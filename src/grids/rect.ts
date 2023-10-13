@@ -1,4 +1,4 @@
-import { Point } from "../types.ts"
+import { Point3d, Viewpoint } from "../types.ts"
 import { Grid } from "../grid.ts"
 
 type RectCoordinate = [number, number, number]
@@ -10,7 +10,7 @@ type RectCellInfo = {
   coordinate: RectCoordinate,
   type: RectCellType,
   sides: Array<RectDirection>,
-  sidePolygons: {[key in RectDirection]: Point[]}
+  sidePolygons: {[key in RectDirection]: Point3d[]}
 }
 
 const RECT_DIRS: Array<RectDirection> = [
@@ -69,14 +69,16 @@ export class RectGrid extends Grid {
     }
   }
 
-  *getCoordinates() {
+  getCoordinates() {
+    let ret = []
     for(let x=0; x<this.size[0]; x++) {
       for(let y=0; y<this.size[1]; y++) {
         for(let z=0; z<this.size[2]; z++) {
-          yield [x, y, z]
+          ret.push([x, y, z])
         }
       }
     }
+    return ret
   }
 
   getAdjacent(coordinate: RectCoordinate, direction: RectDirection): [RectCoordinate|null, RectDirection] {
@@ -102,5 +104,46 @@ export class RectGrid extends Grid {
   applyTransform(cell: RectCellInfo, transform: RectTransform): RectCellInfo {
   }
   */
+  
+  getViewpoints() {
+    let xy: Viewpoint = {
+      id: "xy",
+      name: "X-Y Plane",
+      forwardVector: [0, 0, 1],
+      xVector: [1, 0, 0],
+      nLayers: this.size[2],
+    }
+    let xz: Viewpoint = {
+      id: "xz",
+      name: "X-Z Plane",
+      forwardVector: [0, 1, 0],
+      xVector: [1, 0, 0],
+      nLayers: this.size[1],
+    }
+    let yz: Viewpoint = {
+      id: "yz",
+      name: "Y-Z Plane",
+      forwardVector: [1, 0, 0],
+      xVector: [0, 1, 0],
+      nLayers: this.size[0],
+    }
+    return [xy, xz, yz]
+  }
+  
+  getViewpointLayer(viewpointId: string, layerNumber: number) {
+    let layerIndex: number;
+    if(viewpointId === "xy") {
+      layerIndex = 2
+    } else if(viewpointId === "xz") {
+      layerIndex = 1
+    } else if(viewpointId === "yz") {
+      layerIndex = 0
+    } else {
+      throw new Error("Unknown viewpoint ID "+viewpointId)
+    }
+    return this.getCoordinates().filter((coord) =>
+      coord[layerIndex] === layerNumber
+    )
+  }
 
 }

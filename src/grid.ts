@@ -1,4 +1,4 @@
-import { Size, Coordinate, CellInfo, Direction } from "./types.ts"
+import { Size, Coordinate, CellInfo, Direction, Viewpoint } from "./types.ts"
 
 /**
  * Defines a set of cells and the relation between them. This is the foundation
@@ -33,7 +33,7 @@ export abstract class Grid {
   /**
    * Return the coordinate of all cells in the grid.
    */
-  abstract getCoordinates(): Iterable<Coordinate>
+  abstract getCoordinates(): Coordinate[]
   
   /**
    * Get coordinate next to the given coordinate in the given direction.
@@ -56,4 +56,8 @@ export abstract class Grid {
   //abstract getTransforms(cellType: CellType): Iterable<Transform>
   
   //abstract applyTransform(cellType: CellType, transform: Transform): CellInfo
+
+  abstract getViewpoints(): Viewpoint[]
+  
+  abstract getViewpointLayer(viewpointId: string, layerNumber: number): Coordinate[]
 }
