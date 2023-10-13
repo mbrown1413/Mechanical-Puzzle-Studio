@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from "vue"
 
-import { makeUniqueId } from "../tools.ts"
 import { Coordinate, Point2d } from "../types.ts"
 import { Grid } from "../grid.ts"
 import { Piece } from  "../puzzle.ts"
 import { pointsToSvgSpace, projectPointsToPlane, pointsToSvgPolygonFormat } from '../vector_tools.ts'
+import VerticalSlider from "./VerticalSlider.vue"
 
 const props = defineProps<{
   grid: Grid,
@@ -14,9 +14,6 @@ const props = defineProps<{
 
 // Constants for use in template
 const viewpoints = props.grid.getViewpoints()
-const viewpointInputId = makeUniqueId()
-const layerInputId = makeUniqueId()
-const layerListId = makeUniqueId()
 
 // Input elements in template
 const currentViewpointId = ref(viewpoints[0].id)
@@ -26,7 +23,13 @@ const currentViewpoint = computed(() =>
   viewpoints.find(v => v.id === currentViewpointId.value)
 )
 
-const layerCoordinates = computed(() => 
+watch(currentViewpoint, (newViewpoint) => {
+    if(newViewpoint && layerN.value <= newViewpoint.nLayers) {
+        layerN.value = newViewpoint.nLayers-1
+    }
+})
+
+const layerCoordinates = computed(() =>
   props.grid.getViewpointLayer(
     currentViewpointId.value,
     Number(layerN.value)
@@ -82,11 +85,13 @@ const bounds = computed(() => {
     }
   }
 
+  // Min/max with sanity checks in case there are no xs/ys. This can happen if
+  // a layer is selected which is out of bounds in the seleted viewpoint.
   return {
-    minX: Math.min(...xs),
-    maxX: Math.max(...xs),
-    minY: Math.min(...ys),
-    maxY: Math.max(...ys),
+    minX: xs.length === 0 ? 0 : Math.min(...xs),
+    maxX: xs.length === 0 ? 0 : Math.max(...xs),
+    minY: ys.length === 0 ? 0 : Math.min(...ys),
+    maxY: ys.length === 0 ? 0 : Math.max(...ys),
   }
 })
 
@@ -106,41 +111,29 @@ const viewBox = computed(() => {
 
 <template>
   <div class="display2d">
-    
-    <label :for="viewpointInputId">View: </label>
-    <select
-      :id="viewpointInputId"
-      v-model="currentViewpointId"
-    >
-      <option
-          v-for="viewpoint in viewpoints"
-          :value="viewpoint.id"
-      >
-        {{ viewpoint.name }}
-      </option>
-    </select>
-    <br />
 
-    <label :for="layerInputId">Layer:</label><br />
-    <input
-      :id="layerInputId"
-      v-model="layerN"
-      type="range"
-      min="0"
-      :max="currentViewpoint.nLayers-1"
-      :list="layerListId"
+    <div class="controls">
+        <select v-model="currentViewpointId">
+        <option
+            v-for="viewpoint in viewpoints"
+            :value="viewpoint.id"
+        >
+            {{ viewpoint.name }}
+        </option>
+        </select>
+    </div>
+
+    <VerticalSlider
+        class="slider"
+        v-if="currentViewpoint !== undefined && currentViewpoint.nLayers > 1"
+        v-model="layerN"
+        :options="[...Array(currentViewpoint.nLayers).keys()]"
     />
-    <datalist :id="layerListId">
-      <option
-        v-for="i in [...Array(currentViewpoint.nLayers).keys()]"
-        :value="i"
-        :label="i.toString()"
-      ></option>
-    </datalist>
 
     <svg
-      :viewBox="viewBox"
-      xmlns="http://www.w3.org/2000/svg"
+        class="grid"
+        :viewBox="viewBox"
+        xmlns="http://www.w3.org/2000/svg"
     >
       <template v-for="coordinate in layerCoordinates">
           <polygon
@@ -151,34 +144,28 @@ const viewBox = computed(() => {
             :fill-opacity="coordinateHasPiece(coordinate) ? 0.25 : 0"
             @click="console.log('Clicked!' + polygon)"
           />
-        </template>
+      </template>
     </svg>
   </div>
 </template>
 
 <style scoped>
 .display2d {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template:
+        "controls controls" min-content
+        "slider   grid"    1fr
+        / min-content 1fr ;
 }
-
-/* Layer slider */
-datalist {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  width: calc(100% - 4em);
-  margin-left: 2em;
-  margin-right: 2em;
+.controls {
+    grid-area: controls;
 }
-option {
-  padding: 0;
+.slider {
+    grid-area: slider;
 }
-input[type="range"] {
-  width: calc(100% - 4em);
-  margin: 0;
-  margin-left: 2em;
-  margin-right: 2em;
+.grid {
+    grid-area: grid;
 }
-
 </style>
