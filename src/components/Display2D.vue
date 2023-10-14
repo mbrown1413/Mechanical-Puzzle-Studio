@@ -19,35 +19,35 @@ const cube = new THREE.Mesh( geometry, material );
 scene.add( cube );
 
 function refresh() {
-  renderer.setSize(el.value.offsetWidth, el.value.offsetHeight);
-  renderer.render(scene, camera);
+    renderer.setSize(el.value.offsetWidth, el.value.offsetHeight);
+    renderer.render(scene, camera);
 }
 
 /*
 function onButtonClick() {
-  cube.rotation.x += 0.15;
-  cube.rotation.y += 0.15;
-  refresh()
+    cube.rotation.x += 0.15;
+    cube.rotation.y += 0.15;
+    refresh()
 }
 */
 
 onMounted(() => {
-  const resizeObserver = new ResizeObserver(refresh)
-  resizeObserver.observe(el.value)
+    const resizeObserver = new ResizeObserver(refresh)
+    resizeObserver.observe(el.value)
 
-  el.value.appendChild( renderer.domElement );
-  refresh();
+    el.value.appendChild( renderer.domElement );
+    refresh();
 })
 
 </script>
 
 <template>
-  <div class="display2d" ref="el"></div>
+    <div class="display2d" ref="el"></div>
 </template>
 
 <style scoped>
 .display2d {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 </style>

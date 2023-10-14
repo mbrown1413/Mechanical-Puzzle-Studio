@@ -8,8 +8,8 @@ import { pointsToSvgSpace, projectPointsToPlane, pointsToSvgPolygonFormat } from
 import VerticalSlider from "./VerticalSlider.vue"
 
 const props = defineProps<{
-  grid: Grid,
-  piece: Piece,
+    grid: Grid,
+    piece: Piece,
 }>()
 
 // Constants for use in template
@@ -41,123 +41,124 @@ watch(currentViewpoint, (newViewpoint) => {
 })
 
 const layerCoordinates = computed(() =>
-  props.grid.getViewpointLayer(
-    currentViewpointId.value,
-    Number(layerN.value)
-  )
+    props.grid.getViewpointLayer(
+        currentViewpointId.value,
+        Number(layerN.value)
+    )
 )
 
 const allPolygons = computed(() => {
-  if(currentViewpoint.value === undefined) {
-    return []
-  }
-  let ret: Point2d[][] = []
-  let forwardVector = currentViewpoint.value.forwardVector
-  let xVector = currentViewpoint.value.xVector
-  for(let coordinate of layerCoordinates.value) {
-    let info = props.grid.getCellInfo(coordinate)
-    let polygons = Object.values(info.sidePolygons).map((polygon) =>
-      pointsToSvgSpace(projectPointsToPlane(forwardVector, xVector, ...polygon))
-    )
-    ret.push(...polygons)
-  }
-  return ret
+    if(currentViewpoint.value === undefined) {
+        return []
+    }
+    let ret: Point2d[][] = []
+    let forwardVector = currentViewpoint.value.forwardVector
+    let xVector = currentViewpoint.value.xVector
+    for(let coordinate of layerCoordinates.value) {
+        let info = props.grid.getCellInfo(coordinate)
+        let polygons = Object.values(info.sidePolygons).map((polygon) =>
+            pointsToSvgSpace(projectPointsToPlane(forwardVector, xVector, ...polygon))
+        )
+        ret.push(...polygons)
+    }
+    return ret
 })
 
 function getPolygonsForCoordinate(coordinate: Coordinate): Point2d[][] {
-  if(currentViewpoint.value === undefined) {
-    return []
-  }
-  let ret: Point2d[][] = []
-  let forwardVector = currentViewpoint.value.forwardVector
-  let xVector = currentViewpoint.value.xVector
-  let info = props.grid.getCellInfo(coordinate)
-  let polygons = Object.values(info.sidePolygons).map((polygon) =>
-    pointsToSvgSpace(projectPointsToPlane(forwardVector, xVector, ...polygon))
-  )
-  ret.push(...polygons)
-  return ret
+    if(currentViewpoint.value === undefined) {
+        return []
+    }
+    let ret: Point2d[][] = []
+    let forwardVector = currentViewpoint.value.forwardVector
+    let xVector = currentViewpoint.value.xVector
+    let info = props.grid.getCellInfo(coordinate)
+    let polygons = Object.values(info.sidePolygons).map((polygon) =>
+        pointsToSvgSpace(projectPointsToPlane(forwardVector, xVector, ...polygon))
+    )
+    ret.push(...polygons)
+    return ret
 }
 
 function coordinateHasPiece(coordinate: Coordinate) {
-  let cordToStr = (cord: Coordinate) => cord.join(",")
-  let coordSet: Set<string> = new Set(props.piece.coordinates.map(cordToStr))
-  return coordSet.has(cordToStr(coordinate))
+    let cordToStr = (cord: Coordinate) => cord.join(",")
+    let coordSet: Set<string> = new Set(props.piece.coordinates.map(cordToStr))
+    return coordSet.has(cordToStr(coordinate))
 }
 
 const bounds = computed(() => {
-  // Collect all X and Y values
-  let xs = []
-  let ys = []
-  for(let polygon of allPolygons.value) {
-    for(let point of polygon) {
-      xs.push(point[0])
-      ys.push(point[1])
+    // Collect all X and Y values
+    let xs = []
+    let ys = []
+    for(let polygon of allPolygons.value) {
+        for(let point of polygon) {
+            xs.push(point[0])
+            ys.push(point[1])
+        }
     }
-  }
 
-  // Min/max with sanity checks in case there are no xs/ys. This can happen if
-  // a layer is selected which is out of bounds in the seleted viewpoint.
-  return {
-    minX: xs.length === 0 ? 0 : Math.min(...xs),
-    maxX: xs.length === 0 ? 0 : Math.max(...xs),
-    minY: ys.length === 0 ? 0 : Math.min(...ys),
-    maxY: ys.length === 0 ? 0 : Math.max(...ys),
-  }
+    // Min/max with sanity checks in case there are no xs/ys. This can happen if
+    // a layer is selected which is out of bounds in the seleted viewpoint.
+    return {
+        minX: xs.length === 0 ? 0 : Math.min(...xs),
+        maxX: xs.length === 0 ? 0 : Math.max(...xs),
+        minY: ys.length === 0 ? 0 : Math.min(...ys),
+        maxY: ys.length === 0 ? 0 : Math.max(...ys),
+    }
 })
 
 const viewBox = computed(() => {
-  let width = bounds.value.maxX - bounds.value.minX
-  let height = bounds.value.maxY - bounds.value.minY
-  let margin = Math.max(width*0.1, height*0.1)
-  return (
-    (bounds.value.minX - margin) + " " +
-    (bounds.value.minY - margin) + " " +
-    (width + 2*margin) + " " +
-    (height + 2*margin)
-  )
+    let width = bounds.value.maxX - bounds.value.minX
+    let height = bounds.value.maxY - bounds.value.minY
+    let margin = Math.max(width*0.1, height*0.1)
+    return (
+        (bounds.value.minX - margin) + " " +
+        (bounds.value.minY - margin) + " " +
+        (width + 2*margin) + " " +
+        (height + 2*margin)
+    )
 })
 
 </script>
 
 <template>
-  <div class="display2d">
+    <div class="display2d">
 
-    <div class="controls">
-        <select v-model="currentViewpointId">
-        <option
-            v-for="viewpoint in viewpoints"
-            :value="viewpoint.id"
+        <div class="controls">
+            <select v-model="currentViewpointId">
+                <option
+                    v-for="viewpoint in viewpoints"
+                    :value="viewpoint.id"
+                >
+                    {{ viewpoint.name }}
+                </option>
+            </select>
+        </div>
+
+        <VerticalSlider
+            class="slider"
+            v-if="currentViewpoint !== undefined && currentViewpoint.nLayers > 1"
+            v-model="layerN"
+            :options="[...Array(currentViewpoint.nLayers).keys()]"
+        />
+
+        <svg
+            class="grid"
+            :viewBox="viewBox"
+            xmlns="http://www.w3.org/2000/svg"
         >
-            {{ viewpoint.name }}
-        </option>
-        </select>
+            <template v-for="coordinate in layerCoordinates">
+                <polygon
+                    v-for="polygon in getPolygonsForCoordinate(coordinate)"
+                    :points="pointsToSvgPolygonFormat(polygon)"
+                    stroke="black"
+                    stroke-width="0.01"
+                    :fill-opacity="coordinateHasPiece(coordinate) ? 0.25 : 0"
+                    @click="console.log('Clicked!' + polygon)"
+                />
+            </template>
+        </svg>
+
     </div>
-
-    <VerticalSlider
-        class="slider"
-        v-if="currentViewpoint !== undefined && currentViewpoint.nLayers > 1"
-        v-model="layerN"
-        :options="[...Array(currentViewpoint.nLayers).keys()]"
-    />
-
-    <svg
-        class="grid"
-        :viewBox="viewBox"
-        xmlns="http://www.w3.org/2000/svg"
-    >
-      <template v-for="coordinate in layerCoordinates">
-          <polygon
-            v-for="polygon in getPolygonsForCoordinate(coordinate)"
-            :points="pointsToSvgPolygonFormat(polygon)"
-            stroke="black"
-            stroke-width="0.01"
-            :fill-opacity="coordinateHasPiece(coordinate) ? 0.25 : 0"
-            @click="console.log('Clicked!' + polygon)"
-          />
-      </template>
-    </svg>
-  </div>
 </template>
 
 <style scoped>

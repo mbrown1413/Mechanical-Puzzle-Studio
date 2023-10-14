@@ -80,8 +80,8 @@ datalist {
 }
 
 option {
-  padding: 0;
-  padding-left: 0.25rem;
+    padding: 0;
+    padding-left: 0.25rem;
 }
 
 </style>

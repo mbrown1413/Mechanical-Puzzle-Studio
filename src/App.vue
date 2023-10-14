@@ -3,7 +3,7 @@ import MainLayout from './components/MainLayout.vue'
 </script>
 
 <template>
-  <MainLayout />
+    <MainLayout />
 </template>
 
 <style scoped>
@@ -11,7 +11,7 @@ import MainLayout from './components/MainLayout.vue'
 
 <style>
 body {
-  margin: 0;
-  height: 100vh;
+    margin: 0;
+    height: 100vh;
 }
 </style>

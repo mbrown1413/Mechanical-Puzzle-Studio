@@ -23,41 +23,41 @@ import { Size, Coordinate, CellInfo, Direction, Viewpoint } from "./types.ts"
  * and not arrays will take some getting used to though.
  */
 export abstract class Grid {
-  abstract size: Size
+    abstract size: Size
 
-  /**
-   * Return info describing the cell at the given coordinate.
-   */
-  abstract getCellInfo(coordinate: Coordinate): CellInfo
+    /**
+     * Return info describing the cell at the given coordinate.
+     */
+    abstract getCellInfo(coordinate: Coordinate): CellInfo
 
-  /**
-   * Return the coordinate of all cells in the grid.
-   */
-  abstract getCoordinates(): Coordinate[]
+    /**
+     * Return the coordinate of all cells in the grid.
+     */
+    abstract getCoordinates(): Coordinate[]
   
-  /**
-   * Get coordinate next to the given coordinate in the given direction.
-   * 
-   * @return [
-   *   The coordinate of the adjacent cell or null if there is no cell there,
-   *   The opposite direction (the direction which will get back to the original cell)
-   * ]
-   */
-  abstract getAdjacent(coordinate: Coordinate, direction: Direction): [Coordinate|null, Direction]
+    /**
+     * Get coordinate next to the given coordinate in the given direction.
+     * 
+     * @return [
+     *   The coordinate of the adjacent cell or null if there is no cell there,
+     *   The opposite direction (the direction which will get back to the original cell)
+     * ]
+     */
+    abstract getAdjacent(coordinate: Coordinate, direction: Direction): [Coordinate|null, Direction]
   
-  /**
-   * Get all possible cell types which may appear in this grid.
-   */
-  //abstract getCellTypes(): Iterable<CellType>
+    /**
+     * Get all possible cell types which may appear in this grid.
+     */
+    //abstract getCellTypes(): Iterable<CellType>
   
-  /**
-   * Get transforms which can be applied to the given cell type.
-   */
-  //abstract getTransforms(cellType: CellType): Iterable<Transform>
+    /**
+     * Get transforms which can be applied to the given cell type.
+     */
+    //abstract getTransforms(cellType: CellType): Iterable<Transform>
   
-  //abstract applyTransform(cellType: CellType, transform: Transform): CellInfo
+    //abstract applyTransform(cellType: CellType, transform: Transform): CellInfo
 
-  abstract getViewpoints(): Viewpoint[]
+    abstract getViewpoints(): Viewpoint[]
   
-  abstract getViewpointLayer(viewpointId: string, layerNumber: number): Coordinate[]
+    abstract getViewpointLayer(viewpointId: string, layerNumber: number): Coordinate[]
 }

@@ -9,28 +9,28 @@ export type Vector = [number, number, number]
 export type CellType = string
 
 export type CellInfo = {
-  coordinate: Coordinate,
-  type: CellType,
-  sides: Array<Direction>,
-  sidePolygons: {[key: Direction]: Point3d[]}
+    coordinate: Coordinate,
+    type: CellType,
+    sides: Array<Direction>,
+    sidePolygons: {[key: Direction]: Point3d[]}
 }
 
 export type Viewpoint = {
-  id: string,
-  name: string,
-  nLayers: number,
-  forwardVector: Vector,
-  xVector: Vector,
+    id: string,
+    name: string,
+    nLayers: number,
+    forwardVector: Vector,
+    xVector: Vector,
 }
 
 export type Transform = {
-  id: string,
+    id: string,
 }
 
 export type BoolWithReason = {
-  truth: true
-  reason?: string
+    truth: true
+    reason?: string
 } | {
-  truth: false,
-  reason: string
+    truth: false,
+    reason: string
 }
