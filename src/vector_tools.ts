@@ -43,20 +43,35 @@ export function dot(a: Vector, b: Vector): number {
   return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
 }
 
-export function projectPointToPlane(
+function projectPointToPlane(
   forwardVector: Vector,
   xVector: Vector,
   point: Point3d
 ): Point2d {
+
+  // Get unit vectors in the X and Y directions of the resulting plane we're
+  // projecting onto.
   forwardVector = normalize(forwardVector)
   xVector = normalize(xVector)
   let yVector = cross(forwardVector, xVector)
+
+  // Project each point onto the X and Y unit vectors separately to get the
+  // final projected point.
   return [
     dot(point, xVector),
     dot(point, yVector),
   ]
 }
 
+/**
+ * Project points in 3d space onto a 2d plane.
+ *
+ * @param forwardVector Normal vector to the plane being projected onto.
+ * @param xVector Vector which will end up being the X direction in the
+ *     resulting projected plane's X/Y space.
+ * @param points Points to project.
+ * @returns Given points projected onto the 2d plane.
+ */
 export function projectPointsToPlane(
   forwardVector: Vector,
   xVector: Vector,

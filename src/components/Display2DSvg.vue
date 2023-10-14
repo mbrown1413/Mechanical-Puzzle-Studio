@@ -23,9 +23,20 @@ const currentViewpoint = computed(() =>
   viewpoints.find(v => v.id === currentViewpointId.value)
 )
 
+/* Track which layer each viewpoint was last on, and
+ * return to that layer when going back to the viewpoint. */
+let layerByViewpoint: {[key: string]: number} = {}
+watch(layerN, () => {
+    if(currentViewpoint.value !== undefined) {
+        layerByViewpoint[currentViewpoint.value.id] = layerN.value
+    }
+})
 watch(currentViewpoint, (newViewpoint) => {
-    if(newViewpoint && layerN.value <= newViewpoint.nLayers) {
-        layerN.value = newViewpoint.nLayers-1
+    if(newViewpoint !== undefined) {
+        layerN.value = layerByViewpoint[newViewpoint.id]
+    }
+    if(layerN.value === undefined) {
+        layerN.value = 0
     }
 })
 

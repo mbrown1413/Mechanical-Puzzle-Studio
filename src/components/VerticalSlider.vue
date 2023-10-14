@@ -1,6 +1,6 @@
 <script setup lang="ts">
     
-import { ref, watch } from "vue"
+import { ref, watch, computed } from "vue"
 
 import { makeUniqueId } from "../tools.ts"
 
@@ -24,10 +24,16 @@ watch(selectedIndex, (newIndex) => {
     emit("update:modelValue", props.options[newIndex])
 })
 
+const containerStyle = computed(() => {
+    return {
+        "height": `min(100%, ${props.options.length*5}rem)`,
+    }
+})
+
 </script>
 
 <template>
-    <div class="vertical-slider">
+    <div class="vertical-slider" :style="containerStyle">
         <input
             v-model="selectedIndex"
             type="range"
@@ -38,7 +44,7 @@ watch(selectedIndex, (newIndex) => {
         />
         <datalist :id="datalistId">
             <option
-                v-for="(option, i) in options.reverse()"
+                v-for="(option, i) in options.toReversed()"
                 :value="i"
                 :label="option.toString()"
             ></option>
@@ -57,23 +63,25 @@ watch(selectedIndex, (newIndex) => {
 }
 
 input {
-  height: calc(100% - 4em);
-  margin: 0;
-  margin-top: 2em;
-  margin-bottom: 2em;
+    height: calc(100% - 4rem);
+    margin: 0;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
 }
 
 datalist {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: calc(100% - 4em);
-  margin-top: 2em;
-  margin-bottom: 2em;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: calc(100% - 4rem);
+    margin: 0;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
 }
 
 option {
   padding: 0;
+  padding-left: 0.25rem;
 }
 
 </style>
