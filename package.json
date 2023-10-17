@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "eslint": "^8.51.0",
     "three": "^0.153.0",
     "vue": "^3.2.47"
   },

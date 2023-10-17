@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import Display2DSvg from "./Display2DSvg.vue"
+import Display2DSvg from "./DisplaySvg.vue"
 import { RectGrid } from "../grids/rect.ts"
 import { Piece } from  "../puzzle.ts"
 
-const grid = new RectGrid([3, 3, 1]);
+const grid = new RectGrid([3, 3, 3]);
 const piece = new Piece([[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 0]]);
 </script>
 
