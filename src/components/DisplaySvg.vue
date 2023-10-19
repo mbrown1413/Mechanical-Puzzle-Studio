@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, Ref, watch, nextTick } from "vue"
+import { Vector2, Vector3 } from 'three'
 
-import { Coordinate, Point2d, Point3d, Viewpoint } from "../types.ts"
+import { Coordinate, Viewpoint } from "../types.ts"
 import { Grid } from "../grid.ts"
 import { Piece } from  "../puzzle.ts"
-import { pointsToSvgSpace, projectPointsToPlane, pointsToSvgPolygonFormat } from '../vector_tools.ts'
 import VerticalSlider from "./VerticalSlider.vue"
 
 type AnimationState = {
@@ -94,7 +94,7 @@ const polygonsToDraw = computed(() => {
     return ret
 })
 
-function doProjection(viewpoint: Viewpoint, points: Point3d[]): Point2d[] {
+function doProjection(viewpoint: Viewpoint, points: Vector3[]): Vector2[] {
     return pointsToSvgSpace(
         projectPointsToPlane(
             viewpoint.forwardVector,
@@ -102,6 +102,62 @@ function doProjection(viewpoint: Viewpoint, points: Point3d[]): Point2d[] {
             ...points
         )
     )
+}
+
+/**
+ * Convert from the coordinate system we use to SVG's coordinate space.
+ *
+ * In particular, the origin is changed from bottom-left to upper-left.
+ */
+function pointsToSvgSpace(points: Vector2[]): Vector2[] {
+    return points.map(([x, y]) => new Vector2(x, -y));
+}
+
+/**
+ * Convert polygons from a list of points to a string that SVG's <polygon>
+ * element understands.
+ */
+function pointsToSvgPolygonFormat(points: Vector2[]): string {
+    let pointStrings = points.map((point) => point.x+","+point.y)
+    return pointStrings.join(" ")
+}
+
+function projectPointToPlane(
+    forwardVector: Vector3,
+    xVector: Vector3,
+    point: Vector3,
+): Vector2 {
+
+    // Get unit vectors in the X and Y directions of the resulting plane we're
+    // projecting onto.
+    forwardVector = forwardVector.clone().normalize()
+    xVector = xVector.clone().normalize()
+    let yVector = new Vector3()
+    yVector.crossVectors(forwardVector, xVector)
+
+    // Project each point onto the X and Y unit vectors separately to get the
+    // final projected point.
+    return new Vector2(
+        point.dot(xVector),
+        point.dot(yVector),
+    )
+}
+
+/**
+ * Project points in 3d space onto a 2d plane.
+ *
+ * @param forwardVector Normal vector to the plane being projected onto.
+ * @param xVector Vector which will end up being the X direction in the
+ *     resulting projected plane's X/Y space.
+ * @param points Points to project.
+ * @returns Given points projected onto the 2d plane.
+ */
+function projectPointsToPlane(
+    forwardVector: Vector3,
+    xVector: Vector3,
+    ...points: Vector3[]
+): Vector2[] {
+    return points.map((point) => projectPointToPlane(forwardVector, xVector, point))
 }
 
 function layerHasCoordinate(coordinate: Coordinate) {
@@ -136,8 +192,8 @@ const bounds = computed(() => {
         }
         */
         for(let point of points) {
-            xs.push(point[0])
-            ys.push(point[1])
+            xs.push(point.x)
+            ys.push(point.y)
         }
     }
 

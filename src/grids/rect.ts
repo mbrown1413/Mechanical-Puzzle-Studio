@@ -1,4 +1,6 @@
-import { Point3d, Viewpoint } from "../types.ts"
+import { Vector3 } from 'three'
+
+import { Viewpoint } from "../types.ts"
 import { Grid } from "../grid.ts"
 
 type RectCoordinate = [number, number, number]
@@ -10,7 +12,7 @@ type RectCellInfo = {
     coordinate: RectCoordinate,
     type: RectCellType,
     sides: Array<RectDirection>,
-    sidePolygons: {[key in RectDirection]: Point3d[]}
+    sidePolygons: {[key in RectDirection]: Vector3[]}
 }
 
 const RECT_DIRS: Array<RectDirection> = [
@@ -54,17 +56,18 @@ export class RectGrid extends Grid {
         if(!this._boundsCheck(x, y, z)) {
             throw "getCell() called on out-of-bounds coordinate "+coordinate
         }
+        let v = (x: number, y: number, z: number) => new Vector3(x, y, z)
         return {
             coordinate: coordinate,
             type: "cube",  // The only type of cell in this grid
             sides: RECT_DIRS,
             sidePolygons: {
-                "+X": [[1+x,   y,   z], [1+x, 1+y,   z], [1+x, 1+y, 1+z], [1+x,   y, 1+z]],
-                "-X": [[  x,   y,   z], [  x, 1+y,   z], [  x, 1+y, 1+z], [  x,   y, 1+z]],
-                "+Y": [[  x, 1+y,   z], [1+x, 1+y,   z], [1+x, 1+y, 1+z], [  x, 1+y, 1+z]],
-                "-Y": [[  x,   y,   z], [1+x,   y,   z], [1+x,   y, 1+z], [  x,   y, 1+z]],
-                "+Z": [[  x,   y, 1+z], [1+x,   y, 1+z], [1+x, 1+y, 1+z], [  x, 1+y, 1+z]],
-                "-Z": [[  x,   y,   z], [1+x,   y,   z], [1+x, 1+y,   z], [  x, 1+y,   z]],
+                "+X": [v(1+x,   y,   z), v(1+x, 1+y,   z), v(1+x, 1+y, 1+z), v(1+x,   y, 1+z)],
+                "-X": [v(  x,   y,   z), v(  x, 1+y,   z), v(  x, 1+y, 1+z), v(  x,   y, 1+z)],
+                "+Y": [v(  x, 1+y,   z), v(1+x, 1+y,   z), v(1+x, 1+y, 1+z), v(  x, 1+y, 1+z)],
+                "-Y": [v(  x,   y,   z), v(1+x,   y,   z), v(1+x,   y, 1+z), v(  x,   y, 1+z)],
+                "+Z": [v(  x,   y, 1+z), v(1+x,   y, 1+z), v(1+x, 1+y, 1+z), v(  x, 1+y, 1+z)],
+                "-Z": [v(  x,   y,   z), v(1+x,   y,   z), v(1+x, 1+y,   z), v(  x, 1+y,   z)],
             }
         }
     }
@@ -109,22 +112,22 @@ export class RectGrid extends Grid {
         let xy: Viewpoint = {
             id: "xy",
             name: "X-Y Plane",
-            forwardVector: [0, 0, 1],
-            xVector: [1, 0, 0],
+            forwardVector: new Vector3(0, 0, 1),
+            xVector: new Vector3(1, 0, 0),
             nLayers: this.size[2],
         }
         let xz: Viewpoint = {
             id: "xz",
             name: "X-Z Plane",
-            forwardVector: [0, 1, 0],
-            xVector: [1, 0, 0],
+            forwardVector: new Vector3(0, 1, 0),
+            xVector: new Vector3(1, 0, 0),
             nLayers: this.size[1],
         }
         let yz: Viewpoint = {
             id: "yz",
             name: "Y-Z Plane",
-            forwardVector: [1, 0, 0],
-            xVector: [0, 1, 0],
+            forwardVector: new Vector3(1, 0, 0),
+            xVector: new Vector3(0, 1, 0),
             nLayers: this.size[0],
         }
         return [xy, xz, yz]
