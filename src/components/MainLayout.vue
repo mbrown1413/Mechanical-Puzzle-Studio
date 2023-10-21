@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import DisplaySvg from "./DisplaySvg.vue"
+import DisplayWebGl from "./DisplayWebGl.vue"
 import { RectGrid } from "../grids/rect.ts"
 import { Piece } from  "../puzzle.ts"
 
@@ -16,7 +16,7 @@ const piece = new Piece([[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 0]]);
         <div class="grid-cell side-bot">
         </div>
         <div class="grid-cell main">
-            <DisplaySvg :grid="grid" :piece="piece" />
+            <DisplayWebGl :grid="grid" :piece="piece" />
         </div>
     </div>
 </template>
