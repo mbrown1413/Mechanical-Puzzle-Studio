@@ -25,10 +25,10 @@ const viewpoint = computed(() =>
 )
 
 const renderer = new THREE.WebGLRenderer({antialias: true})
-const scene = new THREE.Scene();
+const scene = new THREE.Scene()
 const fov = 75
-const camera = new THREE.PerspectiveCamera(fov, 2, 0.1, 10);
-//const camera = new THREE.OrthographicCamera(-5.5, 5.5, -5.5, 5.5);
+const camera = new THREE.PerspectiveCamera(fov, 2, 0.1, 10)
+//const camera = new THREE.OrthographicCamera(-5.5, 5.5, -5.5, 5.5)
 
 let controls = new OrbitControls(camera, renderer.domElement)
 controls.listenToKeyEvents(window)
@@ -79,7 +79,7 @@ function buildObjects() {
 }
 
 let firstSceneBuild = true
-function rebuildScene() {
+function doRebuildScene() {
     scene.clear()
 
     const light1 = new THREE.DirectionalLight(0xffffff, 3)
@@ -97,7 +97,7 @@ function rebuildScene() {
     }
     
     if(firstSceneBuild) {
-        const boundingBox = new THREE.Box3().setFromObject(scene)
+        const boundingBox = new THREE.Box3().setFromObject(scene)  // Calculated _before_ AxisHeper added
         const boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere())
         const center = boundingBox.getCenter(new Vector3())
 
@@ -127,11 +127,14 @@ function rebuildScene() {
 }
 
 watch([viewpoint, layerN], () => {
-    rebuildScene()
-    refresh()
+    refresh(true)
 })
 
-function refresh() {
+function refresh(rebuildScene=false) {
+    if(rebuildScene) {
+        doRebuildScene()
+    }
+
     if(el.value === null) return
     const width = el.value.offsetWidth
     const height = el.value.offsetHeight
@@ -139,15 +142,21 @@ function refresh() {
     camera.updateProjectionMatrix()
     renderer.setSize(width, height, false)
     renderer.render(scene, camera)
+
+    // Calculate camera near/far to fit entire scene
+    const boundingBox = new THREE.Box3().setFromObject(scene)  // Calculated _after_ AxisHelper added
+    const boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere())
+    const sphereDistance = boundingSphere.distanceToPoint(camera.position)
+    camera.near = Math.max(sphereDistance * .9, 0.1)
+    camera.far = (sphereDistance + boundingSphere.radius*2) * 1.1
 }
 
 onMounted(() => {
-    const resizeObserver = new ResizeObserver(refresh)
+    const resizeObserver = new ResizeObserver(() => refresh())
     resizeObserver.observe(el.value)
 
-    el.value.appendChild(renderer.domElement);
-    rebuildScene()
-    refresh();
+    el.value.appendChild(renderer.domElement)
+    refresh(true)
 })
 
 function layerHasCoordinate(coordinate: Coordinate) {

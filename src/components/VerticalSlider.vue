@@ -4,6 +4,8 @@ import { ref, watch, computed } from "vue"
 
 import { makeUniqueId } from "../tools.ts"
 
+const toReversed = (array: any[]) => new Array(array).reverse()
+
 const props = defineProps<{
     modelValue: any,
     options: any[],
@@ -44,7 +46,7 @@ const containerStyle = computed(() => {
         />
         <datalist :id="datalistId">
             <option
-                v-for="(option, i) in options.toReversed()"
+                v-for="(option, i) in toReversed(options)"
                 :value="i"
                 :label="option.toString()"
             ></option>
