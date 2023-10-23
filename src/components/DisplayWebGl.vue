@@ -26,8 +26,8 @@ const viewpoint = computed(() =>
 
 const renderer = new THREE.WebGLRenderer({antialias: true})
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, 2, 0.1, 10);
-camera.position.set(-2, -2, 2)
+const fov = 75
+const camera = new THREE.PerspectiveCamera(fov, 2, 0.1, 10);
 //const camera = new THREE.OrthographicCamera(-5.5, 5.5, -5.5, 5.5);
 
 let controls = new OrbitControls(camera, renderer.domElement)
@@ -96,14 +96,25 @@ function rebuildScene() {
         scene.add(obj)
     }
     
-    // Center view on the center of the grid
-    // Only do this once on initialization though, since the user can
-    // right-click drag to change the OrbitControls target location.
     if(firstSceneBuild) {
         const boundingBox = new THREE.Box3().setFromObject(scene)
+        const boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere())
         const center = boundingBox.getCenter(new Vector3())
-        camera.lookAt(center)
+
+        // Position camera according to the first viewpoint.
+        const fovRadians = fov * (Math.PI/180)
+        const cameraPosition = viewpoints[0].forwardVector.clone().normalize()
+        cameraPosition.multiplyScalar(
+            -1 * (boundingSphere.radius * 1.2) / Math.tan(fovRadians / 2)
+        )
+        cameraPosition.add(center)
+        camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z)
+    
+        // Center view on the center of the grid.
+        // Only do this once on initialization though, since the user can
+        // right-click drag to change the OrbitControls target location.
         controls.target = center
+        camera.lookAt(center)
     }
 
     // Add axes helper after bounding box is computed so it doesn't affect the
@@ -111,7 +122,6 @@ function rebuildScene() {
     const axesHelper = new THREE.AxesHelper()
     axesHelper.position.set(-1, -1, -1)
     scene.add(axesHelper)
-
     
     firstSceneBuild = false
 }

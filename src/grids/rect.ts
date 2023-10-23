@@ -112,22 +112,22 @@ export class RectGrid extends Grid {
         let xy: Viewpoint = {
             id: "xy",
             name: "X-Y Plane",
-            forwardVector: new Vector3(0, 0, 1),
+            forwardVector: new Vector3(0, 0, -1),
             xVector: new Vector3(1, 0, 0),
             nLayers: this.size[2],
         }
         let xz: Viewpoint = {
             id: "xz",
             name: "X-Z Plane",
-            forwardVector: new Vector3(0, 1, 0),
+            forwardVector: new Vector3(0, -1, 0),
             xVector: new Vector3(1, 0, 0),
             nLayers: this.size[1],
         }
         let yz: Viewpoint = {
             id: "yz",
             name: "Y-Z Plane",
-            forwardVector: new Vector3(1, 0, 0),
-            xVector: new Vector3(0, 1, 0),
+            forwardVector: new Vector3(-1, 0, 0),
+            xVector: new Vector3(0, 0, -1),
             nLayers: this.size[0],
         }
         return [xy, xz, yz]
