@@ -4,7 +4,7 @@ import { ref, watch, computed } from "vue"
 
 import { makeUniqueId } from "../tools.ts"
 
-const toReversed = (array: any[]) => new Array(array).reverse()
+const toReversed = (array: any[]) => new Array(...array).reverse()
 
 const props = defineProps<{
     modelValue: any,
