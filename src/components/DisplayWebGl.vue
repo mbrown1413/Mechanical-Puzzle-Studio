@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, Ref, onMounted, computed, watch } from 'vue'
 import * as THREE from 'three'
-import { Vector3 } from 'three'
+import { Vector2, Vector3 } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js'
 
@@ -32,12 +32,35 @@ const camera = new THREE.PerspectiveCamera(fov, 2, 0.1, 10)
 
 let controls = new OrbitControls(camera, renderer.domElement)
 controls.listenToKeyEvents(window)
-controls.addEventListener('change', refresh)
+controls.addEventListener('change', () => refresh())
 
+type TrackableResource = THREE.BufferGeometry | THREE.Material
+let trackedResources: TrackableResource[] = []
+function track(resource: TrackableResource) {
+    trackedResources.push(resource)
+}
+function disposeTrackedResources() {
+    for(const resource of trackedResources) {
+        resource.dispose()
+    }
+    trackedResources = []
+}
+
+let layerObjects: THREE.Object3D[] = []
 function buildObjects() {
     const objs = []
+    layerObjects = []
     for(let coordinate of props.grid.getCoordinates()) {
         const cellInfo = props.grid.getCellInfo(coordinate)
+        
+        let highlighted = false
+        if(highlightedCoordinates.value.length &&
+                highlightedCoordinates.value[0][0] == coordinate[0] &&
+                highlightedCoordinates.value[0][1] == coordinate[1] &&
+                highlightedCoordinates.value[0][2] == coordinate[2]) {
+            highlighted = true
+        }
+
         for(let polygon of Object.values(cellInfo.sidePolygons)) {
             const inLayer = layerHasCoordinate(coordinate)
             const hasPiece = coordinateHasPiece(coordinate)
@@ -45,7 +68,8 @@ function buildObjects() {
 
             if(hasPiece) {
                 material = new THREE.MeshPhongMaterial({
-                    color: inLayer ? 0x00ff00 : 0xffffff,
+                    color: highlighted ? 0x0000ff : 
+                            inLayer ? 0x00ff00 : 0xffffff,
                     emissive: 0x004400,
                     side: THREE.DoubleSide,
                     transparent: !inLayer,
@@ -58,7 +82,8 @@ function buildObjects() {
             } else {
 
                 material = new THREE.LineBasicMaterial({
-                    color: inLayer ? 0x00ff00 : 0xffffff,
+                    color: highlighted ? 0x0000ff :
+                            inLayer ? 0x00ff00 : 0xffffff,
                     transparent: !inLayer,
                     opacity: inLayer ? 1 : 0.1,
                 })
@@ -70,9 +95,27 @@ function buildObjects() {
                 if(inLayer) {
                     obj.renderOrder = 1
                 }
+                // Draw highlighted cells even later
+                if(highlighted) {
+                    obj.renderOrder = 2
+                }
 
             }
+            track(material)
+            track(geometry)
             objs.push(obj)
+            
+            // Build separate objects for raycast intersection tests.
+            // We could re-use some objects, but we can't do intersections
+            // properly with lines.
+            if(inLayer) {
+                const geometry = new ConvexGeometry(polygon)
+                const obj = new THREE.Mesh(geometry)
+                obj.userData = {coordinate, cellInfo}
+                layerObjects.push(obj)
+                track(geometry)
+            }
+
         }
     }
     return objs
@@ -80,6 +123,7 @@ function buildObjects() {
 
 let firstSceneBuild = true
 function doRebuildScene() {
+    disposeTrackedResources()
     scene.clear()
 
     const light1 = new THREE.DirectionalLight(0xffffff, 3)
@@ -133,6 +177,7 @@ watch([viewpoint, layerN], () => {
 function refresh(rebuildScene=false) {
     if(rebuildScene) {
         doRebuildScene()
+        console.log("REBUILT")
     }
 
     if(el.value === null) return
@@ -151,12 +196,45 @@ function refresh(rebuildScene=false) {
     camera.far = (sphereDistance + boundingSphere.radius*2) * 1.1
 }
 
+const raycaster = new THREE.Raycaster()
+
+const highlightedCoordinates: Ref<Coordinate[]> = ref([])
+watch(highlightedCoordinates, (newHighlight, oldHighlight) => {
+    if(JSON.stringify(oldHighlight) != JSON.stringify(newHighlight)) {
+        refresh(true)
+    }
+})
+
+function onMouseMove(event: MouseEvent) {
+    const canvas = renderer.domElement
+    const rect = canvas.getBoundingClientRect()
+    const pickPosition = new Vector2(
+        (event.clientX - rect.left) / rect.width * 2 - 1,
+        (event.clientY - rect.top) / rect.height * -2 + 1,
+    )
+    raycaster.setFromCamera(pickPosition, camera)
+    const intersects = raycaster.intersectObjects(layerObjects)
+
+    highlightedCoordinates.value = []
+    if(intersects.length) {
+        highlightedCoordinates.value.push(intersects[0].object.userData.coordinate)
+    }
+}
+
+function onMouseOut() {
+    highlightedCoordinates.value = []
+}
+
 onMounted(() => {
     const resizeObserver = new ResizeObserver(() => refresh())
     resizeObserver.observe(el.value)
 
     el.value.appendChild(renderer.domElement)
     refresh(true)
+    
+    renderer.domElement.addEventListener('mousemove', onMouseMove);
+    renderer.domElement.addEventListener('mouseout', onMouseOut);
+    renderer.domElement.addEventListener('mouseleave', onMouseOut);
 })
 
 function layerHasCoordinate(coordinate: Coordinate) {
