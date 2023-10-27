@@ -25,10 +25,12 @@ export type Transform = {
     id: string,
 }
 
+/* Stores a boolean, and an optional reason for its value. If `false`, the
+ * reason is required. Used for success/failure return values. */
 export type BoolWithReason = {
-    truth: true
+    bool: true
     reason?: string
 } | {
-    truth: false,
+    bool: false,
     reason: string
 }

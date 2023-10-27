@@ -13,10 +13,10 @@ import { Piece } from  "../../puzzle.js"
 export function useGridDrawComposible(
     element: Ref<HTMLElement>,
     grid: Grid,
+    piece: ComputedRef<Piece | null>,
     layerN: Ref<number>,
     viewpoint: ComputedRef<Viewpoint>,
     highlightedCoordinate: Ref<Coordinate | null>,
-    piece: Piece,
 ) {
     const renderer = new THREE.WebGLRenderer({antialias: true})
     const scene = new THREE.Scene()
@@ -87,8 +87,9 @@ export function useGridDrawComposible(
         }
 
         function coordinateHasPiece(coordinate: Coordinate) {
+            if(piece.value === null) return false
             let cordToStr = (cord: Coordinate) => cord.join(",")
-            let coordSet: Set<string> = new Set(piece.coordinates.map(cordToStr))
+            let coordSet: Set<string> = new Set(piece.value.coordinates.map(cordToStr))
             return coordSet.has(cordToStr(coordinate))
         }
 
@@ -228,5 +229,6 @@ export function useGridDrawComposible(
         scene,
         camera,
         hitTestObjects,
+        rebuildScene: () => {rebuild(); refresh()},
     }
 }

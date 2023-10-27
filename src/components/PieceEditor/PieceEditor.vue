@@ -2,41 +2,62 @@
 import { ref, Ref, computed } from "vue"
 
 import { Coordinate } from "../../types.ts"
-import { Grid } from "../../grid.ts"
-import { Piece } from  "../../puzzle.ts"
+import { Action } from "../../actions.ts"
+import { Puzzle } from  "../../puzzle.ts"
 import VerticalSlider from "./../VerticalSlider.vue"
 
 import { useGridDrawComposible } from "./grid_draw.ts"
 import { useMouseEventsComposible } from "./mouse_events.ts"
 
 const props = defineProps<{
-    grid: Grid,
-    piece: Piece,
+    puzzle: Puzzle,
+    pieceId: string,
+}>()
+
+const emit = defineEmits<{
+    action: [action: Action]
 }>()
 
 const el = ref()
-const viewpoints = props.grid.getViewpoints()
+const viewpoints = props.puzzle.grid.getViewpoints()
 const viewpointId = ref(viewpoints[0].id)
 const layerN = ref(0)
 const highlightedCoordinate: Ref<Coordinate | null> = ref(null)
 
 const viewpoint = computed(() =>
-  viewpoints.find(v => v.id === viewpointId.value) || viewpoints[0]
+    viewpoints.find(v => v.id === viewpointId.value) || viewpoints[0]
 )
 
-const { renderer, camera, hitTestObjects } = useGridDrawComposible(
-    el,
-    props.grid,
-    layerN,
-    viewpoint,
-    highlightedCoordinate,
-    props.piece,
+const piece = computed(() =>
+    props.puzzle.pieces.find((p) => p.id === props.pieceId) || null
 )
 
-useMouseEventsComposible(
+const {
     renderer,
     camera,
     hitTestObjects,
+    rebuildScene,
+} = useGridDrawComposible(
+    el,
+    props.puzzle.grid,
+    piece,
+    layerN,
+    viewpoint,
+    highlightedCoordinate,
+)
+
+useMouseEventsComposible(
+    piece,
+    renderer,
+    camera,
+    hitTestObjects,
+    (action) => {
+        console.log("ACTION")
+        emit("action", action)
+        console.log("ACTION DONE")
+        rebuildScene()
+        console.log("Rebuilt!")
+    },
     highlightedCoordinate,  // Output ref
 )
 </script>

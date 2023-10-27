@@ -5,9 +5,9 @@ export class Puzzle {
     grid: Grid
     pieces: Piece[]
     
-    constructor(grid: Grid) {
+    constructor(grid: Grid, pieces: Piece[]=[]) {
         this.grid = grid
-        this.pieces = []
+        this.pieces = pieces
     }
     
     /*
@@ -19,9 +19,11 @@ export class Puzzle {
 }
 
 export class Piece {
+    id: string
     coordinates: Coordinate[]
 
-    constructor(coordinates: Coordinate[]) {
+    constructor(id: string, coordinates: Coordinate[]) {
+        this.id = id
         this.coordinates = coordinates
     }
     

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import DisplayWebGl from "./DisplayWebGl/DisplayWebGl.vue"
+import PieceEditor from "./PieceEditor/PieceEditor.vue"
 import { RectGrid } from "../grids/rect.ts"
-import { Piece } from  "../puzzle.ts"
+import { Puzzle, Piece } from  "../puzzle.ts"
 
 const grid = new RectGrid([3, 3, 3]);
-const piece = new Piece([[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 0]]);
+const piece = new Piece("piece-0", [[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 0]]);
+const puzzle = new Puzzle(grid, [piece])
 </script>
 
 <template>
@@ -16,7 +17,11 @@ const piece = new Piece([[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 0]]);
         <div class="grid-cell side-bot">
         </div>
         <div class="grid-cell main">
-            <DisplayWebGl :grid="grid" :piece="piece" />
+            <PieceEditor
+                :puzzle="puzzle"
+                pieceId="piece-0"
+                @action="$event.perform(puzzle)"
+            />
         </div>
     </div>
 </template>
