@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import DisplayWebGl from "./DisplayWebGl.vue"
+import DisplayWebGl from "./DisplayWebGl/DisplayWebGl.vue"
 import { RectGrid } from "../grids/rect.ts"
 import { Piece } from  "../puzzle.ts"
 
