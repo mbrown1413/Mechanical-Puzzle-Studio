@@ -1,4 +1,4 @@
-import { ref, Ref, ComputedRef, onMounted, watch } from 'vue'
+import { ref, Ref, ComputedRef, onMounted, onUnmounted, watch } from 'vue'
 
 import * as THREE from "three"
 import { Vector3 } from "three"
@@ -40,6 +40,12 @@ export function useGridDrawComposible(
         element.value.appendChild(renderer.domElement)
         rebuild()
         refresh()
+    })
+    
+    onUnmounted(() => {
+        disposeTrackedResources()
+        controls.dispose()
+        renderer.dispose()
     })
 
     /* Call this when things like camera and window size change. */
@@ -86,12 +92,12 @@ export function useGridDrawComposible(
             return coordSet.has(cordToStr(coordinate))
         }
 
-        const light1 = new THREE.DirectionalLight(0xffffff, 3)
+        const light1 = track(new THREE.DirectionalLight(0xffffff, 3))
         light1.position.set(5, 5, 5)
         light1.lookAt(new Vector3(0, 0, 0))
         scene.add(light1)
 
-        const light2 = new THREE.DirectionalLight(0xffffff, 3)
+        const light2 = track(new THREE.DirectionalLight(0xffffff, 3))
         light2.position.set(-5, -5, -5)
         light2.lookAt(new Vector3(0, 0, 0))
         scene.add(light2)
@@ -153,11 +159,10 @@ export function useGridDrawComposible(
                 // We could re-use some objects, but we can't do intersections
                 // properly with lines.
                 if(inLayer) {
-                    const geometry = new ConvexGeometry(polygon)
+                    const geometry = track(new ConvexGeometry(polygon))
                     const obj = new THREE.Mesh(geometry)
-                    obj.userData = {coordinate, cellInfo}
+                    obj.userData = {coordinate}
                     hitTestObjects.value.push(obj)
-                    track(geometry)
                 }
 
             }
@@ -203,10 +208,13 @@ export function useGridDrawComposible(
     // Here, we have a simple system that starts tracking when you call
     // `track(resource)`, then frees everything tracked `disposeTrackedResources()`
     // is called.
-    type TrackableResource = THREE.BufferGeometry | THREE.Material
-    let trackedResources: TrackableResource[] = []
-    function track(resource: TrackableResource) {
+    interface Disposible {
+        dispose: () => void
+    }
+    let trackedResources: Disposible[] = []
+    function track<Type extends Disposible>(resource: Type): Type {
         trackedResources.push(resource)
+        return resource
     }
     function disposeTrackedResources() {
         for(const resource of trackedResources) {
