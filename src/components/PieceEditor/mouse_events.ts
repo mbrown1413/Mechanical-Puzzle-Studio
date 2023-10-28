@@ -35,8 +35,9 @@ export function useMouseEventsComposible(
         return intersects.length === 0 ? null : intersects[0].object
     }
 
-    function onMouseMove(event: MouseEvent) {
-        const intersectedObject = getObjectOnScreen(event.clientX, event.clientY)
+    /* Set highlightedCoordinate based on object at screen position x, y. */
+    function highlightObjectAtPosition(x: number, y: number) {
+        const intersectedObject = getObjectOnScreen(x, y)
         if(intersectedObject) {
             const newValue = intersectedObject.userData.coordinate
             // Only update if changed
@@ -48,18 +49,19 @@ export function useMouseEventsComposible(
         }
     }
 
-    function onMouseOut() {
+    function clearHighlight() {
         highlightedCoordinate.value = null
     }
-    
-    function onClick(event: MouseEvent) {
+
+    /* Emit appropriate action (via actionCallback) for clicking on the object
+    * at the given position and click type in the event. */
+    function clickObject(event: MouseEvent) {
         if(piece.value === null) return
         const intersectedObject = getObjectOnScreen(event.clientX, event.clientY)
         if(intersectedObject) {
             let toAdd: Coordinate[] = []
             let toRemove: Coordinate[] = []
-            console.log("BUTTON:", event.button)
-            if(event.ctrlKey) {
+            if(event.ctrlKey || event.button === 2) {
                 toRemove = [intersectedObject.userData.coordinate]
             } else {
                 toAdd = [intersectedObject.userData.coordinate]
@@ -69,11 +71,38 @@ export function useMouseEventsComposible(
     }
 
     onMounted(() => {
-        renderer.domElement.addEventListener("mousemove", onMouseMove);
-        renderer.domElement.addEventListener("mouseout", onMouseOut);
-        renderer.domElement.addEventListener("mouseleave", onMouseOut);
-        renderer.domElement.addEventListener("click", onClick);
+
+        // Hovering to highlight
+        renderer.domElement.addEventListener("mousemove", (event: MouseEvent) => {
+            highlightObjectAtPosition(event.clientX, event.clientY)
+        })
+        renderer.domElement.addEventListener("mouseout", clearHighlight)
+        renderer.domElement.addEventListener("mouseout", clearHighlight)
+
+        // Click to modify piece
+        // Track position of mousedown and if we move further than
+        // mouseTolerance pixels away, consider it a drag and not a click.
+        let mouseDownPosition: [number, number] | null = null
+        const movementTolerance = 5  // Pixels
+        renderer.domElement.addEventListener("mousedown", (event: MouseEvent) => {
+            mouseDownPosition = [event.clientX, event.clientY]
+        });
+        renderer.domElement.addEventListener("mousemove", (event: MouseEvent) => {
+            if(mouseDownPosition === null) return
+            let distSquared = (
+                (event.clientX - mouseDownPosition[0])**2 +
+                (event.clientY - mouseDownPosition[1])**2
+            )
+            if(distSquared > movementTolerance**2) {
+                mouseDownPosition = null
+            }
+        });
+        renderer.domElement.addEventListener("mouseup", (event: MouseEvent) => {
+            if(mouseDownPosition !== null) {
+                clickObject(event)
+            }
+        });
+
         //TODO: Touch events
-        //renderer.domElement.addEventListener("touchstart", onTouch);
     })
 }

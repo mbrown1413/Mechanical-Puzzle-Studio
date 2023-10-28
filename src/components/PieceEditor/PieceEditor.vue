@@ -52,11 +52,8 @@ useMouseEventsComposible(
     camera,
     hitTestObjects,
     (action) => {
-        console.log("ACTION")
         emit("action", action)
-        console.log("ACTION DONE")
         rebuildScene()
-        console.log("Rebuilt!")
     },
     highlightedCoordinate,  // Output ref
 )
