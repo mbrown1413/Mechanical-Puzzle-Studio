@@ -29,7 +29,7 @@ const viewpoint = computed(() =>
 )
 
 const piece = computed(() =>
-    props.puzzle.pieces.find((p) => p.id === props.pieceId) || null
+    props.pieceId === null ? null : props.puzzle.pieces.get(props.pieceId) || null
 )
 
 const {
