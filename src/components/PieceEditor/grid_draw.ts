@@ -28,7 +28,7 @@ export function useGridDrawComposible(
     controls.listenToKeyEvents(window)
     controls.addEventListener('change', refresh)
 
-    watch([viewpoint, layerN, highlightedCoordinate], () => {
+    watch([piece, viewpoint, layerN, highlightedCoordinate], () => {
         rebuild()
         refresh()
     })

@@ -1,11 +1,19 @@
 <script setup lang="ts">
+import { ref, Ref } from "vue"
+
 import PieceEditor from "./PieceEditor/PieceEditor.vue"
+import PiecesList from "./PiecesList.vue"
 import { RectGrid } from "../grids/rect.ts"
 import { Puzzle, Piece } from  "../puzzle.ts"
 
 const grid = new RectGrid([3, 3, 3]);
-const piece = new Piece("piece-0", [[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 0]]);
-const puzzle = new Puzzle(grid, [piece])
+const puzzle = new Puzzle(grid, [
+    new Piece("piece-0", [[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 0]]),
+    new Piece("piece-1", [[0, 0, 1], [1, 0, 1], [0, 1, 1], [2, 0, 1]]),
+])
+
+const selectedPieceIds: Ref<string[]> = ref([])
+
 </script>
 
 <template>
@@ -13,13 +21,17 @@ const puzzle = new Puzzle(grid, [piece])
         <div class="grid-cell nav">
         </div>
         <div class="grid-cell side-top">
+            <PiecesList
+                :puzzle="puzzle"
+                v-model:selectedPieceIds="selectedPieceIds"
+            />
         </div>
         <div class="grid-cell side-bot">
         </div>
         <div class="grid-cell main">
             <PieceEditor
                 :puzzle="puzzle"
-                pieceId="piece-0"
+                :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
                 @action="$event.perform(puzzle)"
             />
         </div>
@@ -45,8 +57,6 @@ const puzzle = new Puzzle(grid, [piece])
 
 .side-top {
     grid-area: side-top;
-    background-color: red;
-    overflow: scroll;
 }
 
 .side-bot {

@@ -11,7 +11,7 @@ import { useMouseEventsComposible } from "./mouse_events.ts"
 
 const props = defineProps<{
     puzzle: Puzzle,
-    pieceId: string,
+    pieceId: string | null,
 }>()
 
 const emit = defineEmits<{
