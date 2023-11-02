@@ -92,6 +92,14 @@
  * Things we're not particularly concerned about:
  *     * Speed
  *     * Circular references (for now at least)
+ *
+ *
+ * ## Future plans
+ *   * Allow for classes to have custom `serialize()` / `deserialize()` methods
+ *     (and move the current class serialization code to the base class).
+ *   * User registration of classes / types that don't inherit from
+ *     `SerializableClass` (manually passing in a serialize / deserialize func).
+ *   * List of expected types passed to `deserialize()`, not just one.
  */
 
 
@@ -121,7 +129,7 @@ type SerializedData = {
  * implemented, and they will automatically pass typechecks in
  * SerializableClass subclasses.
  */
-type SerializableType = number | string | boolean |
+type SerializableType = number | string | boolean | null |
     SerializableClass |
     SerializableType[] |
     Map<SerializableType, SerializableType>
@@ -150,11 +158,11 @@ export function serialize(value: SerializableType): SerializedData {
 }
 
 function _serialize(value: SerializableType, refs: RefData): any {
-    const type = typeof value
-    if(passthroughPrimitives.includes(type)) {
+    if(passthroughPrimitives.includes(typeof value) || value === null) {
         return value
     }
-    if(type === "object") {
+
+    if(typeof value === "object") {
         const type = value.constructor.name
         
         // Array
@@ -215,7 +223,10 @@ export function deserialize<T extends SerializableType>(
     const value = _deserialize(data.root, data.refs, new Map())
 
     if(expectedType !== undefined) {
-        const actualType = typeof value === "object" ? value.constructor.name : typeof value
+        const actualType =
+            value === null ? "null" :
+            typeof value === "object" ? value.constructor.name :
+            typeof value
         if(actualType !== expectedType) {
             throw `Unexpected deserialized type ${actualType}`
         }
@@ -225,7 +236,7 @@ export function deserialize<T extends SerializableType>(
 }
 
 function _deserialize(data: any, refs: RefData, cache: Map<string, SerializableType>): SerializableType {
-    if(passthroughPrimitives.includes(typeof data)) {
+    if(passthroughPrimitives.includes(typeof data) || data === null) {
         return data
     }
 
