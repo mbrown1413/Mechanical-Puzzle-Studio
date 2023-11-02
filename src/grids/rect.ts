@@ -2,6 +2,7 @@ import { Vector3 } from 'three'
 
 import { Viewpoint } from "../types.ts"
 import { Grid } from "../grid.ts"
+import {registerClass} from '../serialize.ts'
 
 type RectCoordinate = [number, number, number]
 type RectSize = [number, number, number]
@@ -38,8 +39,8 @@ const RECT_OPPOSITES: {[Property in RectDirection]: RectDirection} = {
 export class RectGrid extends Grid {
     size: RectSize
 
-    constructor(size: RectSize) {
-        super()
+    constructor(id: string, size: RectSize) {
+        super(id)
         this.size = size
     }
   
@@ -150,3 +151,5 @@ export class RectGrid extends Grid {
     }
 
 }
+
+registerClass(RectGrid)

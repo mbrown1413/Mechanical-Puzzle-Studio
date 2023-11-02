@@ -1,18 +1,28 @@
 import { Coordinate } from "./types.ts"
 import { Grid } from "./grid.js"
 import { BoolWithReason } from "./types.ts"
+import { SerializableClass, deserialize, registerClass, serialize } from "./serialize.ts"
 
-export class Puzzle {
+export class Puzzle extends SerializableClass  {
     grid: Grid
     pieces: Map<string, Piece>
     
-    constructor(grid: Grid, pieces: Piece[]=[]) {
+    constructor(id: string, grid: Grid, pieces: Piece[]=[]) {
+        super(id)
         this.grid = grid
         this.pieces = new Map()
 
         for(const piece of pieces) {
             this.addPiece(piece)
         }
+    }
+    
+    serialize() {
+        return serialize(this)
+    }
+    
+    deserialize(data: any) {
+        return deserialize<Puzzle>(data, "Puzzle")
     }
     
     generatePieceId(): string {
@@ -65,11 +75,11 @@ export class Puzzle {
     }
 }
 
-export class Piece {
-    id: string
+export class Piece extends SerializableClass {
     coordinates: Coordinate[]
 
     constructor(id: string, coordinates: Coordinate[]) {
+        super(id)
         this.id = id
         this.coordinates = coordinates
     }
@@ -80,3 +90,6 @@ export class Piece {
     */
 
 }
+
+registerClass(Puzzle)
+registerClass(Piece)

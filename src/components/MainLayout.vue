@@ -5,16 +5,23 @@ import PieceEditor from "./PieceEditor/PieceEditor.vue"
 import PiecesList from "./PiecesList.vue"
 import { RectGrid } from "../grids/rect.ts"
 import { Puzzle, Piece } from  "../puzzle.ts"
+import { Action } from "../actions.ts"
 
 const puzzle = reactive(new Puzzle(
-    new RectGrid([3, 3, 3]),
+    "puzzle-0",
+    new RectGrid("grid-0", [3, 3, 3]),
     [
         new Piece("piece-0", [[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 0]]),
         new Piece("piece-1", [[0, 0, 1], [1, 0, 1], [0, 1, 1], [2, 0, 1]]),
     ]
-))
+) as any) as Puzzle
 
-const selectedPieceIds: Ref<string[]> = ref([])
+const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
+
+function performAction(action: Action) {
+    action.perform(puzzle)
+    console.log(puzzle.serialize())
+}
 
 </script>
 
@@ -26,7 +33,7 @@ const selectedPieceIds: Ref<string[]> = ref([])
             <PiecesList
                 :puzzle="puzzle"
                 v-model:selectedPieceIds="selectedPieceIds"
-                @action="$event.perform(puzzle)"
+                @action="performAction"
             />
         </div>
         <div class="grid-cell side-bot">
@@ -35,7 +42,7 @@ const selectedPieceIds: Ref<string[]> = ref([])
             <PieceEditor
                 :puzzle="puzzle"
                 :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
-                @action="$event.perform(puzzle)"
+                @action="performAction"
             />
         </div>
     </div>

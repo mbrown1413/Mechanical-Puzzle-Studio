@@ -1,4 +1,5 @@
 import { Size, Coordinate, CellInfo, Direction, Viewpoint } from "./types.ts"
+import { SerializableClass } from "./serialize.ts"
 
 /**
  * Defines a set of cells and the relation between them. This is the foundation
@@ -22,8 +23,12 @@ import { Size, Coordinate, CellInfo, Direction, Viewpoint } from "./types.ts"
  * grids to create puzzles doesn't need to change. Thinking in terms of graphs
  * and not arrays will take some getting used to though.
  */
-export abstract class Grid {
+export abstract class Grid extends SerializableClass {
     abstract size: Size
+    
+    constructor(id: string) {
+        super(id)
+    }
 
     /**
      * Return info describing the cell at the given coordinate.
