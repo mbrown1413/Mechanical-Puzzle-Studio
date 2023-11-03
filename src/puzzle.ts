@@ -21,7 +21,7 @@ export class Puzzle extends SerializableClass  {
         return serialize(this)
     }
     
-    deserialize(data: any) {
+    static deserialize(data: any) {
         return deserialize<Puzzle>(data, "Puzzle")
     }
     
@@ -80,7 +80,6 @@ export class Piece extends SerializableClass {
 
     constructor(id: string, coordinates: Coordinate[]) {
         super(id)
-        this.id = id
         this.coordinates = coordinates
     }
     

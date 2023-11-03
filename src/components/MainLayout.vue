@@ -7,20 +7,27 @@ import { RectGrid } from "../grids/rect.ts"
 import { Puzzle, Piece } from  "../puzzle.ts"
 import { Action } from "../actions.ts"
 
-const puzzle = reactive(new Puzzle(
-    "puzzle-0",
-    new RectGrid("grid-0", [3, 3, 3]),
-    [
-        new Piece("piece-0", [[0, 0, 0], [1, 0, 0], [0, 1, 0], [2, 0, 0]]),
-        new Piece("piece-1", [[0, 0, 1], [1, 0, 1], [0, 1, 1], [2, 0, 1]]),
-    ]
-) as any) as Puzzle
+/* Load puzzle from localstorage, or create new empty puzzle. */
+function loadPuzzle(): Puzzle {
+    const data = localStorage.getItem("puzzle")
+    if(data !== null) {
+        return Puzzle.deserialize(JSON.parse(data))
+    } else {
+        return new Puzzle(
+            "puzzle-0",
+            new RectGrid("grid-0", [3, 3, 3]),
+        ) as any
+    }
+}
+
+const puzzle = reactive(loadPuzzle()) as Puzzle
 
 const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
 
 function performAction(action: Action) {
     action.perform(puzzle)
-    console.log(puzzle.serialize())
+    const data = puzzle.serialize()
+    localStorage.setItem("puzzle", JSON.stringify(data))
 }
 
 </script>

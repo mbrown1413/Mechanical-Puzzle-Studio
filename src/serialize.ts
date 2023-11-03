@@ -139,7 +139,7 @@ type SerializableType = number | string | boolean | null |
  * use attributes which cannot be serialized, a type error should occur.
  */
 export abstract class SerializableClass {
-    id: string
+    readonly id: string
     [s: string]: SerializableType | Function
 
     constructor(id: string) {
