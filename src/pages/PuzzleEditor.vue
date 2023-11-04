@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, Ref, reactive } from "vue"
 
-import PieceEditor from "./PieceEditor/PieceEditor.vue"
-import PiecesList from "./PiecesList.vue"
+import PieceEditor from "../components/PieceEditor.vue"
+import PiecesList from "./PuzzleEditor/PiecesList.vue"
 import { RectGrid } from "../grids/rect.ts"
-import { Puzzle, Piece } from  "../puzzle.ts"
+import { Puzzle } from  "../puzzle.ts"
 import { Action } from "../actions.ts"
 
 /* Load puzzle from localstorage, or create new empty puzzle. */
@@ -20,7 +20,7 @@ function loadPuzzle(): Puzzle {
     }
 }
 
-const puzzle = reactive(loadPuzzle()) as Puzzle
+const puzzle = reactive(loadPuzzle() as any) as Puzzle
 
 const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
 
@@ -35,6 +35,9 @@ function performAction(action: Action) {
 <template>
     <div class="container">
         <div class="grid-cell nav">
+            <div class="home-link">
+                <RouterLink to="/">&larrhk; Puzzles</RouterLink>
+            </div>
         </div>
         <div class="grid-cell side-top">
             <PiecesList
@@ -69,7 +72,6 @@ function performAction(action: Action) {
 
 .nav {
     grid-area: nav;
-    background-color: purple;
 }
 
 .side-top {
@@ -85,6 +87,10 @@ function performAction(action: Action) {
     grid-area: main;
     background-color: rgb(255, 255, 255);
     overflow: auto;
+}
+    
+.home-link {
+    font-size: 200%;
 }
 
 </style>

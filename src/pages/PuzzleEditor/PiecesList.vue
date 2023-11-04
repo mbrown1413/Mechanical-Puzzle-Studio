@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, Ref } from "vue"
 
-import { Puzzle } from "../puzzle.ts"
-import { Action, AddPieceAction, DeletePiecesAction } from "../actions.ts"
+import { Puzzle } from "../../puzzle.ts"
+import { Action, AddPieceAction, DeletePiecesAction } from "../../actions.ts"
 
 const el: Ref<HTMLSelectElement | null> = ref(null)
 
