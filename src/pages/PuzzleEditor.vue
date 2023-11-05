@@ -3,31 +3,26 @@ import { ref, Ref, reactive } from "vue"
 
 import PieceEditor from "../components/PieceEditor.vue"
 import PiecesList from "./PuzzleEditor/PiecesList.vue"
-import { RectGrid } from "../grids/rect.ts"
-import { Puzzle } from  "../puzzle.ts"
 import { Action } from "../actions.ts"
+import { getStorageInstances } from "../storage"
+import {PuzzleFile} from "../PuzzleFile"
 
-/* Load puzzle from localstorage, or create new empty puzzle. */
-function loadPuzzle(): Puzzle {
-    const data = localStorage.getItem("puzzle")
-    if(data !== null) {
-        return Puzzle.deserialize(JSON.parse(data))
-    } else {
-        return new Puzzle(
-            "puzzle-0",
-            new RectGrid("grid-0", [3, 3, 3]),
-        ) as any
-    }
-}
 
-const puzzle = reactive(loadPuzzle() as any) as Puzzle
+const props = defineProps<{
+    storageId: string,
+    puzzleId: string,
+}>()
+
+const puzzleStorage = getStorageInstances()[props.storageId]
+const puzzleFile = reactive(
+    puzzleStorage.get(props.puzzleId as string) as any
+) as PuzzleFile
 
 const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
 
 function performAction(action: Action) {
-    action.perform(puzzle)
-    const data = puzzle.serialize()
-    localStorage.setItem("puzzle", JSON.stringify(data))
+    action.perform(puzzleFile.puzzle)
+    puzzleStorage.save(puzzleFile)
 }
 
 </script>
@@ -38,10 +33,13 @@ function performAction(action: Action) {
             <div class="home-link">
                 <RouterLink to="/">&larrhk; Puzzles</RouterLink>
             </div>
+            <div>
+                {{ puzzleFile.name }}
+            </div>
         </div>
         <div class="grid-cell side-top">
             <PiecesList
-                :puzzle="puzzle"
+                :puzzle="puzzleFile.puzzle"
                 v-model:selectedPieceIds="selectedPieceIds"
                 @action="performAction"
             />
@@ -50,7 +48,7 @@ function performAction(action: Action) {
         </div>
         <div class="grid-cell main">
             <PieceEditor
-                :puzzle="puzzle"
+                :puzzle="puzzleFile.puzzle"
                 :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
                 @action="performAction"
             />

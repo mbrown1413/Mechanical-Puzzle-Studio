@@ -7,8 +7,17 @@ import Home from "./pages/Home.vue"
 import PuzzleEditor from "./pages/PuzzleEditor.vue"
 
 const routes: RouteRecordRaw[] = [
-    { path: "/", component: Home },
-    { path: "/foo", component: PuzzleEditor },
+    {
+        name: "home",
+        path: "/",
+        component: Home
+    },
+    {
+        name: "puzzle",
+        path: "/puzzle/:storageId/:puzzleId",
+        props: true,
+        component: PuzzleEditor
+    },
 ]
 
 const router = createRouter({

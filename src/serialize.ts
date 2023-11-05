@@ -187,14 +187,16 @@ function _serialize(value: SerializableType, refs: RefData): any {
         // Registered class
         const classInfo = getRegisteredClass(type)
         if(classInfo !== null) {
-            value = value as SerializableClass
-            const data: {[k: string]: SerializableType} = {}
-            for(let [k, v] of Object.entries(value)) {
-                if(typeof v !== "function") {
-                    data[k] = _serialize(v, refs)
+            if(refs[value.id] === undefined) {
+                value = value as SerializableClass
+                const data: {[k: string]: SerializableType} = {}
+                for(let [k, v] of Object.entries(value)) {
+                    if(typeof v !== "function") {
+                        data[k] = _serialize(v, refs)
+                    }
                 }
+                refs[value.id] = {type, data}
             }
-            refs[value.id] = {type, data}
             return {type, id: value.id}
         }
 

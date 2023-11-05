@@ -1,7 +1,7 @@
 import { Coordinate } from "./types.ts"
 import { Grid } from "./grid.js"
 import { BoolWithReason } from "./types.ts"
-import { SerializableClass, deserialize, registerClass, serialize } from "./serialize.ts"
+import { SerializableClass, registerClass } from "./serialize.ts"
 
 export class Puzzle extends SerializableClass  {
     grid: Grid
@@ -15,14 +15,6 @@ export class Puzzle extends SerializableClass  {
         for(const piece of pieces) {
             this.addPiece(piece)
         }
-    }
-    
-    serialize() {
-        return serialize(this)
-    }
-    
-    static deserialize(data: any) {
-        return deserialize<Puzzle>(data, "Puzzle")
     }
     
     generatePieceId(): string {
