@@ -1,21 +1,51 @@
 <script setup lang="ts">
-import {getStorageInstances, PuzzleStorage} from '../storage';
+import {ref, Ref, reactive} from "vue"
+import {useRouter} from "vue-router"
+
+import {getStorageInstances, PuzzleStorage} from "../storage"
 import {PuzzleFile} from "../PuzzleFile.ts"
 import {Puzzle} from "../puzzle.ts"
-import {RectGrid} from '../grids/rect';
-import {useRouter} from 'vue-router';
-import {reactive} from 'vue';
+import {RectGrid} from "../grids/rect"
+import Modal from "../components/Modal.vue"
 
 const router = useRouter()
 
-function newPuzzle(storage: PuzzleStorage) {
+const puzzlesByStorage = reactive(
+    Object.values(getStorageInstances()).map((storage) => {
+        return {
+            storage,
+            puzzles: storage.list(),
+        }
+    })
+)
+
+// Refs for puzzle creation
+const newPuzzleModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
+const newPuzzleForm: Ref<HTMLFormElement | null> = ref(null)
+const newPuzzleFields = reactive({
+    name: "",
+    storage: puzzlesByStorage[0].storage,
+})
+
+function openNewPuzzleModal(storage: PuzzleStorage) {
+    newPuzzleFields.storage = storage
+    newPuzzleModal.value?.open()
+}
+
+function newPuzzleSubmit() {
+    if(!newPuzzleForm.value?.checkValidity()) {
+        newPuzzleForm.value?.reportValidity()
+        return
+    }
+
     const puzzleFile = new PuzzleFile(
         new Puzzle(
             "puzzle-0",
             new RectGrid("grid-0", [3, 3, 3])
         ),
-        "New Puzzle",
+        newPuzzleFields.name
     )
+    const storage = newPuzzleFields.storage
     storage.save(puzzleFile)
     router.push({
         name: "puzzle",
@@ -36,15 +66,6 @@ function deletePuzzle(storage: PuzzleStorage, puzzleId: string) {
         )
     }
 }
-
-const puzzlesByStorage = reactive(
-    Object.values(getStorageInstances()).map((storage) => {
-        return {
-            storage,
-            puzzles: storage.list(),
-        }
-    })
-)
 </script>
 
 <template>
@@ -68,9 +89,49 @@ const puzzlesByStorage = reactive(
                     </button>
                 </li>
                 <li>
-                    <button @click="newPuzzle(storage)">New</button>
+                    <button @click="openNewPuzzleModal(storage)">New</button>
                 </li>
             </ul>
         </div>
+        
+        <Modal
+            ref="newPuzzleModal"
+            title="New Puzzle"
+            okText="Create"
+            @ok="newPuzzleSubmit"
+        >
+            <form ref="newPuzzleForm">
+
+                <div class="mb-3">
+                    <label for="newPuzzle-name" class="form-label">
+                        Name
+                    </label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="newPuzzle-name"
+                        required
+                        v-model="newPuzzleFields.name"
+                    />
+                </div>
+
+                <div class="mb-3">
+                    <label for="newPuzzle-storage" class="form-label">
+                        Storage Backend
+                    </label>
+                    <select
+                        id="newPuzzle-storage"
+                        class="form-select"
+                        v-model="newPuzzleFields.storage"
+                    >
+                        <option v-for="{storage} of puzzlesByStorage" :value="storage">
+                            {{ storage.name }}
+                        </option>
+                    </select>
+                </div>
+                
+            </form>
+        </Modal>
+
     </div>
 </template>

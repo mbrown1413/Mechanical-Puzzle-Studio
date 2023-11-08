@@ -28,7 +28,7 @@ function performAction(action: Action) {
 </script>
 
 <template>
-    <div class="container">
+    <div class="puzzleEditor-container">
         <div class="grid-cell nav">
             <div class="home-link">
                 <RouterLink to="/">&larrhk; Puzzles</RouterLink>
@@ -58,7 +58,7 @@ function performAction(action: Action) {
 
 <style scoped>
 
-.container {
+.puzzleEditor-container {
     display: grid;
     height: 100vh;
     grid-template:
@@ -78,12 +78,10 @@ function performAction(action: Action) {
 
 .side-bot {
     grid-area: side-bot;
-    background-color: green;
 }
 
 .main {
     grid-area: main;
-    background-color: rgb(255, 255, 255);
     overflow: auto;
 }
     

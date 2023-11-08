@@ -1,10 +1,11 @@
 import { createApp } from "vue"
 import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router"
 
-import './style.css'
 import App from './App.vue'
 import Home from "./pages/Home.vue"
 import PuzzleEditor from "./pages/PuzzleEditor.vue"
+
+import './style.scss'
 
 const routes: RouteRecordRaw[] = [
     {
