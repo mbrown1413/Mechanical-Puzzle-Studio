@@ -7,8 +7,8 @@ import {computed, onBeforeUnmount, ref, Ref} from "vue";
 withDefaults(
     defineProps<{
         title: string,
-        okText: string,
-        cancelShow: boolean,
+        okText?: string,
+        cancelShow?: boolean,
     }>(), {
         okText: "Ok",
         cancelShow: true,
