@@ -82,6 +82,9 @@ function deletePuzzle(storage: PuzzleStorage, puzzleId: string) {
                 @click="openNewPuzzleModal(storage)"
             >New</button>
             <table class="table table-striped table-hover">
+                <caption v-if="puzzles.length === 0">
+                    (no puzzles in this storage location)
+                </caption>
                 <thead>
                     <tr>
                         <th scope="col">Name</th>
