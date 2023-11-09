@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, Ref, computed } from "vue"
 
-import { Coordinate } from "../types.ts"
-import { Action } from "../actions.ts"
-import { Puzzle } from  "../puzzle.ts"
-import VerticalSlider from "./VerticalSlider.vue"
+import { Coordinate } from "../../types.ts"
+import { Action } from "../../actions.ts"
+import { Puzzle } from  "../../puzzle.ts"
+import VerticalSlider from "../../components/VerticalSlider.vue"
 
 import { useGridDrawComposible } from "./PieceEditor/grid_draw.ts"
 import { useMouseEventsComposible } from "./PieceEditor/mouse_events.ts"
@@ -60,7 +60,7 @@ useMouseEventsComposible(
 </script>
 
 <template>
-    <div class="display2d" ref="el">
+    <div class="pieceDisplay" ref="el">
         <div class="controls">
             <select v-model="viewpointId">
                 <option
@@ -80,7 +80,7 @@ useMouseEventsComposible(
 </template>
 
 <style scoped>
-.display2d {
+.pieceDisplay {
     width: 100%;
     height: 100%;
     position: relative;  /* Make this the containing block for .controls */

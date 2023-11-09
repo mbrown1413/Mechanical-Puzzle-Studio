@@ -25,14 +25,16 @@ function onItemsSelect() {
 
 <template>
     <div class="piece-list-container">
-        <button
-            class="action-btn add-piece-btn"
-            @click="emit('action', new AddPieceAction())"
-        >+</button>
-        <button
-            class="action-btn del-piece-btn"
-            @click="emit('action', new DeletePiecesAction(selectedPieceIds))"
-        >-</button>
+        <div class="buttons">
+            <button
+                class="action-btn del-piece-btn"
+                @click="emit('action', new DeletePiecesAction(selectedPieceIds))"
+            >-</button>
+            <button
+                class="action-btn add-piece-btn"
+                @click="emit('action', new AddPieceAction())"
+            >+</button>
+        </div>
         <select
             ref="el"
             multiple
@@ -53,11 +55,14 @@ function onItemsSelect() {
 <style scoped>
 .piece-list-container {
     height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 select {
     width: 100%;
     height: 100%;
+    border: 0;
 }
 
 .action-btn {

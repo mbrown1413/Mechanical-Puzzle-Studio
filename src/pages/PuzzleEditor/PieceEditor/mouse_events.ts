@@ -3,10 +3,10 @@ import { Ref, onMounted, ComputedRef } from "vue"
 import * as THREE from "three"
 import { Vector2 } from "three"
 
-import { Piece } from "../../puzzle.ts"
-import { Action, EditPieceAction } from "../../actions.ts"
-import { Coordinate } from "../../types.ts"
-import { arraysEqual } from "../../tools.ts"
+import { Piece } from "../../../puzzle.ts"
+import { Action, EditPieceAction } from "../../../actions.ts"
+import { Coordinate } from "../../../types.ts"
+import { arraysEqual } from "../../../tools.ts"
 
 export function useMouseEventsComposible(
     // Inputs

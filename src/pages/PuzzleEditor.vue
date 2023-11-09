@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, Ref, reactive } from "vue"
+import { ref, Ref, reactive, onMounted } from "vue"
+import Split from "split-grid"
 
-import PieceEditor from "../components/PieceEditor.vue"
+import PieceEditor from "./PuzzleEditor/PieceEditor.vue"
+import PieceMetadataEditor from "./PuzzleEditor/PieceMetadataEditor.vue"
 import PiecesList from "./PuzzleEditor/PiecesList.vue"
 import { Action } from "../actions.ts"
 import { getStorageInstances } from "../storage"
 import {PuzzleFile} from "../PuzzleFile"
-
 
 const props = defineProps<{
     storageId: string,
@@ -25,6 +26,22 @@ function performAction(action: Action) {
     puzzleStorage.save(puzzleFile)
 }
 
+const columnSlider: Ref<HTMLDivElement | null> = ref(null)
+const rowSlider: Ref<HTMLDivElement | null> = ref(null)
+onMounted(() => {
+    if(columnSlider.value && rowSlider.value) {
+        Split({
+            columnGutters: [{
+                track: 1,
+                element: columnSlider.value
+            }],
+            rowGutters: [{
+                track: 2,
+                element: rowSlider.value
+            }]
+        })
+    }
+})
 </script>
 
 <template>
@@ -37,6 +54,7 @@ function performAction(action: Action) {
                 {{ puzzleFile.name }}
             </div>
         </div>
+        <div class="slider col-slide" ref="columnSlider"></div>
         <div class="grid-cell side-top">
             <PiecesList
                 :puzzle="puzzleFile.puzzle"
@@ -44,7 +62,13 @@ function performAction(action: Action) {
                 @action="performAction"
             />
         </div>
+        <div class="slider row-slide" ref="rowSlider"></div>
         <div class="grid-cell side-bot">
+            <PieceMetadataEditor
+                :puzzle="puzzleFile.puzzle"
+                :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
+                @action="performAction"
+            />
         </div>
         <div class="grid-cell main">
             <PieceEditor
@@ -62,14 +86,35 @@ function performAction(action: Action) {
     display: grid;
     height: 100vh;
     grid-template:
-        "nav      nav " 100px
-        "side-top main" 1fr
-        "side-bot main" 1fr
-        / minmax(150px, 1fr) 4fr ;
+        "nav       nav       nav " 100px
+        "side-top  col-slide main" 1fr
+        "row-slide col-slide main" 5px
+        "side-bot  col-slide main" 1fr
+        / 200px    5px       4fr;
 }
 
 .nav {
     grid-area: nav;
+}
+
+.slider {
+    background-color: #909090;
+    border: 2px black groove;
+    cursor: scr
+}
+
+.col-slide {
+    grid-area: col-slide;
+    cursor: col-resize;
+    border-top: none;
+    border-bottom: none;
+}
+
+.row-slide {
+    grid-area: row-slide;
+    cursor: row-resize;
+    border-left: none;
+    border-right: none;
 }
 
 .side-top {

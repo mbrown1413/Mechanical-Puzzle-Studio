@@ -5,10 +5,10 @@ import { Vector3 } from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { ConvexGeometry } from "three/addons/geometries/ConvexGeometry.js"
 
-import { Coordinate, Viewpoint, } from "../../types.js"
-import { arraysEqual } from "../../tools.js"
-import { Grid } from "../../grid.js"
-import { Piece } from  "../../puzzle.js"
+import { Coordinate, Viewpoint, } from "../../../types.js"
+import { arraysEqual } from "../../../tools.js"
+import { Grid } from "../../../grid.js"
+import { Piece } from  "../../../puzzle.js"
 
 export function useGridDrawComposible(
     element: Ref<HTMLElement>,
