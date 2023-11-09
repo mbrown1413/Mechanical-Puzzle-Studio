@@ -1,8 +1,8 @@
-import { Vector3 } from 'three'
+import {Vector3} from "three"
 
-import { Viewpoint } from "../types.ts"
-import { Grid } from "../grid.ts"
-import {registerClass} from '../serialize.ts'
+import {Viewpoint} from "~lib/types.ts"
+import {registerClass} from '~lib/serialize.ts'
+import {Grid} from "~lib/Grid.ts"
 
 type RectCoordinate = [number, number, number]
 type RectSize = [number, number, number]

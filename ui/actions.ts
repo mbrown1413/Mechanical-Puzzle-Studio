@@ -1,6 +1,6 @@
-import { Coordinate, BoolWithReason } from "./types.ts"
-import { Puzzle } from "./puzzle.ts"
-import { arraysEqual } from "./tools.ts"
+import {Coordinate, BoolWithReason} from "~lib/types.ts"
+import {arraysEqual} from "~lib/tools.ts"
+import {Puzzle} from "~lib/Puzzle.ts"
 
 export abstract class Action {
     abstract perform(puzzle: Puzzle): BoolWithReason

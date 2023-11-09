@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { ref, Ref, computed } from "vue"
+import {ref, Ref, computed} from "vue"
 
-import { Coordinate } from "../../types.ts"
-import { Action } from "../../actions.ts"
-import { Puzzle } from  "../../puzzle.ts"
-import VerticalSlider from "../../components/VerticalSlider.vue"
+import {Coordinate} from "~lib/types.ts"
+import {Puzzle} from  "~lib/Puzzle.ts"
+import {Action} from "~ui/actions.ts"
+import VerticalSlider from "~ui/components/VerticalSlider.vue"
 
-import { useGridDrawComposible } from "./PieceEditor/grid_draw.ts"
-import { useMouseEventsComposible } from "./PieceEditor/mouse_events.ts"
+import {useGridDrawComposible} from "./PieceEditor/grid_draw.ts"
+import {useMouseEventsComposible} from "./PieceEditor/mouse_events.ts"
 
 const props = defineProps<{
     puzzle: Puzzle,
@@ -93,4 +93,4 @@ useMouseEventsComposible(
     border-bottom-right-radius: 10px;
 }
 </style>
-./drawing.ts./grid_draw_composible.ts
+./drawing.ts./grid_draw_composible.ts../../Puzzle.ts../../../rws-lib/types.ts

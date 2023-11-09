@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from "vue"
-import { Puzzle } from  "../../puzzle.ts"
-import { Action } from "../../actions.ts"
+import {computed} from "vue"
+
+import {Puzzle} from  "~lib/Puzzle.ts"
+import {Action} from "~ui/actions.ts"
 
 const props = defineProps<{
     puzzle: Puzzle,

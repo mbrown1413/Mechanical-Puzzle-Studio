@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, Ref, reactive, onMounted } from "vue"
+import {ref, Ref, reactive, onMounted} from "vue"
 import Split from "split-grid"
+
+import {Action} from "~ui/actions.ts"
+import {getStorageInstances} from "~ui/storage.ts"
+import {PuzzleFile} from "~lib/PuzzleFile.ts"
 
 import PieceEditor from "./PuzzleEditor/PieceEditor.vue"
 import PieceMetadataEditor from "./PuzzleEditor/PieceMetadataEditor.vue"
 import PiecesList from "./PuzzleEditor/PiecesList.vue"
-import { Action } from "../actions.ts"
-import { getStorageInstances } from "../storage"
-import {PuzzleFile} from "../PuzzleFile"
 
 const props = defineProps<{
     storageId: string,

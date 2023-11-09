@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import {computed, onBeforeUnmount, ref, Ref} from "vue"
 import {Modal} from "bootstrap"
 
-import {makeUniqueId} from '../tools';
-import {computed, onBeforeUnmount, ref, Ref} from "vue";
+import {makeUniqueId} from "~lib/tools.ts";
 
 withDefaults(
     defineProps<{

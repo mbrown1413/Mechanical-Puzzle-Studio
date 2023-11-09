@@ -1,8 +1,7 @@
 <script setup lang="ts">
-    
-import { ref, watch, computed } from "vue"
+import {ref, watch, computed} from "vue"
 
-import { makeUniqueId } from "../tools.ts"
+import {makeUniqueId} from "~lib/tools.ts"
 
 const toReversed = (array: any[]) => new Array(...array).reverse()
 
@@ -86,4 +85,4 @@ option {
     padding-left: 0.25rem;
 }
 
-</style>
+</style>../../rws-lib/tools.ts

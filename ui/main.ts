@@ -1,11 +1,11 @@
-import { createApp } from "vue"
-import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router"
+import {createApp} from "vue"
+import {RouteRecordRaw, createRouter, createWebHistory} from "vue-router"
 
-import App from './App.vue'
-import Home from "./pages/Home.vue"
-import PuzzleEditor from "./pages/PuzzleEditor.vue"
+import App from '~ui/App.vue'
+import Home from "~ui/pages/Home.vue"
+import PuzzleEditor from "~ui/pages/PuzzleEditor.vue"
 
-import './style.scss'
+import '~ui/style.scss'
 
 const routes: RouteRecordRaw[] = [
     {

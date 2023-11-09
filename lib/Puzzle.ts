@@ -1,7 +1,6 @@
-import { Coordinate } from "./types.ts"
-import { Grid } from "./grid.js"
-import { BoolWithReason } from "./types.ts"
-import { SerializableClass, registerClass } from "./serialize.ts"
+import {Coordinate, BoolWithReason} from "~lib/types.js"
+import {Grid} from "~lib/Grid.js"
+import {SerializableClass, registerClass} from "~lib/serialize.js"
 
 export class Puzzle extends SerializableClass  {
     grid: Grid

@@ -1,14 +1,14 @@
 import { ref, Ref, ComputedRef, onMounted, onUnmounted, watch } from 'vue'
 
 import * as THREE from "three"
-import { Vector3 } from "three"
-import { OrbitControls } from "three/addons/controls/OrbitControls.js"
-import { ConvexGeometry } from "three/addons/geometries/ConvexGeometry.js"
+import {Vector3} from "three"
+import {OrbitControls} from "three/addons/controls/OrbitControls.js"
+import {ConvexGeometry} from "three/addons/geometries/ConvexGeometry.js"
 
-import { Coordinate, Viewpoint, } from "../../../types.js"
-import { arraysEqual } from "../../../tools.js"
-import { Grid } from "../../../grid.js"
-import { Piece } from  "../../../puzzle.js"
+import {Coordinate, Viewpoint} from "~lib/types.ts"
+import {arraysEqual} from "~lib/tools.ts"
+import {Grid} from "~lib/Grid.ts"
+import {Piece} from  "~lib/Puzzle.ts"
 
 export function useGridDrawComposible(
     element: Ref<HTMLElement>,

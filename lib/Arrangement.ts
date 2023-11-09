@@ -1,5 +1,5 @@
-import { Coordinate, BoolWithReason } from "./types.ts"
-import { Piece } from "./puzzle.ts"
+import {Coordinate} from "~lib/types.ts"
+import {Piece} from "~lib/Puzzle.ts"
 
 export class Arrangement {
     // Map pieces to their location.

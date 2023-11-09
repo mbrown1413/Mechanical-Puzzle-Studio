@@ -1,5 +1,5 @@
-import { Size, Coordinate, CellInfo, Direction, Viewpoint } from "./types.ts"
-import { SerializableClass } from "./serialize.ts"
+import {Size, Coordinate, CellInfo, Direction, Viewpoint} from "~lib/types.ts"
+import {SerializableClass} from "~lib/serialize.ts"
 
 /**
  * Defines a set of cells and the relation between them. This is the foundation

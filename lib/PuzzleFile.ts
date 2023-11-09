@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid";
 
-import {Puzzle} from "./puzzle"
-import {SerializableClass, deserialize, registerClass, serialize} from "./serialize"
+import {Puzzle} from "~lib/Puzzle.ts"
+import {SerializableClass, deserialize, registerClass, serialize} from "~lib/serialize.ts"
 
 export type PuzzleMetadata = {
     id: string,

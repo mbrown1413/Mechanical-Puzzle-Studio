@@ -2,11 +2,12 @@
 import {ref, Ref, reactive} from "vue"
 import {useRouter} from "vue-router"
 
-import {getStorageInstances, PuzzleStorage} from "../storage"
-import {PuzzleFile} from "../PuzzleFile.ts"
-import {Puzzle} from "../puzzle.ts"
-import {RectGrid} from "../grids/rect"
-import Modal from "../components/Modal.vue"
+import {PuzzleFile} from "~lib/PuzzleFile.ts"
+import {Puzzle} from "~lib/Puzzle.ts"
+import {RectGrid} from "~lib/grids/RectGrid.ts"
+
+import {getStorageInstances, PuzzleStorage} from "~ui/storage.ts"
+import Modal from "~ui/components/Modal.vue"
 
 const router = useRouter()
 
@@ -154,4 +155,4 @@ function deletePuzzle(storage: PuzzleStorage, puzzleId: string) {
         </form>
     </Modal>
 
-</template>
+</template>../Puzzle.ts
