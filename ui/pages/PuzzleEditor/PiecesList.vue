@@ -46,7 +46,7 @@ function onItemsSelect() {
                 :value="piece.id"
             >
                 <i class="piece-color-indicator">&nbsp;</i>
-                {{ piece.id }}
+                {{ piece.label }}
             </option>
         </select>
     </div>

@@ -60,3 +60,34 @@ export class EditPieceAction extends Action {
         return {bool: true}
     }
 }
+
+export type PieceMetadata = {
+    label?: string
+}
+
+export class EditPieceMetadata extends Action {
+    pieceId: string
+    metadata: PieceMetadata
+    
+    constructor(
+        pieceId: string,
+        metadata: PieceMetadata,
+    ) {
+        super()
+        this.pieceId = pieceId
+        this.metadata = metadata
+    }
+    
+    perform(puzzle: Puzzle): BoolWithReason {
+        const piece = puzzle.pieces.get(this.pieceId)
+        if(piece === undefined) {
+            return {
+                bool: false,
+                reason: `Piece with ID ${this.pieceId} not found`
+            }
+        }
+        
+        Object.assign(piece, this.metadata)
+        return {bool: true}
+    }
+}

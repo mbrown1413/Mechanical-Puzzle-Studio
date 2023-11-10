@@ -32,6 +32,7 @@ const rowSlider: Ref<HTMLDivElement | null> = ref(null)
 onMounted(() => {
     if(columnSlider.value && rowSlider.value) {
         Split({
+            minSize: 100,
             columnGutters: [{
                 track: 1,
                 element: columnSlider.value

@@ -68,12 +68,14 @@ export class Puzzle extends SerializableClass  {
 
 export class Piece extends SerializableClass {
     coordinates: Coordinate[]
+    label: string
 
     constructor(id: string, coordinates: Coordinate[]) {
         super(id)
         this.coordinates = coordinates
+        this.label = id
     }
-    
+
     /*
     getVariations() {
     }

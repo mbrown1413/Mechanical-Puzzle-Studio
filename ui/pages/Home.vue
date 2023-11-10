@@ -155,4 +155,4 @@ function deletePuzzle(storage: PuzzleStorage, puzzleId: string) {
         </form>
     </Modal>
 
-</template>../Puzzle.ts
+</template>
