@@ -20,3 +20,31 @@ Other puzzle programs
   * [Fork for Python 3.7+](https://github.com/johnrudge/puzzler)
 * PUZZLESOLVER3D - Referenced [here](https://burrtools.sourceforge.net/gui-doc/Prologue.html) as abandoned
 * [BCPBOX / GENDA](https://billcutlerpuzzles.com/stock/program.html) - Discontinued
+
+
+## Developing
+
+Requirements:
+  * [yarn 1 / classic](https://classic.yarnpkg.com/en/docs/install)
+
+Getting started:
+
+    $ yarn install  # Install dependencies
+    $ yarn dev  # Run development server
+
+Testing:
+
+    $ yarn test  # Run tests and watch for changes
+    $ yarn coverage  # Coverage output to coverage/
+    $ yarn test --coverage  # Watch for changes plus output coverage
+
+Production build:
+
+    $ yarn build  # Outputs static site to dist/
+    
+    # You need a webserver to run the build:
+    $ cd dist/ && python -m http.server
+    
+The source code is divided into two main sections:
+  * `lib/`: Contains the data structures and algorithms for puzzles. Basically, a stand-alone puzzle library without a gui.
+  * `ui/`: User interface built on top of `lib/`. Uses Vue 3 [single-file components](https://vuejs.org/guide/scaling-up/sfc.html) and [composition API](https://vuejs.org/api/composition-api-setup.html).
