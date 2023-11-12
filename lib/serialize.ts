@@ -119,9 +119,9 @@ type RefData = {
 }
 
 /* Resulting data structure after serialization */
-type SerializedData = {
+export type SerializedData = {
     root: any,
-    refs: RefData,
+    refs?: RefData,
 }
 
 /**
@@ -129,10 +129,10 @@ type SerializedData = {
  * implemented, and they will automatically pass typechecks in
  * SerializableClass subclasses.
  */
-type SerializableType = number | string | boolean | null |
+export type SerializableType = number | string | boolean | null |
     SerializableClass |
     SerializableType[] |
-    Map<SerializableType, SerializableType>
+    Map<string, SerializableType>
 
 /**
  * Subclass this and use `registerClass` to make a class serializable. If you
@@ -151,10 +151,11 @@ export abstract class SerializableClass {
 export function serialize(value: SerializableType): SerializedData {
     const refs: RefData = {}
     const root = _serialize(value, refs)
-    return {
-        root,
-        refs: refs,
+    const ret: SerializedData = {root}
+    if(Object.keys(refs).length) {
+        ret.refs = refs
     }
+    return ret
 }
 
 function _serialize(value: SerializableType, refs: RefData): any {
@@ -163,15 +164,13 @@ function _serialize(value: SerializableType, refs: RefData): any {
     }
 
     if(typeof value === "object") {
-        const type = value.constructor.name
-        
         // Array
         if(value instanceof Array) {
             return value.map(
                 (item: SerializableType) => _serialize(item, refs)
             )
         }
-        
+
         // Map
         if(value instanceof Map) {
             const entries: {[key: string | number]: SerializableType} = {}
@@ -183,8 +182,9 @@ function _serialize(value: SerializableType, refs: RefData): any {
                 data: entries,
             }
         }
-        
+
         // Registered class
+        const type = value.constructor.name
         const classInfo = getRegisteredClass(type)
         if(classInfo !== null) {
             if(refs[value.id] === undefined) {
@@ -199,11 +199,15 @@ function _serialize(value: SerializableType, refs: RefData): any {
             }
             return {type, id: value.id}
         }
+        
+        if(type === "Object") {
+            throw "Non-class objects cannot be serialized"
+        }
 
-        throw `Reference to unregistered class ${type}`
+        throw `Reference to unregistered class "${type}"`
     }
 
-    throw `Unsupported primitive type ${typeof value}`
+    throw `Unsupported primitive type "${typeof value}"`
 }
 
 
@@ -222,7 +226,12 @@ export function deserialize<T extends SerializableType>(
     data: SerializedData,
     expectedType?: string
 ): T {
-    const value = _deserialize(data.root, data.refs, new Map())
+    const dataRootTypeError = 'Incorrectly formatted data. Expected object with "root" attribute.'
+    if(typeof data !== "object" || data === null || data.root === undefined) {
+        throw dataRootTypeError
+    }
+    const refs = data.refs || {}
+    const value = _deserialize(data.root, refs, new Map())
 
     if(expectedType !== undefined) {
         const actualType =
@@ -230,7 +239,7 @@ export function deserialize<T extends SerializableType>(
             typeof value === "object" ? value.constructor.name :
             typeof value
         if(actualType !== expectedType) {
-            throw `Unexpected deserialized type ${actualType}`
+            throw `Expected "${expectedType}" after deserializing, not "${actualType}"`
         }
     }
 
@@ -270,11 +279,11 @@ function _deserialize(data: any, refs: RefData, cache: Map<string, SerializableT
         } else if(data.id !== undefined) {
             const ref = refs[data.id]
             if(ref === undefined) {
-                throw `Could not find reference for ID ${data.id}`
+                throw `Could not find reference for ID "${data.id}"`
             }
             objData = ref.data
         } else {
-            throw "Malformed data: no data or ID found in reference"
+            throw "Malformed data: No data or ID found in reference"
         }
 
         // Map
@@ -290,7 +299,7 @@ function _deserialize(data: any, refs: RefData, cache: Map<string, SerializableT
         if(data.id !== undefined) {
             const classInfo = getRegisteredClass(data.type)
             if(classInfo === null) {
-                throw `Reference to unregistered type ${data.type}`
+                throw `Reference to unregistered class "${data.type}"`
             }
             obj = {}
             const ref = refs[data.id]
@@ -305,7 +314,7 @@ function _deserialize(data: any, refs: RefData, cache: Map<string, SerializableT
         }
         return obj
     }
-    throw `Unknown type ${typeof data}`
+    throw `Cannot deserialize type "${typeof data}"`
 }
 
 
@@ -325,7 +334,7 @@ export function registerClass(
     cls: { new(...args: any): SerializableClass },
 ): void {
     if(registeredClasses[cls.name] !== undefined) {
-        throw `Class ${cls.name} is already registered`
+        throw `Class "${cls.name}" is already registered`
     }
     registeredClasses[cls.name] = {
         cls,
