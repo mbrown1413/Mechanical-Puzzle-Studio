@@ -12,4 +12,10 @@ export default defineConfig({
             "~ui": path.resolve(__dirname, "ui"),
         }
     },
+    build: {
+        sourcemap: true,
+    },
+    esbuild: {
+        keepNames: true,
+    },
 })
