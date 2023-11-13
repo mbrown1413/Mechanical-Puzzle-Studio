@@ -150,7 +150,14 @@ export abstract class SerializableClass {
 /* Return an object which can be passed to JSON.stringify to serialize. */
 export function serialize(value: SerializableType): SerializedData {
     const refs: RefData = {}
-    const root = _serialize(value, refs)
+    const path: string[] = []
+    let root
+    try {
+        root = _serialize(value, refs, path, "root")
+    } catch(e) {
+        throw "Serialization failed: " + e + "\n" +
+            "Attribute path: " + path.join(".")
+    }
     const ret: SerializedData = {root}
     if(Object.keys(refs).length) {
         ret.refs = refs
@@ -158,56 +165,78 @@ export function serialize(value: SerializableType): SerializedData {
     return ret
 }
 
-function _serialize(value: SerializableType, refs: RefData): any {
-    if(passthroughPrimitives.includes(typeof value) || value === null) {
-        return value
-    }
+function _serialize(
+    value: SerializableType,
+    refs: RefData,
+    path: string[],
+    attribute: string
+): any {
+    let errorFlag = false
+    try {
+        path.push(attribute)
 
-    if(typeof value === "object") {
-        // Array
-        if(value instanceof Array) {
-            return value.map(
-                (item: SerializableType) => _serialize(item, refs)
-            )
+        if(passthroughPrimitives.includes(typeof value) || value === null) {
+            return value
         }
 
-        // Map
-        if(value instanceof Map) {
-            const entries: {[key: string | number]: SerializableType} = {}
-            for(const [k, v] of value.entries()) {
-                entries[_serialize(k, refs)] = _serialize(v, refs)
+        if(typeof value === "object") {
+            // Array
+            if(value instanceof Array) {
+                return value.map(
+                    (item: SerializableType, i: number) =>
+                    _serialize(item, refs, path, String(i))
+                )
             }
-            return {
-                type: "Map",
-                data: entries,
-            }
-        }
 
-        // Registered class
-        const type = value.constructor.name
-        const classInfo = getRegisteredClass(type)
-        if(classInfo !== null) {
-            if(refs[value.id] === undefined) {
-                value = value as SerializableClass
-                const data: {[k: string]: SerializableType} = {}
-                for(let [k, v] of Object.entries(value)) {
-                    if(typeof v !== "function") {
-                        data[k] = _serialize(v, refs)
+            // Map
+            if(value instanceof Map) {
+                const entries: {[key: string | number]: SerializableType} = {}
+                for(const [k, v] of value.entries()) {
+                    if(typeof k !== "string") {
+                        path.push(k)
+                        throw "Only string keys are supported for Map"
                     }
+                    entries[k] = _serialize(v, refs, path, k)
                 }
-                refs[value.id] = {type, data}
+                return {
+                    type: "Map",
+                    data: entries,
+                }
             }
-            return {type, id: value.id}
-        }
+
+            // Registered class
+            const type = value.constructor.name
+            const classInfo = getRegisteredClass(type)
+            if(classInfo !== null) {
+                if(refs[value.id] === undefined) {
+                    value = value as SerializableClass
+                    const data: {[k: string]: SerializableType} = {}
+                    for(let [k, v] of Object.entries(value)) {
+                        if(typeof v !== "function") {
+                            data[k] = _serialize(v, refs, path, k)
+                        }
+                    }
+                    refs[value.id] = {type, data}
+                }
+                return {type, id: value.id}
+            }
         
-        if(type === "Object") {
-            throw "Non-class objects cannot be serialized"
+            if(type === "Object") {
+                throw "Non-class objects cannot be serialized"
+            }
+
+            throw `Reference to unregistered class "${type}"`
         }
 
-        throw `Reference to unregistered class "${type}"`
+        throw `Unsupported primitive type "${typeof value}"`
+    } catch(e) {
+        errorFlag = true
+        throw e
+    } finally {
+        if(!errorFlag) {
+            path.pop()
+        }
     }
-
-    throw `Unsupported primitive type "${typeof value}"`
 }
 
 
@@ -231,7 +260,14 @@ export function deserialize<T extends SerializableType>(
         throw dataRootTypeError
     }
     const refs = data.refs || {}
-    const value = _deserialize(data.root, refs, new Map())
+    const path: string[] = []
+    let value
+    try {
+        value = _deserialize(data.root, refs, new Map(), path, "root")
+    } catch(e) {
+        throw "Deserialization failed: " + e + "\n" +
+            "Attribute path: " + path.join(".")
+    }
 
     if(expectedType !== undefined) {
         const actualType =
@@ -246,75 +282,96 @@ export function deserialize<T extends SerializableType>(
     return value as T
 }
 
-function _deserialize(data: any, refs: RefData, cache: Map<string, SerializableType>): SerializableType {
-    if(passthroughPrimitives.includes(typeof data) || data === null) {
-        return data
-    }
+function _deserialize(
+    data: any,
+    refs: RefData,
+    cache: Map<string, SerializableType>,
+    path: string[],
+    attribute: string
+): SerializableType {
+    let errorFlag = false
+    try {
+        path.push(attribute)
 
-    if(Array.isArray(data)) {
-        return data.map(
-            (x: SerializableType) => _deserialize(x, refs, cache)
-        )
-    }
-
-    if(typeof data === "object") {
-        if(data.type === undefined) {
-            throw `Malformed data: No type attribute on object`
+        if(passthroughPrimitives.includes(typeof data) || data === null) {
+            return data
         }
+
+        if(Array.isArray(data)) {
+            return data.map(
+                (x: SerializableType, i: number) =>
+                _deserialize(x, refs, cache, path, String(i))
+            )
+        }
+
+        if(typeof data === "object") {
+            if(data.type === undefined) {
+                throw `Malformed data: No type attribute on object`
+            }
         
-        // Read data either directly, or from refs
-        if(data.id !== undefined) {
-            // Check if we already deserialized the object with this ID
-            const obj = cache.get(data.id)
-            if(obj !== undefined) {
-                return obj
+            // Read data either directly, or from refs
+            if(data.id !== undefined) {
+                // Check if we already deserialized the object with this ID
+                const obj = cache.get(data.id)
+                if(obj !== undefined) {
+                    return obj
+                }
             }
-        }
 
-        // Get data, either here inline or from refs
-        let obj: any
-        let objData
-        if(data.data !== undefined) {
-            objData = data.data
-        } else if(data.id !== undefined) {
-            const ref = refs[data.id]
-            if(ref === undefined) {
-                throw `Could not find reference for ID "${data.id}"`
+            // Get data, either here inline or from refs
+            let obj: any
+            let objData
+            if(data.data !== undefined) {
+                objData = data.data
+            } else if(data.id !== undefined) {
+                const ref = refs[data.id]
+                if(ref === undefined) {
+                    throw `Could not find reference for ID "${data.id}"`
+                }
+                objData = ref.data
+            } else {
+                throw "Malformed data: No data or ID found in reference"
             }
-            objData = ref.data
-        } else {
-            throw "Malformed data: No data or ID found in reference"
-        }
+            
+            // Map
+            if(data.type === "Map") {
+                const map: Map<SerializableType, SerializableType> = new Map()
+                for(const [k, v] of Object.entries(objData)) {
+                    map.set(k, _deserialize(v, refs, cache, path, k))
+                }
+                obj = map
+            }
 
-        // Map
-        if(data.type === "Map") {
-            const map: Map<SerializableType, SerializableType> = new Map()
-            for(const [k, v] of Object.entries(objData)) {
-                map.set(_deserialize(k, refs, cache), _deserialize(v, refs, cache))
+            // Ref to registered class
+            if(data.id !== undefined) {
+                const classInfo = getRegisteredClass(data.type)
+                if(classInfo === null) {
+                    throw `Reference to unregistered class "${data.type}"`
+                }
+                if(typeof objData !== "object") {
+                    throw `Expected instance data to be an object, not ${typeof objData}`
+                }
+                obj = {}
+                for(const [key, value] of Object.entries(objData)) {
+                    obj[key] = _deserialize(value, refs, cache, path, key)
+                }
+                Object.setPrototypeOf(obj, classInfo.cls.prototype)
             }
-            obj = map
-        }
 
-        // Ref to registered class
-        if(data.id !== undefined) {
-            const classInfo = getRegisteredClass(data.type)
-            if(classInfo === null) {
-                throw `Reference to unregistered class "${data.type}"`
+            if(data.id !== undefined) {
+                cache.set(data.id, obj)
             }
-            obj = {}
-            const ref = refs[data.id]
-            for(const [key, value] of Object.entries(ref.data)) {
-                obj[key] = _deserialize(value, refs, cache)
-            }
-            Object.setPrototypeOf(obj, classInfo.cls.prototype)
+            return obj
         }
-        
-        if(data.id !== undefined) {
-            cache.set(data.id, obj)
+        throw `Cannot deserialize type "${typeof data}"`
+    } catch(e) {
+        errorFlag = true
+        throw e
+    } finally {
+        if(!errorFlag) {
+            path.pop()
         }
-        return obj
     }
-    throw `Cannot deserialize type "${typeof data}"`
 }
 
 
