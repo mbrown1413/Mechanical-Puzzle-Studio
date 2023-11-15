@@ -44,9 +44,18 @@ function onItemsSelect() {
             <option
                 v-for="piece in puzzle.pieces.values()"
                 :value="piece.id"
+                :class="{'empty-label': !piece.label}"
             >
-                <i class="piece-color-indicator">&nbsp;</i>
+                <i
+                    class="piece-color-indicator"
+                    :style="{'background-color': piece.color || '#000000'}"
+                >&nbsp;</i>
                 {{ piece.label }}
+                <span
+                    v-if="!piece.label"
+                >
+                    (empty name)
+                </span>
             </option>
         </select>
     </div>
@@ -63,6 +72,12 @@ select {
     width: 100%;
     height: 100%;
     border: 0;
+}
+select .empty-label {
+    color: #606060;
+}
+select .empty-label span {
+    font-size: 75%;
 }
 
 .action-btn {
@@ -81,6 +96,6 @@ select {
     width: 1em;
     height: 1em;
     margin-right: 0.5em;
-    background-color: black;
+    border: var(--bs-border-width) solid var(--bs-border-color);
 }
 </style>

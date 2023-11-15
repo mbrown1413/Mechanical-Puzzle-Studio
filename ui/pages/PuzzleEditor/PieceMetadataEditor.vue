@@ -28,7 +28,7 @@ function handleTextInput(field: keyof PieceMetadata, el: HTMLInputElement) {
 
 <template>
     <div v-if="piece">
-        <h4>Piece Metadata</h4>
+        <h4>Piece Data</h4>
         
         <label
             for="pieceMetadataEditor-label-input"
@@ -43,12 +43,32 @@ function handleTextInput(field: keyof PieceMetadata, el: HTMLInputElement) {
             @input="handleTextInput('label', $event.target as HTMLInputElement)"
         />
         
-        <!--
-        <label for="pieceMetadataEditor-color-input">Color</label>
-        <input
-            id="pieceMetadataEditor-color-input"
-            type="color"
-        />
-        -->
+        <div class="row mt-2 align-items-center g-3">
+            <div class="col-auto">
+                <label
+                    for="pieceMetadataEditor-color-input"
+                    class="form-label"
+                >Color</label>
+            </div>
+            <div class="col-auto">
+                <input
+                    id="pieceMetadataEditor-color-input"
+                    type="color"
+                    class="form-control"
+                    :value="piece.color"
+                    @input="handleTextInput('color', $event.target as HTMLInputElement)"
+                />
+            </div>
+        </div>
     </div>
 </template>
+
+<style scoped>
+input[type="color"] {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    padding: 10px;
+}
+</style>

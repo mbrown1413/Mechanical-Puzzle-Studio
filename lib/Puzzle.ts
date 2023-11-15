@@ -70,11 +70,13 @@ export class Piece extends SerializableClass {
     declare id: string
     coordinates: Coordinate[]
     label: string
+    color: string
 
     constructor(id: string, coordinates: Coordinate[]) {
         super(id)
         this.coordinates = coordinates
         this.label = id
+        this.color = "#00ff00"
     }
 
     /*

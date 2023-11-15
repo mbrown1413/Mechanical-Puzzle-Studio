@@ -63,6 +63,7 @@ export class EditPieceAction extends Action {
 
 export type PieceMetadata = {
     label?: string
+    color?: string
 }
 
 export class EditPieceMetadata extends Action {
