@@ -139,10 +139,19 @@ export type SerializableType = number | string | boolean | null |
  * use attributes which cannot be serialized, a type error should occur.
  */
 export abstract class SerializableClass {
-    readonly id: string
+
+    /** Unique identifier used to deduplicate instances after serializing. If
+     * `null`, instances will be serialized inline and not deduplicated.
+     * 
+     * If you want to require an ID on a particular class, re-declare the
+     * property like this:
+     *     declare id: string
+     */
+    readonly id: string | null
+
     [s: string]: SerializableType | Function
 
-    constructor(id: string) {
+    constructor(id: string | null) {
         this.id = id
     }
 }
@@ -208,17 +217,31 @@ function _serialize(
             const type = value.constructor.name
             const classInfo = getRegisteredClass(type)
             if(classInfo !== null) {
-                if(refs[value.id] === undefined) {
-                    value = value as SerializableClass
+                value = value as SerializableClass
+
+                function _getClassData(value: SerializableClass) {
                     const data: {[k: string]: SerializableType} = {}
                     for(let [k, v] of Object.entries(value)) {
                         if(typeof v !== "function") {
                             data[k] = _serialize(v, refs, path, k)
                         }
                     }
-                    refs[value.id] = {type, data}
+                    return data
                 }
-                return {type, id: value.id}
+                
+                // Store inline
+                if(value.id === null) {
+                    const data = _getClassData(value)
+                    return {type, data}
+
+                // Store in a reference
+                } else {
+                    if(refs[value.id] === undefined) {
+                        const data = _getClassData(value)
+                        refs[value.id] = {type, data}
+                    }
+                    return {type, id: value.id}
+                }
             }
         
             if(type === "Object") {
@@ -340,10 +363,9 @@ function _deserialize(
                     map.set(k, _deserialize(v, refs, cache, path, k))
                 }
                 obj = map
-            }
 
-            // Ref to registered class
-            if(data.id !== undefined) {
+            // Registered class
+            } else {
                 const classInfo = getRegisteredClass(data.type)
                 if(classInfo === null) {
                     throw `Reference to unregistered class "${data.type}"`

@@ -15,6 +15,7 @@ export type PuzzleMetadata = {
 }
 
 export class PuzzleFile extends SerializableClass {
+    declare id: string
     puzzle: Puzzle
 
     name: string

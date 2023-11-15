@@ -10,7 +10,7 @@ class A extends SerializableClass {
 }
 class B extends SerializableClass {
     nested: A
-    constructor(id: string, nested: A) {
+    constructor(id: string | null, nested: A) {
         super(id)
         this.nested = nested
     }
@@ -128,8 +128,49 @@ describe("serialization and deserialization of", () => {
         )
         // Ensure all copies are actually the same object
         const deserialized = deserialize(serialized, "Array") as A[]
-        expect(deserialized[0]).toEqual(deserialized[1])
-        expect(deserialized[0]).toEqual(deserialized[2])
+        expect(deserialized[0]).toBe(deserialized[1])
+        expect(deserialized[0]).toBe(deserialized[2])
+    })
+    
+    test("inline class", () => {
+        serializeMatches(
+            new A(null),
+            {
+                root: {
+                    type: "A",
+                    data: {id: null}
+                }
+            },
+            "A"
+        )
+        serializeMatches(
+            new B(null, new A(null)),
+            {
+                root: {
+                    type: "B",
+                    data: {
+                        id: null,
+                        nested: {
+                            type: "A",
+                            data: {id: null}
+                        }
+                    }
+                }
+            },
+            "B"
+        )
+        
+        const a = new A(null)
+        serializeMatches(
+            [a, a],
+            {
+                root: [
+                    {type: "A", data: {id: null}},
+                    {type: "A", data: {id: null}},
+                ]
+            },
+            "Array"
+        )
     })
 
 })

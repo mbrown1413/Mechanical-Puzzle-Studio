@@ -67,6 +67,7 @@ export class Puzzle extends SerializableClass  {
 }
 
 export class Piece extends SerializableClass {
+    declare id: string
     coordinates: Coordinate[]
     label: string
 
