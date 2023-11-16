@@ -45,11 +45,8 @@ function onItemsSelect() {
                 v-for="piece in puzzle.pieces.values()"
                 :value="piece.id"
                 :class="{'empty-label': !piece.label}"
+                :style="'--data-color:' + (piece.color || '#000000')"
             >
-                <i
-                    class="piece-color-indicator"
-                    :style="{'background-color': piece.color || '#000000'}"
-                >&nbsp;</i>
                 {{ piece.label }}
                 <span
                     v-if="!piece.label"
@@ -90,12 +87,16 @@ select .empty-label span {
     background-color: red;
 }
 
-.piece-color-indicator {
+/* Colored block showing the piece's color. */
+option::before {
+    content: "";
     display: inline-block;
     vertical-align: middle;
     width: 1em;
     height: 1em;
     margin-right: 0.5em;
     border: var(--bs-border-width) solid var(--bs-border-color);
+    border-radius: 5px;
+    background-color: var(--data-color); /* Var set on <option> */
 }
 </style>
