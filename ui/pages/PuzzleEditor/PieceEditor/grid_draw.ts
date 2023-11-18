@@ -5,7 +5,7 @@ import {Vector3} from "three"
 import {OrbitControls} from "three/addons/controls/OrbitControls.js"
 import {ConvexGeometry} from "three/addons/geometries/ConvexGeometry.js"
 
-import {Coordinate, Viewpoint} from "~lib/types.ts"
+import {CellInfo, Coordinate, Viewpoint} from "~lib/types.ts"
 import {arraysEqual} from "~lib/tools.ts"
 import {Grid} from "~lib/Grid.ts"
 import {Piece} from  "~lib/Puzzle.ts"
@@ -68,31 +68,26 @@ export function useGridDrawComposible(
         camera.far = (sphereDistance + boundingSphere.radius*2) * 1.1
     }
 
-    /* Call this when the objects in the scene need to be updated. */
-    let isInitialRebuild = true
-    function rebuild() {
-        disposeTrackedResources()
-        scene.clear()
-        
-        function layerHasCoordinate(coordinate: Coordinate) {
-            if(!viewpoint.value) return false
-            let layerCoordinates = grid.getViewpointLayer(
-                viewpoint.value.id,
-                Number(layerN.value)
-            )
+    function layerHasCoordinate(coordinate: Coordinate) {
+        if(!viewpoint.value) return false
+        let layerCoordinates = grid.getViewpointLayer(
+            viewpoint.value.id,
+            Number(layerN.value)
+        )
 
-            let cordToStr = (cord: Coordinate) => cord.join(",")
-            let coordSet: Set<string> = new Set(layerCoordinates.map(cordToStr))
-            return coordSet.has(cordToStr(coordinate))
-        }
+        let cordToStr = (cord: Coordinate) => cord.join(",")
+        let coordSet: Set<string> = new Set(layerCoordinates.map(cordToStr))
+        return coordSet.has(cordToStr(coordinate))
+    }
 
-        function coordinateHasPiece(coordinate: Coordinate) {
-            if(piece.value === null) return false
-            let cordToStr = (cord: Coordinate) => cord.join(",")
-            let coordSet: Set<string> = new Set(piece.value.coordinates.map(cordToStr))
-            return coordSet.has(cordToStr(coordinate))
-        }
-
+    function coordinateHasPiece(coordinate: Coordinate) {
+        if(piece.value === null) return false
+        let cordToStr = (cord: Coordinate) => cord.join(",")
+        let coordSet: Set<string> = new Set(piece.value.coordinates.map(cordToStr))
+        return coordSet.has(cordToStr(coordinate))
+    }
+    
+    function getLights(): THREE.Light[] {
         const light1 = track(new THREE.DirectionalLight(0xffffff, 3))
         light1.position.set(5, 5, 5)
         light1.lookAt(new Vector3(0, 0, 0))
@@ -103,92 +98,129 @@ export function useGridDrawComposible(
         light2.lookAt(new Vector3(0, 0, 0))
         scene.add(light2)
         
+        return [light1, light2]
+    }
+    
+    function initializeCamera() {
+        const boundingBox = new THREE.Box3().setFromObject(scene)  // Calculated _before_ AxisHeper added
+        const boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere())
+        const center = boundingBox.getCenter(new Vector3())
+
+        // Position camera according to the initial viewpoint.
+        const fovRadians = fov * (Math.PI/180)
+        const cameraPosition = viewpoint.value.forwardVector.clone().normalize()
+        cameraPosition.multiplyScalar(
+            -1 * (boundingSphere.radius * 1.2) / Math.tan(fovRadians / 2)
+        )
+        cameraPosition.add(center)
+        camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z)
+    
+        // Center view on the center of the grid.
+        // Only do this once on initialization though, since the user can
+        // right-click drag to change the OrbitControls target location.
+        controls.target = center
+        camera.lookAt(center)
+    }
+
+    function getCoordinateSolid(
+        cellInfo: CellInfo,
+        inLayer: boolean,
+        highlighted: boolean,
+    ): THREE.Object3D {
+
+        const material = track(new THREE.MeshPhongMaterial({
+            color: highlighted ? 0x0000ff : 
+                    inLayer ? 0x00ff00 : 0xffffff,
+            emissive: 0x004400,
+            side: THREE.DoubleSide,
+            transparent: !inLayer,
+            opacity: inLayer ? 1 : 0.1,
+            depthWrite: inLayer,
+        }))
+
+        const obj = new THREE.Object3D()
+        for(let polygon of Object.values(cellInfo.sidePolygons)) {
+            const geometry = track(new ConvexGeometry(polygon))
+            obj.add(new THREE.Mesh(geometry, material))
+        }
+        return obj
+    }
+
+    function getCoordinateWireframe(
+        cellInfo: CellInfo,
+        inLayer: boolean,
+        highlighted: boolean,
+    ): THREE.Object3D {
+        const material = track(new THREE.LineBasicMaterial({
+            color: highlighted ? 0x0000ff :
+                    inLayer ? 0x00ff00 : 0xffffff,
+            transparent: !inLayer,
+            opacity: inLayer ? 1 : 0.1,
+        }))
+
+        const obj = new THREE.Object3D()
+        for(let polygon of Object.values(cellInfo.sidePolygons)) {
+            const geometry = track(new THREE.BufferGeometry())
+            geometry.setFromPoints(polygon)
+            obj.add(new THREE.LineLoop(geometry, material))
+        }
+
+        // Draw wireframes of the current layer last so it's not
+        // overwritten by other sides of non-selected layers.
+        if(inLayer) {
+            obj.renderOrder = 1
+        }
+        // Draw highlighted cells even later
+        if(highlighted) {
+            obj.renderOrder = 2
+        }
+
+        return obj
+    }
+
+    /* Call this when the objects in the scene need to be updated. */
+    let isInitialRebuild = true
+    function rebuild() {
+        disposeTrackedResources()
+        scene.clear()
+        
+        getLights().forEach((light) => {
+            scene.add(light)
+        })
+        
         hitTestObjects.value = []
         for(let coordinate of grid.getCoordinates()) {
             const cellInfo = grid.getCellInfo(coordinate)
-            
+            const inLayer = layerHasCoordinate(coordinate)
+            const hasPiece = coordinateHasPiece(coordinate)
+
             let highlighted = false
             if(highlightedCoordinate.value !== null && arraysEqual(coordinate, highlightedCoordinate.value)) {
                 highlighted = true
             }
 
-            for(let polygon of Object.values(cellInfo.sidePolygons)) {
-                const inLayer = layerHasCoordinate(coordinate)
-                const hasPiece = coordinateHasPiece(coordinate)
-                let material, geometry, obj
-
-                if(hasPiece) {
-                    material = new THREE.MeshPhongMaterial({
-                        color: highlighted ? 0x0000ff : 
-                                inLayer ? 0x00ff00 : 0xffffff,
-                        emissive: 0x004400,
-                        side: THREE.DoubleSide,
-                        transparent: !inLayer,
-                        opacity: inLayer ? 1 : 0.1,
-                        depthWrite: inLayer,
-                    })
-                    geometry = new ConvexGeometry(polygon)
-                    obj = new THREE.Mesh(geometry, material)
-
-                } else {
-
-                    material = new THREE.LineBasicMaterial({
-                        color: highlighted ? 0x0000ff :
-                                inLayer ? 0x00ff00 : 0xffffff,
-                        transparent: !inLayer,
-                        opacity: inLayer ? 1 : 0.1,
-                    })
-                    geometry = new THREE.BufferGeometry().setFromPoints(polygon)
-                    obj = new THREE.LineLoop(geometry, material)
-                    
-                    // Draw wireframes of the current layer last so it's not
-                    // overwritten by other sides of non-selected layers.
-                    if(inLayer) {
-                        obj.renderOrder = 1
-                    }
-                    // Draw highlighted cells even later
-                    if(highlighted) {
-                        obj.renderOrder = 2
-                    }
-
-                }
-                track(material)
-                track(geometry)
-                scene.add(obj)
-                
-                // Build separate objects for raycast intersection tests.
-                // We could re-use some objects, but we can't do intersections
-                // properly with lines.
-                if(inLayer) {
-                    const geometry = track(new ConvexGeometry(polygon))
-                    const obj = new THREE.Mesh(geometry)
-                    obj.userData = {coordinate}
-                    hitTestObjects.value.push(obj)
-                }
-
+            const solid = getCoordinateSolid(cellInfo, inLayer, highlighted)
+            if(hasPiece) {
+                scene.add(solid)
+            } else {
+                const wireframe = getCoordinateWireframe(cellInfo, inLayer, highlighted)
+                scene.add(wireframe)
             }
             
+            if(inLayer) {
+                // Populate hitTestObjects and save what coordinate the object
+                // was drawn for so we can pull it out later after a raycast
+                // intersects it. Since Raycaster will find the leaf nodes of
+                // our object tree, we need to set the userData on children.
+                solid.children.forEach((child) => {
+                    child.userData = {coordinate}
+                })
+                hitTestObjects.value.push(solid)
+            }
         }
         
         if(isInitialRebuild) {
-            const boundingBox = new THREE.Box3().setFromObject(scene)  // Calculated _before_ AxisHeper added
-            const boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere())
-            const center = boundingBox.getCenter(new Vector3())
-
-            // Position camera according to the initial viewpoint.
-            const fovRadians = fov * (Math.PI/180)
-            const cameraPosition = viewpoint.value.forwardVector.clone().normalize()
-            cameraPosition.multiplyScalar(
-                -1 * (boundingSphere.radius * 1.2) / Math.tan(fovRadians / 2)
-            )
-            cameraPosition.add(center)
-            camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z)
-        
-            // Center view on the center of the grid.
-            // Only do this once on initialization though, since the user can
-            // right-click drag to change the OrbitControls target location.
-            controls.target = center
-            camera.lookAt(center)
+            initializeCamera()
         }
 
         // Add axes helper after bounding box is computed so it doesn't affect the
