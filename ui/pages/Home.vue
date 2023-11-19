@@ -122,7 +122,7 @@ function deletePuzzle(storage: PuzzleStorage, puzzleId: string) {
         okText="Create"
         @ok="newPuzzleSubmit"
     >
-        <form ref="newPuzzleForm">
+        <form ref="newPuzzleForm" :onSubmit="newPuzzleSubmit">
 
             <div class="mb-3">
                 <label for="newPuzzle-name" class="form-label">
