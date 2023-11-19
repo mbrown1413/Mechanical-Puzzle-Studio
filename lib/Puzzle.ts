@@ -1,6 +1,7 @@
 import {Coordinate, BoolWithReason} from "~lib/types.js"
 import {Grid} from "~lib/Grid.js"
 import {SerializableClass, registerClass} from "~lib/serialize.js"
+import {getNextColor} from "./colors"
 
 export class Puzzle extends SerializableClass  {
     grid: Grid
@@ -26,9 +27,16 @@ export class Puzzle extends SerializableClass  {
         }
     }
 
+    getNewPieceColor(): string {
+        const piecesList = Array.from(this.pieces.values())
+        const existingColors = piecesList.map((piece) => piece.color)
+        return getNextColor(existingColors)
+    }
+
     addPiece(piece: Piece | null = null): Piece {
         if(piece === null) {
             piece = new Piece(this.generatePieceId(), [])
+            piece.color = this.getNewPieceColor()
         }
         if(this.pieces.has(piece.id)) {
             throw `Duplicate piece ID: ${piece.id}`

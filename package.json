@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "bootstrap": "5.3.2",
+    "colorjs.io": "^0.4.5",
     "eslint": "^8.52.0",
     "three": "^0.153.0",
     "uuid": "^9.0.1",

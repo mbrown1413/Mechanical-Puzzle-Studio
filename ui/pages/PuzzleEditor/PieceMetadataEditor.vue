@@ -59,6 +59,9 @@ function handleTextInput(field: keyof PieceMetadata, el: HTMLInputElement) {
                     @input="handleTextInput('color', $event.target as HTMLInputElement)"
                 />
             </div>
+            <div class="col-auto">
+                {{ piece.color }}
+            </div>
         </div>
     </div>
 </template>
