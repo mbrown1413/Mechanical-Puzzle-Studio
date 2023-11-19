@@ -19,6 +19,7 @@ export function useGridDrawComposible(
     highlightedCoordinate: Ref<Coordinate | null>,
 ) {
     const renderer = new THREE.WebGLRenderer({antialias: true})
+    renderer.setClearColor(0xdddddd, 1)
     const scene = new THREE.Scene()
     const fov = 75
     const camera = new THREE.PerspectiveCamera(fov, 2, 0.1, 10)
@@ -80,11 +81,15 @@ export function useGridDrawComposible(
         return coordSet.has(cordToStr(coordinate))
     }
 
-    function coordinateHasPiece(coordinate: Coordinate) {
-        if(piece.value === null) return false
+    function coordinateHasPiece(coordinate: Coordinate): Piece | null {
+        if(piece.value === null) return null
         let cordToStr = (cord: Coordinate) => cord.join(",")
         let coordSet: Set<string> = new Set(piece.value.coordinates.map(cordToStr))
-        return coordSet.has(cordToStr(coordinate))
+        if(coordSet.has(cordToStr(coordinate))) {
+            return piece.value
+        } else {
+            return null
+        }
     }
     
     function getLights(): THREE.Light[] {
@@ -121,64 +126,116 @@ export function useGridDrawComposible(
         controls.target = center
         camera.lookAt(center)
     }
+    
+    function getRenderOrder(inLayer: boolean, highlighted: boolean): number {
+        if(highlighted) {
+            return 2
+        } else if(inLayer) {
+            return 1
+        }
+        return 0
+    }
 
-    function getCoordinateSolid(
+    function getCellSolid(
+        piece: Piece | null,
         cellInfo: CellInfo,
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
-
+        const renderOrder = getRenderOrder(inLayer, highlighted)
         const material = track(new THREE.MeshPhongMaterial({
-            color: highlighted ? 0x0000ff : 
-                    inLayer ? 0x00ff00 : 0xffffff,
-            emissive: 0x004400,
+            color: piece ? piece.color : 0xffffff,
             side: THREE.DoubleSide,
             transparent: !inLayer,
-            opacity: inLayer ? 1 : 0.1,
+            opacity: inLayer ? 1 : 0.5,
             depthWrite: inLayer,
         }))
 
         const obj = new THREE.Object3D()
         for(let polygon of Object.values(cellInfo.sidePolygons)) {
             const geometry = track(new ConvexGeometry(polygon))
-            obj.add(new THREE.Mesh(geometry, material))
+            const mesh = new THREE.Mesh(geometry, material)
+            mesh.renderOrder = renderOrder
+            obj.add(mesh)
         }
         return obj
     }
-
-    function getCoordinateWireframe(
+    
+    function getCellThinWireframe(
         cellInfo: CellInfo,
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
+        const renderOrder = getRenderOrder(inLayer, highlighted)
         const material = track(new THREE.LineBasicMaterial({
             color: highlighted ? 0x0000ff :
-                    inLayer ? 0x00ff00 : 0xffffff,
+                    inLayer ? 0x00ff00 : 0xaaaaaa,
             transparent: !inLayer,
-            opacity: inLayer ? 1 : 0.1,
+            opacity: inLayer ? 1 : 0.5,
         }))
 
         const obj = new THREE.Object3D()
         for(let polygon of Object.values(cellInfo.sidePolygons)) {
             const geometry = track(new THREE.BufferGeometry())
             geometry.setFromPoints(polygon)
-            obj.add(new THREE.LineLoop(geometry, material))
+            const line = new THREE.LineLoop(geometry, material)
+            line.renderOrder = renderOrder
+            obj.add(line)
         }
-
-        // Draw wireframes of the current layer last so it's not
-        // overwritten by other sides of non-selected layers.
-        if(inLayer) {
-            obj.renderOrder = 1
-        }
-        // Draw highlighted cells even later
-        if(highlighted) {
-            obj.renderOrder = 2
-        }
-
         return obj
     }
 
-    /* Call this when the objects in the scene need to be updated. */
+    function getCellThickWireframe(
+        cellInfo: CellInfo,
+        inLayer: boolean,
+        highlighted: boolean,
+    ): THREE.Object3D {
+        const renderOrder = getRenderOrder(inLayer, highlighted)
+        const material = track(new THREE.MeshBasicMaterial({
+            color: highlighted ? 0x00ff00 : 0x000000,
+        }))
+        const thickness = 0.005
+        const divisions = 10
+
+        const obj = new THREE.Object3D()
+        for(let polygon of Object.values(cellInfo.sidePolygons)) {
+            for(let i=0; i<polygon.length; i++) {
+                const point1 = polygon[i]
+                const point2 = polygon[(i+1) % polygon.length]
+                const path = new THREE.LineCurve3(
+                    new Vector3(...point1),
+                    new Vector3(...point2)
+                )
+                const tubeGeometry = track(
+                    new THREE.TubeGeometry(path, 2, thickness, divisions, false)
+                )
+                const tube = new THREE.Mesh(tubeGeometry, material)
+                tube.renderOrder = renderOrder
+                obj.add(tube)
+                
+                const sphereGeometry = track(new THREE.SphereGeometry(thickness, divisions, divisions))
+                sphereGeometry.translate(point1.x, point1.y, point1.z)
+                const sphere = new THREE.Mesh(sphereGeometry, material)
+                sphere.renderOrder = renderOrder
+                obj.add(sphere)
+            }
+        }
+        return obj
+    }
+
+    function getCellWireframe(
+        cellInfo: CellInfo,
+        inLayer: boolean,
+        highlighted: boolean,
+    ): THREE.Object3D {
+        if(inLayer) {
+            return getCellThickWireframe(cellInfo, inLayer, highlighted)
+        } else {
+            return getCellThinWireframe(cellInfo, inLayer, highlighted)
+        }
+    }
+
+    /* Call rebuild() when the objects in the scene need to be updated. */
     let isInitialRebuild = true
     function rebuild() {
         disposeTrackedResources()
@@ -192,20 +249,24 @@ export function useGridDrawComposible(
         for(let coordinate of grid.getCoordinates()) {
             const cellInfo = grid.getCellInfo(coordinate)
             const inLayer = layerHasCoordinate(coordinate)
-            const hasPiece = coordinateHasPiece(coordinate)
+            const pieceAtCoordinate = coordinateHasPiece(coordinate)
 
-            let highlighted = false
-            if(highlightedCoordinate.value !== null && arraysEqual(coordinate, highlightedCoordinate.value)) {
-                highlighted = true
-            }
+            let highlighted = highlightedCoordinate.value !== null &&
+                arraysEqual(coordinate, highlightedCoordinate.value)
 
-            const solid = getCoordinateSolid(cellInfo, inLayer, highlighted)
-            if(hasPiece) {
+            const solid = getCellSolid(
+                pieceAtCoordinate,
+                cellInfo,
+                inLayer,
+                highlighted,
+            )
+
+            if(pieceAtCoordinate) {
                 scene.add(solid)
-            } else {
-                const wireframe = getCoordinateWireframe(cellInfo, inLayer, highlighted)
-                scene.add(wireframe)
             }
+
+            const wireframe = getCellWireframe(cellInfo, inLayer, highlighted)
+            scene.add(wireframe)
             
             if(inLayer) {
                 // Populate hitTestObjects and save what coordinate the object
