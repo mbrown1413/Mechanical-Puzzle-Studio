@@ -1,10 +1,10 @@
 import Color from "colorjs.io"
 
-function isSimilar(color1: string, color2: string): boolean {
+export function isColorSimilar(color1: string, color2: string): boolean {
     const c1 = new Color(color1)
     const c2 = new Color(color2)
     const dist = Color.deltaE(c1, c2, "ITP")
-    return dist < 40
+    return dist < 60
 }
 
 /**
@@ -18,7 +18,7 @@ export function getNextColor(existingColors: string[]): string {
     const similarCount: Map<string, number> = new Map()
     for(const paletteColor of palette) {
         for(const existingColor of existingColors) {
-            if(isSimilar(existingColor, paletteColor)) {
+            if(isColorSimilar(existingColor, paletteColor)) {
                 similarCount.set(
                     paletteColor,
                     (similarCount.get(paletteColor) || 0) + 1

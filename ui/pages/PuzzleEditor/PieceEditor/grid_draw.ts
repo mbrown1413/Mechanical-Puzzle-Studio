@@ -9,6 +9,7 @@ import {CellInfo, Coordinate, Viewpoint} from "~lib/types.ts"
 import {arraysEqual} from "~lib/tools.ts"
 import {Grid} from "~lib/Grid.ts"
 import {Piece} from  "~lib/Puzzle.ts"
+import {isColorSimilar} from '~lib/colors'
 
 export function useGridDrawComposible(
     element: Ref<HTMLElement>,
@@ -81,7 +82,7 @@ export function useGridDrawComposible(
         return coordSet.has(cordToStr(coordinate))
     }
 
-    function coordinateHasPiece(coordinate: Coordinate): Piece | null {
+    function getPieceAtCoordinate(coordinate: Coordinate): Piece | null {
         if(piece.value === null) return null
         let cordToStr = (cord: Coordinate) => cord.join(",")
         let coordSet: Set<string> = new Set(piece.value.coordinates.map(cordToStr))
@@ -136,6 +137,16 @@ export function useGridDrawComposible(
         return 0
     }
 
+    function getHighlightColor(piece: Piece | null) {
+        const defaultColor = "#00ff00"
+        const alternateColor = "#0000ff"
+        if(piece === null || !isColorSimilar(piece.color, defaultColor)) {
+            return defaultColor
+        } else {
+            return alternateColor
+        }
+    }
+
     function getCellSolid(
         piece: Piece | null,
         cellInfo: CellInfo,
@@ -162,14 +173,14 @@ export function useGridDrawComposible(
     }
     
     function getCellThinWireframe(
+        piece: Piece | null,
         cellInfo: CellInfo,
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
         const renderOrder = getRenderOrder(inLayer, highlighted)
         const material = track(new THREE.LineBasicMaterial({
-            color: highlighted ? 0x0000ff :
-                    inLayer ? 0x00ff00 : 0xaaaaaa,
+            color: highlighted ? getHighlightColor(piece) : 0xaaaaaa,
             transparent: !inLayer,
             opacity: inLayer ? 1 : 0.5,
         }))
@@ -186,13 +197,14 @@ export function useGridDrawComposible(
     }
 
     function getCellThickWireframe(
+        piece: Piece | null,
         cellInfo: CellInfo,
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
         const renderOrder = getRenderOrder(inLayer, highlighted)
         const material = track(new THREE.MeshBasicMaterial({
-            color: highlighted ? 0x00ff00 : 0x000000,
+            color: highlighted ? getHighlightColor(piece) : 0x000000,
         }))
         const thickness = 0.005
         const divisions = 10
@@ -224,14 +236,15 @@ export function useGridDrawComposible(
     }
 
     function getCellWireframe(
+        piece: Piece | null,
         cellInfo: CellInfo,
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
         if(inLayer) {
-            return getCellThickWireframe(cellInfo, inLayer, highlighted)
+            return getCellThickWireframe(piece, cellInfo, inLayer, highlighted)
         } else {
-            return getCellThinWireframe(cellInfo, inLayer, highlighted)
+            return getCellThinWireframe(piece, cellInfo, inLayer, highlighted)
         }
     }
 
@@ -249,7 +262,7 @@ export function useGridDrawComposible(
         for(let coordinate of grid.getCoordinates()) {
             const cellInfo = grid.getCellInfo(coordinate)
             const inLayer = layerHasCoordinate(coordinate)
-            const pieceAtCoordinate = coordinateHasPiece(coordinate)
+            const pieceAtCoordinate = getPieceAtCoordinate(coordinate)
 
             let highlighted = highlightedCoordinate.value !== null &&
                 arraysEqual(coordinate, highlightedCoordinate.value)
@@ -265,7 +278,7 @@ export function useGridDrawComposible(
                 scene.add(solid)
             }
 
-            const wireframe = getCellWireframe(cellInfo, inLayer, highlighted)
+            const wireframe = getCellWireframe(pieceAtCoordinate, cellInfo, inLayer, highlighted)
             scene.add(wireframe)
             
             if(inLayer) {
