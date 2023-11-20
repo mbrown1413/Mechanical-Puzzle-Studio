@@ -2,13 +2,15 @@
 import {ref, Ref, reactive, onMounted} from "vue"
 import Split from "split-grid"
 
+import {PuzzleFile} from "~lib/PuzzleFile.ts"
 import {Action} from "~ui/actions.ts"
 import {getStorageInstances} from "~ui/storage.ts"
-import {PuzzleFile} from "~lib/PuzzleFile.ts"
+import TabLayout from "~ui/components/TabLayout.vue"
 
 import PieceEditor from "./PuzzleEditor/PieceEditor.vue"
 import PieceMetadataEditor from "./PuzzleEditor/PieceMetadataEditor.vue"
-import PiecesList from "./PuzzleEditor/PiecesList.vue"
+import PieceList from "./PuzzleEditor/PieceList.vue"
+import ProblemList from "./PuzzleEditor/ProblemList.vue"
 
 const props = defineProps<{
     storageId: string,
@@ -21,6 +23,12 @@ const puzzleFile = reactive(
 ) as PuzzleFile
 
 const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
+const selectedProblemIds: Ref<string[]> = ref(["problem-0"])
+
+const sideTabs = [
+    {id: 'pieces', text: 'Pieces'},
+    {id: 'problems', text: 'Problems'},
+]
 
 function performAction(action: Action) {
     action.perform(puzzleFile.puzzle)
@@ -58,11 +66,25 @@ onMounted(() => {
         </div>
         <div class="slider col-slide" ref="columnSlider"></div>
         <div class="grid-cell side-top">
-            <PiecesList
-                :puzzle="puzzleFile.puzzle"
-                v-model:selectedPieceIds="selectedPieceIds"
-                @action="performAction"
-            />
+            <TabLayout
+                :tabs="sideTabs"
+                :contentStyle="{'flex-grow': 1}"
+            >
+                <template v-slot:pieces>
+                    <PieceList
+                        :puzzle="puzzleFile.puzzle"
+                        v-model:selectedPieceIds="selectedPieceIds"
+                        @action="performAction"
+                    />
+                </template>
+                <template v-slot:problems>
+                    <ProblemList
+                        :puzzle="puzzleFile.puzzle"
+                        v-model:selectedProblemIds="selectedProblemIds"
+                        @action="performAction"
+                    />
+                </template>
+            </TabLayout>
         </div>
         <div class="slider row-slide" ref="rowSlider"></div>
         <div class="grid-cell side-bot">
@@ -121,6 +143,8 @@ onMounted(() => {
 
 .side-top {
     grid-area: side-top;
+    display: flex;
+    flex-direction: column;
 }
 
 .side-bot {
