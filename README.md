@@ -4,7 +4,7 @@ Mechanical puzzle design software.
 
 The focus is on put-together / take-apart / interlocking puzzles. Riddlewood Studio is very extensible; with some programming knowledge, you can create new grid types, arbitrary constraints for when a puzzle is considered solved, and more.
 
-**Note: This software is in pre-alpa development.** To track progress, see the [MVP Planning](https://github.com/mbrown1413/Riddlewood-Studio/issues/1) issue.
+**Note: This software is in pre-alpha development.** To track progress, see the [MVP Planning](https://github.com/mbrown1413/Riddlewood-Studio/issues/1) issue.
 
 
 ## Puzzling Resources
@@ -46,5 +46,5 @@ Production build:
     $ cd dist/ && python -m http.server
     
 The source code is divided into two main sections:
-  * `lib/`: Contains the data structures and algorithms for puzzles. Basically, a stand-alone puzzle library without a gui.
-  * `ui/`: User interface built on top of `lib/`. Uses Vue 3 [single-file components](https://vuejs.org/guide/scaling-up/sfc.html) and [composition API](https://vuejs.org/api/composition-api-setup.html).
+  * [`lib/`](lib/): Contains the data structures and algorithms for puzzles. Basically, a stand-alone puzzle library without a gui.
+  * [`ui/`](ui/): User interface built on top of `lib/`.

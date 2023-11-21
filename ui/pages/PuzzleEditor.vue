@@ -3,14 +3,14 @@ import {ref, Ref, reactive, onMounted} from "vue"
 import Split from "split-grid"
 
 import {PuzzleFile} from "~lib/PuzzleFile.ts"
+
 import {Action} from "~ui/actions.ts"
 import {getStorageInstances} from "~ui/storage.ts"
-import TabLayout from "~ui/components/TabLayout.vue"
-
-import PieceEditor from "./PuzzleEditor/PieceEditor.vue"
-import PieceMetadataEditor from "./PuzzleEditor/PieceMetadataEditor.vue"
-import PieceList from "./PuzzleEditor/PieceList.vue"
-import ProblemList from "./PuzzleEditor/ProblemList.vue"
+import TabLayout from "~ui/common/TabLayout.vue"
+import PieceEditor from "~ui/components/PieceEditor.vue"
+import PieceMetadataEditor from "~ui/components/PieceMetadataEditor.vue"
+import PieceList from "~ui/components/PieceList.vue"
+import ProblemList from "~ui/components/ProblemList.vue"
 
 const props = defineProps<{
     storageId: string,

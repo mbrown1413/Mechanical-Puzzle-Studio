@@ -7,7 +7,7 @@ import {Puzzle} from "~lib/Puzzle.ts"
 import {RectGrid} from "~lib/grids/RectGrid.ts"
 
 import {getStorageInstances, PuzzleStorage} from "~ui/storage.ts"
-import Modal from "~ui/components/Modal.vue"
+import Modal from "~ui/common/Modal.vue"
 
 const router = useRouter()
 

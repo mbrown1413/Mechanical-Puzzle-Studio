@@ -4,10 +4,10 @@ import {ref, Ref, computed} from "vue"
 import {Coordinate} from "~lib/types.ts"
 import {Puzzle} from  "~lib/Puzzle.ts"
 import {Action} from "~ui/actions.ts"
-import VerticalSlider from "~ui/components/VerticalSlider.vue"
+import VerticalSlider from "~ui/common/VerticalSlider.vue"
 
-import {useGridDrawComposible} from "./PieceEditor/grid_draw.ts"
-import {useMouseEventsComposible} from "./PieceEditor/mouse_events.ts"
+import {useGridDrawComposible} from "./PieceEditor_draw.ts"
+import {useMouseEventsComposible} from "./PieceEditor_mouse.ts"
 
 const props = defineProps<{
     puzzle: Puzzle,
