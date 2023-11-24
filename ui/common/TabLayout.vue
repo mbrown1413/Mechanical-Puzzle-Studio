@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import {ref} from "vue"
 
-const props = withDefaults(
+withDefaults(
     defineProps<{
         tabs: {id: string, text: string}[],
+        currentTabId: string,
         contentStyle: any,
     }>(), {
-        contentStyle: {}
+        contentStyle: {},
+        currentTabId: undefined,
     }
 )
 
-const currentTabId = ref(props.tabs[0].id)
+const emit = defineEmits<{
+    "update:currentTabId": [value: string]
+}>()
 </script>
 
 <template>
@@ -20,7 +23,7 @@ const currentTabId = ref(props.tabs[0].id)
                 class="nav-link"
                 :class="{active: tab.id === currentTabId}"
                 :aria-selected="tab.id === currentTabId"
-                @click="currentTabId = tab.id"
+                @click="emit('update:currentTabId', tab.id)"
             >
                 {{ tab.text }}
             </button>
@@ -36,3 +39,9 @@ const currentTabId = ref(props.tabs[0].id)
         </template>
     </div>
 </template>
+
+<style scoped>
+ul {
+    background-color: #dddddd;
+}
+</style>

@@ -1,76 +1,63 @@
-import {Coordinate, BoolWithReason} from "~lib/types.js"
-import {Grid} from "~lib/Grid.js"
-import {SerializableClass, registerClass} from "~lib/serialize.js"
-import {getNextColor} from "./colors"
+import {Coordinate} from "~lib/types.ts"
+import {SerializableClass, registerClass} from "~lib/serialize.ts"
+import {Grid} from "~lib/Grid.ts"
+import {Problem} from "~lib/Problem.ts"
 
 export class Puzzle extends SerializableClass  {
     grid: Grid
     pieces: Map<string, Piece>
+    problems: Map<string, Problem>
     
     constructor(id: string, grid: Grid, pieces: Piece[]=[]) {
         super(id)
         this.grid = grid
         this.pieces = new Map()
+        this.problems = new Map()
 
         for(const piece of pieces) {
             this.addPiece(piece)
         }
     }
     
-    generatePieceId(): string {
-        //TODO: Make this O(1), not O(n)
-        for(let i=0; ; i++) {
-            const id = "piece-"+i
-            if(!this.pieces.has(id)) {
-                return id
-            }
-        }
-    }
-
-    getNewPieceColor(): string {
-        const piecesList = Array.from(this.pieces.values())
-        const existingColors = piecesList.map((piece) => piece.color)
-        return getNextColor(existingColors)
-    }
-
-    addPiece(piece: Piece | null = null): Piece {
-        if(piece === null) {
-            piece = new Piece(this.generatePieceId(), [])
-            piece.color = this.getNewPieceColor()
-        }
+    addPiece(piece: Piece) {
         if(this.pieces.has(piece.id)) {
             throw `Duplicate piece ID: ${piece.id}`
         }
         this.pieces.set(piece.id, piece)
-        return piece
     }
     
-    removePieces(pieceOrIds: Array<Piece | string>, throwErrors=true): BoolWithReason {
-        // Get list of IDs and track ones we're missing
-        const ids = []
-        const missingIds = []
-        for(const pieceOrId of pieceOrIds) {
-            const id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
-            const piece = this.pieces.get(id)
-            if(piece === undefined) {
-                missingIds.push(id)
-            } else {
-                ids.push(piece.id)
-            }
+    hasPiece(pieceOrId: Piece | string): boolean {
+        let id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
+        return this.pieces.has(id)
+    }
+    
+    removePiece(pieceOrId: Piece | string, throwErrors=true) {
+        let id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
+        if(throwErrors && !this.pieces.has(id)) {
+            throw `Piece ID not found ${id}`
         }
-
-        if(missingIds.length) {
-            const reason = `Piece IDs not found ${missingIds}`
-            if(throwErrors) {
-                throw reason
-            }
-            return {bool: false, reason}
+        this.pieces.delete(id)
+    }
+    
+    addProblem(problem: Problem): Problem {
+        if(this.problems.has(problem.id)) {
+            throw `Duplicate problem ID: ${problem.id}`
         }
-        
-        for(const id of ids) {
-            this.pieces.delete(id)
+        this.problems.set(problem.id, problem)
+        return problem
+    }
+    
+    hasProblem(problemOrId: Problem | string): boolean {
+        let id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
+        return this.problems.has(id)
+    }
+    
+    removeProblem(problemOrId: Problem | string, throwErrors=true) {
+        let id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
+        if(throwErrors && !this.problems.has(id)) {
+            throw `Problem ID not found ${id}`
         }
-        return {bool: true}
+        this.problems.delete(id)
     }
 }
 

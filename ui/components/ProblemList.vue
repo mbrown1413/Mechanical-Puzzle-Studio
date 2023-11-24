@@ -1,18 +1,25 @@
 <script setup lang="ts">
 import {Puzzle} from "~lib/Puzzle.ts"
-import {Action} from "~ui/actions.ts"
+import {Action, AddProblemAction, DeleteProblemsAction} from "~ui/actions.ts"
+import ListSelect from "~ui/common/ListSelect.vue"
 
 defineProps<{
     puzzle: Puzzle,
-    selectedProblemIds: string[]
+    selectedProblemIds: string[],
 }>()
 
 const emit = defineEmits<{
-    "update:selectedPieceIds": [pieceIds: string[]],
+    "update:selectedProblemIds": [problemIds: string[]],
     action: [action: Action]
 }>()
 </script>
 
 <template>
-    (problems list placeholder)
+    <ListSelect
+        :items="Array.from(puzzle.problems.values())"
+        :selectedIds="selectedProblemIds"
+        @update:selectedIds="emit('update:selectedProblemIds', $event)"
+        @add="emit('action', new AddProblemAction())"
+        @remove="emit('action', new DeleteProblemsAction(selectedProblemIds))"
+    />
 </template>

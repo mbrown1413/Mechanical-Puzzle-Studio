@@ -25,9 +25,10 @@ const puzzleFile = reactive(
 const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
 const selectedProblemIds: Ref<string[]> = ref(["problem-0"])
 
+const currentTabId = ref("pieces")
 const sideTabs = [
-    {id: 'pieces', text: 'Pieces'},
-    {id: 'problems', text: 'Problems'},
+    {id: "pieces", text: "Pieces"},
+    {id: "problems", text: "Problems"},
 ]
 
 function performAction(action: Action) {
@@ -68,6 +69,7 @@ onMounted(() => {
         <div class="grid-cell side-top">
             <TabLayout
                 :tabs="sideTabs"
+                v-model:currentTabId="currentTabId"
                 :contentStyle="{'flex-grow': 1}"
             >
                 <template v-slot:pieces>
@@ -89,6 +91,7 @@ onMounted(() => {
         <div class="slider row-slide" ref="rowSlider"></div>
         <div class="grid-cell side-bot">
             <PieceMetadataEditor
+                v-if="currentTabId === 'pieces'"
                 :puzzle="puzzleFile.puzzle"
                 :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
                 @action="performAction"
@@ -96,6 +99,7 @@ onMounted(() => {
         </div>
         <div class="grid-cell main">
             <PieceEditor
+                v-if="currentTabId === 'pieces'"
                 :puzzle="puzzleFile.puzzle"
                 :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
                 @action="performAction"
