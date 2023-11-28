@@ -8,15 +8,11 @@ export class Puzzle extends SerializableClass  {
     pieces: Map<string, Piece>
     problems: Map<string, Problem>
     
-    constructor(id: string, grid: Grid, pieces: Piece[]=[]) {
+    constructor(id: string, grid: Grid) {
         super(id)
         this.grid = grid
         this.pieces = new Map()
         this.problems = new Map()
-
-        for(const piece of pieces) {
-            this.addPiece(piece)
-        }
     }
     
     addPiece(piece: Piece) {

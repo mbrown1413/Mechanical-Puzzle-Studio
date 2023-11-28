@@ -62,6 +62,41 @@ export abstract class EditItemMetadataAction extends Action {
     }
 }
 
+abstract class DeleteItemsAction extends Action {
+    static itemAttribute: "pieces" | "problems"
+    static itemName: "Piece" | "Problem"
+    itemIds: string[]
+
+    constructor(itemIds: string[]) {
+        super()
+        this.itemIds = itemIds
+    }
+    
+    perform(puzzle: Puzzle): BoolWithReason {
+        const constructor = <typeof DeleteItemsAction> this.constructor
+        const itemMap = puzzle[constructor.itemAttribute]
+
+        const missingIds = []
+        for(const id of this.itemIds) {
+            if(!itemMap.has(id)) {
+                missingIds.push(id)
+            }
+        }
+        if(missingIds.length) {
+            return {
+                bool: false,
+                reason: `${constructor.itemName} IDs not found: ${missingIds}`
+            }
+        }
+        
+        for(const id of this.itemIds) {
+            itemMap.delete(id)
+        }
+        return {bool: true}
+    }
+
+}
+
 
 ////////// Piece Actions //////////
 
@@ -69,38 +104,14 @@ export class NewPieceAction extends Action {
     perform(puzzle: Puzzle): BoolWithReason {
         const piece = new Piece(generateId(puzzle, "piece", "pieces"), [])
         piece.color = getNewPieceColor(puzzle)
-        puzzle.addPiece(piece)
+        puzzle.pieces.set(piece.id, piece)
         return {bool: true}
     }
 }
 
-export class DeletePiecesAction extends Action {
-    pieceIds: string[]
-
-    constructor(pieceIds: string[]) {
-        super()
-        this.pieceIds = pieceIds
-    }
-    
-    perform(puzzle: Puzzle): BoolWithReason {
-        const missingIds = []
-        for(const id of this.pieceIds) {
-            if(!puzzle.hasPiece(id)) {
-                missingIds.push(id)
-            }
-        }
-        if(missingIds.length) {
-            return {
-                bool: false,
-                reason: `Piece IDs not found: ${missingIds}`
-            }
-        }
-        
-        for(const id of this.pieceIds) {
-            puzzle.removePiece(id)
-        }
-        return {bool: true}
-    }
+export class DeletePiecesAction extends DeleteItemsAction {
+    static itemAttribute: "pieces" = "pieces"
+    static itemName: "Piece" = "Piece"
 }
 
 export class EditPieceAction extends Action {
@@ -156,38 +167,14 @@ export class NewProblemAction extends Action {
             generateId(puzzle, "problem", "problems"),
             []
         )
-        puzzle.addProblem(problem)
+        puzzle.problems.set(problem.id, problem)
         return {bool: true}
     }
 }
 
-export class DeleteProblemsAction extends Action {
-    problemIds: string[]
-
-    constructor(problemIds: string[]) {
-        super()
-        this.problemIds = problemIds
-    }
-    
-    perform(puzzle: Puzzle): BoolWithReason {
-        const missingIds = []
-        for(const id of this.problemIds) {
-            if(!puzzle.hasProblem(id)) {
-                missingIds.push(id)
-            }
-        }
-        if(missingIds.length) {
-            return {
-                bool: false,
-                reason: `Problem IDs not found: ${missingIds}`
-            }
-        }
-        
-        for(const id of this.problemIds) {
-            puzzle.removeProblem(id)
-        }
-        return {bool: true}
-    }
+export class DeleteProblemsAction extends DeleteItemsAction {
+    static itemAttribute: "problems" = "problems"
+    static itemName: "Problem" = "Problem"
 }
 
 export class EditProblemMetadataAction extends EditItemMetadataAction {
