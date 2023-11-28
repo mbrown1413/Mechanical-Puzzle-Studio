@@ -11,7 +11,7 @@ function generateId(
 ): string {
     //TODO: Make this O(1), not O(n)
     for(let i=0; ; i++) {
-        const id = prefix+i
+        const id = prefix+"-"+i
         if(!puzzle[listAttribute].has(id)) {
             return id
         }
@@ -24,9 +24,46 @@ function getNewPieceColor(puzzle: Puzzle): string {
     return getNextColor(existingColors)
 }
 
+
+////////// Base Classes //////////
+
 export abstract class Action {
     abstract perform(puzzle: Puzzle): BoolWithReason
 }
+
+export abstract class EditItemMetadataAction extends Action {
+    itemId: string
+    metadata: any
+    
+    static itemName: "Piece" | "Problem"
+    static itemAttribute: "pieces" | "problems"
+    
+    constructor(
+        itemId: string,
+        metadata: any,
+    ) {
+        super()
+        this.itemId = itemId
+        this.metadata = metadata
+    }
+
+    perform(puzzle: Puzzle): BoolWithReason {
+        const constructor = <typeof EditItemMetadataAction> this.constructor
+        const item = puzzle[constructor.itemAttribute].get(this.itemId)
+        if(item === undefined) {
+            return {
+                bool: false,
+                reason: `${constructor.itemName} with ID ${this.itemId} not found`
+            }
+        }
+        
+        Object.assign(item, this.metadata)
+        return {bool: true}
+    }
+}
+
+
+////////// Piece Actions //////////
 
 export class NewPieceAction extends Action {
     perform(puzzle: Puzzle): BoolWithReason {
@@ -101,39 +138,19 @@ export class EditPieceAction extends Action {
     }
 }
 
-export type PieceMetadata = {
-    label?: string
-    color?: string
-}
-
-export class EditPieceMetadata extends Action {
-    pieceId: string
-    metadata: PieceMetadata
-    
-    constructor(
-        pieceId: string,
-        metadata: PieceMetadata,
-    ) {
-        super()
-        this.pieceId = pieceId
-        this.metadata = metadata
-    }
-    
-    perform(puzzle: Puzzle): BoolWithReason {
-        const piece = puzzle.pieces.get(this.pieceId)
-        if(piece === undefined) {
-            return {
-                bool: false,
-                reason: `Piece with ID ${this.pieceId} not found`
-            }
-        }
-        
-        Object.assign(piece, this.metadata)
-        return {bool: true}
+export class EditPieceMetadataAction extends EditItemMetadataAction {
+    static itemAttribute: "pieces" = "pieces"
+    static itemName: "Piece" = "Piece"
+    static metadata: {
+        label?: string
+        color?: string
     }
 }
 
-export class AddProblemAction extends Action {
+
+////////// Problem Actions //////////
+
+export class NewProblemAction extends Action {
     perform(puzzle: Puzzle): BoolWithReason {
         const problem = new Problem(
             generateId(puzzle, "problem", "problems"),
@@ -170,5 +187,13 @@ export class DeleteProblemsAction extends Action {
             puzzle.removeProblem(id)
         }
         return {bool: true}
+    }
+}
+
+export class EditProblemMetadataAction extends EditItemMetadataAction {
+    static itemAttribute: "problems" = "problems"
+    static itemName: "Problem" = "Problem"
+    static metadata: {
+        label?: string
     }
 }

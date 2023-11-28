@@ -8,7 +8,7 @@ import {Action} from "~ui/actions.ts"
 import {getStorageInstances} from "~ui/storage.ts"
 import TabLayout from "~ui/common/TabLayout.vue"
 import PieceEditor from "~ui/components/PieceEditor.vue"
-import PieceMetadataEditor from "~ui/components/PieceMetadataEditor.vue"
+import ItemMetadataEditor from "~ui/components/ItemMetadataEditor.vue"
 import PieceList from "~ui/components/PieceList.vue"
 import ProblemList from "~ui/components/ProblemList.vue"
 
@@ -90,10 +90,18 @@ onMounted(() => {
         </div>
         <div class="slider row-slide" ref="rowSlider"></div>
         <div class="grid-cell side-bot">
-            <PieceMetadataEditor
+            <ItemMetadataEditor
                 v-if="currentTabId === 'pieces'"
                 :puzzle="puzzleFile.puzzle"
-                :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
+                itemType="piece"
+                :itemId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
+                @action="performAction"
+            />
+            <ItemMetadataEditor
+                v-if="currentTabId === 'problems'"
+                :puzzle="puzzleFile.puzzle"
+                itemType="problem"
+                :itemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
                 @action="performAction"
             />
         </div>

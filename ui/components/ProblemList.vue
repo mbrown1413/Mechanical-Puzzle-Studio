@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Puzzle} from "~lib/Puzzle.ts"
-import {Action, AddProblemAction, DeleteProblemsAction} from "~ui/actions.ts"
+import {Action, NewProblemAction, DeleteProblemsAction} from "~ui/actions.ts"
 import ListSelect from "~ui/common/ListSelect.vue"
 
 defineProps<{
@@ -19,7 +19,7 @@ const emit = defineEmits<{
         :items="Array.from(puzzle.problems.values())"
         :selectedIds="selectedProblemIds"
         @update:selectedIds="emit('update:selectedProblemIds', $event)"
-        @add="emit('action', new AddProblemAction())"
+        @add="emit('action', new NewProblemAction())"
         @remove="emit('action', new DeleteProblemsAction(selectedProblemIds))"
     />
 </template>
