@@ -58,8 +58,11 @@ export abstract class EditItemMetadataAction extends Action {
         }
         
         Object.assign(item, this.metadata)
+        this.postEdit(item)
         return {bool: true}
     }
+
+    postEdit(_item: Piece | Problem) { }
 }
 
 abstract class DeleteItemsAction extends Action {
@@ -182,5 +185,14 @@ export class EditProblemMetadataAction extends EditItemMetadataAction {
     static itemName: "Problem" = "Problem"
     static metadata: {
         label?: string
+    }
+    
+    postEdit(problem: Problem) {
+        // Remove used piece entries with "0" count
+        for(const [pieceId, count] of problem.usedPieceCounts.entries()) {
+            if(count <= 0) {
+                problem.usedPieceCounts.delete(pieceId)
+            }
+        }
     }
 }

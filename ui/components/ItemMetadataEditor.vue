@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import {computed} from "vue"
 
-import {Puzzle} from  "~lib/Puzzle.ts"
+import {Piece, Puzzle} from  "~lib/Puzzle.ts"
+import {Problem} from "~lib/Problem.ts"
 import {Action, EditPieceMetadataAction, EditProblemMetadataAction} from "~ui/actions.ts"
+import ProblemPiecesEditor from "~ui/components/ProblemPiecesEditor.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
@@ -10,10 +12,14 @@ const props = defineProps<{
     itemId: string | null,
 }>()
 
+const emit = defineEmits<{
+    action: [action: Action]
+}>()
+
 type Field = {
     property: string,
     label: string,
-    type: "string" | "color",
+    type: "string" | "color" | "piece" | "pieces",
     required?: boolean,
 }
 
@@ -49,6 +55,14 @@ switch(props.itemType) {
                 property: "label",
                 label: "Name",
                 type: "string",
+            }, {
+                property: "goalPieceId",
+                label: "Goal",
+                type: "piece",
+            }, {
+                property: "piecesId",
+                label: "Pieces Used",
+                type: "pieces",
             }
         ]
         break;
@@ -57,20 +71,34 @@ switch(props.itemType) {
         throw "Invalid itemType"
 }
 
-const emit = defineEmits<{
-    action: [action: Action]
-}>()
-
 const item = computed(() =>
     props.itemId === null ?
         null :
         props.puzzle[puzzleProperty].get(props.itemId) || null
 )
 
+const pieceItems = computed(() => {
+    const pieces = Array.from(props.puzzle.pieces.values())
+    return pieces.map((piece) => {
+        return {
+            title: piece.label,
+            value: piece,
+        }
+    })
+})
+
 function handleTextInput(field: Field, el: HTMLInputElement) {
     if(props.itemId === null) return
     const metadata: any = {}
     metadata[field.property] = el.value
+    const action = new actionClass(props.itemId, metadata)
+    emit("action", action)
+}
+
+function handlePieceInput(field: Field, piece: Piece) {
+    if(props.itemId === null) return
+    const metadata: any = {}
+    metadata[field.property] = piece.id
     const action = new actionClass(props.itemId, metadata)
     emit("action", action)
 }
@@ -85,21 +113,14 @@ function getElId(field: Field) {
         <h4>{{ title }}</h4>
         
         <template v-for="field in fields">
-
-            <template v-if="field.type === 'string'">
-                <label
-                    :for="getElId(field)"
-                    class="form-label"
-                >{{ field.label }}</label>
-                <input
-                    :id="getElId(field)"
-                    class="form-control"
-                    type="text"
+            
+            <VTextField
+                    v-if="field.type === 'string'"
+                    :label="field.label"
                     :required="field.required === true"
-                    :value="item[field.property]"
+                    :model-value="item[field.property]"
                     @input="handleTextInput(field, $event.target as HTMLInputElement)"
-                />
-            </template>
+            />
 
             <div
                 v-if="field.type === 'color'"
@@ -124,7 +145,23 @@ function getElId(field: Field) {
                     {{ item[field.property] }}
                 </div>
             </div>
-
+            
+            <VSelect
+                    v-if="field.type === 'piece'"
+                    :label="field.label"
+                    :required="field.required !== false"
+                    :items="pieceItems"
+                    :modelValue="item[field.property]"
+                    @update:modelValue="handlePieceInput(field, $event as Piece)"
+            />
+            
+            <ProblemPiecesEditor
+                v-if="field.type === 'pieces' && item instanceof Problem"
+                :puzzle="puzzle"
+                :problem="item"
+                :label="field.label"
+                @action="emit('action', $event)"
+            />
         </template>
 
     </div>

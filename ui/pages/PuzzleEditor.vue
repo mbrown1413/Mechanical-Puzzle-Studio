@@ -97,19 +97,19 @@ onMounted(() => {
                 :itemId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
                 @action="performAction"
             />
-            <ItemMetadataEditor
-                v-if="currentTabId === 'problems'"
-                :puzzle="puzzleFile.puzzle"
-                itemType="problem"
-                :itemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
-                @action="performAction"
-            />
         </div>
         <div class="grid-cell main">
             <PieceEditor
                 v-if="currentTabId === 'pieces'"
                 :puzzle="puzzleFile.puzzle"
                 :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
+                @action="performAction"
+            />
+            <ItemMetadataEditor
+                v-if="currentTabId === 'problems'"
+                :puzzle="puzzleFile.puzzle"
+                itemType="problem"
+                :itemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
                 @action="performAction"
             />
         </div>

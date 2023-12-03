@@ -1,15 +1,18 @@
 import {SerializableClass, registerClass} from "~lib/serialize.ts"
-import {Piece} from "~lib/Puzzle.ts"
 
 export class Problem extends SerializableClass {
     declare id: string
-    pieces: Piece[]
     label: string
+    goalPieceId: string | null
     
-    constructor(id: string, pieces: Piece[]=[]) {
+    /* Maps piece ID to how many of that piece are used in this problem. */
+    usedPieceCounts: Map<string, number>
+    
+    constructor(id: string) {
         super(id)
-        this.pieces = pieces
         this.label = id
+        this.goalPieceId = null
+        this.usedPieceCounts = new Map()
     }
 }
 

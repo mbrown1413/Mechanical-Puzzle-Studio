@@ -16,10 +16,13 @@
     "eslint": "^8.52.0",
     "three": "^0.153.0",
     "uuid": "^9.0.1",
+    "vite-plugin-vuetify": "^1.0.2",
     "vue": "^3.3.7",
-    "vue-router": "4"
+    "vue-router": "4",
+    "vuetify": "^3.4.4"
   },
   "devDependencies": {
+    "@mdi/font": "^7.3.67",
     "@popperjs/core": "^2.11.8",
     "@types/bootstrap": "^5.2.9",
     "@types/node": "^20.8.10",
