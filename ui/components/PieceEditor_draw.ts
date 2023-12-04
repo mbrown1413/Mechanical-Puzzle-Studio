@@ -6,10 +6,11 @@ import {OrbitControls} from "three/addons/controls/OrbitControls.js"
 import {ConvexGeometry} from "three/addons/geometries/ConvexGeometry.js"
 
 import {CellInfo, Coordinate, Viewpoint} from "~lib/types.ts"
-import {arraysEqual} from "~lib/tools.ts"
+import {arraysEqual} from "~lib/utils.ts"
 import {Grid} from "~lib/Grid.ts"
 import {Piece} from  "~lib/Puzzle.ts"
-import {isColorSimilar} from '~lib/colors'
+import {isColorSimilar} from "~lib/colors.ts"
+import {Object3DCache, ResourceTracker} from "~ui/utils/threejs.ts";
 
 export function useGridDrawComposible(
     element: Ref<HTMLElement>,
@@ -26,6 +27,9 @@ export function useGridDrawComposible(
     const camera = new THREE.PerspectiveCamera(fov, 2, 0.1, 10)
     let controls = new OrbitControls(camera, renderer.domElement)
     const hitTestObjects: Ref<THREE.Object3D[]> = ref([])
+    
+    const resourceTracker = new ResourceTracker()
+    const objectCache = new Object3DCache()
     
     controls.listenToKeyEvents(window)
     controls.addEventListener('change', refresh)
@@ -45,7 +49,7 @@ export function useGridDrawComposible(
     })
     
     onUnmounted(() => {
-        disposeTrackedResources()
+        resourceTracker.releaseAll()
         controls.dispose()
         renderer.dispose()
     })
@@ -94,12 +98,12 @@ export function useGridDrawComposible(
     }
     
     function getLights(): THREE.Light[] {
-        const light1 = track(new THREE.DirectionalLight(0xffffff, 3))
+        const light1 = new THREE.DirectionalLight(0xffffff, 3)
         light1.position.set(5, 5, 5)
         light1.lookAt(new Vector3(0, 0, 0))
         scene.add(light1)
 
-        const light2 = track(new THREE.DirectionalLight(0xffffff, 3))
+        const light2 = new THREE.DirectionalLight(0xffffff, 3)
         light2.position.set(-5, -5, -5)
         light2.lookAt(new Vector3(0, 0, 0))
         scene.add(light2)
@@ -153,22 +157,36 @@ export function useGridDrawComposible(
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
+        const key = JSON.stringify([
+            "solid",
+            cellInfo.coordinate,
+            piece?.color,
+            inLayer,
+            highlighted,
+        ])
+        let obj = objectCache.get(key)
+        if(obj !== null) {
+            return obj
+        }
+
         const renderOrder = getRenderOrder(inLayer, highlighted)
-        const material = track(new THREE.MeshPhongMaterial({
+        const material = new THREE.MeshPhongMaterial({
             color: piece ? piece.color : 0xffffff,
             side: THREE.DoubleSide,
             transparent: !inLayer,
             opacity: inLayer ? 1 : 0.5,
             depthWrite: inLayer,
-        }))
+        })
 
-        const obj = new THREE.Object3D()
+        obj = new THREE.Object3D()
         for(let polygon of Object.values(cellInfo.sidePolygons)) {
-            const geometry = track(new ConvexGeometry(polygon))
+            const geometry = new ConvexGeometry(polygon)
             const mesh = new THREE.Mesh(geometry, material)
             mesh.renderOrder = renderOrder
             obj.add(mesh)
         }
+
+        objectCache.set(key, obj)
         return obj
     }
     
@@ -179,15 +197,15 @@ export function useGridDrawComposible(
         highlighted: boolean,
     ): THREE.Object3D {
         const renderOrder = getRenderOrder(inLayer, highlighted)
-        const material = track(new THREE.LineBasicMaterial({
+        const material = new THREE.LineBasicMaterial({
             color: highlighted ? getHighlightColor(piece) : 0xaaaaaa,
             transparent: !inLayer,
             opacity: inLayer ? 1 : 0.5,
-        }))
+        })
 
         const obj = new THREE.Object3D()
         for(let polygon of Object.values(cellInfo.sidePolygons)) {
-            const geometry = track(new THREE.BufferGeometry())
+            const geometry = new THREE.BufferGeometry()
             geometry.setFromPoints(polygon)
             const line = new THREE.LineLoop(geometry, material)
             line.renderOrder = renderOrder
@@ -203,9 +221,9 @@ export function useGridDrawComposible(
         highlighted: boolean,
     ): THREE.Object3D {
         const renderOrder = getRenderOrder(inLayer, highlighted)
-        const material = track(new THREE.MeshBasicMaterial({
+        const material = new THREE.MeshBasicMaterial({
             color: highlighted ? getHighlightColor(piece) : 0x000000,
-        }))
+        })
         const thickness = 0.005
         const divisions = 10
 
@@ -218,14 +236,12 @@ export function useGridDrawComposible(
                     new Vector3(...point1),
                     new Vector3(...point2)
                 )
-                const tubeGeometry = track(
-                    new THREE.TubeGeometry(path, 2, thickness, divisions, false)
-                )
+                const tubeGeometry = new THREE.TubeGeometry(path, 2, thickness, divisions, false)
                 const tube = new THREE.Mesh(tubeGeometry, material)
                 tube.renderOrder = renderOrder
                 obj.add(tube)
                 
-                const sphereGeometry = track(new THREE.SphereGeometry(thickness, divisions, divisions))
+                const sphereGeometry = new THREE.SphereGeometry(thickness, divisions, divisions)
                 sphereGeometry.translate(point1.x, point1.y, point1.z)
                 const sphere = new THREE.Mesh(sphereGeometry, material)
                 sphere.renderOrder = renderOrder
@@ -241,17 +257,31 @@ export function useGridDrawComposible(
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
-        if(inLayer) {
-            return getCellThickWireframe(piece, cellInfo, inLayer, highlighted)
-        } else {
-            return getCellThinWireframe(piece, cellInfo, inLayer, highlighted)
-        }
+        const key = JSON.stringify([
+            "wireframe",
+            cellInfo.coordinate,
+            piece?.color,
+            inLayer,
+            highlighted,
+        ])
+        return objectCache.getOrSet(
+            key,
+            () => {
+                if(inLayer) {
+                    return getCellThickWireframe(piece, cellInfo, inLayer, highlighted)
+                } else {
+                    return getCellThinWireframe(piece, cellInfo, inLayer, highlighted)
+                }
+            }
+        )
+
     }
 
     /* Call rebuild() when the objects in the scene need to be updated. */
     let isInitialRebuild = true
     function rebuild() {
-        disposeTrackedResources()
+        objectCache.newScene()
+        resourceTracker.markUnused(scene)
         scene.clear()
         
         getLights().forEach((light) => {
@@ -303,31 +333,9 @@ export function useGridDrawComposible(
         axesHelper.position.set(-1, -1, -1)
         scene.add(axesHelper)
 
+        resourceTracker.markUsed(scene)
+        resourceTracker.releaseUnused()
         isInitialRebuild = false
-    }
-
-    ////////// Resource Tracking //////////
-    // Textures, geometries, and materials must have `.dispose()` called in order
-    // for their memory to be free'd. See:
-    //
-    //     https://threejs.org/manual/#en/cleanup
-    //
-    // Here, we have a simple system that starts tracking when you call
-    // `track(resource)`, then frees everything tracked `disposeTrackedResources()`
-    // is called.
-    interface Disposible {
-        dispose: () => void
-    }
-    let trackedResources: Disposible[] = []
-    function track<Type extends Disposible>(resource: Type): Type {
-        trackedResources.push(resource)
-        return resource
-    }
-    function disposeTrackedResources() {
-        for(const resource of trackedResources) {
-            resource.dispose()
-        }
-        trackedResources = []
     }
 
     return {

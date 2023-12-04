@@ -1,5 +1,5 @@
 import {Coordinate, BoolWithReason} from "~lib/types.ts"
-import {arraysEqual} from "~lib/tools.ts"
+import {arraysEqual} from "~lib/utils.ts"
 import {getNextColor} from "~lib/colors.ts"
 import {Puzzle, Piece} from "~lib/Puzzle.ts"
 import {Problem} from "~lib/Problem.ts"
@@ -168,7 +168,6 @@ export class NewProblemAction extends Action {
     perform(puzzle: Puzzle): BoolWithReason {
         const problem = new Problem(
             generateId(puzzle, "problem", "problems"),
-            []
         )
         puzzle.problems.set(problem.id, problem)
         return {bool: true}

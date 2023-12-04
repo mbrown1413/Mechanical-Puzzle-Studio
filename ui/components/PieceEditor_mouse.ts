@@ -5,7 +5,7 @@ import {Vector2} from "three"
 
 import {Piece} from "~lib/Puzzle.ts"
 import {Coordinate} from "~lib/types.ts"
-import {arraysEqual} from "~lib/tools.ts"
+import {arraysEqual} from "~lib/utils.ts"
 import {Action, EditPieceAction} from "~ui/actions.ts"
 
 export function useMouseEventsComposible(

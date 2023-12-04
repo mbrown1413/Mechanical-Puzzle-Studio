@@ -2,7 +2,7 @@
 import {computed, onBeforeUnmount, ref, Ref} from "vue"
 import {Modal} from "bootstrap"
 
-import {makeUniqueId} from "~lib/tools.ts";
+import {makeUniqueId} from "~lib/utils.ts";
 
 withDefaults(
     defineProps<{

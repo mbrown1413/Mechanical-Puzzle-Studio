@@ -91,7 +91,7 @@ onMounted(() => {
         <div class="slider row-slide" ref="rowSlider"></div>
         <div class="grid-cell side-bot">
             <ItemMetadataEditor
-                v-if="currentTabId === 'pieces'"
+                v-show="currentTabId === 'pieces'"
                 :puzzle="puzzleFile.puzzle"
                 itemType="piece"
                 :itemId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
@@ -100,13 +100,13 @@ onMounted(() => {
         </div>
         <div class="grid-cell main">
             <PieceEditor
-                v-if="currentTabId === 'pieces'"
+                v-show="currentTabId === 'pieces'"
                 :puzzle="puzzleFile.puzzle"
                 :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
                 @action="performAction"
             />
             <ItemMetadataEditor
-                v-if="currentTabId === 'problems'"
+                v-show="currentTabId === 'problems'"
                 :puzzle="puzzleFile.puzzle"
                 itemType="problem"
                 :itemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
