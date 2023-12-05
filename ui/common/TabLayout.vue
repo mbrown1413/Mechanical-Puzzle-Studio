@@ -17,31 +17,38 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <ul class="nav nav-tabs" role="tablist">
-        <li v-for="tab in tabs" role="presentation">
-            <button
-                class="nav-link"
-                :class="{active: tab.id === currentTabId}"
-                :aria-selected="tab.id === currentTabId"
-                @click="emit('update:currentTabId', tab.id)"
-            >
-                {{ tab.text }}
-            </button>
-        </li>
-    </ul>
+    <VTabs
+            @update:model-value="emit('update:currentTabId', $event as string)"
+    >
+        <VTab
+                v-for="tab in tabs"
+                :value="tab.id"
+        >
+            {{ tab.text }}
+        </VTab>
+    </VTabs>
 
-    <div class="tab-content" :style="contentStyle">
-        <template v-for="tab in tabs">
-            <slot
-                :name="tab.id"
-                v-if="tab.id === currentTabId"
-            ></slot>
-        </template>
-    </div>
+    <VWindow
+        :model-value="currentTabId"
+    >
+        <VWindowItem
+                v-for="tab in tabs"
+                :value="tab.id"
+        >
+            <slot :name="tab.id"></slot>
+        </VWindowItem>
+    </VWindow>
 </template>
 
 <style scoped>
-ul {
-    background-color: #dddddd;
+.v-tabs:deep(.v-btn) {
+  padding: 0 8px;
+}
+
+.v-window {
+    flex-grow: 1;
+}
+.v-window:deep(.v-window__container), .v-window-item {
+    height: 100%;
 }
 </style>

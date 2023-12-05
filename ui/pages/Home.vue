@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, Ref, reactive} from "vue"
+import {ref, Ref, reactive, computed} from "vue"
 import {useRouter} from "vue-router"
 
 import {PuzzleFile} from "~lib/PuzzleFile.ts"
@@ -27,6 +27,15 @@ const newPuzzleFields = reactive({
     name: "",
     storage: puzzlesByStorage[0].storage,
 })
+
+const storageSelectItems = computed(() =>
+    Object.values(getStorageInstances()).map((storage) => {
+        return {
+            title: storage.name,
+            value: storage,
+        }
+    })
+)
 
 function openNewPuzzleModal(storage: PuzzleStorage) {
     newPuzzleFields.storage = storage
@@ -67,92 +76,80 @@ function deletePuzzle(storage: PuzzleStorage, puzzleId: string) {
         )
     }
 }
+
+const tableHeaders: {
+    title: string,
+    key?: string,
+    sortable?: boolean,
+    align?: "start" | "center"
+}[] = [
+    {title: "Name", key: "name", align: "start"},
+    //{title: "Created", key: "created"},
+    //{title: "Modified", key: "modified"},
+    {title: "Actions", key: "actions", sortable: false, align: "center"},
+]
 </script>
 
 <template>
-    <div class="container-md">
-        <h1>Riddlewood Studio</h1>
-
-        <div
-            v-for="{storage, puzzles} of puzzlesByStorage"
-        >
-            <h2 class="float-start">{{ storage.name }}</h2>
-            <button
-                class="btn btn-primary float-end"
-                type="button"
-                @click="openNewPuzzleModal(storage)"
-            >New</button>
-            <table class="table table-striped table-hover">
-                <caption v-if="puzzles.length === 0">
-                    (no puzzles in this storage location)
-                </caption>
-                <thead>
-                    <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr
-                        v-for="puzzle in puzzles"
+    <VAppBar title="Ridlewood Studio" />
+    <VMain>
+        <VRow justify="center">
+            <VDataTable
+                    v-for="{storage, puzzles} of puzzlesByStorage"
+                    :headers="tableHeaders"
+                    :items="puzzles"
+                    no-data-text="No puzzles in this storage location"
+                    class="mt-10 ml-10 mr-10"
+                    style="max-width: 800px;"
+            >
+                <template v-slot:bottom v-if="puzzles.length <= 10" />
+                <template v-slot:top>
+                    <VToolbar
+                            flat
+                            density="compact"
+                            :title="storage.name"
                     >
-                        <td>
-                            <RouterLink :to="{name: 'puzzle', params: {storageId: storage.id, puzzleId: puzzle.id}}">
-                                {{ puzzle.name }}
-                            </RouterLink>
-                        </td>
-                        <td>
-                            <button
-                                type="button"
-                                class="btn btn-danger"
-                                @click="deletePuzzle(storage, puzzle.id)"
-                            >
-                                Delete
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
+                        <VBtn
+                            color="primary"
+                            dark
+                            @click="openNewPuzzleModal(storage)"
+                        >
+                            New Puzzle
+                        </VBtn>
+                    </VToolbar>
+                </template>
+                <template v-slot:item.name="{item}">
+                    <RouterLink :to="{name: 'puzzle', params: {storageId: storage.id, puzzleId: item.id}}">
+                        {{ item.name }}
+                    </RouterLink>
+                </template>
+                <template v-slot:item.actions="{item}">
+                    <VBtn @click="deletePuzzle(storage, item.id)">
+                        <VIcon icon="mdi-delete" aria-label="Delete" aria-hidden="false" />
+                    </VBtn>
+                </template>
+            </VDataTable>
+        </VRow>
+    </VMain>
+    
     <Modal
-        ref="newPuzzleModal"
-        title="New Puzzle"
-        okText="Create"
-        @ok="newPuzzleSubmit"
+            ref="newPuzzleModal"
+            title="New Puzzle"
+            okText="Create"
+            @ok="newPuzzleSubmit"
     >
         <form ref="newPuzzleForm" :onSubmit="newPuzzleSubmit">
-
-            <div class="mb-3">
-                <label for="newPuzzle-name" class="form-label">
-                    Name
-                </label>
-                <input
-                    type="text"
-                    class="form-control"
-                    id="newPuzzle-name"
+            <VTextField
+                    label="Name"
                     required
                     v-model="newPuzzleFields.name"
-                />
-            </div>
-
-            <div class="mb-3">
-                <label for="newPuzzle-storage" class="form-label">
-                    Storage Backend
-                </label>
-                <select
-                    id="newPuzzle-storage"
-                    class="form-select"
+            />
+            <VSelect
+                    label="Storage Location"
+                    required
                     v-model="newPuzzleFields.storage"
-                >
-                    <option v-for="{storage} of puzzlesByStorage" :value="storage">
-                        {{ storage.name }}
-                    </option>
-                </select>
-            </div>
-            
+                    :items="storageSelectItems"
+            />
         </form>
     </Modal>
-
 </template>

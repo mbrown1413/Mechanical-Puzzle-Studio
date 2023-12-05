@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import {computed, onBeforeUnmount, ref, Ref} from "vue"
-import {Modal} from "bootstrap"
-
-import {makeUniqueId} from "~lib/utils.ts";
+import {ref} from "vue"
 
 withDefaults(
     defineProps<{
@@ -19,70 +16,46 @@ defineEmits<{
     ok: []
 }>()
 
-const labelId = makeUniqueId()
-const modalElement: Ref<HTMLDivElement | null> = ref(null)
-
-const modal = computed(() => {
-    if(modalElement.value === null) return null
-    return new Modal(modalElement.value)
-})
-
-onBeforeUnmount(() => {
-    modal.value?.dispose()
-})
+const modalOpen = ref(false)
 
 defineExpose({
-    open() {
-        modal.value?.show()
-    }
+    open() { modalOpen.value = true },
+    close() { modalOpen.value = false }
 })
 </script>
 
 <template>
-    <div
-        class="modal fade"
-        tabindex="-1"
-        ref="modalElement"
-        :aria-labelledby="labelId"
-        aria-hidden="true"
+    <VDialog
+            v-model="modalOpen"
+            max-width="500px"
     >
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1
-                        class="modal-title fs-5"
-                        :id="labelId"
-                    >
-                        {{ title }}
-                    </h1>
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Close"
-                    ></button>
-                </div>
-                <div class="modal-body">
-                    <slot></slot>
-                </div>
-                <div class="modal-footer">
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        data-bs-dismiss="modal"
+        <VCard>
+            <VCardTitle>
+                <span class="text-h5">{{ title }}</span>
+            </VCardTitle>
+
+            <VCardText>
+                <slot></slot>
+            </VCardText>
+
+            <VCardActions>
+                <VSpacer />
+                <VBtn
                         v-if="cancelShow"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-primary"
+                        color="blue-darken-1"
+                        variant="text"
+                        @click="modalOpen = false"
+                >
+                    Cancel
+                </VBtn>
+                <VBtn
+                        color="blue-darken-1"
+                        variant="text"
                         @click="$emit('ok')"
-                    >
-                        {{ okText }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+                >
+                    {{ okText }}
+                </VBtn>
+            </VCardActions>
+        </VCard>
+    </VDialog>
 </template>

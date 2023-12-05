@@ -17,7 +17,7 @@ export function useGridDrawComposible(
     grid: Grid,
     piece: ComputedRef<Piece | null>,
     layerN: Ref<number>,
-    viewpoint: ComputedRef<Viewpoint>,
+    viewpoint: Ref<Viewpoint>,
     highlightedCoordinate: Ref<Coordinate | null>,
 ) {
     const renderer = new THREE.WebGLRenderer({antialias: true})

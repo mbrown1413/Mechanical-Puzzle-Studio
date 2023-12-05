@@ -20,12 +20,17 @@ const emit = defineEmits<{
 
 const el = ref()
 const viewpoints = props.puzzle.grid.getViewpoints()
-const viewpointId = ref(viewpoints[0].id)
+const viewpoint = ref(viewpoints[0])
 const layerN = ref(0)
 const highlightedCoordinate: Ref<Coordinate | null> = ref(null)
 
-const viewpoint = computed(() =>
-    viewpoints.find(v => v.id === viewpointId.value) || viewpoints[0]
+const viewpointOptions = computed(() =>
+    viewpoints.map((viewpoint) => {
+        return {
+            title: viewpoint.name,
+            value: viewpoint,
+        }
+    })
 )
 
 const piece = computed(() =>
@@ -62,18 +67,20 @@ useMouseEventsComposible(
 <template>
     <div class="pieceDisplay" ref="el">
         <div class="controls">
-            <select v-model="viewpointId">
-                <option
-                    v-for="viewpoint in viewpoints"
-                    :value="viewpoint.id"
-                >
-                    {{ viewpoint.name }}
-                </option>
-            </select>
-            <VerticalSlider
-                v-if="viewpoint.nLayers > 1"
-                v-model="layerN"
-                :options="[...Array(viewpoint.nLayers).keys()]"
+            <VSelect
+                    v-model="viewpoint"
+                    :items="viewpointOptions"
+                    density="compact"
+            />
+            <VSlider
+                    v-if="viewpoint.nLayers > 1"
+                    :ticks="[...Array(viewpoint.nLayers).keys()]"
+                    showTicks="always"
+                    direction="vertical"
+                    v-model="layerN"
+                    min="0"
+                    :max="viewpoint.nLayers-1"
+                    step="1"
             />
         </div>
     </div>
@@ -91,5 +98,8 @@ useMouseEventsComposible(
     left: 0;
     background: rgba(255, 255, 255, 0.5);
     border-bottom-right-radius: 10px;
+}
+.controls > * {
+    margin: 0 auto;
 }
 </style>

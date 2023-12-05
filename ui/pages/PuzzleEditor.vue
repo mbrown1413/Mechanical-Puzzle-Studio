@@ -47,7 +47,7 @@ onMounted(() => {
                 element: columnSlider.value
             }],
             rowGutters: [{
-                track: 2,
+                track: 1,
                 element: rowSlider.value
             }]
         })
@@ -56,15 +56,15 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="puzzleEditor-container">
-        <div class="grid-cell nav">
-            <div class="home-link">
-                <RouterLink to="/">&larrhk; Puzzles</RouterLink>
-            </div>
-            <div>
-                {{ puzzleFile.name }}
-            </div>
+    <VAppBar>
+        <div class="home-link">
+            <RouterLink to="/">&larrhk; Puzzles</RouterLink>
         </div>
+        <div>
+            {{ puzzleFile.name }}
+        </div>
+    </VAppBar>
+    <VMain class="puzzleEditor-container">
         <div class="slider col-slide" ref="columnSlider"></div>
         <div class="grid-cell side-top">
             <TabLayout
@@ -113,7 +113,7 @@ onMounted(() => {
                 @action="performAction"
             />
         </div>
-    </div>
+    </VMain>
 </template>
 
 <style scoped>
@@ -121,16 +121,12 @@ onMounted(() => {
 .puzzleEditor-container {
     display: grid;
     height: 100vh;
+    transition: none;
     grid-template:
-        "nav       nav       nav " 100px
         "side-top  col-slide main" 1fr
         "row-slide col-slide main" 5px
         "side-bot  col-slide main" 1fr
         / 200px    5px       4fr;
-}
-
-.nav {
-    grid-area: nav;
 }
 
 .slider {
