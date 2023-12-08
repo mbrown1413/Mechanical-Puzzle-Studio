@@ -97,18 +97,22 @@ export function useGridDrawComposible(
         }
     }
     
-    function getLights(): THREE.Light[] {
-        const light1 = new THREE.DirectionalLight(0xffffff, 3)
-        light1.position.set(5, 5, 5)
-        light1.lookAt(new Vector3(0, 0, 0))
-        scene.add(light1)
+    function getLights(): THREE.Object3D {
+        return objectCache.getOrSet("lights", () => {
+            const light1 = new THREE.DirectionalLight(0xffffff, 3)
+            light1.position.set(5, 5, 5)
+            light1.lookAt(new Vector3(0, 0, 0))
+            scene.add(light1)
 
-        const light2 = new THREE.DirectionalLight(0xffffff, 3)
-        light2.position.set(-5, -5, -5)
-        light2.lookAt(new Vector3(0, 0, 0))
-        scene.add(light2)
-        
-        return [light1, light2]
+            const light2 = new THREE.DirectionalLight(0xffffff, 3)
+            light2.position.set(-5, -5, -5)
+            light2.lookAt(new Vector3(0, 0, 0))
+            scene.add(light2)
+            
+            const obj = new THREE.Object3D()
+            obj.add(light1, light2)
+            return obj
+        })
     }
     
     function initializeCamera() {
@@ -281,12 +285,11 @@ export function useGridDrawComposible(
     let isInitialRebuild = true
     function rebuild() {
         objectCache.newScene()
+        objectCache.resetStats()
         resourceTracker.markUnused(scene)
         scene.clear()
         
-        getLights().forEach((light) => {
-            scene.add(light)
-        })
+        scene.add(getLights())
         
         hitTestObjects.value = []
         for(let coordinate of grid.getCoordinates()) {
@@ -329,8 +332,11 @@ export function useGridDrawComposible(
 
         // Add axes helper after bounding box is computed so it doesn't affect the
         // center.
-        const axesHelper = new THREE.AxesHelper()
-        axesHelper.position.set(-1, -1, -1)
+        const axesHelper = objectCache.getOrSet("axisHelper", () => {
+            const obj = new THREE.AxesHelper()
+            obj.position.set(-1, -1, -1)
+            return obj
+        })
         scene.add(axesHelper)
 
         resourceTracker.markUsed(scene)

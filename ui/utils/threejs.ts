@@ -127,6 +127,11 @@ export class Object3DCache {
         obj: THREE.Object3D,
         scenesSinceUsed: number,
     }>
+    stats: {
+        hits: number,
+        misses: number,
+        expired: number,
+    }
     
     /* Number of scene changes in which an object is unused before it is disposed. */
     sceneTimeout: number
@@ -134,6 +139,11 @@ export class Object3DCache {
     constructor(sceneCountTimeout: number=4) {
         this.cache = new Map()
         this.sceneTimeout = sceneCountTimeout
+        this.stats = {
+            hits: 0,
+            misses: 0,
+            expired: 0,
+        }
     }
 
     set(key: string, obj: THREE.Object3D) {
@@ -143,8 +153,10 @@ export class Object3DCache {
     get(key: string): THREE.Object3D | null {
         const entry = this.cache.get(key)
         if(entry === undefined) {
+            this.stats.misses++
             return null
         }
+        this.stats.hits++
         entry.scenesSinceUsed = 0
         return entry.obj
     }
@@ -167,7 +179,16 @@ export class Object3DCache {
             entry.scenesSinceUsed++;
             if(entry.scenesSinceUsed > this.sceneTimeout) {
                 this.cache.delete(key)
+                this.stats.expired++
             }
+        }
+    }
+    
+    resetStats() {
+        this.stats = {
+            hits: 0,
+            misses: 0,
+            expired: 0,
         }
     }
 }
