@@ -143,6 +143,7 @@ const tableHeaders: {
                     label="Name"
                     required
                     v-model="newPuzzleFields.name"
+                    autofocus
             />
             <VSelect
                     label="Storage Location"
