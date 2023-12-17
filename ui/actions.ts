@@ -105,7 +105,10 @@ abstract class DeleteItemsAction extends Action {
 
 export class NewPieceAction extends Action {
     perform(puzzle: Puzzle): BoolWithReason {
-        const piece = new Piece(generateId(puzzle, "piece", "pieces"), [])
+        const piece = new Piece(
+            generateId(puzzle, "piece", "pieces"),
+            puzzle.grid.getDefaultPieceBounds()
+        )
         piece.color = getNewPieceColor(puzzle)
         puzzle.pieces.set(piece.id, piece)
         return {bool: true}

@@ -1,6 +1,6 @@
 import { Vector3 } from 'three'
 
-export type Size = Array<number>
+export type Bounds = Array<number>
 export type Coordinate = Array<any>
 export type Direction = string
 
@@ -16,9 +16,10 @@ export type CellInfo = {
 export type Viewpoint = {
     id: string,
     name: string,
-    nLayers: number,
     forwardVector: Vector3,
     xVector: Vector3,
+    getNLayers(bounds: Bounds): number,
+    isInLayer(coordinate: Coordinate, layerIndex: number): boolean,
 }
 
 export type Transform = {

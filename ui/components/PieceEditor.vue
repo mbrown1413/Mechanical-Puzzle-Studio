@@ -4,7 +4,6 @@ import {ref, Ref, computed} from "vue"
 import {Coordinate} from "~lib/types.ts"
 import {Puzzle} from  "~lib/Puzzle.ts"
 import {Action} from "~ui/actions.ts"
-import VerticalSlider from "~ui/common/VerticalSlider.vue"
 
 import {useGridDrawComposible} from "./PieceEditor_draw.ts"
 import {useMouseEventsComposible} from "./PieceEditor_mouse.ts"
@@ -73,13 +72,13 @@ useMouseEventsComposible(
                     density="compact"
             />
             <VSlider
-                    v-if="viewpoint.nLayers > 1"
-                    :ticks="[...Array(viewpoint.nLayers).keys()]"
+                    v-if="piece && viewpoint.getNLayers(piece.bounds) > 1"
+                    :ticks="[...Array(viewpoint.getNLayers(piece.bounds)).keys()]"
                     showTicks="always"
                     direction="vertical"
                     v-model="layerN"
                     min="0"
-                    :max="viewpoint.nLayers-1"
+                    :max="viewpoint.getNLayers(piece.bounds)-1"
                     step="1"
             />
         </div>

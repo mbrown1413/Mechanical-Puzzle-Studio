@@ -1,11 +1,11 @@
 import {Vector3} from "three"
 
-import {Viewpoint} from "~lib/types.ts"
+import {Bounds, Viewpoint} from "~lib/types.ts"
 import {registerClass} from '~lib/serialize.ts'
 import {Grid} from "~lib/Grid.ts"
 
 type RectCoordinate = [number, number, number]
-type RectSize = [number, number, number]
+type RectBounds = [number, number, number]
 type RectDirection = "+X" | "-X" | "+Y" | "-Y" | "+Z" | "-Z"
 type RectCellType = "cube"
 
@@ -37,26 +37,22 @@ const RECT_OPPOSITES: {[Property in RectDirection]: RectDirection} = {
 }
 
 export class RectGrid extends Grid {
-    size: RectSize
-
-    constructor(id: string, size: RectSize) {
-        super(id)
-        this.size = size
+    
+    getDefaultPieceBounds(): RectBounds {
+        return [3, 3, 3]
     }
-  
-    _boundsCheck(x: number, y: number, z: number) {
+
+    isInBounds(bounds: RectBounds, coordinate: RectCoordinate): Boolean {
+        let [x, y, z] = coordinate
         return (
-            x >= 0 && x < this.size[0] &&
-            y >= 0 && y < this.size[1] &&
-            z >= 0 && z < this.size[2]
+            x >= 0 && x < bounds[0] &&
+            y >= 0 && y < bounds[1] &&
+            z >= 0 && z < bounds[2]
         )
     }
   
     getCellInfo(coordinate: RectCoordinate): RectCellInfo {
         let [x, y, z] = coordinate
-        if(!this._boundsCheck(x, y, z)) {
-            throw "getCell() called on out-of-bounds coordinate "+coordinate
-        }
         let v = (x: number, y: number, z: number) => new Vector3(x, y, z)
         return {
             coordinate: coordinate,
@@ -73,11 +69,11 @@ export class RectGrid extends Grid {
         }
     }
 
-    getCoordinates() {
+    getCoordinates(bounds: Bounds) {
         let ret = []
-        for(let x=0; x<this.size[0]; x++) {
-            for(let y=0; y<this.size[1]; y++) {
-                for(let z=0; z<this.size[2]; z++) {
+        for(let x=0; x<bounds[0]; x++) {
+            for(let y=0; y<bounds[1]; y++) {
+                for(let z=0; z<bounds[2]; z++) {
                     ret.push([x, y, z])
                 }
             }
@@ -85,17 +81,11 @@ export class RectGrid extends Grid {
         return ret
     }
 
-    getAdjacent(coordinate: RectCoordinate, direction: RectDirection): [RectCoordinate|null, RectDirection] {
+    getAdjacent(coordinate: RectCoordinate, direction: RectDirection): [RectCoordinate, RectDirection] {
         let [x, y, z] = coordinate
-        if(!this._boundsCheck(x, y, z)) {
-            throw "getAdjacent() called on out-of-bounds coordinate "+coordinate
-        }
         let [dx, dy, dz] = RECT_DIR_DELTAS[direction]
         let [nx, ny, nz] = [x+dx, y+dy, z+dz]
-        let neighbor: RectCoordinate|null = null
-        if(this._boundsCheck(nx, ny, nz)) {
-            neighbor = [nx, ny, nz]
-        }
+        let neighbor: RectCoordinate|null = [nx, ny, nz]
         let oppositeDir = RECT_OPPOSITES[direction]
         return [neighbor, oppositeDir]
     }
@@ -115,41 +105,27 @@ export class RectGrid extends Grid {
             name: "X-Y Plane",
             forwardVector: new Vector3(0, 0, -1),
             xVector: new Vector3(1, 0, 0),
-            nLayers: this.size[2],
+            getNLayers(bounds) { return bounds[2] },
+            isInLayer(coordinate, layerIndex) { return coordinate[2] == layerIndex },
         }
         let xz: Viewpoint = {
             id: "xz",
             name: "X-Z Plane",
             forwardVector: new Vector3(0, -1, 0),
             xVector: new Vector3(1, 0, 0),
-            nLayers: this.size[1],
+            getNLayers(bounds) { return bounds[1] },
+            isInLayer(coordinate, layerIndex) { return coordinate[1] == layerIndex },
         }
         let yz: Viewpoint = {
             id: "yz",
             name: "Y-Z Plane",
             forwardVector: new Vector3(-1, 0, 0),
             xVector: new Vector3(0, 0, -1),
-            nLayers: this.size[0],
+            getNLayers(bounds) { return bounds[0] },
+            isInLayer(coordinate, layerIndex) { return coordinate[0] == layerIndex },
         }
         return [xy, xz, yz]
     }
-  
-    getViewpointLayer(viewpointId: string, layerNumber: number) {
-        let layerIndex: number;
-        if(viewpointId === "xy") {
-            layerIndex = 2
-        } else if(viewpointId === "xz") {
-            layerIndex = 1
-        } else if(viewpointId === "yz") {
-            layerIndex = 0
-        } else {
-            throw new Error("Unknown viewpoint ID "+viewpointId)
-        }
-        return this.getCoordinates().filter((coord) =>
-            coord[layerIndex] === layerNumber
-        )
-    }
-
 }
 
 registerClass(RectGrid)

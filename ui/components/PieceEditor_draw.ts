@@ -1,4 +1,4 @@
-import { ref, Ref, ComputedRef, onMounted, onUnmounted, watch } from 'vue'
+import { ref, Ref, ComputedRef, onMounted, onUnmounted, watch } from "vue"
 
 import * as THREE from "three"
 import {Vector3} from "three"
@@ -10,7 +10,7 @@ import {arraysEqual} from "~lib/utils.ts"
 import {Grid} from "~lib/Grid.ts"
 import {Piece} from  "~lib/Puzzle.ts"
 import {isColorSimilar} from "~lib/colors.ts"
-import {Object3DCache, ResourceTracker} from "~ui/utils/threejs.ts";
+import {Object3DCache, ResourceTracker} from "~ui/utils/threejs.ts"
 
 export function useGridDrawComposible(
     element: Ref<HTMLElement>,
@@ -72,18 +72,6 @@ export function useGridDrawComposible(
         const sphereDistance = boundingSphere.distanceToPoint(camera.position)
         camera.near = Math.max(sphereDistance * .9, 0.1)
         camera.far = (sphereDistance + boundingSphere.radius*2) * 1.1
-    }
-
-    function layerHasCoordinate(coordinate: Coordinate) {
-        if(!viewpoint.value) return false
-        let layerCoordinates = grid.getViewpointLayer(
-            viewpoint.value.id,
-            Number(layerN.value)
-        )
-
-        let cordToStr = (cord: Coordinate) => cord.join(",")
-        let coordSet: Set<string> = new Set(layerCoordinates.map(cordToStr))
-        return coordSet.has(cordToStr(coordinate))
     }
 
     function getPieceAtCoordinate(coordinate: Coordinate): Piece | null {
@@ -288,13 +276,14 @@ export function useGridDrawComposible(
         objectCache.resetStats()
         resourceTracker.markUnused(scene)
         scene.clear()
-        
         scene.add(getLights())
         
         hitTestObjects.value = []
-        for(let coordinate of grid.getCoordinates()) {
+
+        const bounds = piece.value ? piece.value.bounds : grid.getDefaultPieceBounds()
+        for(let coordinate of grid.getCoordinates(bounds)) {
             const cellInfo = grid.getCellInfo(coordinate)
-            const inLayer = layerHasCoordinate(coordinate)
+            const inLayer = viewpoint.value.isInLayer(coordinate, layerN.value)
             const pieceAtCoordinate = getPieceAtCoordinate(coordinate)
 
             let highlighted = highlightedCoordinate.value !== null &&

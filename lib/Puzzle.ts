@@ -1,4 +1,4 @@
-import {Coordinate} from "~lib/types.ts"
+import {Bounds, Coordinate} from "~lib/types.ts"
 import {SerializableClass, registerClass} from "~lib/serialize.ts"
 import {Grid} from "~lib/Grid.ts"
 import {Problem} from "~lib/Problem.ts"
@@ -59,12 +59,14 @@ export class Puzzle extends SerializableClass  {
 
 export class Piece extends SerializableClass {
     declare id: string
+    bounds: Bounds
     coordinates: Coordinate[]
     label: string
     color: string
 
-    constructor(id: string, coordinates: Coordinate[]) {
+    constructor(id: string, bounds: Bounds, coordinates: Coordinate[]=[]) {
         super(id)
+        this.bounds = bounds
         this.coordinates = coordinates
         this.label = id
         this.color = "#00ff00"

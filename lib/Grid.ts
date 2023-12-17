@@ -1,4 +1,4 @@
-import {Size, Coordinate, CellInfo, Direction, Viewpoint} from "~lib/types.ts"
+import {Bounds, Coordinate, CellInfo, Direction, Viewpoint} from "~lib/types.ts"
 import {SerializableClass} from "~lib/serialize.ts"
 
 /**
@@ -8,8 +8,9 @@ import {SerializableClass} from "~lib/serialize.ts"
  * A grid can be thought of as an undirected graph where each cell is a node
  * and the edges between cells are labeled on each end with a direction. Cells
  * are identified by coordinates and also have a type, which corresponds to
- * their shape when made physically (in jigsaws, this determines which pieces
- * can fit into this shape).
+ * their shape when made physically. Grids instances are typically infinite,
+ * but some methods take a bounds argument which limits the space which is
+ * considered.
  *
  * A simple example is a 2x2 rectangular grid. Each cell may be identified by
  * a (x, y) coordinate like so:
@@ -24,11 +25,13 @@ import {SerializableClass} from "~lib/serialize.ts"
  * and not arrays will take some getting used to though.
  */
 export abstract class Grid extends SerializableClass {
-    abstract size: Size
-    
-    constructor(id: string) {
+    constructor(id: string|null = null) {
         super(id)
     }
+    
+    abstract getDefaultPieceBounds(): Bounds
+
+    abstract isInBounds(coordinate: Coordinate, bounds: Bounds): Boolean
 
     /**
      * Return info describing the cell at the given coordinate.
@@ -38,10 +41,13 @@ export abstract class Grid extends SerializableClass {
     /**
      * Return the coordinate of all cells in the grid.
      */
-    abstract getCoordinates(): Coordinate[]
+    abstract getCoordinates(bounds: Bounds): Coordinate[]
   
     /**
      * Get coordinate next to the given coordinate in the given direction.
+     * 
+     * Although this may return coordinates which are out of any given bounds,
+     * it may also return null if the grid is finite or irregular.
      * 
      * @return [
      *   The coordinate of the adjacent cell or null if there is no cell there,
@@ -49,6 +55,17 @@ export abstract class Grid extends SerializableClass {
      * ]
      */
     abstract getAdjacent(coordinate: Coordinate, direction: Direction): [Coordinate|null, Direction]
+    
+    /**
+     * Same as `getAdjacent()`, but adjacent coordinates out of bounds are set to null.
+     */
+    getAdjacentInBounds(coordinate: Coordinate, direction: Direction, bounds: Bounds): [Coordinate|null, Direction] {
+        let [neighbor, oppositeDir] = this.getAdjacent(coordinate, direction)
+        if(neighbor !== null && !this.isInBounds(neighbor, bounds)) {
+            neighbor = null
+        }
+        return [neighbor, oppositeDir]
+    }
   
     /**
      * Get all possible cell types which may appear in this grid.
@@ -63,6 +80,4 @@ export abstract class Grid extends SerializableClass {
     //abstract applyTransform(cellType: CellType, transform: Transform): CellInfo
 
     abstract getViewpoints(): Viewpoint[]
-  
-    abstract getViewpointLayer(viewpointId: string, layerNumber: number): Coordinate[]
 }
