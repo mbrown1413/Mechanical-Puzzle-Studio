@@ -40,7 +40,7 @@ const {
     renderer,
     camera,
     hitTestObjects,
-    rebuildScene,
+    redraw,
 } = useGridDrawComposible(
     el,
     props.puzzle.grid,
@@ -55,12 +55,13 @@ useMouseEventsComposible(
     renderer,
     camera,
     hitTestObjects,
-    (action) => {
-        emit("action", action)
-        rebuildScene()
-    },
+    (action) => { emit("action", action) },
     highlightedCoordinate,  // Output ref
 )
+
+defineExpose({
+    redraw,
+})
 </script>
 
 <template>

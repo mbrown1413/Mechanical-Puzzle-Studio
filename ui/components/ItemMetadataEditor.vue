@@ -5,6 +5,7 @@ import {Piece, Puzzle} from  "~lib/Puzzle.ts"
 import {Problem} from "~lib/Problem.ts"
 import {Action, EditPieceMetadataAction, EditProblemMetadataAction} from "~ui/actions.ts"
 import ProblemPiecesEditor from "~ui/components/ProblemPiecesEditor.vue"
+import {Bounds} from "~lib/types"
 
 const props = defineProps<{
     puzzle: Puzzle,
@@ -19,7 +20,7 @@ const emit = defineEmits<{
 type Field = {
     property: string,
     label: string,
-    type: "string" | "color" | "piece" | "pieces",
+    type: "string" | "color" | "piece" | "pieces" | "bounds",
     required?: boolean,
 }
 
@@ -42,6 +43,10 @@ switch(props.itemType) {
                 property: "color",
                 label: "Color",
                 type: "color",
+            }, {
+                property: "bounds",
+                label: "Size",
+                type: "bounds",
             }
         ]
         break;
@@ -103,6 +108,16 @@ function handlePieceInput(field: Field, piece: Piece) {
     emit("action", action)
 }
 
+function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputElement) {
+    if(props.itemId === null || item.value === null) return
+    const metadata: any = {}
+    metadata[field.property] = item.value[field.property]
+    metadata[field.property][dimensionIndex] = Number(el.value)
+    const action = new actionClass(props.itemId, metadata)
+    emit("action", action)
+    
+}
+
 function getElId(field: Field) {
     return `metadataEditor-field-${props.itemId}-${field.property}`
 }
@@ -128,17 +143,17 @@ function getElId(field: Field) {
             >
                 <div class="col-auto">
                     <label
-                        :for="getElId(field)"
-                        class="form-label"
+                            :for="getElId(field)"
+                            class="form-label"
                     >{{ field.label }}</label>
                 </div>
                 <div class="col-auto">
                     <input
-                        :id="getElId(field)"
-                        type="color"
-                        class="form-control"
-                        :value="item[field.property]"
-                        @input="handleTextInput(field, $event.target as HTMLInputElement)"
+                            :id="getElId(field)"
+                            type="color"
+                            class="form-control"
+                            :value="item[field.property]"
+                            @input="handleTextInput(field, $event.target as HTMLInputElement)"
                     />
                 </div>
                 <div class="col-auto">
@@ -156,12 +171,30 @@ function getElId(field: Field) {
             />
             
             <ProblemPiecesEditor
-                v-if="field.type === 'pieces' && item instanceof Problem"
-                :puzzle="puzzle"
-                :problem="item"
-                :label="field.label"
-                @action="emit('action', $event)"
+                    v-if="field.type === 'pieces' && item instanceof Problem"
+                    :puzzle="puzzle"
+                    :problem="item"
+                    :label="field.label"
+                    @action="emit('action', $event)"
             />
+            
+            <VContainer
+                    v-if="field.type === 'bounds' && puzzle !== null && item instanceof Piece"
+            >
+                <VRow>
+                    <VCol
+                            v-for="(dimension, i) in puzzle.grid.getDimensions()"
+                    >
+                        <VTextField
+                                :label="dimension.name"
+                                type="number"
+                                min="1"
+                                :model-value="(item[field.property] as Bounds)[i]"
+                                @input="handleBoundsInput(field, i, $event.target as HTMLInputElement)"
+                        />
+                    </VCol>
+                </VRow>
+            </VContainer>
         </template>
 
     </div>

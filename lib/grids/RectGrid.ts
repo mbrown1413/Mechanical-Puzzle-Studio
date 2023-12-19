@@ -37,11 +37,15 @@ const RECT_OPPOSITES: {[Property in RectDirection]: RectDirection} = {
 }
 
 export class RectGrid extends Grid {
-    
-    getDefaultPieceBounds(): RectBounds {
-        return [3, 3, 3]
-    }
 
+    getDimensions() {
+        return [
+            {name: "X", defaultBound: 3},
+            {name: "Y", defaultBound: 3},
+            {name: "Z", defaultBound: 3},
+        ]
+    }
+    
     isInBounds(bounds: RectBounds, coordinate: RectCoordinate): Boolean {
         let [x, y, z] = coordinate
         return (

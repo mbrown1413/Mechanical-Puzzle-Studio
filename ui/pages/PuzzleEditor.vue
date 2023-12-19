@@ -25,6 +25,8 @@ const puzzleFile = reactive(
 const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
 const selectedProblemIds: Ref<string[]> = ref(["problem-0"])
 
+const pieceEditor: Ref<InstanceType<typeof PieceEditor> | null> = ref(null)
+
 const currentTabId = ref("pieces")
 const sideTabs = [
     {id: "pieces", text: "Pieces"},
@@ -33,6 +35,7 @@ const sideTabs = [
 
 function performAction(action: Action) {
     action.perform(puzzleFile.puzzle)
+    pieceEditor.value?.redraw()
     puzzleStorage.save(puzzleFile)
 }
 
@@ -41,7 +44,7 @@ const rowSlider: Ref<HTMLDivElement | null> = ref(null)
 onMounted(() => {
     if(columnSlider.value && rowSlider.value) {
         Split({
-            minSize: 100,
+            minSize: 200,
             columnGutters: [{
                 track: 1,
                 element: columnSlider.value
@@ -100,6 +103,7 @@ onMounted(() => {
         </div>
         <div class="grid-cell main">
             <PieceEditor
+                ref="pieceEditor"
                 v-show="currentTabId === 'pieces'"
                 :puzzle="puzzleFile.puzzle"
                 :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
@@ -126,7 +130,7 @@ onMounted(() => {
         "side-top  col-slide main" 1fr
         "row-slide col-slide main" 5px
         "side-bot  col-slide main" 1fr
-        / 200px    5px       4fr;
+        / 300px    5px       4fr;
 }
 
 .slider {

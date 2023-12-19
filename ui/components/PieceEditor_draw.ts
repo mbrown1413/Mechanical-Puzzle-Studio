@@ -338,6 +338,6 @@ export function useGridDrawComposible(
         scene,
         camera,
         hitTestObjects,
-        rebuildScene: () => {rebuild(); refresh()},
+        redraw: () => {rebuild(); refresh()},
     }
 }

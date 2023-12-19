@@ -51,7 +51,7 @@ function newPuzzleSubmit() {
     const puzzleFile = new PuzzleFile(
         new Puzzle(
             "puzzle-0",
-            new RectGrid("grid-0", [3, 3, 3])
+            new RectGrid()
         ),
         newPuzzleFields.name
     )

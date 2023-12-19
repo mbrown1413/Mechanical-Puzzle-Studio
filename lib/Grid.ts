@@ -1,4 +1,4 @@
-import {Bounds, Coordinate, CellInfo, Direction, Viewpoint} from "~lib/types.ts"
+import {Bounds, Coordinate, CellInfo, Dimension, Direction, Viewpoint} from "~lib/types.ts"
 import {SerializableClass} from "~lib/serialize.ts"
 
 /**
@@ -29,7 +29,16 @@ export abstract class Grid extends SerializableClass {
         super(id)
     }
     
-    abstract getDefaultPieceBounds(): Bounds
+    abstract getDimensions(): Dimension[]
+
+    getDefaultPieceBounds(): Bounds {
+        return this.getDimensions().map((dimension) => {
+            if(!dimension.defaultBound) {
+                throw "No default dimension size specified in grid"
+            }
+            return dimension.defaultBound
+        })
+    }
 
     abstract isInBounds(coordinate: Coordinate, bounds: Bounds): Boolean
 

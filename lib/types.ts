@@ -4,6 +4,11 @@ export type Bounds = Array<number>
 export type Coordinate = Array<any>
 export type Direction = string
 
+export type Dimension = {
+    name: string,
+    defaultBound?: number,
+}
+
 export type CellType = string
 
 export type CellInfo = {
