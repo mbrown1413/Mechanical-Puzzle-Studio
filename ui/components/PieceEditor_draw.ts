@@ -1,4 +1,4 @@
-import { ref, Ref, ComputedRef, onMounted, onUnmounted, watch } from "vue"
+import { ref, Ref, ComputedRef, onMounted, onUnmounted, watch, computed } from "vue"
 
 import * as THREE from "three"
 import {Vector3} from "three"
@@ -53,6 +53,22 @@ export function useGridDrawComposible(
         controls.dispose()
         renderer.dispose()
     })
+    
+    let cordToStr = (cord: Coordinate) => cord.join(",")
+    const pieceCoordinateSet: ComputedRef<Set<string>> = computed(() => {
+        if(piece.value === null) {
+            return new Set()
+        } else {
+            return new Set(piece.value.coordinates.map(cordToStr))
+        }
+    })
+    function getPieceAtCoordinate(coordinate: Coordinate): Piece | null {
+        if(pieceCoordinateSet.value.has(cordToStr(coordinate))) {
+            return piece.value
+        } else {
+            return null
+        }
+    }
 
     /* Call this when things like camera and window size change. */
     function refresh(
@@ -74,17 +90,6 @@ export function useGridDrawComposible(
         camera.far = (sphereDistance + boundingSphere.radius*2) * 1.1
     }
 
-    function getPieceAtCoordinate(coordinate: Coordinate): Piece | null {
-        if(piece.value === null) return null
-        let cordToStr = (cord: Coordinate) => cord.join(",")
-        let coordSet: Set<string> = new Set(piece.value.coordinates.map(cordToStr))
-        if(coordSet.has(cordToStr(coordinate))) {
-            return piece.value
-        } else {
-            return null
-        }
-    }
-    
     function getLights(): THREE.Object3D {
         return objectCache.getOrSet("lights", () => {
             const light1 = new THREE.DirectionalLight(0xffffff, 3)

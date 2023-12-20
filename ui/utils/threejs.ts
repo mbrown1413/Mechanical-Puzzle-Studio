@@ -70,6 +70,7 @@ export class ResourceTracker {
 
             } else if(obj instanceof THREE.Material) {
                 yield obj
+                /* Don't support textures, since we don't use them, and iterating over all attributes is slow.
                 for (const value of Object.values(obj)) {
                     if (value instanceof THREE.Texture) {
                         yield value
@@ -78,6 +79,7 @@ export class ResourceTracker {
                 if((obj as any).uniforms) {
                     throw "Uniforms non supported"
                 }
+                */
 
             } else {
                 throw "Unknown 3d object " + obj
