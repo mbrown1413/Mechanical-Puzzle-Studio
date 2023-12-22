@@ -16,10 +16,11 @@ const emit = defineEmits<{
 
 <template>
     <ListSelect
-        :items="Array.from(puzzle.pieces.values())"
-        :selectedIds="selectedPieceIds"
-        @update:selectedIds="emit('update:selectedPieceIds', $event)"
-        @add="emit('action', new NewPieceAction())"
-        @remove="emit('action', new DeletePiecesAction(selectedPieceIds))"
+            showButtons
+            :items="Array.from(puzzle.pieces.values())"
+            :selectedIds="selectedPieceIds"
+            @update:selectedIds="emit('update:selectedPieceIds', $event)"
+            @add="emit('action', new NewPieceAction())"
+            @remove="emit('action', new DeletePiecesAction(selectedPieceIds))"
     />
 </template>

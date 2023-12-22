@@ -3,7 +3,7 @@ import {SerializableClass, registerClass} from "~lib/serialize.ts"
 import {Grid} from "~lib/Grid.ts"
 import {Problem} from "~lib/Problem.ts"
 
-export class Puzzle extends SerializableClass  {
+export class Puzzle extends SerializableClass {
     grid: Grid
     pieces: Map<string, Piece>
     problems: Map<string, Problem>

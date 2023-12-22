@@ -2,7 +2,7 @@ import {Coordinate, BoolWithReason} from "~lib/types.ts"
 import {arraysEqual} from "~lib/utils.ts"
 import {getNextColor} from "~lib/colors.ts"
 import {Puzzle, Piece} from "~lib/Puzzle.ts"
-import {Problem} from "~lib/Problem.ts"
+import {AssemblyProblem, Problem} from "~lib/Problem.ts"
 
 function generateId(
     puzzle: Puzzle,
@@ -169,7 +169,7 @@ export class EditPieceMetadataAction extends EditItemMetadataAction {
 
 export class NewProblemAction extends Action {
     perform(puzzle: Puzzle): BoolWithReason {
-        const problem = new Problem(
+        const problem = new AssemblyProblem(
             generateId(puzzle, "problem", "problems"),
         )
         puzzle.problems.set(problem.id, problem)
@@ -190,11 +190,59 @@ export class EditProblemMetadataAction extends EditItemMetadataAction {
     }
     
     postEdit(problem: Problem) {
-        // Remove used piece entries with "0" count
-        for(const [pieceId, count] of problem.usedPieceCounts.entries()) {
-            if(count <= 0) {
-                problem.usedPieceCounts.delete(pieceId)
+        if(problem instanceof AssemblyProblem) {
+            // Remove used piece entries with "0" count
+            for(const [pieceId, count] of problem.usedPieceCounts.entries()) {
+                if(count <= 0) {
+                    problem.usedPieceCounts.delete(pieceId)
+                }
             }
         }
+    }
+}
+
+export class ProblemSolveAction extends Action {
+    problemId: string
+    
+    constructor(problemId: string) {
+        super()
+        this.problemId = problemId
+    }
+
+    perform(puzzle: Puzzle): BoolWithReason {
+        const problem = puzzle.problems.get(this.problemId)
+        if(!problem) {
+            return {
+                bool: false,
+                reason: `Problem ID ${this.problemId} not found`
+            }
+        }
+        problem.solutions = null
+
+        const solvers = problem.getSolvers()
+        if(problem.solverId === null) {
+            return {
+                bool: false,
+                reason: `No solver selected`
+            }
+        }
+        const solverInfo = solvers[problem.solverId]
+        if(!solverInfo) {
+            return {
+                bool: false,
+                reason: "Selected solver is not found"
+            }
+        }
+        if(!solverInfo.isUsable.bool) {
+            return {
+                bool: false,
+                reason: "Solver not usable: " + solverInfo.isUsable.reason
+            }
+        }
+        const solver = new solverInfo.solver()
+        const solutions = solver.solve(puzzle, problem)
+
+        problem.solutions = solutions
+        return {bool: true}
     }
 }

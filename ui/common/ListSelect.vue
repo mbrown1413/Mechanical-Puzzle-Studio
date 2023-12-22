@@ -9,10 +9,16 @@ type Item = {
     color?: string,
 }
 
-defineProps<{
-    items: Item[],
-    selectedIds: string[],
-}>()
+withDefaults(
+    defineProps<{
+        items: Item[],
+        selectedIds: string[],
+        showButtons?: boolean,
+    }>(), {
+        showButtons: false,
+    }
+)
+
 
 const emit = defineEmits<{
     "update:selectedIds": [ids: string[]],
@@ -29,7 +35,7 @@ function onItemsSelect() {
 
 <template>
     <div class="list-container">
-        <div class="buttons">
+        <div class="buttons" v-if="showButtons">
             <button
                 class="action-button del-button"
                 @click="emit('remove')"

@@ -6,6 +6,7 @@ import ListSelect from "~ui/common/ListSelect.vue"
 defineProps<{
     puzzle: Puzzle,
     selectedProblemIds: string[],
+    allowCreateDelete: boolean,
 }>()
 
 const emit = defineEmits<{
@@ -16,10 +17,11 @@ const emit = defineEmits<{
 
 <template>
     <ListSelect
-        :items="Array.from(puzzle.problems.values())"
-        :selectedIds="selectedProblemIds"
-        @update:selectedIds="emit('update:selectedProblemIds', $event)"
-        @add="emit('action', new NewProblemAction())"
-        @remove="emit('action', new DeleteProblemsAction(selectedProblemIds))"
+            :showButtons="allowCreateDelete"
+            :items="Array.from(puzzle.problems.values())"
+            :selectedIds="selectedProblemIds"
+            @update:selectedIds="emit('update:selectedProblemIds', $event)"
+            @add="emit('action', new NewProblemAction())"
+            @remove="emit('action', new DeleteProblemsAction(selectedProblemIds))"
     />
 </template>

@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import {ref, Ref, reactive, onMounted} from "vue"
+import {computed, ref, Ref, reactive, onMounted} from "vue"
 import Split from "split-grid"
 
 import {PuzzleFile} from "~lib/PuzzleFile.ts"
 
-import {Action} from "~ui/actions.ts"
+import {Action, ProblemSolveAction} from "~ui/actions.ts"
 import {getStorageInstances} from "~ui/storage.ts"
 import TabLayout from "~ui/common/TabLayout.vue"
 import PieceEditor from "~ui/components/PieceEditor.vue"
 import ItemMetadataEditor from "~ui/components/ItemMetadataEditor.vue"
 import PieceList from "~ui/components/PieceList.vue"
 import ProblemList from "~ui/components/ProblemList.vue"
+import ProblemSolverForm from "~ui/components/ProblemSolverForm.vue"
+import ListSelect from "~ui/common/ListSelect.vue"
 
 const props = defineProps<{
     storageId: string,
@@ -24,6 +26,7 @@ const puzzleFile = reactive(
 
 const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
 const selectedProblemIds: Ref<string[]> = ref(["problem-0"])
+const selectedSolutionIds: Ref<string[]> = ref([])
 
 const pieceEditor: Ref<InstanceType<typeof PieceEditor> | null> = ref(null)
 
@@ -31,12 +34,34 @@ const currentTabId = ref("pieces")
 const sideTabs = [
     {id: "pieces", text: "Pieces"},
     {id: "problems", text: "Problems"},
+    {id: "solutions", text: "Solutions"},
 ]
+
+const solutionItems = computed(() => {
+    if(selectedProblemIds.value.length !== 1) {
+        return []
+    }
+    const problem = puzzleFile.puzzle.problems.get(selectedProblemIds.value[0])
+    if(!problem || problem.solutions === null) {
+        return []
+    }
+    return problem.solutions.map((_, i) => {
+        const id = `Solution ${i}`
+        return {
+            id: id,
+            label: id,
+        }
+    })
+})
 
 function performAction(action: Action) {
     action.perform(puzzleFile.puzzle)
     pieceEditor.value?.redraw()
     puzzleStorage.save(puzzleFile)
+    
+    if(action instanceof ProblemSolveAction) {
+        currentTabId.value = "solutions"
+    }
 }
 
 const columnSlider: Ref<HTMLDivElement | null> = ref(null)
@@ -44,7 +69,7 @@ const rowSlider: Ref<HTMLDivElement | null> = ref(null)
 onMounted(() => {
     if(columnSlider.value && rowSlider.value) {
         Split({
-            minSize: 200,
+            minSize: 315,
             columnGutters: [{
                 track: 1,
                 element: columnSlider.value
@@ -68,7 +93,9 @@ onMounted(() => {
         </div>
     </VAppBar>
     <VMain class="puzzleEditor-container">
+
         <div class="slider col-slide" ref="columnSlider"></div>
+
         <div class="grid-cell side-top">
             <TabLayout
                 :tabs="sideTabs"
@@ -85,13 +112,24 @@ onMounted(() => {
                 <template v-slot:problems>
                     <ProblemList
                         :puzzle="puzzleFile.puzzle"
+                        :allowCreateDelete="true"
+                        v-model:selectedProblemIds="selectedProblemIds"
+                        @action="performAction"
+                    />
+                </template>
+                <template v-slot:solutions>
+                    <ProblemList
+                        :puzzle="puzzleFile.puzzle"
+                        :allowCreateDelete="false"
                         v-model:selectedProblemIds="selectedProblemIds"
                         @action="performAction"
                     />
                 </template>
             </TabLayout>
         </div>
+
         <div class="slider row-slide" ref="rowSlider"></div>
+
         <div class="grid-cell side-bot">
             <ItemMetadataEditor
                 v-show="currentTabId === 'pieces'"
@@ -100,7 +138,21 @@ onMounted(() => {
                 :itemId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
                 @action="performAction"
             />
+            <ProblemSolverForm
+                v-show="currentTabId === 'problems' && selectedProblemIds"
+                :puzzle="puzzleFile.puzzle"
+                :problemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
+                @action="performAction"
+            />
+            <div v-show="currentTabId === 'solutions'">
+                <h4>Solutions</h4>
+                <ListSelect
+                        :items="solutionItems"
+                        v-model:selectedIds="selectedSolutionIds"
+                />
+            </div>
         </div>
+
         <div class="grid-cell main">
             <PieceEditor
                 ref="pieceEditor"
@@ -116,7 +168,11 @@ onMounted(() => {
                 :itemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
                 @action="performAction"
             />
+            <div v-show="currentTabId === 'solutions'">
+                {{ selectedSolutionIds }}
+            </div>
         </div>
+
     </VMain>
 </template>
 
@@ -130,7 +186,7 @@ onMounted(() => {
         "side-top  col-slide main" 1fr
         "row-slide col-slide main" 5px
         "side-bot  col-slide main" 1fr
-        / 300px    5px       4fr;
+        / 315px    5px       4fr;
 }
 
 .slider {

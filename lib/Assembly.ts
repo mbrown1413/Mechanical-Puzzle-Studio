@@ -1,7 +1,7 @@
 import {Coordinate} from "~lib/types.ts"
 import {Piece} from "~lib/Puzzle.ts"
 
-export class Arrangement {
+export class Assembly {
     // Map pieces to their location.
     // Unplaced pieces have no entry.
     placements: Map<Piece, Coordinate>
