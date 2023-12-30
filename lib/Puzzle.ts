@@ -170,6 +170,16 @@ export class Puzzle extends SerializableClass {
         pieceOrId: Piece | string,
         availableCoordinates: Coordinate[]
     ): Iterable<PiecePlacement> {
+
+        const usedPlacements: Set<string> = new Set()
+        function getPlacementKey(piece: Piece): string {
+            const coordStrings = piece.coordinates.map((coordinate) =>
+                coordinate.join(",")
+            )
+            coordStrings.sort()
+            return coordStrings.join(";")
+        }
+
         const piece = this.getPieceFromPieceOrId(pieceOrId)
         for(const pieceVariation of this.getPieceVariations(piece)) {
             const pieceTranslations = this.getPieceTranslations(
@@ -178,6 +188,11 @@ export class Puzzle extends SerializableClass {
             )
             const z = Array.from(pieceTranslations)
             for(const pieceTranslation of z) {
+                
+                const key = getPlacementKey(pieceTranslation.transformedPiece)
+                if(usedPlacements.has(key)) continue
+                usedPlacements.add(key)
+
                 yield {
                     originalPiece: piece,
                     transformedPiece: pieceTranslation.transformedPiece,

@@ -151,7 +151,7 @@ describe("Puzzle", () => {
             piece,
             puzzle.grid.getCoordinates([3, 2, 2])
         ))
-        expect(placements.length).toEqual(160)
+        expect(placements.length).toEqual(20)
         expect(
             makePlacementSet(placements.map((p) => p.transformedPiece.coordinates))
         ).toMatchObject(
@@ -191,12 +191,11 @@ describe("Puzzle", () => {
             piece,
             [[0, 0, 0], [0, 1, 0], [1, 1, 0]]
         ))
-        expect(placements.length).toEqual(2)
+        expect(placements.length).toEqual(1)
         expect(
             placements.map((p) => p.transformedPiece.coordinates)
         ).toMatchObject([
             [[0, 0, 0], [0, 1, 0], [1, 1, 0]],
-            [[1, 1, 0], [0, 1, 0], [0, 0, 0]],
         ])
     })
 })
