@@ -1,28 +1,7 @@
 import {Coordinate, BoolWithReason} from "~lib/types.ts"
 import {arraysEqual} from "~lib/utils.ts"
-import {getNextColor} from "~lib/colors.ts"
 import {Puzzle, Piece} from "~lib/Puzzle.ts"
 import {AssemblyProblem, Problem} from "~lib/Problem.ts"
-
-function generateId(
-    puzzle: Puzzle,
-    prefix: string,
-    listAttribute: "pieces"|"problems"
-): string {
-    //TODO: Make this O(1), not O(n)
-    for(let i=0; ; i++) {
-        const id = prefix+"-"+i
-        if(!puzzle[listAttribute].has(id)) {
-            return id
-        }
-    }
-}
-
-function getNewPieceColor(puzzle: Puzzle): string {
-    const piecesList = Array.from(puzzle.pieces.values())
-    const existingColors = piecesList.map((piece) => piece.color)
-    return getNextColor(existingColors)
-}
 
 
 ////////// Base Classes //////////
@@ -106,11 +85,11 @@ abstract class DeleteItemsAction extends Action {
 export class NewPieceAction extends Action {
     perform(puzzle: Puzzle): BoolWithReason {
         const piece = new Piece(
-            generateId(puzzle, "piece", "pieces"),
+            puzzle.generateId("piece", "pieces"),
             puzzle.grid.getDefaultPieceBounds()
         )
-        piece.color = getNewPieceColor(puzzle)
-        puzzle.pieces.set(piece.id, piece)
+        piece.color = puzzle.getNewPieceColor()
+        puzzle.addPiece(piece)
         return {bool: true}
     }
 }
@@ -170,9 +149,9 @@ export class EditPieceMetadataAction extends EditItemMetadataAction {
 export class NewProblemAction extends Action {
     perform(puzzle: Puzzle): BoolWithReason {
         const problem = new AssemblyProblem(
-            generateId(puzzle, "problem", "problems"),
+            puzzle.generateId("problem", "problems"),
         )
-        puzzle.problems.set(problem.id, problem)
+        puzzle.addProblem(problem)
         return {bool: true}
     }
 }

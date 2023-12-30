@@ -1,4 +1,4 @@
-import {Bounds, Coordinate, CellInfo, Dimension, Direction, Viewpoint} from "~lib/types.ts"
+import {Bounds, Coordinate, CellInfo, Dimension, Direction, Viewpoint, Orientation, Translation} from "~lib/types.ts"
 import {SerializableClass} from "~lib/serialize.ts"
 
 /**
@@ -76,17 +76,10 @@ export abstract class Grid extends SerializableClass {
         return [neighbor, oppositeDir]
     }
   
-    /**
-     * Get all possible cell types which may appear in this grid.
-     */
-    //abstract getCellTypes(): Iterable<CellType>
-  
-    /**
-     * Get transforms which can be applied to the given cell type.
-     */
-    //abstract getTransforms(cellType: CellType): Iterable<Transform>
-  
-    //abstract applyTransform(cellType: CellType, transform: Transform): CellInfo
+    abstract getOrientations(): Orientation[]
+    
+    abstract translate(coordinate: Coordinate, translation: Translation): Coordinate | null
+    abstract getTranslation(from: Coordinate, to: Coordinate): Translation | null
 
     abstract getViewpoints(): Viewpoint[]
 }

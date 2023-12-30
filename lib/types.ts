@@ -27,9 +27,12 @@ export type Viewpoint = {
     isInLayer(coordinate: Coordinate, layerIndex: number): boolean,
 }
 
-export type Transform = {
-    id: string,
+export type OrientationFunc = (oldCoordinates: Coordinate[]) => Coordinate[] | null
+export type Orientation = {
+    orientationFunc: OrientationFunc
 }
+
+export type Translation = Array<number>
 
 /* Stores a boolean, and an optional reason for its value. If `false`, the
  * reason is required. Used for success/failure return values. */

@@ -46,7 +46,7 @@ const solutionItems = computed(() => {
         return []
     }
     return problem.solutions.map((_, i) => {
-        const id = `Solution ${i}`
+        const id = `solution-${i}`
         return {
             id: id,
             label: id,

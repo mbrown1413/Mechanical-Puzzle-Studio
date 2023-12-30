@@ -1,11 +1,12 @@
-import {Vector3} from "three"
+import {Vector3, Matrix3} from "three"
 
-import {Bounds, Viewpoint} from "~lib/types.ts"
+import {Bounds, Coordinate, Viewpoint} from "~lib/types.ts"
 import {registerClass} from '~lib/serialize.ts'
 import {Grid} from "~lib/Grid.ts"
 
 type RectCoordinate = [number, number, number]
 type RectBounds = [number, number, number]
+type RectTranslation = [number, number, number]
 type RectDirection = "+X" | "-X" | "+Y" | "-Y" | "+Z" | "-Z"
 type RectCellType = "cube"
 
@@ -45,7 +46,7 @@ export class RectGrid extends Grid {
             {name: "Z", defaultBound: 3},
         ]
     }
-    
+
     isInBounds(bounds: RectBounds, coordinate: RectCoordinate): Boolean {
         let [x, y, z] = coordinate
         return (
@@ -54,7 +55,7 @@ export class RectGrid extends Grid {
             z >= 0 && z < bounds[2]
         )
     }
-  
+
     getCellInfo(coordinate: RectCoordinate): RectCellInfo {
         let [x, y, z] = coordinate
         let v = (x: number, y: number, z: number) => new Vector3(x, y, z)
@@ -93,16 +94,86 @@ export class RectGrid extends Grid {
         let oppositeDir = RECT_OPPOSITES[direction]
         return [neighbor, oppositeDir]
     }
-  
-    /*
-    getTransforms(cell: RectCellType | RectCellInfo): Iterable<Transform> {
-        return []
+
+    getOrientations() {
+        // Matrices to rotate 3D coordinate around X, Y or Z axis (clockwise
+        // when viewed from a positive coordinate looking down at the origin).
+        const rotateX = new Matrix3(
+            1, 0,  0,
+            0, 0, -1,
+            0, 1,  0
+        )
+        const rotateY = new Matrix3(
+             0, 0, 1,
+             0, 1, 0,
+            -1, 0, 0
+        )
+        const rotateZ = new Matrix3(
+            0, -1, 0,
+            1,  0, 0,
+            0,  0, 1
+        )
+
+        // Each of these rotation matrices transform the given face so it's facing +X
+        const faceXMatrices = {
+            "+X": new Matrix3().identity(),
+            "-X": rotateZ.clone().multiply(rotateZ),
+            "+Y": rotateZ,
+            "-Y": rotateZ.clone().multiply(rotateZ).multiply(rotateZ),
+            "+Z": rotateY.clone().multiply(rotateY).multiply(rotateY),
+            "-Z": rotateY,
+        }
+
+        // Rotate each face to point in the +X direction, then rotate on the X
+        // axis 0-3 times. This covers all possible orientations.
+        const orientationMatrices = []
+        for(const faceXMatrix of Object.values(faceXMatrices)) {
+            for(let nXRotations of [0, 1, 2, 3]) {
+                const matrix = faceXMatrix.clone()
+                for(let i=0; i<nXRotations; i++) {
+                    matrix.multiply(rotateX)
+                }
+                orientationMatrices.push(matrix)
+            }
+        }
+
+        function coordinateMultiply(coord: Coordinate, m: THREE.Matrix3): RectCoordinate {
+            return [
+                coord[0]*m.elements[0] + coord[1]*m.elements[1] + coord[2]*m.elements[2],
+                coord[0]*m.elements[3] + coord[1]*m.elements[4] + coord[2]*m.elements[5],
+                coord[0]*m.elements[6] + coord[1]*m.elements[7] + coord[2]*m.elements[8],
+            ]
+        }
+
+        return orientationMatrices.map((matrix) => {
+            return {
+                orientationFunc(coords: Coordinate[]): RectCoordinate[] {
+                    const newCoords = coords.map((coord) => coordinateMultiply(coord, matrix))
+                    let minX = Math.min(...newCoords.map(c => c[0]))
+                    let minY = Math.min(...newCoords.map(c => c[1]))
+                    let minZ = Math.min(...newCoords.map(c => c[2]))
+                    return newCoords.map(c => [c[0]-minX, c[1]-minY, c[2]-minZ])
+                }
+            }
+        })
     }
-    
-    applyTransform(cell: RectCellInfo, transform: RectTransform): RectCellInfo {
+
+    translate(coordinate: RectCoordinate, translation: RectTranslation) {
+        return [
+            coordinate[0] + translation[0],
+            coordinate[1] + translation[1],
+            coordinate[2] + translation[2],
+        ]
     }
-    */
-  
+
+    getTranslation(from: RectCoordinate, to: RectCoordinate): RectTranslation {
+        return [
+            to[0] - from[0],
+            to[1] - from[1],
+            to[2] - from[2],
+        ]
+    }
+
     getViewpoints() {
         let xy: Viewpoint = {
             id: "xy",

@@ -7,6 +7,7 @@ export abstract class Solution extends SerializableClass {
 }
 
 export class AssemblySolution extends Solution {
+    //piecePlacements: Map<string, [Coordinate, Transform[]]>
 }
 
 registerClass(AssemblySolution)

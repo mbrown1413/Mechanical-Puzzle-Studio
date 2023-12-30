@@ -147,7 +147,7 @@ export abstract class SerializableClass {
      * property like this:
      *     declare id: string
      */
-    readonly id: string | null
+    id: string | null
 
     [s: string]: SerializableType | Function
 
