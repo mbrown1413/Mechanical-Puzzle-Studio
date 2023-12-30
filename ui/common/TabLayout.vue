@@ -18,6 +18,7 @@ const emit = defineEmits<{
 
 <template>
     <VTabs
+            v-bind:model-value="currentTabId"
             @update:model-value="emit('update:currentTabId', $event as string)"
     >
         <VTab
