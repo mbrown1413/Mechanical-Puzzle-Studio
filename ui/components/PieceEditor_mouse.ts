@@ -66,6 +66,9 @@ export function useMouseEventsComposible(
             } else {
                 toAdd = [intersectedObject.userData.coordinate]
             }
+            if(piece.value.id === null) {
+                throw "Cannot edit piece with no ID"
+            }
             actionCallback(new EditPieceAction(piece.value.id, toAdd, toRemove))
         }
     }

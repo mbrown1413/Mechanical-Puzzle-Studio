@@ -1,28 +1,27 @@
-import {Bounds, Coordinate, Orientation, Translation} from "~lib/types.ts"
+import {Bounds, Coordinate, Translation} from "~lib/types.ts"
 import {SerializableClass, deserialize, registerClass, serialize} from "~lib/serialize.ts"
 import {Grid} from "~lib/Grid.ts"
 import {Problem} from "~lib/Problem.ts"
 import {arrayContainsCoordinate} from "~lib/utils.ts"
 import {getNextColor} from "~lib/colors.ts"
 
-export type PieceVariation = {
+export class PiecePlacement extends SerializableClass {
     originalPiece: Piece
     transformedPiece: Piece
-    orientation: Orientation
+    translation: Translation | null
+    
+    constructor(
+        originalPiece: Piece,
+        transformedPiece: Piece,
+        translation: Translation | null = null,
+    ) {
+        super(null)
+        this.originalPiece = originalPiece
+        this.transformedPiece = transformedPiece
+        this.translation = translation
+    }
 }
-
-export type PieceTranslation = {
-    originalPiece: Piece
-    transformedPiece: Piece
-    translation: Translation
-}
-
-export type PiecePlacement = {
-    originalPiece: Piece
-    transformedPiece: Piece
-    orientation: Orientation
-    translation: Translation
-}
+registerClass(PiecePlacement)
 
 export class Puzzle extends SerializableClass {
     grid: Grid
@@ -55,7 +54,7 @@ export class Puzzle extends SerializableClass {
         return getNextColor(existingColors)
     }
 
-    addPiece(piece: Piece) {
+    addPiece(piece: Piece): Piece {
         if(piece.id === null) {
             throw "Cannot add piece without ID"
         }
@@ -63,6 +62,7 @@ export class Puzzle extends SerializableClass {
             throw `Duplicate piece ID: ${piece.id}`
         }
         this.pieces.set(piece.id, piece)
+        return piece
     }
 
     hasPiece(pieceOrId: Piece | string): boolean {
@@ -118,7 +118,7 @@ export class Puzzle extends SerializableClass {
         }
     }
 
-    *getPieceVariations(pieceOrId: Piece | string): Iterable<PieceVariation> {
+    *getPieceVariations(pieceOrId: Piece | string): Iterable<PiecePlacement> {
         const piece = this.getPieceFromPieceOrId(pieceOrId)
         const orientations = this.grid.getOrientations()
         for(const orientation of orientations) {
@@ -126,24 +126,20 @@ export class Puzzle extends SerializableClass {
             if(newCoordinates === null) { continue }
             const transformedPiece = piece.copy()
             transformedPiece.coordinates = newCoordinates
-            yield {
-                originalPiece: piece,
-                transformedPiece,
-                orientation: orientation
-            }
+            yield new PiecePlacement(piece, transformedPiece)
         }
     }
 
     *getPieceTranslations(
         pieceOrId: Piece | string,
         availableCoordinates: Coordinate[]
-    ): Iterable<PieceTranslation> {
+    ): Iterable<PiecePlacement> {
         const piece = this.getPieceFromPieceOrId(pieceOrId)
 
         for(const toCoordinate of availableCoordinates) {
             const translation = this.grid.getTranslation(piece.coordinates[0], toCoordinate)
             if(translation === null) { continue }
-            
+
             const newCoordinates = []
             for(const oldCoordinate of piece.coordinates) {
                 const newCoordinate = this.grid.translate(oldCoordinate, translation)
@@ -158,14 +154,10 @@ export class Puzzle extends SerializableClass {
 
             const newPiece = piece.copy()
             newPiece.coordinates = newCoordinates
-            yield {
-                originalPiece: piece,
-                transformedPiece: newPiece,
-                translation
-            }
+            yield new PiecePlacement(piece, newPiece, translation)
         }
     }
-    
+
     *getPiecePlacements(
         pieceOrId: Piece | string,
         availableCoordinates: Coordinate[]
@@ -188,17 +180,16 @@ export class Puzzle extends SerializableClass {
             )
             const z = Array.from(pieceTranslations)
             for(const pieceTranslation of z) {
-                
+
                 const key = getPlacementKey(pieceTranslation.transformedPiece)
                 if(usedPlacements.has(key)) continue
                 usedPlacements.add(key)
 
-                yield {
-                    originalPiece: piece,
-                    transformedPiece: pieceTranslation.transformedPiece,
-                    orientation: pieceVariation.orientation,
-                    translation: pieceTranslation.translation,
-                }
+                yield new PiecePlacement(
+                    piece,
+                    pieceTranslation.transformedPiece,
+                    pieceTranslation.translation,
+                )
             }
         }
     }
@@ -217,7 +208,7 @@ export class Piece extends SerializableClass {
         this.label = id || "unlabeled-piece"
         this.color = "#00ff00"
     }
-    
+
     copy(): Piece {
         const coppied = deserialize<Piece>(serialize(this), "Piece")
         coppied.id = null

@@ -13,6 +13,7 @@ import PieceList from "~ui/components/PieceList.vue"
 import ProblemList from "~ui/components/ProblemList.vue"
 import ProblemSolverForm from "~ui/components/ProblemSolverForm.vue"
 import ListSelect from "~ui/common/ListSelect.vue"
+import {serialize} from "~lib/serialize.ts"
 
 const props = defineProps<{
     storageId: string,
@@ -45,13 +46,26 @@ const solutionItems = computed(() => {
     if(!problem || problem.solutions === null) {
         return []
     }
-    return problem.solutions.map((_, i) => {
+    return problem.solutions.map((solution, i) => {
         const id = `solution-${i}`
         return {
             id: id,
             label: id,
+            solution,
         }
     })
+})
+
+const selectedSolutions = computed(() => {
+    return solutionItems.value.filter(
+        (item) => selectedSolutionIds.value.includes(item.id)
+    ).map(
+        (item) => item.solution
+    )
+})
+
+const solutionsText = computed(() => {
+    return JSON.stringify(serialize(selectedSolutions.value), null, 2)
 })
 
 function performAction(action: Action) {
@@ -170,6 +184,7 @@ onMounted(() => {
             />
             <div v-show="currentTabId === 'solutions'">
                 {{ selectedSolutionIds }}
+                <pre>{{ solutionsText }}</pre>
             </div>
         </div>
 
