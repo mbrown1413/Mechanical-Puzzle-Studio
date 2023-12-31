@@ -166,7 +166,7 @@ function getElId(field: Field) {
                     :label="field.label"
                     :required="field.required !== false"
                     :items="pieceItems"
-                    :modelValue="item[field.property]"
+                    :modelValue="puzzle.pieces.get(item[field.property] as string)"
                     @update:modelValue="handlePieceInput(field, $event as Piece)"
             />
             
