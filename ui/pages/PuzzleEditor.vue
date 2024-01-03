@@ -8,12 +8,12 @@ import {Action, ProblemSolveAction} from "~ui/actions.ts"
 import {getStorageInstances} from "~ui/storage.ts"
 import TabLayout from "~ui/common/TabLayout.vue"
 import PieceEditor from "~ui/components/PieceEditor.vue"
+import SolutionViewer from "~ui/components/SolutionViewer.vue"
 import ItemMetadataEditor from "~ui/components/ItemMetadataEditor.vue"
 import PieceList from "~ui/components/PieceList.vue"
 import ProblemList from "~ui/components/ProblemList.vue"
 import ProblemSolverForm from "~ui/components/ProblemSolverForm.vue"
 import ListSelect from "~ui/common/ListSelect.vue"
-import {serialize} from "~lib/serialize.ts"
 
 const props = defineProps<{
     storageId: string,
@@ -62,10 +62,6 @@ const selectedSolutions = computed(() => {
     ).map(
         (item) => item.solution
     )
-})
-
-const solutionsText = computed(() => {
-    return JSON.stringify(serialize(selectedSolutions.value), null, 2)
 })
 
 function performAction(action: Action) {
@@ -182,10 +178,11 @@ onMounted(() => {
                 :itemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
                 @action="performAction"
             />
-            <div v-show="currentTabId === 'solutions'">
-                {{ selectedSolutionIds }}
-                <pre>{{ solutionsText }}</pre>
-            </div>
+            <SolutionViewer
+                v-show="currentTabId === 'solutions'"
+                :puzzle="puzzleFile.puzzle"
+                :solution="selectedSolutions[0] || null"
+            />
         </div>
 
     </VMain>

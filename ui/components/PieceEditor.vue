@@ -3,9 +3,9 @@ import {ref, Ref, computed} from "vue"
 
 import {Coordinate} from "~lib/types.ts"
 import {Puzzle} from  "~lib/Puzzle.ts"
-import {Action} from "~ui/actions.ts"
 
-import {useGridDrawComposible} from "./PieceEditor_draw.ts"
+import {Action} from "~ui/actions.ts"
+import {useGridDrawComposible} from "~ui/composibles/drawGrid.ts"
 import {useMouseEventsComposible} from "./PieceEditor_mouse.ts"
 
 const props = defineProps<{
@@ -36,6 +36,10 @@ const piece = computed(() =>
     props.pieceId === null ? null : props.puzzle.pieces.get(props.pieceId) || null
 )
 
+const pieces = computed(() =>
+    piece.value === null ? [] : [piece.value]
+)
+
 const {
     renderer,
     camera,
@@ -44,7 +48,7 @@ const {
 } = useGridDrawComposible(
     el,
     props.puzzle.grid,
-    piece,
+    pieces,
     layerN,
     viewpoint,
     highlightedCoordinate,
@@ -102,4 +106,4 @@ defineExpose({
 .controls > * {
     margin: 0 auto;
 }
-</style>
+</style>./drawGrid.ts

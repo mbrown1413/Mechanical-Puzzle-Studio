@@ -15,7 +15,7 @@ import {Object3DCache, ResourceTracker} from "~ui/utils/threejs.ts"
 export function useGridDrawComposible(
     element: Ref<HTMLElement>,
     grid: Grid,
-    piece: ComputedRef<Piece | null>,
+    pieces: ComputedRef<Piece[]>,
     layerN: Ref<number>,
     viewpoint: Ref<Viewpoint>,
     highlightedCoordinate: Ref<Coordinate | null>,
@@ -34,7 +34,7 @@ export function useGridDrawComposible(
     controls.listenToKeyEvents(window)
     controls.addEventListener('change', refresh)
 
-    watch([piece, viewpoint, layerN, highlightedCoordinate], () => {
+    watch([pieces, viewpoint, layerN, highlightedCoordinate], () => {
         rebuild()
         refresh()
     })
@@ -54,9 +54,10 @@ export function useGridDrawComposible(
         renderer.dispose()
     })
     
-    let cordToStr = (cord: Coordinate) => cord.join(",")
+    let coordinateToString = (cord: Coordinate) => cord.join(",")
+    /*
     const pieceCoordinateSet: ComputedRef<Set<string>> = computed(() => {
-        if(piece.value === null) {
+        if(pieces.value.length === 0) {
             return new Set()
         } else {
             return new Set(piece.value.coordinates.map(cordToStr))
@@ -68,6 +69,20 @@ export function useGridDrawComposible(
         } else {
             return null
         }
+    }
+    */
+    const coordinatePieceMap = computed(() => {
+        const map = new Map()
+        for(const piece of pieces.value) {
+            for(const coordinate of piece.coordinates) {
+                map.set(coordinateToString(coordinate), piece)
+            }
+        }
+        return map
+    })
+    function getPieceAtCoordinate(coordinate: Coordinate): Piece | null {
+        const piece = coordinatePieceMap.value.get(coordinateToString(coordinate))
+        return piece === undefined ? null : piece
     }
 
     /* Call this when things like camera and window size change. */
@@ -285,7 +300,18 @@ export function useGridDrawComposible(
         
         hitTestObjects.value = []
 
-        const bounds = piece.value ? piece.value.bounds : grid.getDefaultPieceBounds()
+        let bounds
+        if(pieces.value.length === 0) {
+            bounds = grid.getDefaultPieceBounds()
+        } else {
+            bounds = pieces.value[0].bounds
+            for(const piece of pieces.value) {
+                for(const i of bounds.keys()) {
+                    bounds[i] = Math.max(bounds[i], piece.bounds[i])
+                }
+            }
+        }
+
         for(let coordinate of grid.getCoordinates(bounds)) {
             const cellInfo = grid.getCellInfo(coordinate)
             const inLayer = viewpoint.value.isInLayer(coordinate, layerN.value)
