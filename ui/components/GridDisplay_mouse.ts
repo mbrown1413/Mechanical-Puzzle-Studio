@@ -1,22 +1,19 @@
-import { Ref, onMounted, ComputedRef } from "vue"
+import { Ref, onMounted} from "vue"
 
 import * as THREE from "three"
 import {Vector2} from "three"
 
-import {Piece} from "~lib/Puzzle.ts"
 import {Coordinate} from "~lib/types.ts"
 import {arraysEqual} from "~lib/utils.ts"
-import {Action, EditPieceAction} from "~ui/actions.ts"
 
-export function useMouseEventsComposible(
+export function useGridMouseComposible(
     // Inputs
-    piece: ComputedRef<Piece | null>,
     renderer: THREE.Renderer,
     camera: THREE.Camera,
     hitTestObjects: Ref<THREE.Object3D[]>,
 
     // Output
-    actionCallback: (action: Action) => void,
+    clickCallback: (mouseEvent: MouseEvent, coordinate: Coordinate) => void,
     highlightedCoordinate: Ref<Coordinate | null>,
 ) {
     const raycaster = new THREE.Raycaster()
@@ -56,20 +53,12 @@ export function useMouseEventsComposible(
     /* Emit appropriate action (via actionCallback) for clicking on the object
     * at the given position and click type in the event. */
     function clickObject(event: MouseEvent) {
-        if(piece.value === null) return
         const intersectedObject = getObjectOnScreen(event.clientX, event.clientY)
         if(intersectedObject) {
-            let toAdd: Coordinate[] = []
-            let toRemove: Coordinate[] = []
-            if(event.ctrlKey || event.button === 2) {
-                toRemove = [intersectedObject.userData.coordinate]
-            } else {
-                toAdd = [intersectedObject.userData.coordinate]
-            }
-            if(piece.value.id === null) {
-                throw "Cannot edit piece with no ID"
-            }
-            actionCallback(new EditPieceAction(piece.value.id, toAdd, toRemove))
+            clickCallback(
+                event,
+                intersectedObject.userData.coordinate,
+            )
         }
     }
 

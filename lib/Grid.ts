@@ -41,6 +41,17 @@ export abstract class Grid extends SerializableClass {
     }
 
     abstract isInBounds(coordinate: Coordinate, bounds: Bounds): Boolean
+    
+    getMaxBounds(...bounds: Bounds[]) {
+        if(bounds.length === 0) {
+            return this.getDefaultPieceBounds()
+        }
+        return bounds.reduce(
+            (accumulator, currentValue) => accumulator.map(
+                (boundsPart, i) => Math.max(boundsPart, currentValue[i]),
+            )
+        )
+    }
 
     /**
      * Return info describing the cell at the given coordinate.

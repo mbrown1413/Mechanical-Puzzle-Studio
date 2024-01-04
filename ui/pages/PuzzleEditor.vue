@@ -8,7 +8,7 @@ import {Action, ProblemSolveAction} from "~ui/actions.ts"
 import {getStorageInstances} from "~ui/storage.ts"
 import TabLayout from "~ui/common/TabLayout.vue"
 import PieceEditor from "~ui/components/PieceEditor.vue"
-import SolutionViewer from "~ui/components/SolutionViewer.vue"
+import SolutionDisplay from "~ui/components/SolutionDisplay.vue"
 import ItemMetadataEditor from "~ui/components/ItemMetadataEditor.vue"
 import PieceList from "~ui/components/PieceList.vue"
 import ProblemList from "~ui/components/ProblemList.vue"
@@ -66,7 +66,6 @@ const selectedSolutions = computed(() => {
 
 function performAction(action: Action) {
     action.perform(puzzleFile.puzzle)
-    pieceEditor.value?.redraw()
     puzzleStorage.save(puzzleFile)
     
     if(action instanceof ProblemSolveAction) {
@@ -178,7 +177,7 @@ onMounted(() => {
                 :itemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
                 @action="performAction"
             />
-            <SolutionViewer
+            <SolutionDisplay
                 v-show="currentTabId === 'solutions'"
                 :puzzle="puzzleFile.puzzle"
                 :solution="selectedSolutions[0] || null"

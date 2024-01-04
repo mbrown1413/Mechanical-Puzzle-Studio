@@ -1,4 +1,4 @@
-import { ref, Ref, ComputedRef, onMounted, onUnmounted, watch, computed } from "vue"
+import {ref, Ref, ComputedRef, onMounted, onUnmounted, computed, watchEffect} from "vue"
 
 import * as THREE from "three"
 import {Vector3} from "three"
@@ -34,18 +34,16 @@ export function useGridDrawComposible(
     controls.listenToKeyEvents(window)
     controls.addEventListener('change', refresh)
 
-    watch([pieces, viewpoint, layerN, highlightedCoordinate], () => {
-        rebuild()
-        refresh()
-    })
-
     onMounted(() => {
         const resizeObserver = new ResizeObserver(() => refresh())
         resizeObserver.observe(element.value)
 
         element.value.appendChild(renderer.domElement)
-        rebuild()
-        refresh()
+
+        watchEffect(() => {
+            rebuild()
+            refresh()
+        })
     })
     
     onUnmounted(() => {
@@ -55,22 +53,6 @@ export function useGridDrawComposible(
     })
     
     let coordinateToString = (cord: Coordinate) => cord.join(",")
-    /*
-    const pieceCoordinateSet: ComputedRef<Set<string>> = computed(() => {
-        if(pieces.value.length === 0) {
-            return new Set()
-        } else {
-            return new Set(piece.value.coordinates.map(cordToStr))
-        }
-    })
-    function getPieceAtCoordinate(coordinate: Coordinate): Piece | null {
-        if(pieceCoordinateSet.value.has(cordToStr(coordinate))) {
-            return piece.value
-        } else {
-            return null
-        }
-    }
-    */
     const coordinatePieceMap = computed(() => {
         const map = new Map()
         for(const piece of pieces.value) {
@@ -300,17 +282,9 @@ export function useGridDrawComposible(
         
         hitTestObjects.value = []
 
-        let bounds
-        if(pieces.value.length === 0) {
-            bounds = grid.getDefaultPieceBounds()
-        } else {
-            bounds = pieces.value[0].bounds
-            for(const piece of pieces.value) {
-                for(const i of bounds.keys()) {
-                    bounds[i] = Math.max(bounds[i], piece.bounds[i])
-                }
-            }
-        }
+        const bounds = grid.getMaxBounds(
+            ...pieces.value.map(piece => piece.bounds)
+        )
 
         for(let coordinate of grid.getCoordinates(bounds)) {
             const cellInfo = grid.getCellInfo(coordinate)
