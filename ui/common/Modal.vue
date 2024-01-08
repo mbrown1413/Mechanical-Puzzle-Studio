@@ -5,9 +5,11 @@ withDefaults(
     defineProps<{
         title: string,
         okText?: string,
+        okColor?: string,
         cancelShow?: boolean,
     }>(), {
         okText: "Ok",
+        okColor: "blue-darken-1",
         cancelShow: true,
     }
 )
@@ -43,14 +45,14 @@ defineExpose({
                 <VBtn
                         v-if="cancelShow"
                         color="blue-darken-1"
-                        variant="text"
+                        variant="outlined"
                         @click="modalOpen = false"
                 >
                     Cancel
                 </VBtn>
                 <VBtn
-                        color="blue-darken-1"
-                        variant="text"
+                        :color="okColor"
+                        variant="elevated"
                         @click="$emit('ok')"
                 >
                     {{ okText }}

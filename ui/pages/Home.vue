@@ -8,6 +8,7 @@ import {RectGrid} from "~lib/grids/RectGrid.ts"
 
 import {getStorageInstances, PuzzleStorage} from "~ui/storage.ts"
 import Modal from "~ui/common/Modal.vue"
+import ConfirmButton from "~ui/common/ConfirmButton.vue"
 
 const router = useRouter()
 
@@ -124,9 +125,14 @@ const tableHeaders: {
                     </RouterLink>
                 </template>
                 <template v-slot:item.actions="{item}">
-                    <VBtn @click="deletePuzzle(storage, item.id)">
+                    <ConfirmButton
+                        :text="`Delete Puzzle ${item.name}?`"
+                        confirmText="Delete"
+                        confirmButtonColor="red"
+                        @confirm="deletePuzzle(storage, item.id)"
+                    >
                         <VIcon icon="mdi-delete" aria-label="Delete" aria-hidden="false" />
-                    </VBtn>
+                    </ConfirmButton>
                 </template>
             </VDataTable>
         </VRow>
