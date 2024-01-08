@@ -4,7 +4,7 @@ import {useRouter} from "vue-router"
 
 import {PuzzleFile} from "~lib/PuzzleFile.ts"
 import {Puzzle} from "~lib/Puzzle.ts"
-import {RectGrid} from "~lib/grids/RectGrid.ts"
+import {CubicGrid} from "~lib/grids/CubicGrid.ts"
 
 import {getStorageInstances, PuzzleStorage} from "~ui/storage.ts"
 import Modal from "~ui/common/Modal.vue"
@@ -52,7 +52,7 @@ function newPuzzleSubmit() {
     const puzzleFile = new PuzzleFile(
         new Puzzle(
             "puzzle-0",
-            new RectGrid()
+            new CubicGrid()
         ),
         newPuzzleFields.name
     )

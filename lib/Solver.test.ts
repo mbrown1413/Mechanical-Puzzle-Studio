@@ -1,7 +1,7 @@
 import {test, expect, describe} from "vitest"
 import {AssemblySolver} from "./Solver.ts"
 import {Piece, Puzzle} from "./Puzzle.ts"
-import {RectGrid} from "./grids/RectGrid.ts"
+import {CubicGrid} from "./grids/CubicGrid.ts"
 import {AssemblyProblem} from "./Problem"
 import {AssemblySolution} from "./Solution.ts"
 import {Coordinate} from "./types.ts"
@@ -16,7 +16,7 @@ function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShort
 }
 
 describe("AssemblySolver", () => {
-    const puzzle = new Puzzle("puzzle-0", new RectGrid())
+    const puzzle = new Puzzle("puzzle-0", new CubicGrid())
     puzzle.addPiece(new Piece(
         "goal-0",
         puzzle.grid.getDefaultPieceBounds(),

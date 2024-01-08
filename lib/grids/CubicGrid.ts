@@ -4,23 +4,23 @@ import {Bounds, Coordinate, Viewpoint} from "~lib/types.ts"
 import {registerClass} from '~lib/serialize.ts'
 import {Grid} from "~lib/Grid.ts"
 
-type RectCoordinate = [number, number, number]
-type RectBounds = [number, number, number]
-type RectTranslation = [number, number, number]
-type RectDirection = "+X" | "-X" | "+Y" | "-Y" | "+Z" | "-Z"
-type RectCellType = "cube"
+type CubicCoordinate = [number, number, number]
+type CubicBounds = [number, number, number]
+type CubicTranslation = [number, number, number]
+type CubicDirection = "+X" | "-X" | "+Y" | "-Y" | "+Z" | "-Z"
+type CubicCellType = "cube"
 
-type RectCellInfo = {
-    coordinate: RectCoordinate,
-    type: RectCellType,
-    sides: Array<RectDirection>,
-    sidePolygons: {[key in RectDirection]: Vector3[]}
+type CubicCellInfo = {
+    coordinate: CubicCoordinate,
+    type: CubicCellType,
+    sides: Array<CubicDirection>,
+    sidePolygons: {[key in CubicDirection]: Vector3[]}
 }
 
-const RECT_DIRS: Array<RectDirection> = [
+const CUBIC_DIRS: Array<CubicDirection> = [
     "+X", "-X", "+Y", "-Y", "+Z", "-Z"
 ]
-const RECT_DIR_DELTAS = {
+const CUBIC_DIR_DELTAS = {
     "+X": [ 1,  0,  0],
     "-X": [-1,  0,  0],
     "+Y": [ 0,  1,  0],
@@ -28,7 +28,7 @@ const RECT_DIR_DELTAS = {
     "+Z": [ 0,  0,  1],
     "-Z": [ 0,  0, -1],
 }
-const RECT_OPPOSITES: {[Property in RectDirection]: RectDirection} = {
+const CUBIC_OPPOSITES: {[Property in CubicDirection]: CubicDirection} = {
     "+X": "-X",
     "-X": "+X",
     "+Y": "-Y",
@@ -37,7 +37,7 @@ const RECT_OPPOSITES: {[Property in RectDirection]: RectDirection} = {
     "-Z": "+Z",
 }
 
-export class RectGrid extends Grid {
+export class CubicGrid extends Grid {
 
     getDimensions() {
         return [
@@ -47,7 +47,7 @@ export class RectGrid extends Grid {
         ]
     }
 
-    isInBounds(bounds: RectBounds, coordinate: RectCoordinate): Boolean {
+    isInBounds(bounds: CubicBounds, coordinate: CubicCoordinate): Boolean {
         let [x, y, z] = coordinate
         return (
             x >= 0 && x < bounds[0] &&
@@ -56,13 +56,13 @@ export class RectGrid extends Grid {
         )
     }
 
-    getCellInfo(coordinate: RectCoordinate): RectCellInfo {
+    getCellInfo(coordinate: CubicCoordinate): CubicCellInfo {
         let [x, y, z] = coordinate
         let v = (x: number, y: number, z: number) => new Vector3(x, y, z)
         return {
             coordinate: coordinate,
             type: "cube",  // The only type of cell in this grid
-            sides: RECT_DIRS,
+            sides: CUBIC_DIRS,
             sidePolygons: {
                 "+X": [v(1+x,   y,   z), v(1+x, 1+y,   z), v(1+x, 1+y, 1+z), v(1+x,   y, 1+z)],
                 "-X": [v(  x,   y,   z), v(  x, 1+y,   z), v(  x, 1+y, 1+z), v(  x,   y, 1+z)],
@@ -86,12 +86,12 @@ export class RectGrid extends Grid {
         return ret
     }
 
-    getAdjacent(coordinate: RectCoordinate, direction: RectDirection): [RectCoordinate, RectDirection] {
+    getAdjacent(coordinate: CubicCoordinate, direction: CubicDirection): [CubicCoordinate, CubicDirection] {
         let [x, y, z] = coordinate
-        let [dx, dy, dz] = RECT_DIR_DELTAS[direction]
+        let [dx, dy, dz] = CUBIC_DIR_DELTAS[direction]
         let [nx, ny, nz] = [x+dx, y+dy, z+dz]
-        let neighbor: RectCoordinate|null = [nx, ny, nz]
-        let oppositeDir = RECT_OPPOSITES[direction]
+        let neighbor: CubicCoordinate|null = [nx, ny, nz]
+        let oppositeDir = CUBIC_OPPOSITES[direction]
         return [neighbor, oppositeDir]
     }
 
@@ -137,7 +137,7 @@ export class RectGrid extends Grid {
             }
         }
 
-        function coordinateMultiply(coord: Coordinate, m: THREE.Matrix3): RectCoordinate {
+        function coordinateMultiply(coord: Coordinate, m: THREE.Matrix3): CubicCoordinate {
             return [
                 coord[0]*m.elements[0] + coord[1]*m.elements[1] + coord[2]*m.elements[2],
                 coord[0]*m.elements[3] + coord[1]*m.elements[4] + coord[2]*m.elements[5],
@@ -147,7 +147,7 @@ export class RectGrid extends Grid {
 
         return orientationMatrices.map((matrix) => {
             return {
-                orientationFunc(coords: Coordinate[]): RectCoordinate[] {
+                orientationFunc(coords: Coordinate[]): CubicCoordinate[] {
                     const newCoords = coords.map((coord) => coordinateMultiply(coord, matrix))
                     let minX = Math.min(...newCoords.map(c => c[0]))
                     let minY = Math.min(...newCoords.map(c => c[1]))
@@ -158,7 +158,7 @@ export class RectGrid extends Grid {
         })
     }
 
-    translate(coordinate: RectCoordinate, translation: RectTranslation) {
+    translate(coordinate: CubicCoordinate, translation: CubicTranslation) {
         return [
             coordinate[0] + translation[0],
             coordinate[1] + translation[1],
@@ -166,7 +166,7 @@ export class RectGrid extends Grid {
         ]
     }
 
-    getTranslation(from: RectCoordinate, to: RectCoordinate): RectTranslation {
+    getTranslation(from: CubicCoordinate, to: CubicCoordinate): CubicTranslation {
         return [
             to[0] - from[0],
             to[1] - from[1],
@@ -203,4 +203,4 @@ export class RectGrid extends Grid {
     }
 }
 
-registerClass(RectGrid)
+registerClass(CubicGrid)

@@ -1,8 +1,8 @@
 import {test, expect, describe} from "vitest"
 
 import {Piece, Puzzle} from "./Puzzle.ts"
-import {RectGrid} from "./grids/RectGrid.ts"
-import {orientationTestResultingShapes, orientationTestShape} from "./grids/RectGrid.test.ts"
+import {CubicGrid} from "./grids/CubicGrid.ts"
+import {orientationTestResultingShapes, orientationTestShape} from "./grids/CubicGrid.test.ts"
 import {Coordinate} from "./types.ts"
 
 function makePlacementSet(coordinateLists: Coordinate[][]): Set<string> {
@@ -21,7 +21,7 @@ function makePlacementSet(coordinateLists: Coordinate[][]): Set<string> {
 
 describe("Puzzle", () => {
     test("Piece editing", () => {
-        const puzzle = new Puzzle("puzzle-0", new RectGrid())
+        const puzzle = new Puzzle("puzzle-0", new CubicGrid())
 
         const pieceWithId = new Piece("piece-0", puzzle.grid.getDefaultPieceBounds())
         expect(puzzle.hasPiece("piece-0")).toBeFalsy()
@@ -73,7 +73,7 @@ describe("Puzzle", () => {
     })
 
     test("Piece variations", () => {
-        const puzzle = new Puzzle("puzzle-0", new RectGrid())
+        const puzzle = new Puzzle("puzzle-0", new CubicGrid())
         const piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
@@ -91,7 +91,7 @@ describe("Puzzle", () => {
     })
 
     test("Piece translations", () => {
-        let puzzle = new Puzzle("puzzle-0", new RectGrid())
+        let puzzle = new Puzzle("puzzle-0", new CubicGrid())
         let piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
@@ -121,7 +121,7 @@ describe("Puzzle", () => {
         expect(placements[6].transformedPiece.coordinates).toEqual([[1, 1, 0], [2, 1, 0]])
         expect(placements[7].transformedPiece.coordinates).toEqual([[1, 1, 1], [2, 1, 1]])
 
-        puzzle = new Puzzle("puzzle-0", new RectGrid())
+        puzzle = new Puzzle("puzzle-0", new CubicGrid())
         piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
@@ -141,7 +141,7 @@ describe("Puzzle", () => {
     })
 
     test("Piece placements", () => {
-        let puzzle = new Puzzle("puzzle-0", new RectGrid())
+        let puzzle = new Puzzle("puzzle-0", new CubicGrid())
         let piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
@@ -181,7 +181,7 @@ describe("Puzzle", () => {
             ])
         )
 
-        puzzle = new Puzzle("puzzle-0", new RectGrid())
+        puzzle = new Puzzle("puzzle-0", new CubicGrid())
         piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),

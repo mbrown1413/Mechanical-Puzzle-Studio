@@ -1,6 +1,6 @@
 import {test, expect, describe} from "vitest"
 
-import {RectGrid} from "./RectGrid.ts"
+import {CubicGrid} from "./CubicGrid.ts"
 
 export const orientationTestShape = [[0, 0, 0], [1, 0, 0], [1, 1, 0]]
 export const orientationTestResultingShapes = [
@@ -41,8 +41,8 @@ export const orientationTestResultingShapes = [
         [[0, 1, 0], [0, 0, 0], [0, 0, 1]],
 ]
 
-describe("Rectangular grid", () => {
-    const grid = new RectGrid()
+describe("Cubic grid", () => {
+    const grid = new CubicGrid()
 
     test("bounds", () => {
         expect(grid.isInBounds([0, 0, 0], [0, 0, 0])).toBeFalsy()
