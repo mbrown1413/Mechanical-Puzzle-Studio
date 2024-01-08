@@ -7,14 +7,28 @@ import {Puzzle, Piece} from  "~lib/Puzzle.ts"
 import {useGridDrawComposible} from "./GridDisplay_draw.ts"
 import {useGridMouseComposible} from "./GridDisplay_mouse.ts"
 
-const props = defineProps<{
-    puzzle: Puzzle,
-    pieces: (Piece | string)[]
-}>()
+const props = withDefaults(
+    defineProps<{
+        puzzle: Puzzle,
+        pieces: (Piece | string)[],
+        displayOnly?: boolean,
+        size?: "fill" | number,
+    }>(), {
+        displayOnly: false,
+        size: "fill",
+    }
+)
 
 const emit = defineEmits<{
     voxelClicked: [mouseEvent: MouseEvent, coordinate: Coordinate]
 }>()
+
+const pieceDisplayStyle = computed(() => {
+    return {
+        width: props.size === "fill" ? "100%" : props.size+"px",
+        height: props.size === "fill" ? "100%" : props.size+"px",
+    }
+})
 
 const el = ref()
 const viewpoints = props.puzzle.grid.getViewpoints()
@@ -64,8 +78,8 @@ useGridMouseComposible(
 </script>
 
 <template>
-    <div class="pieceDisplay" ref="el">
-        <div class="controls">
+    <div class="pieceDisplay" :style="pieceDisplayStyle" ref="el">
+        <div class="controls" v-if="!displayOnly">
             <VSelect
                     v-model="viewpoint"
                     :items="viewpointOptions"
@@ -87,8 +101,6 @@ useGridMouseComposible(
 
 <style scoped>
 .pieceDisplay {
-    width: 100%;
-    height: 100%;
     position: relative;  /* Make this the containing block for .controls */
 }
 .controls {
@@ -101,4 +113,4 @@ useGridMouseComposible(
 .controls > * {
     margin: 0 auto;
 }
-</style>./drawGrid.ts
+</style>

@@ -6,6 +6,7 @@ import {VToolbar} from "vuetify/components/VToolbar"
 import {Puzzle} from '~lib/Puzzle.ts'
 import {Problem} from '~lib/Problem.ts'
 import {Action, EditProblemMetadataAction} from "~ui/actions.ts"
+import GridDisplay from "./GridDisplay.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
@@ -18,8 +19,9 @@ const emit = defineEmits<{
 }>()
 
 const tableHeaders = [
-    {title: "Piece", key: "label"},
+    {title: "Piece Name", key: "label"},
     {title: "Count", key: "count"},
+    {title: "", key: "display", sortable: false},
 ]
 
 const tableItems = computed(() => {
@@ -27,6 +29,7 @@ const tableItems = computed(() => {
     return pieces.map((piece) => {
         return {
             id: piece.id,
+            piece: piece,
             label: piece.label,
             count: props.problem.usedPieceCounts.get(piece.id) || 0,
         }
@@ -49,7 +52,6 @@ function onUpdate(pieceId: string, count: number) {
     <VDataTable
             :headers="tableHeaders"
             :items="tableItems"
-            density="compact"
             items-per-page="-1"
     >
         <template v-slot:top>
@@ -60,12 +62,20 @@ function onUpdate(pieceId: string, count: number) {
         <template v-slot:item.count="{item}">
             <VTextField
                     v-model="item.count"
-                    density="compact"
                     hide-details
                     single-line
                     type="number"
                     min="0"
                     @update:model-value="onUpdate(item.id, Number($event))"
+            />
+        </template>
+        
+        <template v-slot:item.display="{item}">
+            <GridDisplay
+                    :puzzle="puzzle"
+                    :pieces="[item.piece]"
+                    displayOnly
+                    :size="200"
             />
         </template>
     </VDataTable>
