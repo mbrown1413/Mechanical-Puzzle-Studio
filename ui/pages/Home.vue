@@ -9,6 +9,7 @@ import {CubicGrid} from "~lib/grids/CubicGrid.ts"
 import {getStorageInstances, PuzzleStorage} from "~ui/storage.ts"
 import Modal from "~ui/common/Modal.vue"
 import ConfirmButton from "~ui/common/ConfirmButton.vue"
+import TitleBar from "~ui/components/TitleBar.vue"
 
 const router = useRouter()
 
@@ -92,7 +93,7 @@ const tableHeaders: {
 </script>
 
 <template>
-    <VAppBar title="Ridlewood Studio" />
+    <TitleBar />
     <VMain>
         <VRow justify="center">
             <VDataTable

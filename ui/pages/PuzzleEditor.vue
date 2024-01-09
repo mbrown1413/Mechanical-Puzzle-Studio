@@ -14,6 +14,7 @@ import PieceList from "~ui/components/PieceList.vue"
 import ProblemList from "~ui/components/ProblemList.vue"
 import ProblemSolverForm from "~ui/components/ProblemSolverForm.vue"
 import ListSelect from "~ui/common/ListSelect.vue"
+import TitleBar from "~ui/components/TitleBar.vue"
 
 const props = defineProps<{
     storageId: string,
@@ -93,14 +94,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <VAppBar>
-        <div class="home-link">
-            <RouterLink to="/">&larrhk; Puzzles</RouterLink>
-        </div>
-        <div>
-            {{ puzzleFile.name }}
-        </div>
-    </VAppBar>
+    <TitleBar :puzzleFile="puzzleFile" />
     <VMain class="puzzleEditor-container">
 
         <div class="slider col-slide" ref="columnSlider"></div>
