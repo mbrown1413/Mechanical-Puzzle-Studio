@@ -1,0 +1,9 @@
+.v-data-table-header__content {
+    font-weight: bolder;
+}
+.v-data-table {
+    border: solid 1px rgb(var(--v-theme-on-surface-variant));
+}
+.v-data-table-rows-no-data {
+    background-color: rgba(var(--v-theme-on-surface-variant), 0.25);
+}

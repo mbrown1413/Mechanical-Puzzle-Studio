@@ -53,6 +53,8 @@ function onUpdate(pieceId: string, count: number) {
             :headers="tableHeaders"
             :items="tableItems"
             items-per-page="-1"
+            no-data-text="No pieces in puzzle!"
+            style="width: fit-content;"
     >
         <template v-slot:top>
             <VToolbar flat density="compact" :title="label" />
@@ -62,11 +64,11 @@ function onUpdate(pieceId: string, count: number) {
         <template v-slot:item.count="{item}">
             <VTextField
                     v-model="item.count"
-                    hide-details
-                    single-line
                     type="number"
                     min="0"
                     @update:model-value="onUpdate(item.id, Number($event))"
+                    hide-details="auto"
+                    variant="solo-filled"
             />
         </template>
         

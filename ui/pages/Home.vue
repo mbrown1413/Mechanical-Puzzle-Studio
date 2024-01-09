@@ -44,7 +44,8 @@ function openNewPuzzleModal(storage: PuzzleStorage) {
     newPuzzleModal.value?.open()
 }
 
-function newPuzzleSubmit() {
+function newPuzzleSubmit(event?: Event) {
+    event?.preventDefault()
     if(!newPuzzleForm.value?.checkValidity()) {
         newPuzzleForm.value?.reportValidity()
         return
@@ -143,7 +144,7 @@ const tableHeaders: {
             ref="newPuzzleModal"
             title="New Puzzle"
             okText="Create"
-            @ok="newPuzzleSubmit"
+            @ok="newPuzzleSubmit()"
     >
         <form ref="newPuzzleForm" :onSubmit="newPuzzleSubmit">
             <VTextField
@@ -158,6 +159,7 @@ const tableHeaders: {
                     v-model="newPuzzleFields.storage"
                     :items="storageSelectItems"
             />
+            <input type="submit" style="display: none;" />
         </form>
     </Modal>
 </template>

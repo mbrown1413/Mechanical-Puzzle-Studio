@@ -167,6 +167,7 @@ function getElId(field: Field) {
                     :required="field.required !== false"
                     :items="pieceItems"
                     :modelValue="puzzle.pieces.get(item[field.property] as string)"
+                    no-data-text="No pieces in puzzle!"
                     @update:modelValue="handlePieceInput(field, $event as Piece)"
             />
             

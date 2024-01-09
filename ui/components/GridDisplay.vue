@@ -78,7 +78,7 @@ useGridMouseComposible(
 </script>
 
 <template>
-    <div class="pieceDisplay" :style="pieceDisplayStyle" ref="el">
+    <div class="grid-display" :style="pieceDisplayStyle" ref="el">
         <div class="controls" v-if="!displayOnly">
             <VSelect
                     v-model="viewpoint"
@@ -88,19 +88,22 @@ useGridMouseComposible(
             <VSlider
                     v-if="viewpoint.getNLayers(bounds) > 1"
                     :ticks="[...Array(viewpoint.getNLayers(bounds)).keys()]"
-                    showTicks="always"
-                    direction="vertical"
                     v-model="layerN"
                     min="0"
                     :max="viewpoint.getNLayers(bounds)-1"
                     step="1"
+                    showTicks="always"
+                    direction="vertical"
+                    track-size="8"
+                    thumb-size="25"
+                    tick-size="4"
             />
         </div>
     </div>
 </template>
 
 <style scoped>
-.pieceDisplay {
+.grid-display {
     position: relative;  /* Make this the containing block for .controls */
 }
 .controls {
