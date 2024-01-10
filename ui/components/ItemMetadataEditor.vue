@@ -5,6 +5,7 @@ import {Piece, Puzzle} from  "~lib/Puzzle.ts"
 import {Problem} from "~lib/Problem.ts"
 import {Action, EditPieceMetadataAction, EditProblemMetadataAction} from "~ui/actions.ts"
 import ProblemPiecesEditor from "~ui/components/ProblemPiecesEditor.vue"
+import ColorInput from "~ui/common/ColorInput.vue"
 import {Bounds} from "~lib/types"
 
 const props = defineProps<{
@@ -40,13 +41,13 @@ switch(props.itemType) {
                 label: "Name",
                 type: "string",
             }, {
-                property: "color",
-                label: "Color",
-                type: "color",
-            }, {
                 property: "bounds",
                 label: "Size",
                 type: "bounds",
+            }, {
+                property: "color",
+                label: "Color",
+                type: "color",
             }
         ]
         break;
@@ -92,10 +93,10 @@ const pieceItems = computed(() => {
     })
 })
 
-function handleTextInput(field: Field, el: HTMLInputElement) {
+function handleTextInput(field: Field, value: string) {
     if(props.itemId === null) return
     const metadata: any = {}
-    metadata[field.property] = el.value
+    metadata[field.property] = value
     const action = new actionClass(props.itemId, metadata)
     emit("action", action)
 }
@@ -117,14 +118,10 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
     emit("action", action)
     
 }
-
-function getElId(field: Field) {
-    return `metadataEditor-field-${props.itemId}-${field.property}`
-}
 </script>
 
 <template>
-    <div v-if="item">
+    <div v-if="item" class="metadata-form">
         <h4>{{ title }}</h4>
         
         <template v-for="field in fields">
@@ -134,32 +131,14 @@ function getElId(field: Field) {
                     :label="field.label"
                     :required="field.required === true"
                     :model-value="item[field.property]"
-                    @input="handleTextInput(field, $event.target as HTMLInputElement)"
+                    @input="handleTextInput(field, $event.target.value)"
             />
 
-            <div
-                v-if="field.type === 'color'"
-                class="row mt-2 align-items-center g-3"
-            >
-                <div class="col-auto">
-                    <label
-                            :for="getElId(field)"
-                            class="form-label"
-                    >{{ field.label }}</label>
-                </div>
-                <div class="col-auto">
-                    <input
-                            :id="getElId(field)"
-                            type="color"
-                            class="form-control"
-                            :value="item[field.property]"
-                            @input="handleTextInput(field, $event.target as HTMLInputElement)"
-                    />
-                </div>
-                <div class="col-auto">
-                    {{ item[field.property] }}
-                </div>
-            </div>
+            <ColorInput
+                    v-if="field.type === 'color'"
+                    :value="item[field.property] as string"
+                    @input="handleTextInput(field, $event)"
+            />
             
             <VSelect
                     v-if="field.type === 'piece'"
@@ -202,11 +181,11 @@ function getElId(field: Field) {
 </template>
 
 <style scoped>
-input[type="color"] {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    border: var(--bs-border-width) solid var(--bs-border-color);
-    padding: 10px;
+.metadata-form {
+    margin: 1em;
+    width: fit-content;
+}
+.metadata-form h4 {
+    margin-bottom: 0.5em;
 }
 </style>

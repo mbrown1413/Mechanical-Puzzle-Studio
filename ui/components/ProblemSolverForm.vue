@@ -21,7 +21,7 @@ function startSolve() {
 </script>
 
 <template>
-    <div>
+    <div class="solver-form">
         <h4>Solver</h4>
 
         <VBtn
@@ -32,3 +32,13 @@ function startSolve() {
         </VBtn>
     </div>
 </template>
+
+<style>
+.solver-form {
+    margin: 1em;
+    width: fit-content;
+}
+.solver-form h4 {
+    margin-bottom: 0.5em;
+}
+</style>

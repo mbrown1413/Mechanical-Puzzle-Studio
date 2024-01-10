@@ -16,7 +16,7 @@ export function getNextColor(existingColors: string[]): string {
 
     // Map color in palette to number of matches in existingColors
     const similarCount: Map<string, number> = new Map()
-    for(const paletteColor of palette) {
+    for(const paletteColor of flatPalette) {
         for(const existingColor of existingColors) {
             if(isColorSimilar(existingColor, paletteColor)) {
                 similarCount.set(
@@ -28,20 +28,20 @@ export function getNextColor(existingColors: string[]): string {
     }
     
     let minNumSimilar
-    if(similarCount.size < palette.length) {
+    if(similarCount.size < flatPalette.length) {
         minNumSimilar = 0
     } else {
         minNumSimilar = Math.min(...similarCount.values())
     }
 
-    for(const color of palette) {
+    for(const color of flatPalette) {
         const count = similarCount.get(color) || 0
         if(count <= minNumSimilar) {
             return color
         }
     }
 
-    return palette[0]  // Should never happen
+    return flatPalette[0]  // Should never happen
 }
 
 /**
@@ -60,7 +60,7 @@ export function getNextColor(existingColors: string[]): string {
  * colorspace systematically (#ff0000, #00ff00, etc.). I'm sure there could be
  * many more improvements to this, but this will do for now.
  */
-const palette = [
+export const flatPalette = [
     // Seaborn "bright"
     "#023eff",
     "#ff7c00",
@@ -96,4 +96,35 @@ const palette = [
     "#3c3c3c",
     "#b8850a",
     "#006374",
+]
+
+/* Same colors as flatPalette organized into categories. */
+export const swatches = [
+    [
+        "#e8000b",
+        "#ff7c00",
+        "#ffc400",
+        "#fffea3",
+    ], [
+        "#12711c",
+        "#1ac938",
+        "#8de5a1",
+        "#006374",
+    ], [
+        "#001c7f",
+        "#023eff",
+        "#00d7ff",
+    ], [
+        "#591e71",
+        "#8b2be2",
+        "#d0bbff",
+        "#a23582",
+        "#f14cc1",
+    ], [
+        "#3c3c3c",
+        "#592f0d",
+        "#8c0800",
+        "#9f4800",
+        "#b8850a",
+    ],
 ]
