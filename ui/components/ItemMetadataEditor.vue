@@ -2,7 +2,7 @@
 import {computed} from "vue"
 
 import {Piece, Puzzle} from  "~lib/Puzzle.ts"
-import {Problem} from "~lib/Problem.ts"
+import {AssemblyProblem, Problem} from "~lib/Problem.ts"
 import {Action, EditPieceMetadataAction, EditProblemMetadataAction} from "~ui/actions.ts"
 import ProblemPiecesEditor from "~ui/components/ProblemPiecesEditor.vue"
 import ColorInput from "~ui/common/ColorInput.vue"
@@ -23,6 +23,10 @@ type Field = {
     label: string,
     type: "string" | "color" | "piece" | "pieces" | "bounds",
     required?: boolean,
+
+    //TODO: Field-specific stuff that should be factored out when a proper form
+    //system is written.
+    getDisabledPieceIds?: (problem: AssemblyProblem) => string[]
 }
 
 let title: string
@@ -69,6 +73,7 @@ switch(props.itemType) {
                 property: "piecesId",
                 label: "Pieces Used",
                 type: "pieces",
+                getDisabledPieceIds: (item: AssemblyProblem) => item.goalPieceId ? [item.goalPieceId] : []
             }
         ]
         break;
@@ -156,6 +161,7 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
                     :problem="item"
                     :label="field.label"
                     @action="emit('action', $event)"
+                    :disabledPieceIds="field.getDisabledPieceIds ? field.getDisabledPieceIds(item as AssemblyProblem) : []"
             />
             
             <VContainer

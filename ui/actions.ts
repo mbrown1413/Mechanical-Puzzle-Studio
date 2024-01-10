@@ -176,6 +176,10 @@ export class EditProblemMetadataAction extends EditItemMetadataAction {
                     problem.usedPieceCounts.delete(pieceId)
                 }
             }
+            // Remove "goal" piece from used pieces
+            if(problem.goalPieceId !== null) {
+                problem.usedPieceCounts.delete(problem.goalPieceId)
+            }
         }
     }
 }

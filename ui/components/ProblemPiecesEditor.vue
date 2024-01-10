@@ -8,11 +8,16 @@ import {Problem} from '~lib/Problem.ts'
 import {Action, EditProblemMetadataAction} from "~ui/actions.ts"
 import GridDisplay from "./GridDisplay.vue"
 
-const props = defineProps<{
-    puzzle: Puzzle,
-    problem: Problem,
-    label: string,
-}>()
+const props = withDefaults(
+    defineProps<{
+        puzzle: Puzzle,
+        problem: Problem,
+        label: string,
+        disabledPieceIds: string[],
+    }>(), {
+        disabledPieceIds: () => [],
+    }
+) 
 
 const emit = defineEmits<{
     action: [action: Action]
@@ -27,11 +32,14 @@ const tableHeaders = [
 const tableItems = computed(() => {
     const pieces = Array.from(props.puzzle.pieces.values())
     return pieces.map((piece) => {
+        const disabled = props.disabledPieceIds.includes(piece.id)
         return {
             id: piece.id,
             piece: piece,
             label: piece.label,
             count: props.problem.usedPieceCounts.get(piece.id) || 0,
+            disabled,
+            messages: disabled ? ["Goal Piece"] : [],
         }
     })
 })
@@ -63,10 +71,12 @@ function onUpdate(pieceId: string, count: number) {
             
         <template v-slot:item.count="{item}">
             <VTextField
-                    v-model="item.count"
                     type="number"
                     min="0"
+                    :value="item.disabled ? '' : item.count"
                     @update:model-value="onUpdate(item.id, Number($event))"
+                    :disabled="item.disabled"
+                    :messages="item.messages"
                     hide-details="auto"
                     variant="solo-filled"
             />
