@@ -41,10 +41,13 @@ Testing:
 Production build:
 
     $ yarn build  # Outputs static site to dist/
-    
-    # You need a webserver to run the build:
+
+    # Use webserver to run the build:
     $ cd dist/ && python -m http.server
     
+    # Note that without server-side redirects,
+    # starting at apage other than `/` won't work.
+
 The source code is divided into two main sections:
   * [`lib/`](lib/): Contains the data structures and algorithms for puzzles. Basically, a stand-alone puzzle library without a gui.
   * [`ui/`](ui/): User interface built on top of `lib/`.

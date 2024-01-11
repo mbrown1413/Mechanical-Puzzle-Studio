@@ -1,0 +1,47 @@
+name: deploy
+
+on:
+    workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+    run-tests:
+        name: Deploy
+        runs-on: ubuntu-latest
+        steps:
+
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Install node.js
+          uses: actions/setup-node@v3
+          with:
+              node-version: "19.x"
+
+        - name: Install yarn dependencies
+          run: yarn --frozen-lockfile
+
+        - name: Run tests
+          run: yarn test
+
+        - name: Build dist
+          run: |
+              yarn build --base=/Riddlewood-Studio/
+              cp dist/index.html dist/404.html
+
+        - name: Configure Pages
+          uses: actions/configure-pages@v4
+
+        - name: Upload artifact
+          uses: actions/upload-pages-artifact@v3
+          with:
+            path: 'dist/'
+
+        - name: Deploy to GitHub Pages
+          id: deployment
+          uses: actions/deploy-pages@v4
