@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import {PuzzleFile} from "~lib/PuzzleFile"
+
 withDefaults(
     defineProps<{
         puzzleFile?: PuzzleFile | null,
@@ -10,7 +12,7 @@ withDefaults(
 
 <template>
     <VAppBar>
-        <VAppBarTitle v-slot="title" class="main-title">
+        <VAppBarTitle v-slot class="main-title">
             <RouterLink to="/">
                 Riddlewood Studio
             </RouterLink>

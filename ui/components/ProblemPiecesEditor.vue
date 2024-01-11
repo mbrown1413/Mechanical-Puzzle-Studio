@@ -4,14 +4,14 @@ import {VDataTable} from "vuetify/components/VDataTable"
 import {VToolbar} from "vuetify/components/VToolbar"
 
 import {Puzzle} from '~lib/Puzzle.ts'
-import {Problem} from '~lib/Problem.ts'
+import {AssemblyProblem} from '~lib/Problem.ts'
 import {Action, EditProblemMetadataAction} from "~ui/actions.ts"
 import GridDisplay from "./GridDisplay.vue"
 
 const props = withDefaults(
     defineProps<{
         puzzle: Puzzle,
-        problem: Problem,
+        problem: AssemblyProblem,
         label: string,
         disabledPieceIds: string[],
     }>(), {
@@ -32,7 +32,7 @@ const tableHeaders = [
 const tableItems = computed(() => {
     const pieces = Array.from(props.puzzle.pieces.values())
     return pieces.map((piece) => {
-        const disabled = props.disabledPieceIds.includes(piece.id)
+        const disabled = piece.id ? props.disabledPieceIds.includes(piece.id) : false
         return {
             id: piece.id,
             piece: piece,

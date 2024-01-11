@@ -2,7 +2,7 @@
 import {computed} from "vue"
 
 import {Piece, Puzzle} from  "~lib/Puzzle.ts"
-import {AssemblyProblem, Problem} from "~lib/Problem.ts"
+import {AssemblyProblem} from "~lib/Problem.ts"
 import {Action, EditPieceMetadataAction, EditProblemMetadataAction} from "~ui/actions.ts"
 import ProblemPiecesEditor from "~ui/components/ProblemPiecesEditor.vue"
 import ColorInput from "~ui/common/ColorInput.vue"
@@ -156,7 +156,7 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
             />
             
             <ProblemPiecesEditor
-                    v-if="field.type === 'pieces' && item instanceof Problem"
+                    v-if="field.type === 'pieces' && item instanceof AssemblyProblem"
                     :puzzle="puzzle"
                     :problem="item"
                     :label="field.label"

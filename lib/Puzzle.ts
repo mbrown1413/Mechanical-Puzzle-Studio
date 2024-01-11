@@ -25,7 +25,7 @@ registerClass(PiecePlacement)
 
 export class Puzzle extends SerializableClass {
     grid: Grid
-    pieces: Map<string, Piece>
+    pieces: Map<string, PieceWithId>
     problems: Map<string, Problem>
 
     constructor(id: string, grid: Grid) {
@@ -55,7 +55,7 @@ export class Puzzle extends SerializableClass {
     }
 
     addPiece(piece: Piece): Piece {
-        if(piece.id === null) {
+        if(!piece.hasId()) {
             throw "Cannot add piece without ID"
         }
         if(this.pieces.has(piece.id)) {
@@ -208,6 +208,10 @@ export class Piece extends SerializableClass {
         this.label = id || "unlabeled-piece"
         this.color = "#00ff00"
     }
+    
+    hasId(): this is PieceWithId {
+        return typeof this.id === "string"
+    }
 
     copy(): Piece {
         const coppied = deserialize<Piece>(serialize(this), "Piece")
@@ -215,6 +219,8 @@ export class Piece extends SerializableClass {
         return coppied
     }
 }
+
+export type PieceWithId = Piece & {id: string}
 
 registerClass(Puzzle)
 registerClass(Piece)
