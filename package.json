@@ -16,7 +16,7 @@
     "three": "^0.153.0",
     "uuid": "^9.0.1",
     "vite-plugin-vuetify": "^1.0.2",
-    "vue": "^3.3.7",
+    "vue": "3.4.10",
     "vue-router": "4",
     "vuetify": "^3.4.4"
   },
