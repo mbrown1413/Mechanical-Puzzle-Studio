@@ -108,7 +108,7 @@ function solveExactCoverNaive(matrix: Boolean[][]) {
             }
         }
 
-        colsCovered.sort()
+        colsCovered.sort((a, b) => a-b)
         return arraysEqual(
             colsCovered,
             [...Array(nCols).keys()]
