@@ -1,4 +1,4 @@
-import {Bounds, Coordinate, Translation} from "~lib/types.ts"
+import {Bounds, Voxel, Translation} from "~lib/types.ts"
 import {SerializableClass, deserialize, registerClass, serialize} from "~lib/serialize.ts"
 import {Grid} from "~lib/Grid.ts"
 import {Problem} from "~lib/Problem.ts"
@@ -122,61 +122,61 @@ export class Puzzle extends SerializableClass {
         const piece = this.getPieceFromPieceOrId(pieceOrId)
         const orientations = this.grid.getOrientations()
         for(const orientation of orientations) {
-            const newCoordinates = orientation.orientationFunc(piece.coordinates)
-            if(newCoordinates === null) { continue }
+            const newVoxels = orientation.orientationFunc(piece.voxels)
+            if(newVoxels === null) { continue }
             const transformedPiece = piece.copy()
-            transformedPiece.coordinates = newCoordinates
+            transformedPiece.voxels = newVoxels
             yield new PiecePlacement(piece, transformedPiece)
         }
     }
 
     *getPieceTranslations(
         pieceOrId: Piece | string,
-        availableCoordinates: Coordinate[]
+        availableVoxels: Voxel[]
     ): Iterable<PiecePlacement> {
         const piece = this.getPieceFromPieceOrId(pieceOrId)
 
-        for(const toCoordinate of availableCoordinates) {
-            const translation = this.grid.getTranslation(piece.coordinates[0], toCoordinate)
+        for(const toVoxel of availableVoxels) {
+            const translation = this.grid.getTranslation(piece.voxels[0], toVoxel)
             if(translation === null) { continue }
 
-            const newCoordinates = []
-            for(const oldCoordinate of piece.coordinates) {
-                const newCoordinate = this.grid.translate(oldCoordinate, translation)
-                if(newCoordinate === null || !arrayContainsCoordinate(availableCoordinates, newCoordinate)) {
+            const newVoxels = []
+            for(const oldVoxel of piece.voxels) {
+                const newVoxel = this.grid.translate(oldVoxel, translation)
+                if(newVoxel === null || !arrayContainsCoordinate(availableVoxels, newVoxel)) {
                     break
                 }
-                newCoordinates.push(newCoordinate)
+                newVoxels.push(newVoxel)
             }
-            if(newCoordinates.length !== piece.coordinates.length) {
+            if(newVoxels.length !== piece.voxels.length) {
                 continue
             }
 
             const newPiece = piece.copy()
-            newPiece.coordinates = newCoordinates
+            newPiece.voxels = newVoxels
             yield new PiecePlacement(piece, newPiece, translation)
         }
     }
 
     *getPiecePlacements(
         pieceOrId: Piece | string,
-        availableCoordinates: Coordinate[]
+        availableVoxels: Voxel[]
     ): Iterable<PiecePlacement> {
 
         const usedPlacements: Set<string> = new Set()
         function getPlacementKey(piece: Piece): string {
-            const coordStrings = piece.coordinates.map((coordinate) =>
-                coordinate.join(",")
+            const voxelStrings = piece.voxels.map((voxel) =>
+                voxel.join(",")
             )
-            coordStrings.sort()
-            return coordStrings.join(";")
+            voxelStrings.sort()
+            return voxelStrings.join(";")
         }
 
         const piece = this.getPieceFromPieceOrId(pieceOrId)
         for(const pieceVariation of this.getPieceVariations(piece)) {
             const pieceTranslations = this.getPieceTranslations(
                 pieceVariation.transformedPiece,
-                availableCoordinates
+                availableVoxels
             )
             const z = Array.from(pieceTranslations)
             for(const pieceTranslation of z) {
@@ -197,14 +197,14 @@ export class Puzzle extends SerializableClass {
 
 export class Piece extends SerializableClass {
     bounds: Bounds
-    coordinates: Coordinate[]
+    voxels: Voxel[]
     label: string
     color: string
 
-    constructor(id: string | null, bounds: Bounds, coordinates: Coordinate[]=[]) {
+    constructor(id: string | null, bounds: Bounds, voxels: Voxel[]=[]) {
         super(id)
         this.bounds = bounds
-        this.coordinates = coordinates
+        this.voxels = voxels
         this.label = id || "unlabeled-piece"
         this.color = "#00ff00"
     }

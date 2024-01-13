@@ -5,7 +5,7 @@ import {Puzzle} from  "~lib/Puzzle.ts"
 
 import {Action, EditPieceAction} from "~ui/actions.ts"
 import GridDisplay from "./GridDisplay.vue"
-import {Coordinate} from "~lib/types.ts"
+import {Voxel} from "~lib/types.ts"
 
 const props = defineProps<{
     puzzle: Puzzle,
@@ -24,15 +24,15 @@ const pieces = computed(() =>
     piece.value === null ? [] : [piece.value]
 )
 
-function voxelClicked(event: MouseEvent, coordinate: Coordinate) {
+function voxelClicked(event: MouseEvent, voxel: Voxel) {
     if(piece.value === null) { return }
 
-    let toAdd: Coordinate[] = []
-    let toRemove: Coordinate[] = []
+    let toAdd: Voxel[] = []
+    let toRemove: Voxel[] = []
     if(event.ctrlKey || event.button === 2) {
-        toRemove = [coordinate]
+        toRemove = [voxel]
     } else {
-        toAdd = [coordinate]
+        toAdd = [voxel]
     }
     if(piece.value.id === null) {
         throw "Cannot edit piece with no ID"

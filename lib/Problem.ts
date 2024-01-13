@@ -1,7 +1,7 @@
 import {SerializableClass, registerClass} from "~lib/serialize.ts"
-import {BoolWithReason} from "./types.ts"
-import {Solver, AssemblySolver} from "./Solver.ts"
-import {Solution} from "./Solution.ts"
+import {BoolWithReason} from "~lib/types.ts"
+import {Solver, AssemblySolver} from "~lib/Solver.ts"
+import {Solution} from "~lib/Solution.ts"
 
 type SolverInfo = {
     solver: new(...args: any) => Solver,

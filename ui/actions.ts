@@ -1,4 +1,4 @@
-import {Coordinate, BoolWithReason} from "~lib/types.ts"
+import {Voxel, BoolWithReason} from "~lib/types.ts"
 import {arraysEqual} from "~lib/utils.ts"
 import {Puzzle, Piece} from "~lib/Puzzle.ts"
 import {AssemblyProblem, Problem} from "~lib/Problem.ts"
@@ -101,18 +101,18 @@ export class DeletePiecesAction extends DeleteItemsAction {
 
 export class EditPieceAction extends Action {
     pieceId: string
-    addCoords: Coordinate[]
-    removeCoords: Coordinate[]
+    addVoxels: Voxel[]
+    removeVoxels: Voxel[]
     
     constructor(
         pieceId: string,
-        addCoords: Coordinate[],
-        removeCoords: Coordinate[],
+        addVoxels: Voxel[],
+        removeVoxels: Voxel[],
     ) {
         super()
         this.pieceId = pieceId
-        this.addCoords = addCoords
-        this.removeCoords = removeCoords
+        this.addVoxels = addVoxels
+        this.removeVoxels = removeVoxels
     }
     
     perform(puzzle: Puzzle): BoolWithReason {
@@ -124,12 +124,12 @@ export class EditPieceAction extends Action {
             }
         }
 
-        piece.coordinates = piece.coordinates.filter(
-            (coord) => !this.removeCoords.some(removeCoord =>
-                arraysEqual(removeCoord, coord)
+        piece.voxels = piece.voxels.filter(
+            (voxel) => !this.removeVoxels.some(toRemove =>
+                arraysEqual(toRemove, voxel)
             )
         )
-        piece.coordinates.push(...this.addCoords)
+        piece.voxels.push(...this.addVoxels)
         return {bool: true}
     }
 }

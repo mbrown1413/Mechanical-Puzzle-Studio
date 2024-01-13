@@ -3,7 +3,7 @@ import { Ref, onMounted} from "vue"
 import * as THREE from "three"
 import {Vector2} from "three"
 
-import {Coordinate} from "~lib/types.ts"
+import {Voxel} from "~lib/types.ts"
 import {arraysEqual} from "~lib/utils.ts"
 
 export function useGridMouseComposible(
@@ -13,8 +13,8 @@ export function useGridMouseComposible(
     hitTestObjects: Ref<THREE.Object3D[]>,
 
     // Output
-    clickCallback: (mouseEvent: MouseEvent, coordinate: Coordinate) => void,
-    highlightedCoordinate: Ref<Coordinate | null>,
+    clickCallback: (mouseEvent: MouseEvent, voxel: Voxel) => void,
+    highlightedVoxel: Ref<Voxel | null>,
 ) {
     const raycaster = new THREE.Raycaster()
     
@@ -32,22 +32,22 @@ export function useGridMouseComposible(
         return intersects.length === 0 ? null : intersects[0].object
     }
 
-    /* Set highlightedCoordinate based on object at screen position x, y. */
+    /* Set highlightedVoxel based on object at screen position x, y. */
     function highlightObjectAtPosition(x: number, y: number) {
         const intersectedObject = getObjectOnScreen(x, y)
         if(intersectedObject) {
-            const newValue = intersectedObject.userData.coordinate
+            const newValue = intersectedObject.userData.voxel
             // Only update if changed
-            if(!Array.isArray(highlightedCoordinate.value) || !arraysEqual(highlightedCoordinate.value, newValue)) {
-                highlightedCoordinate.value = newValue
+            if(!Array.isArray(highlightedVoxel.value) || !arraysEqual(highlightedVoxel.value, newValue)) {
+                highlightedVoxel.value = newValue
             }
         } else {
-            highlightedCoordinate.value = null
+            highlightedVoxel.value = null
         }
     }
 
     function clearHighlight() {
-        highlightedCoordinate.value = null
+        highlightedVoxel.value = null
     }
 
     /* Emit appropriate action (via actionCallback) for clicking on the object
@@ -57,7 +57,7 @@ export function useGridMouseComposible(
         if(intersectedObject) {
             clickCallback(
                 event,
-                intersectedObject.userData.coordinate,
+                intersectedObject.userData.voxel,
             )
         }
     }

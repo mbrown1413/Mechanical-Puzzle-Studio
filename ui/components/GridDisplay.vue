@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {ref, Ref, computed} from "vue"
 
-import {Coordinate} from "~lib/types.ts"
+import {Voxel} from "~lib/types.ts"
 import {Puzzle, Piece} from  "~lib/Puzzle.ts"
 
 import {useGridDrawComposible} from "./GridDisplay_draw.ts"
@@ -20,7 +20,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-    voxelClicked: [mouseEvent: MouseEvent, coordinate: Coordinate]
+    voxelClicked: [mouseEvent: MouseEvent, voxel: Voxel]
 }>()
 
 const pieceDisplayStyle = computed(() => {
@@ -34,7 +34,7 @@ const el = ref()
 const viewpoints = props.puzzle.grid.getViewpoints()
 const viewpoint = ref(viewpoints[0])
 const layerN = ref(0)
-const highlightedCoordinate: Ref<Coordinate | null> = ref(null)
+const highlightedVoxel: Ref<Voxel | null> = ref(null)
 
 const viewpointOptions = computed(() =>
     viewpoints.map((viewpoint) => {
@@ -65,15 +65,15 @@ const {
     pieces,
     layerN,
     viewpoint,
-    highlightedCoordinate,
+    highlightedVoxel,
 )
 
 useGridMouseComposible(
     renderer,
     camera,
     hitTestObjects,
-    (mouseEvent, coordinate) => emit("voxelClicked", mouseEvent, coordinate),
-    highlightedCoordinate,  // Output ref
+    (mouseEvent, voxel) => emit("voxelClicked", mouseEvent, voxel),
+    highlightedVoxel,  // Output ref
 )
 </script>
 

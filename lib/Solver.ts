@@ -48,7 +48,7 @@ export class AssemblySolver extends Solver {
         const rowPlacements = []
         const rows: Boolean[][] = []
         for(const [i, piece] of pieces.entries()) {
-            for(const placement of puzzle.getPiecePlacements(piece, goal.coordinates)) {
+            for(const placement of puzzle.getPiecePlacements(piece, goal.voxels)) {
                 rowPlacements.push(placement)
                 rows.push(this.getPlacementRow(pieces, i, placement, goal))
             }
@@ -63,14 +63,14 @@ export class AssemblySolver extends Solver {
         placement: PiecePlacement,
         goal: Piece,
     ): Boolean[] {
-        const pieceCols: Boolean[] = new Array(pieces.length).fill(false)
-        pieceCols[pieceIdx] = true
+        const pieceColumns: Boolean[] = new Array(pieces.length).fill(false)
+        pieceColumns[pieceIdx] = true
 
-        const coordCols: Boolean[] = goal.coordinates.map((coordinate) =>
-            arrayContainsCoordinate(placement.transformedPiece.coordinates, coordinate)
+        const voxelColumns: Boolean[] = goal.voxels.map((voxel) =>
+            arrayContainsCoordinate(placement.transformedPiece.voxels, voxel)
         )
 
-        return pieceCols.concat(coordCols)
+        return pieceColumns.concat(voxelColumns)
     }
 }
 

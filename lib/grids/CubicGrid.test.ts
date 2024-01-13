@@ -53,9 +53,9 @@ describe("Cubic grid", () => {
         expect(grid.isInBounds([1, 1, 2], [0, 0, 2])).toBeFalsy()
     })
 
-    test("getCoordinates()", () => {
+    test("getVoxels()", () => {
         expect(
-            grid.getCoordinates([2, 2, 2])
+            grid.getVoxels([2, 2, 2])
         ).toMatchObject([
             [0, 0, 0],
             [0, 0, 1],
@@ -67,10 +67,10 @@ describe("Cubic grid", () => {
             [1, 1, 1],
         ])
         expect(
-            grid.getCoordinates([1, 1, 1])
+            grid.getVoxels([1, 1, 1])
         ).toMatchObject([[0, 0, 0]])
         expect(
-            grid.getCoordinates([0, 0, 0])
+            grid.getVoxels([0, 0, 0])
         ).toMatchObject([])
     })
 

@@ -1,7 +1,7 @@
 import { Vector3 } from 'three'
 
+export type Voxel = Array<any>
 export type Bounds = Array<number>
-export type Coordinate = Array<any>
 export type Direction = string
 
 export type Dimension = {
@@ -9,11 +9,15 @@ export type Dimension = {
     defaultBound?: number,
 }
 
-export type CellType = string
+export type VoxelShape = string
 
-export type CellInfo = {
-    coordinate: Coordinate,
-    type: CellType,
+export type VoxelInfo = {
+    voxel: Voxel,
+
+    /* Corresponds to the voxel's shape when made physically. A voxel may "fit
+    * into" another voxel only if the shapes match. */
+    shape: VoxelShape,
+
     sides: Array<Direction>,
     sidePolygons: {[key: Direction]: Vector3[]}
 }
@@ -24,10 +28,10 @@ export type Viewpoint = {
     forwardVector: Vector3,
     xVector: Vector3,
     getNLayers(bounds: Bounds): number,
-    isInLayer(coordinate: Coordinate, layerIndex: number): boolean,
+    isInLayer(voxel: Voxel, layerIndex: number): boolean,
 }
 
-export type OrientationFunc = (oldCoordinates: Coordinate[]) => Coordinate[] | null
+export type OrientationFunc = (oldVoxels: Voxel[]) => Voxel[] | null
 export type Orientation = {
     orientationFunc: OrientationFunc
 }

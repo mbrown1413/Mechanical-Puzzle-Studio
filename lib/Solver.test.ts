@@ -4,13 +4,13 @@ import {Piece, Puzzle} from "./Puzzle.ts"
 import {CubicGrid} from "./grids/CubicGrid.ts"
 import {AssemblyProblem} from "./Problem"
 import {AssemblySolution} from "./Solution.ts"
-import {Coordinate} from "./types.ts"
+import {Voxel} from "./types.ts"
 
-type SolutionShorthand = {[pieceId: string]: Coordinate[]}
+type SolutionShorthand = {[pieceId: string]: Voxel[]}
 function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShorthand) {
     const actual: SolutionShorthand = {}
     for(const [pieceId, placement] of solution.placements.entries()) {
-        actual[pieceId] = placement.transformedPiece.coordinates
+        actual[pieceId] = placement.transformedPiece.voxels
     }
     expect(actual).toMatchObject(expected)
 }

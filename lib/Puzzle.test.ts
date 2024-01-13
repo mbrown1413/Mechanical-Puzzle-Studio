@@ -3,17 +3,17 @@ import {test, expect, describe} from "vitest"
 import {Piece, Puzzle} from "./Puzzle.ts"
 import {CubicGrid} from "./grids/CubicGrid.ts"
 import {orientationTestResultingShapes, orientationTestShape} from "./grids/CubicGrid.test.ts"
-import {Coordinate} from "./types.ts"
+import {Voxel} from "./types.ts"
 
-function makePlacementSet(coordinateLists: Coordinate[][]): Set<string> {
+function makePlacementSet(voxelLists: Voxel[][]): Set<string> {
     const set: Set<string> = new Set()
-    for(const coordinates of coordinateLists) {
-        const stringCoords = coordinates.map((coordinate) =>
-            coordinate.join(",")
+    for(const voxels of voxelLists) {
+        const stringVoxels = voxels.map((voxel) =>
+            voxel.join(",")
         )
-        stringCoords.sort()
+        stringVoxels.sort()
         set.add(
-            stringCoords.join("; ")
+            stringVoxels.join("; ")
         )
     }
     return set
@@ -85,7 +85,7 @@ describe("Puzzle", () => {
         expect(variations[0].transformedPiece).not.toEqual(piece)
         for(let i=0; i<24; i++) {
             expect(
-                variations[i].transformedPiece.coordinates
+                variations[i].transformedPiece.voxels
             ).toMatchObject(orientationTestResultingShapes[i])
         }
     })
@@ -99,7 +99,7 @@ describe("Puzzle", () => {
         )
         let placements = Array.from(puzzle.getPieceTranslations(
             piece,
-            puzzle.grid.getCoordinates([3, 2, 2])
+            puzzle.grid.getVoxels([3, 2, 2])
         ))
         expect(placements.length).toEqual(8)
 
@@ -112,14 +112,14 @@ describe("Puzzle", () => {
         expect(placements[6].translation).toEqual([1, 1, 0])
         expect(placements[7].translation).toEqual([1, 1, 1])
 
-        expect(placements[0].transformedPiece.coordinates).toEqual([[0, 0, 0], [1, 0, 0]])
-        expect(placements[1].transformedPiece.coordinates).toEqual([[0, 0, 1], [1, 0, 1]])
-        expect(placements[2].transformedPiece.coordinates).toEqual([[0, 1, 0], [1, 1, 0]])
-        expect(placements[3].transformedPiece.coordinates).toEqual([[0, 1, 1], [1, 1, 1]])
-        expect(placements[4].transformedPiece.coordinates).toEqual([[1, 0, 0], [2, 0, 0]])
-        expect(placements[5].transformedPiece.coordinates).toEqual([[1, 0, 1], [2, 0, 1]])
-        expect(placements[6].transformedPiece.coordinates).toEqual([[1, 1, 0], [2, 1, 0]])
-        expect(placements[7].transformedPiece.coordinates).toEqual([[1, 1, 1], [2, 1, 1]])
+        expect(placements[0].transformedPiece.voxels).toEqual([[0, 0, 0], [1, 0, 0]])
+        expect(placements[1].transformedPiece.voxels).toEqual([[0, 0, 1], [1, 0, 1]])
+        expect(placements[2].transformedPiece.voxels).toEqual([[0, 1, 0], [1, 1, 0]])
+        expect(placements[3].transformedPiece.voxels).toEqual([[0, 1, 1], [1, 1, 1]])
+        expect(placements[4].transformedPiece.voxels).toEqual([[1, 0, 0], [2, 0, 0]])
+        expect(placements[5].transformedPiece.voxels).toEqual([[1, 0, 1], [2, 0, 1]])
+        expect(placements[6].transformedPiece.voxels).toEqual([[1, 1, 0], [2, 1, 0]])
+        expect(placements[7].transformedPiece.voxels).toEqual([[1, 1, 1], [2, 1, 1]])
 
         puzzle = new Puzzle("puzzle-0", new CubicGrid())
         piece = new Piece(
@@ -129,15 +129,15 @@ describe("Puzzle", () => {
         )
         placements = Array.from(puzzle.getPieceTranslations(
             piece,
-            puzzle.grid.getCoordinates([3, 2, 2])
+            puzzle.grid.getVoxels([3, 2, 2])
         ))
         expect(placements.length).toEqual(6)
-        expect(placements[0].transformedPiece.coordinates).toEqual([[0, 0, 0], [0, 0, 1]])
-        expect(placements[1].transformedPiece.coordinates).toEqual([[0, 1, 0], [0, 1, 1]])
-        expect(placements[2].transformedPiece.coordinates).toEqual([[1, 0, 0], [1, 0, 1]])
-        expect(placements[3].transformedPiece.coordinates).toEqual([[1, 1, 0], [1, 1, 1]])
-        expect(placements[4].transformedPiece.coordinates).toEqual([[2, 0, 0], [2, 0, 1]])
-        expect(placements[5].transformedPiece.coordinates).toEqual([[2, 1, 0], [2, 1, 1]])
+        expect(placements[0].transformedPiece.voxels).toEqual([[0, 0, 0], [0, 0, 1]])
+        expect(placements[1].transformedPiece.voxels).toEqual([[0, 1, 0], [0, 1, 1]])
+        expect(placements[2].transformedPiece.voxels).toEqual([[1, 0, 0], [1, 0, 1]])
+        expect(placements[3].transformedPiece.voxels).toEqual([[1, 1, 0], [1, 1, 1]])
+        expect(placements[4].transformedPiece.voxels).toEqual([[2, 0, 0], [2, 0, 1]])
+        expect(placements[5].transformedPiece.voxels).toEqual([[2, 1, 0], [2, 1, 1]])
     })
 
     test("Piece placements", () => {
@@ -149,11 +149,11 @@ describe("Puzzle", () => {
         )
         let placements = Array.from(puzzle.getPiecePlacements(
             piece,
-            puzzle.grid.getCoordinates([3, 2, 2])
+            puzzle.grid.getVoxels([3, 2, 2])
         ))
         expect(placements.length).toEqual(20)
         expect(
-            makePlacementSet(placements.map((p) => p.transformedPiece.coordinates))
+            makePlacementSet(placements.map((p) => p.transformedPiece.voxels))
         ).toMatchObject(
             makePlacementSet([
                 [[0, 0, 0], [1, 0, 0]],
@@ -193,7 +193,7 @@ describe("Puzzle", () => {
         ))
         expect(placements.length).toEqual(1)
         expect(
-            placements.map((p) => p.transformedPiece.coordinates)
+            placements.map((p) => p.transformedPiece.voxels)
         ).toMatchObject([
             [[0, 0, 0], [0, 1, 0], [1, 1, 0]],
         ])

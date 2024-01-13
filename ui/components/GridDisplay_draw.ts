@@ -5,7 +5,7 @@ import {Vector3} from "three"
 import {OrbitControls} from "three/addons/controls/OrbitControls.js"
 import {ConvexGeometry} from "three/addons/geometries/ConvexGeometry.js"
 
-import {CellInfo, Coordinate, Viewpoint} from "~lib/types.ts"
+import {VoxelInfo, Voxel, Viewpoint} from "~lib/types.ts"
 import {arraysEqual} from "~lib/utils.ts"
 import {Grid} from "~lib/Grid.ts"
 import {Piece} from  "~lib/Puzzle.ts"
@@ -18,7 +18,7 @@ export function useGridDrawComposible(
     pieces: ComputedRef<Piece[]>,
     layerN: Ref<number>,
     viewpoint: Ref<Viewpoint>,
-    highlightedCoordinate: Ref<Coordinate | null>,
+    highlightedVoxel: Ref<Voxel | null>,
 ) {
     const renderer = new THREE.WebGLRenderer({antialias: true})
     renderer.setClearColor(0xdddddd, 1)
@@ -52,18 +52,18 @@ export function useGridDrawComposible(
         renderer.dispose()
     })
     
-    let coordinateToString = (cord: Coordinate) => cord.join(",")
-    const coordinatePieceMap = computed(() => {
+    let voxelToString = (cord: Voxel) => cord.join(",")
+    const voxelPieceMap = computed(() => {
         const map = new Map()
         for(const piece of pieces.value) {
-            for(const coordinate of piece.coordinates) {
-                map.set(coordinateToString(coordinate), piece)
+            for(const voxel of piece.voxels) {
+                map.set(voxelToString(voxel), piece)
             }
         }
         return map
     })
-    function getPieceAtCoordinate(coordinate: Coordinate): Piece | null {
-        const piece = coordinatePieceMap.value.get(coordinateToString(coordinate))
+    function getPieceAtVoxel(voxel: Voxel): Piece | null {
+        const piece = voxelPieceMap.value.get(voxelToString(voxel))
         return piece === undefined ? null : piece
     }
 
@@ -145,15 +145,15 @@ export function useGridDrawComposible(
         }
     }
 
-    function getCellSolid(
+    function getVoxelSolid(
         piece: Piece | null,
-        cellInfo: CellInfo,
+        voxelInfo: VoxelInfo,
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
         const key = JSON.stringify([
             "solid",
-            cellInfo.coordinate,
+            voxelInfo.voxel,
             piece?.color,
             inLayer,
             highlighted,
@@ -173,7 +173,7 @@ export function useGridDrawComposible(
         })
 
         obj = new THREE.Object3D()
-        for(let polygon of Object.values(cellInfo.sidePolygons)) {
+        for(let polygon of Object.values(voxelInfo.sidePolygons)) {
             const geometry = new ConvexGeometry(polygon)
             const mesh = new THREE.Mesh(geometry, material)
             mesh.renderOrder = renderOrder
@@ -184,9 +184,9 @@ export function useGridDrawComposible(
         return obj
     }
     
-    function getCellThinWireframe(
+    function getVoxelThinWireframe(
         piece: Piece | null,
-        cellInfo: CellInfo,
+        voxelInfo: VoxelInfo,
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
@@ -198,7 +198,7 @@ export function useGridDrawComposible(
         })
 
         const obj = new THREE.Object3D()
-        for(let polygon of Object.values(cellInfo.sidePolygons)) {
+        for(let polygon of Object.values(voxelInfo.sidePolygons)) {
             const geometry = new THREE.BufferGeometry()
             geometry.setFromPoints(polygon)
             const line = new THREE.LineLoop(geometry, material)
@@ -208,9 +208,9 @@ export function useGridDrawComposible(
         return obj
     }
 
-    function getCellThickWireframe(
+    function getVoxelThickWireframe(
         piece: Piece | null,
-        cellInfo: CellInfo,
+        voxelInfo: VoxelInfo,
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
@@ -222,7 +222,7 @@ export function useGridDrawComposible(
         const divisions = 10
 
         const obj = new THREE.Object3D()
-        for(let polygon of Object.values(cellInfo.sidePolygons)) {
+        for(let polygon of Object.values(voxelInfo.sidePolygons)) {
             for(let i=0; i<polygon.length; i++) {
                 const point1 = polygon[i]
                 const point2 = polygon[(i+1) % polygon.length]
@@ -245,15 +245,15 @@ export function useGridDrawComposible(
         return obj
     }
 
-    function getCellWireframe(
+    function getVoxelWireframe(
         piece: Piece | null,
-        cellInfo: CellInfo,
+        voxelInfo: VoxelInfo,
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
         const key = JSON.stringify([
             "wireframe",
-            cellInfo.coordinate,
+            voxelInfo.voxel,
             piece?.color,
             inLayer,
             highlighted,
@@ -262,9 +262,9 @@ export function useGridDrawComposible(
             key,
             () => {
                 if(inLayer) {
-                    return getCellThickWireframe(piece, cellInfo, inLayer, highlighted)
+                    return getVoxelThickWireframe(piece, voxelInfo, inLayer, highlighted)
                 } else {
-                    return getCellThinWireframe(piece, cellInfo, inLayer, highlighted)
+                    return getVoxelThinWireframe(piece, voxelInfo, inLayer, highlighted)
                 }
             }
         )
@@ -286,35 +286,35 @@ export function useGridDrawComposible(
             ...pieces.value.map(piece => piece.bounds)
         )
 
-        for(let coordinate of grid.getCoordinates(bounds)) {
-            const cellInfo = grid.getCellInfo(coordinate)
-            const inLayer = viewpoint.value.isInLayer(coordinate, layerN.value)
-            const pieceAtCoordinate = getPieceAtCoordinate(coordinate)
+        for(let voxel of grid.getVoxels(bounds)) {
+            const voxelInfo = grid.getVoxelInfo(voxel)
+            const inLayer = viewpoint.value.isInLayer(voxel, layerN.value)
+            const pieceAtVoxel = getPieceAtVoxel(voxel)
 
-            let highlighted = highlightedCoordinate.value !== null &&
-                arraysEqual(coordinate, highlightedCoordinate.value)
+            let highlighted = highlightedVoxel.value !== null &&
+                arraysEqual(voxel, highlightedVoxel.value)
 
-            const solid = getCellSolid(
-                pieceAtCoordinate,
-                cellInfo,
+            const solid = getVoxelSolid(
+                pieceAtVoxel,
+                voxelInfo,
                 inLayer,
                 highlighted,
             )
 
-            if(pieceAtCoordinate) {
+            if(pieceAtVoxel) {
                 scene.add(solid)
             }
 
-            const wireframe = getCellWireframe(pieceAtCoordinate, cellInfo, inLayer, highlighted)
+            const wireframe = getVoxelWireframe(pieceAtVoxel, voxelInfo, inLayer, highlighted)
             scene.add(wireframe)
             
             if(inLayer) {
-                // Populate hitTestObjects and save what coordinate the object
-                // was drawn for so we can pull it out later after a raycast
+                // Populate hitTestObjects and save what voxel the object was
+                // drawn for so we can pull it out later after a raycast
                 // intersects it. Since Raycaster will find the leaf nodes of
                 // our object tree, we need to set the userData on children.
                 solid.children.forEach((child) => {
-                    child.userData = {coordinate}
+                    child.userData = {voxel}
                 })
                 hitTestObjects.value.push(solid)
             }
