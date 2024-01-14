@@ -11,6 +11,6 @@ export function arraysEqual(a: any[], b: any[]) {
 
 export function arrayContainsCoordinate(haystack: Voxel[], needle: Voxel) {
     return haystack.find(
-        (c) => arraysEqual(c, needle)
+        (c) => c === needle
     ) !== undefined
 }

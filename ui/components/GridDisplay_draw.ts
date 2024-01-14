@@ -6,7 +6,6 @@ import {OrbitControls} from "three/addons/controls/OrbitControls.js"
 import {ConvexGeometry} from "three/addons/geometries/ConvexGeometry.js"
 
 import {VoxelInfo, Voxel, Viewpoint} from "~lib/types.ts"
-import {arraysEqual} from "~lib/utils.ts"
 import {Grid} from "~lib/Grid.ts"
 import {Piece} from  "~lib/Puzzle.ts"
 import {isColorSimilar} from "~lib/colors.ts"
@@ -52,18 +51,17 @@ export function useGridDrawComposible(
         renderer.dispose()
     })
     
-    let voxelToString = (cord: Voxel) => cord.join(",")
     const voxelPieceMap = computed(() => {
         const map = new Map()
         for(const piece of pieces.value) {
             for(const voxel of piece.voxels) {
-                map.set(voxelToString(voxel), piece)
+                map.set(voxel, piece)
             }
         }
         return map
     })
     function getPieceAtVoxel(voxel: Voxel): Piece | null {
-        const piece = voxelPieceMap.value.get(voxelToString(voxel))
+        const piece = voxelPieceMap.value.get(voxel)
         return piece === undefined ? null : piece
     }
 
@@ -291,8 +289,7 @@ export function useGridDrawComposible(
             const inLayer = viewpoint.value.isInLayer(voxel, layerN.value)
             const pieceAtVoxel = getPieceAtVoxel(voxel)
 
-            let highlighted = highlightedVoxel.value !== null &&
-                arraysEqual(voxel, highlightedVoxel.value)
+            let highlighted = voxel === highlightedVoxel.value
 
             const solid = getVoxelSolid(
                 pieceAtVoxel,

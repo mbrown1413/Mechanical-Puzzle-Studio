@@ -1,6 +1,13 @@
 import { Vector3 } from 'three'
 
-export type Voxel = Array<any>
+/** 
+ * Represents one cell in a `Grid`.
+ * 
+ * This should be treated as an opaque type by anything other than a `Grid`
+ * implementation.
+ */
+export type Voxel = string
+
 export type Bounds = Array<number>
 export type Direction = string
 

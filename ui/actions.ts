@@ -1,5 +1,4 @@
 import {Voxel, BoolWithReason} from "~lib/types.ts"
-import {arraysEqual} from "~lib/utils.ts"
 import {Puzzle, Piece} from "~lib/Puzzle.ts"
 import {AssemblyProblem, Problem} from "~lib/Problem.ts"
 
@@ -125,9 +124,7 @@ export class EditPieceAction extends Action {
         }
 
         piece.voxels = piece.voxels.filter(
-            (voxel) => !this.removeVoxels.some(toRemove =>
-                arraysEqual(toRemove, voxel)
-            )
+            (voxel) => !this.removeVoxels.includes(voxel)
         )
         piece.voxels.push(...this.addVoxels)
         return {bool: true}

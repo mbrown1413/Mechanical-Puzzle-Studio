@@ -8,12 +8,9 @@ import {Voxel} from "./types.ts"
 function makePlacementSet(voxelLists: Voxel[][]): Set<string> {
     const set: Set<string> = new Set()
     for(const voxels of voxelLists) {
-        const stringVoxels = voxels.map((voxel) =>
-            voxel.join(",")
-        )
-        stringVoxels.sort()
+        const sortedVoxels = [...voxels].sort()
         set.add(
-            stringVoxels.join("; ")
+            sortedVoxels.join("; ")
         )
     }
     return set
@@ -95,7 +92,7 @@ describe("Puzzle", () => {
         let piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
-            [[0, 0, 0], [1, 0, 0]]
+            ["0,0,0", "1,0,0"]
         )
         let placements = Array.from(puzzle.getPieceTranslations(
             piece,
@@ -112,32 +109,32 @@ describe("Puzzle", () => {
         expect(placements[6].translation).toEqual([1, 1, 0])
         expect(placements[7].translation).toEqual([1, 1, 1])
 
-        expect(placements[0].transformedPiece.voxels).toEqual([[0, 0, 0], [1, 0, 0]])
-        expect(placements[1].transformedPiece.voxels).toEqual([[0, 0, 1], [1, 0, 1]])
-        expect(placements[2].transformedPiece.voxels).toEqual([[0, 1, 0], [1, 1, 0]])
-        expect(placements[3].transformedPiece.voxels).toEqual([[0, 1, 1], [1, 1, 1]])
-        expect(placements[4].transformedPiece.voxels).toEqual([[1, 0, 0], [2, 0, 0]])
-        expect(placements[5].transformedPiece.voxels).toEqual([[1, 0, 1], [2, 0, 1]])
-        expect(placements[6].transformedPiece.voxels).toEqual([[1, 1, 0], [2, 1, 0]])
-        expect(placements[7].transformedPiece.voxels).toEqual([[1, 1, 1], [2, 1, 1]])
+        expect(placements[0].transformedPiece.voxels).toEqual(["0,0,0", "1,0,0"])
+        expect(placements[1].transformedPiece.voxels).toEqual(["0,0,1", "1,0,1"])
+        expect(placements[2].transformedPiece.voxels).toEqual(["0,1,0", "1,1,0"])
+        expect(placements[3].transformedPiece.voxels).toEqual(["0,1,1", "1,1,1"])
+        expect(placements[4].transformedPiece.voxels).toEqual(["1,0,0", "2,0,0"])
+        expect(placements[5].transformedPiece.voxels).toEqual(["1,0,1", "2,0,1"])
+        expect(placements[6].transformedPiece.voxels).toEqual(["1,1,0", "2,1,0"])
+        expect(placements[7].transformedPiece.voxels).toEqual(["1,1,1", "2,1,1"])
 
         puzzle = new Puzzle("puzzle-0", new CubicGrid())
         piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
-            [[0, 0, 0], [0, 0, 1]]
+            ["0,0,0", "0,0,1"]
         )
         placements = Array.from(puzzle.getPieceTranslations(
             piece,
             puzzle.grid.getVoxels([3, 2, 2])
         ))
         expect(placements.length).toEqual(6)
-        expect(placements[0].transformedPiece.voxels).toEqual([[0, 0, 0], [0, 0, 1]])
-        expect(placements[1].transformedPiece.voxels).toEqual([[0, 1, 0], [0, 1, 1]])
-        expect(placements[2].transformedPiece.voxels).toEqual([[1, 0, 0], [1, 0, 1]])
-        expect(placements[3].transformedPiece.voxels).toEqual([[1, 1, 0], [1, 1, 1]])
-        expect(placements[4].transformedPiece.voxels).toEqual([[2, 0, 0], [2, 0, 1]])
-        expect(placements[5].transformedPiece.voxels).toEqual([[2, 1, 0], [2, 1, 1]])
+        expect(placements[0].transformedPiece.voxels).toEqual(["0,0,0", "0,0,1"])
+        expect(placements[1].transformedPiece.voxels).toEqual(["0,1,0", "0,1,1"])
+        expect(placements[2].transformedPiece.voxels).toEqual(["1,0,0", "1,0,1"])
+        expect(placements[3].transformedPiece.voxels).toEqual(["1,1,0", "1,1,1"])
+        expect(placements[4].transformedPiece.voxels).toEqual(["2,0,0", "2,0,1"])
+        expect(placements[5].transformedPiece.voxels).toEqual(["2,1,0", "2,1,1"])
     })
 
     test("Piece placements", () => {
@@ -145,7 +142,7 @@ describe("Puzzle", () => {
         let piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
-            [[0, 0, 0], [0, 0, 1]]
+            ["0,0,0", "0,0,1"]
         )
         let placements = Array.from(puzzle.getPiecePlacements(
             piece,
@@ -156,28 +153,28 @@ describe("Puzzle", () => {
             makePlacementSet(placements.map((p) => p.transformedPiece.voxels))
         ).toMatchObject(
             makePlacementSet([
-                [[0, 0, 0], [1, 0, 0]],
-                [[0, 1, 0], [1, 1, 0]],
-                [[0, 0, 1], [1, 0, 1]],
-                [[0, 1, 1], [1, 1, 1]],
-                [[1, 0, 0], [2, 0, 0]],
-                [[1, 1, 0], [2, 1, 0]],
-                [[1, 0, 1], [2, 0, 1]],
-                [[1, 1, 1], [2, 1, 1]],
+                ["0,0,0", "1,0,0"],
+                ["0,1,0", "1,1,0"],
+                ["0,0,1", "1,0,1"],
+                ["0,1,1", "1,1,1"],
+                ["1,0,0", "2,0,0"],
+                ["1,1,0", "2,1,0"],
+                ["1,0,1", "2,0,1"],
+                ["1,1,1", "2,1,1"],
 
-                [[0, 0, 0], [0, 0, 1]],
-                [[0, 1, 0], [0, 1, 1]],
-                [[1, 0, 0], [1, 0, 1]],
-                [[1, 1, 0], [1, 1, 1]],
-                [[2, 0, 0], [2, 0, 1]],
-                [[2, 1, 0], [2, 1, 1]],
+                ["0,0,0", "0,0,1"],
+                ["0,1,0", "0,1,1"],
+                ["1,0,0", "1,0,1"],
+                ["1,1,0", "1,1,1"],
+                ["2,0,0", "2,0,1"],
+                ["2,1,0", "2,1,1"],
 
-                [[0, 0, 0], [0, 1, 0]],
-                [[1, 0, 0], [1, 1, 0]],
-                [[2, 0, 0], [2, 1, 0]],
-                [[0, 0, 1], [0, 1, 1]],
-                [[1, 0, 1], [1, 1, 1]],
-                [[2, 0, 1], [2, 1, 1]],
+                ["0,0,0", "0,1,0"],
+                ["1,0,0", "1,1,0"],
+                ["2,0,0", "2,1,0"],
+                ["0,0,1", "0,1,1"],
+                ["1,0,1", "1,1,1"],
+                ["2,0,1", "2,1,1"],
             ])
         )
 
@@ -185,17 +182,17 @@ describe("Puzzle", () => {
         piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
-            [[0, 0, 0], [0, 1, 0], [1, 1, 0]]
+            ["0,0,0", "0,1,0", "1,1,0"]
         )
         placements = Array.from(puzzle.getPiecePlacements(
             piece,
-            [[0, 0, 0], [0, 1, 0], [1, 1, 0]]
+            ["0,0,0", "0,1,0", "1,1,0"]
         ))
         expect(placements.length).toEqual(1)
         expect(
             placements.map((p) => p.transformedPiece.voxels)
         ).toMatchObject([
-            [[0, 0, 0], [0, 1, 0], [1, 1, 0]],
+            ["0,0,0", "0,1,0", "1,1,0"],
         ])
     })
 })

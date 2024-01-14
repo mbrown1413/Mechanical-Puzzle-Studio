@@ -165,11 +165,8 @@ export class Puzzle extends SerializableClass {
 
         const usedPlacements: Set<string> = new Set()
         function getPlacementKey(piece: Piece): string {
-            const voxelStrings = piece.voxels.map((voxel) =>
-                voxel.join(",")
-            )
-            voxelStrings.sort()
-            return voxelStrings.join(";")
+            const sortedVoxels = [...piece.voxels].sort()
+            return sortedVoxels.join(";")
         }
 
         const piece = this.getPieceFromPieceOrId(pieceOrId)
