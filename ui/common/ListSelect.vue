@@ -104,9 +104,10 @@ option::before {
     vertical-align: middle;
     width: 1em;
     height: 1em;
+    margin-left: 0.5em;
     margin-right: 0.5em;
     border: var(--bs-border-width) solid var(--bs-border-color);
     border-radius: 5px;
-    background-color: var(--data-color); /* Var set on <option> */
+    background-color: var(--data-color); /* Var set by <option> */
 }
 </style>

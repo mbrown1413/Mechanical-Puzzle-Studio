@@ -152,7 +152,7 @@ onMounted(() => {
                 :problemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
                 @action="performAction"
             />
-            <div v-show="currentTabId === 'solutions'">
+            <div v-show="currentTabId === 'solutions'" class="solution-list">
                 <h4>Solutions</h4>
                 <ListSelect
                         :items="solutionItems"
@@ -237,5 +237,8 @@ onMounted(() => {
 .home-link {
     font-size: 200%;
 }
-
+    
+.solution-list h4 {
+    margin: 1em 1em .5em 1em;
+}
 </style>

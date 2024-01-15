@@ -32,12 +32,13 @@ function onOk() {
     <VBtn
         :color="value"
         @click="onOpen"
-        class="color-input"
+        class="color-input-button"
     >
         Color
     </VBtn>
     <Modal
         ref="modal"
+        class="color-input-modal"
         title=""
         @ok="onOk"
     >
@@ -51,7 +52,10 @@ function onOk() {
 </template>
 
 <style>
-.color-input {
+.color-input-button {
     border-radius: 10px;
+}
+.color-input-modal .v-overlay__content {
+    width: unset !important;
 }
 </style>
