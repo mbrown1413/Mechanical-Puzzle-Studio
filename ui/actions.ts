@@ -9,12 +9,12 @@ export abstract class Action {
     abstract perform(puzzle: Puzzle): BoolWithReason
 }
 
-export abstract class EditItemMetadataAction extends Action {
+export abstract class EditItemMetadataAction<T extends Object> extends Action {
     itemId: string
     metadata: any
     
-    static itemName: "Piece" | "Problem"
-    static itemAttribute: "pieces" | "problems"
+    static itemName: string
+    static itemAttribute: string
     
     constructor(
         itemId: string,
@@ -27,7 +27,8 @@ export abstract class EditItemMetadataAction extends Action {
 
     perform(puzzle: Puzzle): BoolWithReason {
         const constructor = <typeof EditItemMetadataAction> this.constructor
-        const item = puzzle[constructor.itemAttribute].get(this.itemId)
+        const itemContainer = puzzle[constructor.itemAttribute] as Map<string, T>
+        const item = itemContainer.get(this.itemId)
         if(item === undefined) {
             return {
                 bool: false,
@@ -36,11 +37,11 @@ export abstract class EditItemMetadataAction extends Action {
         }
         
         Object.assign(item, this.metadata)
-        this.postEdit(item)
+        this.postEdit(item, puzzle)
         return {bool: true}
     }
 
-    postEdit(_item: Piece | Problem) { }
+    postEdit(_item: T, _puzzle: Puzzle) { }
 }
 
 abstract class DeleteItemsAction extends Action {
@@ -131,12 +132,19 @@ export class EditPieceAction extends Action {
     }
 }
 
-export class EditPieceMetadataAction extends EditItemMetadataAction {
+export class EditPieceMetadataAction extends EditItemMetadataAction<Piece> {
     static itemAttribute: "pieces" = "pieces"
     static itemName: "Piece" = "Piece"
     static metadata: {
         label?: string
         color?: string
+    }
+
+    postEdit(piece: Piece, puzzle: Puzzle) {
+        // Remove voxels out of piece's bounds
+        piece.voxels = piece.voxels.filter((voxel) =>
+            puzzle.grid.isInBounds(voxel, piece.bounds)
+        )
     }
 }
 
@@ -158,7 +166,7 @@ export class DeleteProblemsAction extends DeleteItemsAction {
     static itemName: "Problem" = "Problem"
 }
 
-export class EditProblemMetadataAction extends EditItemMetadataAction {
+export class EditProblemMetadataAction extends EditItemMetadataAction<Problem> {
     static itemAttribute: "problems" = "problems"
     static itemName: "Problem" = "Problem"
     static metadata: {
