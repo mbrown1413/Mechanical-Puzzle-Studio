@@ -6,10 +6,13 @@ import {PuzzleFile} from "~lib/PuzzleFile.ts"
 import {Puzzle} from "~lib/Puzzle.ts"
 import {CubicGrid} from "~lib/grids/CubicGrid.ts"
 
+import {title} from "~ui/globals.ts"
 import {getStorageInstances, PuzzleStorage} from "~ui/storage.ts"
 import Modal from "~ui/common/Modal.vue"
 import ConfirmButton from "~ui/common/ConfirmButton.vue"
 import TitleBar from "~ui/components/TitleBar.vue"
+
+title.value = ""
 
 const router = useRouter()
 

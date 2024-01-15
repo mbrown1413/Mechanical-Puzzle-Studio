@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {computed, ref, Ref, reactive, onMounted} from "vue"
+import {computed, ref, Ref, reactive, onMounted, watchEffect} from "vue"
 import Split from "split-grid"
 
 import {PuzzleFile} from "~lib/PuzzleFile.ts"
 
+import {title} from "~ui/globals.ts"
 import {Action, ProblemSolveAction} from "~ui/actions.ts"
 import {getStorageInstances} from "~ui/storage.ts"
 import TabLayout from "~ui/common/TabLayout.vue"
@@ -25,6 +26,10 @@ const puzzleStorage = getStorageInstances()[props.storageId]
 const puzzleFile = reactive(
     puzzleStorage.get(props.puzzleId as string) as any
 ) as PuzzleFile
+
+watchEffect(() => {
+    title.value = puzzleFile.name
+})
 
 const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
 const selectedProblemIds: Ref<string[]> = ref(["problem-0"])
