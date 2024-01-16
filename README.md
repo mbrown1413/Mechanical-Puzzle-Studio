@@ -51,3 +51,9 @@ Production build:
 The source code is divided into two main sections:
   * [`lib/`](lib/): Contains the data structures and algorithms for puzzles. Basically, a stand-alone puzzle library without a gui.
   * [`ui/`](ui/): User interface built on top of `lib/`.
+
+
+## License
+
+This project is licensed under **Mozilla Public License Version 2.0**. See
+[LICENSE.txt](LICENSE.txt) for details.
