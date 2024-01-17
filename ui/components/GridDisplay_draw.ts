@@ -29,8 +29,7 @@ export function useGridDrawComposible(
     
     const resourceTracker = new ResourceTracker()
     const objectCache = new Object3DCache()
-    
-    controls.listenToKeyEvents(window)
+
     controls.addEventListener('change', refresh)
 
     onMounted(() => {
