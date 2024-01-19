@@ -2,7 +2,6 @@ import {Bounds, Voxel, Translation} from "~lib/types.ts"
 import {SerializableClass, deserialize, registerClass, serialize} from "~lib/serialize.ts"
 import {Grid} from "~lib/Grid.ts"
 import {Problem} from "~lib/Problem.ts"
-import {arrayContainsCoordinate} from "~lib/utils.ts"
 import {getNextColor} from "~lib/colors.ts"
 
 export class PiecePlacement extends SerializableClass {
@@ -143,7 +142,7 @@ export class Puzzle extends SerializableClass {
             const newVoxels = []
             for(const oldVoxel of piece.voxels) {
                 const newVoxel = this.grid.translate(oldVoxel, translation)
-                if(newVoxel === null || !arrayContainsCoordinate(availableVoxels, newVoxel)) {
+                if(newVoxel === null || !availableVoxels.includes(newVoxel)) {
                     break
                 }
                 newVoxels.push(newVoxel)

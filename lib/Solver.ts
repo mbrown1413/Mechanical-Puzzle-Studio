@@ -1,7 +1,6 @@
 import {AssemblyProblem, Problem} from "~lib/Problem.ts"
 import {Puzzle, PiecePlacement, Piece} from "~lib/Puzzle.ts"
 import {AssemblySolution, Solution} from "~lib/Solution.ts"
-import {arrayContainsCoordinate, arraysEqual} from "~lib/utils.ts"
 
 export abstract class Solver {
     abstract solve(puzzle: Puzzle, problem: Problem): Solution[]
@@ -67,7 +66,7 @@ export class AssemblySolver extends Solver {
         pieceColumns[pieceIdx] = true
 
         const voxelColumns: Boolean[] = goal.voxels.map((voxel) =>
-            arrayContainsCoordinate(placement.transformedPiece.voxels, voxel)
+            placement.transformedPiece.voxels.includes(voxel)
         )
 
         return pieceColumns.concat(voxelColumns)
@@ -108,11 +107,12 @@ function solveExactCoverNaive(matrix: Boolean[][]) {
             }
         }
 
-        colsCovered.sort((a, b) => a-b)
-        return arraysEqual(
-            colsCovered,
-            [...Array(nCols).keys()]
-        )
+        for(let i=0; i<nCols; i++) {
+            if(!colsCovered.includes(i)) {
+                return false
+            }
+        }
+        return true
     }
 
     function recurse(rowsPicked: number[]) {

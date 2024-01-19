@@ -4,7 +4,6 @@ import * as THREE from "three"
 import {Vector2} from "three"
 
 import {Voxel} from "~lib/types.ts"
-import {arraysEqual} from "~lib/utils.ts"
 
 export function useGridMouseComposible(
     // Inputs
@@ -37,10 +36,7 @@ export function useGridMouseComposible(
         const intersectedObject = getObjectOnScreen(x, y)
         if(intersectedObject) {
             const newValue = intersectedObject.userData.voxel
-            // Only update if changed
-            if(!Array.isArray(highlightedVoxel.value) || !arraysEqual(highlightedVoxel.value, newValue)) {
-                highlightedVoxel.value = newValue
-            }
+            highlightedVoxel.value = newValue
         } else {
             highlightedVoxel.value = null
         }
