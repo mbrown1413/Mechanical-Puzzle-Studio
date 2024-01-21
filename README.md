@@ -1,10 +1,13 @@
-# Riddlewood Studio
+# Mechanical Puzzle Studio
 
 Mechanical puzzle design software.
 
-The focus is on put-together / take-apart / interlocking puzzles. Riddlewood Studio is very extensible; with some programming knowledge, you can create new grid types, arbitrary constraints for when a puzzle is considered solved, and more.
+The focus is on put-together / take-apart / interlocking puzzles. Mechanical
+Puzzle Studio is very extensible; with some programming knowledge, you can
+create new grid types, arbitrary constraints for when a puzzle is considered
+solved, and more.
 
-**Note: This software is in pre-alpha development.** To track progress, see the [MVP Planning](https://github.com/mbrown1413/Riddlewood-Studio/issues/1) issue.
+**Note: This software is in pre-alpha development.** To track progress, see the [MVP Planning](https://github.com/mbrown1413/Mechanical-Puzzle-Studio/issues/1) issue.
 
 
 ## Puzzling Resources

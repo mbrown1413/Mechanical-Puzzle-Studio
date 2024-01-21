@@ -31,7 +31,7 @@ jobs:
 
         - name: Build dist
           run: |
-              yarn build --base=/Riddlewood-Studio/
+              yarn build --base=/Mechanical-Puzzle-Studio/
               cp dist/index.html dist/404.html
 
         - name: Configure Pages
