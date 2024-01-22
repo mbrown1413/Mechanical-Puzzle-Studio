@@ -81,6 +81,30 @@ describe("serialization and deserialization of", () => {
             "Map"
         )
     })
+    
+    test("Objects", () => {
+        serializeMatches(
+            {a: 1, b: 2},
+            {root: {
+                type: "Object",
+                data: {a: 1, b: 2},
+            }},
+            "Object"
+        )
+        serializeMatches(
+            {a: 1, b: {
+                c: 2
+            }},
+            {root: {
+                type: "Object",
+                data: {a: 1, b: {
+                    type: "Object",
+                    data: {c: 2}
+                }},
+            }},
+            "Object"
+        )
+    })
 
     test("SerializableClass instances", () => {
         serializeMatches(
@@ -199,12 +223,6 @@ describe("error on serialization", () => {
             serialize(undefined as any)
         }).toThrowErrorMatchingInlineSnapshot(`
           "Serialization failed: Unsupported primitive type \\"undefined\\"
-          Attribute path: root"
-        `)
-        expect(() => {
-            serialize({} as any)
-        }).toThrowErrorMatchingInlineSnapshot(`
-          "Serialization failed: Non-class objects cannot be serialized
           Attribute path: root"
         `)
     })

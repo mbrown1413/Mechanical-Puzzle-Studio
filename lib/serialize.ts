@@ -1,13 +1,15 @@
 /**
  * Serialization framework
  *
- * This requires you to register classes upfront, but it makes it super easy to
- * implement serializable classes. You just can't use non-serializable
- * attributes, which is all enforced via typescript.
+ * This can serialize and deserialize most common types, including objects and
+ * classes. Trying to serialize something not serializable should be caught
+ * statically by typescript. To see what types may be serialized, see the
+ * `SerializableType` type. Classes must be registered upfront.
  * 
  * To serialize:
- *     1. pass any serializable type into `serialize`
- *     2. If you want a string instead of an object, use `JSON.stringify()`
+ *     1. Pass any serializable type into `serialize`
+ *     2. If you want the serialized form to be a string instead of an object,
+ *        use `JSON.stringify()`
  *
  * To deserialize:
  *     * Pass the return value of `serialize()` to `deserialize()`
@@ -16,7 +18,7 @@
  *     * Extend it from `SerializableClass`
  *     * Register it with `registerClass()`
  * 
- * Example usage:
+ * Example usage of registered classes:
  * 
  *     import { SerializableClass, registerClass, serialize, deserialize } from "./serialize.ts"
  *     
@@ -130,9 +132,12 @@ export type SerializedData = {
  * SerializableClass subclasses.
  */
 export type SerializableType = number | string | boolean | null |
+    SerializableObject |
     SerializableClass |
     SerializableType[] |
     Map<string, SerializableType>
+
+export type SerializableObject = {[key: string]: SerializableType}
 
 /**
  * Subclass this and use `registerClass` to make a class serializable. If you
@@ -213,31 +218,37 @@ function _serialize(
                 }
             }
 
-            // Registered class
+            function getClassData(value: SerializableClass | SerializableObject) {
+                const data: {[k: string]: SerializableType} = {}
+                for(let [k, v] of Object.entries(value)) {
+                    if(typeof v !== "function") {
+                        data[k] = _serialize(v, refs, path, k)
+                    }
+                }
+                return data
+            }
+
+            // Object
             const type = value.constructor.name
+            if(value.constructor.name === "Object") {
+                const data = getClassData(value)
+                return {type: "Object", data}
+            }
+
+            // Registered class
             const classInfo = getRegisteredClass(type)
             if(classInfo !== null) {
                 value = value as SerializableClass
 
-                function _getClassData(value: SerializableClass) {
-                    const data: {[k: string]: SerializableType} = {}
-                    for(let [k, v] of Object.entries(value)) {
-                        if(typeof v !== "function") {
-                            data[k] = _serialize(v, refs, path, k)
-                        }
-                    }
-                    return data
-                }
-                
                 // Store inline
                 if(value.id === null) {
-                    const data = _getClassData(value)
+                    const data = getClassData(value)
                     return {type, data}
 
                 // Store in a reference
                 } else {
                     if(refs[value.id] === undefined) {
-                        const data = _getClassData(value)
+                        const data = getClassData(value)
                         refs[value.id] = {type, data}
                     }
                     return {type, id: value.id}
@@ -363,6 +374,13 @@ function _deserialize(
                     map.set(k, _deserialize(v, refs, cache, path, k))
                 }
                 obj = map
+                
+            // Object
+            } else if(data.type === "Object") {
+                obj = {}
+                for(const [key, value] of Object.entries(objData)) {
+                    obj[key] = _deserialize(value, refs, cache, path, key)
+                }
 
             // Registered class
             } else {
