@@ -1,6 +1,8 @@
 import {Voxel, BoolWithReason} from "~lib/types.ts"
 import {Puzzle, Piece} from "~lib/Puzzle.ts"
 import {AssemblyProblem, Problem} from "~lib/Problem.ts"
+import {ProblemSolveTask} from "~ui/tasks.ts"
+import {taskRunner} from "~ui/globals.ts"
 
 
 ////////// Base Classes //////////
@@ -198,39 +200,7 @@ export class ProblemSolveAction extends Action {
     }
 
     perform(puzzle: Puzzle): BoolWithReason {
-        const problem = puzzle.problems.get(this.problemId)
-        if(!problem) {
-            return {
-                bool: false,
-                reason: `Problem ID ${this.problemId} not found`
-            }
-        }
-        problem.solutions = null
-
-        const solvers = problem.getSolvers()
-        if(problem.solverId === null) {
-            return {
-                bool: false,
-                reason: `No solver selected`
-            }
-        }
-        const solverInfo = solvers[problem.solverId]
-        if(!solverInfo) {
-            return {
-                bool: false,
-                reason: "Selected solver is not found"
-            }
-        }
-        if(!solverInfo.isUsable.bool) {
-            return {
-                bool: false,
-                reason: "Solver not usable: " + solverInfo.isUsable.reason
-            }
-        }
-        const solver = new solverInfo.solver()
-        const solutions = solver.solve(puzzle, problem)
-
-        problem.solutions = solutions
+        taskRunner.submitTask(new ProblemSolveTask(puzzle, this.problemId))
         return {bool: true}
     }
 }

@@ -1,4 +1,6 @@
-import {ref, watch} from "vue"
+import {reactive, ref, watch} from "vue"
+
+import {TaskRunner} from "~ui/tasks.ts"
 
 export const title = ref("")
 watch(title, () => {
@@ -8,3 +10,5 @@ watch(title, () => {
         document.title = import.meta.env.VITE_APP_TITLE
     }
 }, {immediate: true})
+
+export const taskRunner = reactive(new TaskRunner())
