@@ -3,14 +3,15 @@ import {serialize, deserialize} from "~lib/serialize.ts"
 import {
     StartMessage,
     TaskToWorkerMessage,
-    WorkerToTaskMessage
-} from "./tasks.ts"
+    WorkerToTaskMessage,
+} from "./TaskRunner.ts"
 
 // Imports needed for solver in deserialization
 import "~lib/Puzzle.ts"
 import "~lib/grids/CubicGrid.ts"
 import "~lib/Problem.ts"
-import "./tasks.ts"
+import "~ui/tasks.ts"
+
 
 function sendMessage(message: WorkerToTaskMessage) {
     postMessage(serialize(message))
