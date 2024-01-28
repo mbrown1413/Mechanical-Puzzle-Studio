@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {ref, Ref} from "vue"
 
-import Modal from "~ui/common/Modal.vue"
+import Modal from "~/ui/common/Modal.vue"
 
 withDefaults(
     defineProps<{

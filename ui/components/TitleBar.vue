@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {PuzzleFile} from "~lib/PuzzleFile"
+import {PuzzleFile} from "~lib"
 
 withDefaults(
     defineProps<{

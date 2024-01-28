@@ -21,8 +21,9 @@
         "noFallthroughCasesInSwitch": true,
 
         "paths": {
-            "~lib/*": ["./lib/*"],
-            "~ui/*": ["./ui/*"],
+            "~lib": ["./lib/index.ts"],
+            "~/lib/*": ["./lib/*"],
+            "~/ui/*": ["./ui/*"],
         }
     },
     "include": [

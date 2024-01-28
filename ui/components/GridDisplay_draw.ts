@@ -5,11 +5,8 @@ import {Vector3} from "three"
 import {OrbitControls} from "three/addons/controls/OrbitControls.js"
 import {ConvexGeometry} from "three/addons/geometries/ConvexGeometry.js"
 
-import {VoxelInfo, Voxel, Viewpoint} from "~lib/types.ts"
-import {Grid} from "~lib/Grid.ts"
-import {Piece} from  "~lib/Puzzle.ts"
-import {isColorSimilar} from "~lib/colors.ts"
-import {Object3DCache, ResourceTracker} from "~ui/utils/threejs.ts"
+import {VoxelInfo, Voxel, Viewpoint, Grid, Piece, isColorSimilar} from "~lib"
+import {Object3DCache, ResourceTracker} from "~/ui/utils/threejs.ts"
 
 export function useGridDrawComposible(
     element: Ref<HTMLElement>,

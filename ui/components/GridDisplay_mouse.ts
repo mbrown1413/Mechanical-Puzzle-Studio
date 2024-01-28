@@ -3,7 +3,7 @@ import { Ref, onMounted} from "vue"
 import * as THREE from "three"
 import {Vector2} from "three"
 
-import {Voxel} from "~lib/types.ts"
+import {Voxel} from "~lib"
 
 export function useGridMouseComposible(
     // Inputs

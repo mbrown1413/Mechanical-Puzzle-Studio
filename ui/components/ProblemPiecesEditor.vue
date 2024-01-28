@@ -3,10 +3,10 @@ import {computed} from "vue"
 import {VDataTable} from "vuetify/components/VDataTable"
 import {VToolbar} from "vuetify/components/VToolbar"
 
-import {Puzzle} from '~lib/Puzzle.ts'
-import {AssemblyProblem} from '~lib/Problem.ts'
-import {Action, EditProblemMetadataAction} from "~ui/actions.ts"
-import GridDisplay from "./GridDisplay.vue"
+import {Puzzle, AssemblyProblem} from '~lib'
+
+import {Action, EditProblemMetadataAction} from "~/ui/actions.ts"
+import GridDisplay from "~/ui/components/GridDisplay.vue"
 
 const props = withDefaults(
     defineProps<{

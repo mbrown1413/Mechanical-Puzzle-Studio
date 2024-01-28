@@ -2,20 +2,20 @@
 import {computed, ref, Ref, reactive, onMounted, watchEffect} from "vue"
 import Split from "split-grid"
 
-import {PuzzleFile} from "~lib/PuzzleFile.ts"
+import {PuzzleFile} from "~lib"
 
-import {title} from "~ui/globals.ts"
-import {Action, ProblemSolveAction} from "~ui/actions.ts"
-import {getStorageInstances} from "~ui/storage.ts"
-import TabLayout from "~ui/common/TabLayout.vue"
-import PieceEditor from "~ui/components/PieceEditor.vue"
-import SolutionDisplay from "~ui/components/SolutionDisplay.vue"
-import ItemMetadataEditor from "~ui/components/ItemMetadataEditor.vue"
-import PieceList from "~ui/components/PieceList.vue"
-import ProblemList from "~ui/components/ProblemList.vue"
-import ProblemSolverForm from "~ui/components/ProblemSolverForm.vue"
-import ListSelect from "~ui/common/ListSelect.vue"
-import TitleBar from "~ui/components/TitleBar.vue"
+import {title} from "~/ui/globals.ts"
+import {Action, ProblemSolveAction} from "~/ui/actions.ts"
+import {getStorageInstances} from "~/ui/storage.ts"
+import TabLayout from "~/ui/common/TabLayout.vue"
+import PieceEditor from "~/ui/components/PieceEditor.vue"
+import SolutionDisplay from "~/ui/components/SolutionDisplay.vue"
+import ItemMetadataEditor from "~/ui/components/ItemMetadataEditor.vue"
+import PieceList from "~/ui/components/PieceList.vue"
+import ProblemList from "~/ui/components/ProblemList.vue"
+import ProblemSolverForm from "~/ui/components/ProblemSolverForm.vue"
+import ListSelect from "~/ui/common/ListSelect.vue"
+import TitleBar from "~/ui/components/TitleBar.vue"
 
 const props = defineProps<{
     storageId: string,

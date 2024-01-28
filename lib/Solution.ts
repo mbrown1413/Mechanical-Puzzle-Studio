@@ -1,5 +1,5 @@
-import {PiecePlacement} from "~lib/Puzzle.ts"
-import {SerializableClass, registerClass} from "~lib/serialize.ts"
+import {PiecePlacement} from "~/lib/Puzzle.ts"
+import {SerializableClass, registerClass} from "~/lib/serialize.ts"
 
 export abstract class Solution extends SerializableClass { }
 

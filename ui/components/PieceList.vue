@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import {Puzzle} from "~lib/Puzzle.ts"
-import {Action, NewPieceAction, DeletePiecesAction} from "~ui/actions.ts"
-import ListSelect from "~ui/common/ListSelect.vue"
+import {Puzzle} from "~lib"
+
+import {Action, NewPieceAction, DeletePiecesAction} from "~/ui/actions.ts"
+import ListSelect from "~/ui/common/ListSelect.vue"
 
 defineProps<{
     puzzle: Puzzle,

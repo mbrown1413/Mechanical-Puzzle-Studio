@@ -1,9 +1,10 @@
 import {test, expect, describe} from "vitest"
 import "@vitest/web-worker"
 
+import {registerClass} from "~lib"
+
 import {TaskRunner} from "./TaskRunner.ts"
 import {Task} from "./tasks.ts"
-import {registerClass} from "~lib/serialize.ts"
 
 type TaskErrorLocation = null | "setup" | "run" | "processResult" | "onSuccess" | "onFailure"
 

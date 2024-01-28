@@ -1,8 +1,7 @@
-import {Voxel, BoolWithReason} from "~lib/types.ts"
-import {Puzzle, Piece} from "~lib/Puzzle.ts"
-import {AssemblyProblem, Problem} from "~lib/Problem.ts"
-import {ProblemSolveTask} from "~ui/tasks.ts"
-import {taskRunner} from "~ui/globals.ts"
+import {Voxel, BoolWithReason, Puzzle, Piece, Problem, AssemblyProblem} from "~lib"
+
+import {ProblemSolveTask} from "~/ui/tasks.ts"
+import {taskRunner} from "~/ui/globals.ts"
 
 
 ////////// Base Classes //////////

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {ref, Ref} from "vue"
 
-import {swatches} from "~lib/colors.ts"
-import Modal from "~ui/common/Modal.vue"
+import {swatches} from "~lib"
+import Modal from "~/ui/common/Modal.vue"
 
 const props = defineProps<{
     value: string,

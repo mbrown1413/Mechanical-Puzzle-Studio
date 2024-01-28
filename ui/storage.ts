@@ -1,5 +1,5 @@
 
-import {PuzzleFile, PuzzleMetadata} from "~lib/PuzzleFile.ts";
+import {PuzzleFile, PuzzleMetadata} from "~lib"
 
 export function getStorageInstances(): {[id: string]: PuzzleStorage} {
     const storages = [

@@ -1,6 +1,6 @@
-import {AssemblyProblem, Problem} from "~lib/Problem.ts"
-import {Puzzle, PiecePlacement, Piece} from "~lib/Puzzle.ts"
-import {AssemblySolution, Solution} from "~lib/Solution.ts"
+import {AssemblyProblem, Problem} from "~/lib/Problem.ts"
+import {Puzzle, PiecePlacement, Piece} from "~/lib/Puzzle.ts"
+import {AssemblySolution, Solution} from "~/lib/Solution.ts"
 
 export abstract class Solver {
     abstract solve(puzzle: Puzzle, problem: Problem): Solution[]

@@ -1,6 +1,6 @@
-import {serialize, deserialize} from "~lib/serialize.ts"
+import {serialize, deserialize} from "~lib"
 
-import {Task} from "~ui/tasks.ts"
+import {Task} from "~/ui/tasks.ts"
 
 // See options for importing workers with Vite
 // https://vitejs.dev/guide/features.html#web-workers

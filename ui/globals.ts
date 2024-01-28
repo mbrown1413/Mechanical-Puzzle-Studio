@@ -1,6 +1,6 @@
 import {reactive, ref, watch} from "vue"
 
-import {TaskRunner} from "~ui/TaskRunner.ts"
+import {TaskRunner} from "~/ui/TaskRunner.ts"
 
 export const title = ref("")
 watch(title, () => {

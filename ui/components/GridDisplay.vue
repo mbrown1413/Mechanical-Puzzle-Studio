@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import {ref, Ref, computed} from "vue"
 
-import {Voxel} from "~lib/types.ts"
-import {Puzzle, Piece} from  "~lib/Puzzle.ts"
+import {Puzzle, Piece, Voxel} from "~lib"
 
 import {useGridDrawComposible} from "./GridDisplay_draw.ts"
 import {useGridMouseComposible} from "./GridDisplay_mouse.ts"

@@ -1,4 +1,4 @@
-import {serialize, deserialize} from "~lib/serialize.ts"
+import {serialize, deserialize} from "~lib"
 
 import {
     StartMessage,
@@ -6,11 +6,9 @@ import {
     WorkerToTaskMessage,
 } from "./TaskRunner.ts"
 
-// Imports needed for solver in deserialization
-import "~lib/Puzzle.ts"
-import "~lib/grids/CubicGrid.ts"
-import "~lib/Problem.ts"
-import "~ui/tasks.ts"
+// Imports needed for registered classes which may be deserialized
+import "~lib"
+import "~/ui/tasks.ts"
 
 function sendMessage(message: WorkerToTaskMessage) {
     postMessage(serialize(message))

@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import {computed} from "vue"
 
-import {Piece, Puzzle} from  "~lib/Puzzle.ts"
-import {AssemblyProblem} from "~lib/Problem.ts"
-import {Action, EditPieceMetadataAction, EditProblemMetadataAction} from "~ui/actions.ts"
-import ProblemPiecesEditor from "~ui/components/ProblemPiecesEditor.vue"
-import ColorInput from "~ui/common/ColorInput.vue"
-import {Bounds} from "~lib/types"
+import {Bounds, Piece, Puzzle, AssemblyProblem} from  "~lib"
+
+import {Action, EditPieceMetadataAction, EditProblemMetadataAction} from "~/ui/actions.ts"
+import ProblemPiecesEditor from "~/ui/components/ProblemPiecesEditor.vue"
+import ColorInput from "~/ui/common/ColorInput.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,

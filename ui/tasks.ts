@@ -1,8 +1,5 @@
-import {SerializableClass, registerClass, SerializableType} from "~lib/serialize.ts"
-import {Puzzle} from "~lib/Puzzle.ts"
-import {Problem} from "~lib/Problem.ts"
-import {Solver} from "~lib/Solver.ts"
-import {Solution} from "~lib/Solution.ts"
+import {SerializableClass, registerClass, SerializableType} from "~lib"
+import {Puzzle, Problem, Solver, Solution} from "~lib"
 
 type TaskCallbacks = {
     updateProgress: (percent: number) => void,

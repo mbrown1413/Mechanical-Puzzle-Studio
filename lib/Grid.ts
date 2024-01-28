@@ -1,5 +1,5 @@
-import {Bounds, Voxel, VoxelInfo, Dimension, Direction, Viewpoint, Orientation, Translation} from "~lib/types.ts"
-import {SerializableClass} from "~lib/serialize.ts"
+import {Bounds, Voxel, VoxelInfo, Dimension, Direction, Viewpoint, Orientation, Translation} from "~/lib/types.ts"
+import {SerializableClass} from "~/lib/serialize.ts"
 
 /**
  * Defines a set of voxels and the relation between them. This is the foundation

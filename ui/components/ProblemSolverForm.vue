@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import {Puzzle} from "~lib/Puzzle"
-import {ProblemSolveAction} from "~ui/actions"
+import {Puzzle} from "~lib"
+
+import {ProblemSolveAction} from "~/ui/actions.ts"
 
 const props = defineProps<{
     puzzle: Puzzle,

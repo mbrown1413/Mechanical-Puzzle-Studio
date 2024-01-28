@@ -1,8 +1,8 @@
-import {Bounds, Voxel, Translation} from "~lib/types.ts"
-import {SerializableClass, deserialize, registerClass, serialize} from "~lib/serialize.ts"
-import {Grid} from "~lib/Grid.ts"
-import {Problem} from "~lib/Problem.ts"
-import {getNextColor} from "~lib/colors.ts"
+import {Bounds, Voxel, Translation} from "~/lib/types.ts"
+import {SerializableClass, deserialize, registerClass, serialize} from "~/lib/serialize.ts"
+import {Grid} from "~/lib/Grid.ts"
+import {Problem} from "~/lib/Problem.ts"
+import {getNextColor} from "~/lib/colors.ts"
 
 export class PiecePlacement extends SerializableClass {
     originalPiece: Piece

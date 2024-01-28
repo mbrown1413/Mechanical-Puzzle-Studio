@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import {computed} from "vue"
 
-import {Puzzle} from  "~lib/Puzzle.ts"
+import {Puzzle, Voxel} from  "~lib"
 
-import {Action, EditPieceAction} from "~ui/actions.ts"
-import GridDisplay from "./GridDisplay.vue"
-import {Voxel} from "~lib/types.ts"
+import {Action, EditPieceAction} from "~/ui/actions.ts"
+import GridDisplay from "~/ui/components/GridDisplay.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
