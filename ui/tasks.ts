@@ -42,6 +42,13 @@ export abstract class Task extends SerializableClass {
      * Process results returned from `run()` in main thread.
      */
     abstract processResult(result: SerializableType): void
+
+    /**
+     * One of these methods is always called main thread when the task
+     * is done running, whether if it succeeds or has an error.
+     */
+    onSuccess() { }
+    onFailure(_error: string) { }
 }
 
 export class ProblemSolveTask extends Task {

@@ -514,6 +514,13 @@
     loupe "^2.3.6"
     pretty-format "^29.5.0"
 
+"@vitest/web-worker@^1.2.2":
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/@vitest/web-worker/-/web-worker-1.2.2.tgz#b9d20e5a30e99bc6608a94088a3bb78fa00a84a4"
+  integrity sha512-nDHsEE8s+e32PPKJOP+HR/X658ja+BZ1dC9y2jfX8+qiuuN/HSc6KiWrnBHZaLEuKMS0XAEjaIWsbzo0oneSsw==
+  dependencies:
+    debug "^4.3.4"
+
 "@volar/language-core@1.7.8":
   version "1.7.8"
   resolved "https://registry.yarnpkg.com/@volar/language-core/-/language-core-1.7.8.tgz#88e33fda749ecb1ecb28c031027d45e778b8cd5f"

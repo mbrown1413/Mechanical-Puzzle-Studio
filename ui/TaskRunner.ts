@@ -21,8 +21,13 @@ type FinishedMessage = {
     result: any,
 }
 
+type ErrorMessage = {
+    type: "error",
+    message: string,
+}
+
 export type TaskToWorkerMessage = StartMessage
-export type WorkerToTaskMessage = ProgressMessage | FinishedMessage
+export type WorkerToTaskMessage = ProgressMessage | FinishedMessage | ErrorMessage
 
 /**
  * Singleton class which queues and runs tasks in a web worker. You will find
@@ -31,12 +36,15 @@ export type WorkerToTaskMessage = ProgressMessage | FinishedMessage
 export class TaskRunner {
     queue: Task[]
     currentTask: Task | null
-    worker: Worker | null
+    worker: Worker
 
     constructor() {
         this.queue = []
         this.currentTask = null
-        this.worker = null
+        this.worker = new TaskWorker()
+        this.worker.onmessage = this.handleMessage.bind(this)
+        this.worker.onerror = this.handleWorkerError.bind(this)
+        this.worker.onmessageerror = this.handleMessageError.bind(this)
     }
 
     submitTask(task: Task) {
@@ -48,7 +56,7 @@ export class TaskRunner {
     }
 
     get isTaskRunning() {
-        return this.worker || this.currentTask
+        return this.currentTask !== null
     }
 
     private startNextTask() {
@@ -57,45 +65,76 @@ export class TaskRunner {
             throw "No task in queue to start"
         }
         this.currentTask = task
-        this.worker = new TaskWorker()
-        this.worker.onmessage = this.handleMessage.bind(this)
-        this.currentTask.setup()
-        this.sendMessage({
-            type: "start",
-            task: this.currentTask,
-        })
+        try {
+            this.currentTask.setup()
+            this.sendMessage({
+                type: "start",
+                task: this.currentTask,
+            })
+        } catch(e) {
+            this.finishTask(false, null, String(e))
+        }
+    }
+
+    private finishTask(success: boolean, result: any, error: string | null) {
+        if(success) {
+            try {
+                this.currentTask?.processResult(result)
+                this.currentTask?.onSuccess()
+            } catch(e) {
+                success = false
+                error = String(e)
+            }
+        }
+
+        if(!success) {
+            try {
+                this.currentTask?.onFailure(error || "Unknown worker error")
+            } catch(e) {
+                console.error(e)
+            }
+        }
+        this.currentTask = null
+
+        if(this.queue.length) {
+            this.startNextTask()
+        }
     }
 
     private sendMessage(message: TaskToWorkerMessage) {
-        if(!this.worker) {
-            throw "No running worker to send a message to"
-        }
         this.worker.postMessage(serialize(message))
+    }
+    
+    private handleWorkerError(event: ErrorEvent) {
+        this.finishTask(false, null, event.message)
+    }
+
+    private handleMessageError() {
+        this.finishTask(false, null, "Error deserializing worker message")
     }
 
     private handleMessage(event: MessageEvent) {
         const message = deserialize(event.data) as WorkerToTaskMessage
         switch(message.type) {
-            case "progress": this.onProgress(message); break
-            case "finished": this.onFinished(message); break
+            case "progress": this.onProgressMessage(message); break
+            case "finished": this.onFinishedMessage(message); break
+            case "error": this.onErrorMessage(message); break
             default:
                 const _exhaustiveCheck: never = message
                 return _exhaustiveCheck
         }
     }
 
-    private onProgress(data: ProgressMessage) {
+    private onProgressMessage(data: ProgressMessage) {
         console.log("Progress:", data.percent)
     }
 
-    private onFinished(data: FinishedMessage) {
-        this.currentTask?.processResult(data.result)
-        this.worker?.terminate()
-        this.currentTask = null
-        this.worker = null
-
-        if(this.queue.length) {
-            this.startNextTask()
-        }
+    private onFinishedMessage(data: FinishedMessage) {
+        this.finishTask(true, data.result, null)
     }
+
+    private onErrorMessage(data: ErrorMessage) {
+        this.finishTask(false, null, data.message)
+    }
+    
 }

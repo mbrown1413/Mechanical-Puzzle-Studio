@@ -12,7 +12,6 @@ import "~lib/grids/CubicGrid.ts"
 import "~lib/Problem.ts"
 import "~ui/tasks.ts"
 
-
 function sendMessage(message: WorkerToTaskMessage) {
     postMessage(serialize(message))
 }
@@ -30,11 +29,18 @@ function onStart(data: StartMessage) {
     })
 }
 
-onmessage = (event: MessageEvent) => {
-    const handlers: {[type: string]: (data: any) => void} = {
-        start: onStart,
+self.onmessage = (event: MessageEvent) => {
+    try {
+        const handlers: {[type: string]: (data: any) => void} = {
+            start: onStart,
+        }
+        const message = deserialize(event.data) as TaskToWorkerMessage
+        const handler = handlers[message.type]
+        handler(message)
+    } catch(e) {
+        sendMessage({
+            type: "error",
+            message: String(e)
+        })
     }
-    const message = deserialize(event.data) as TaskToWorkerMessage
-    const handler = handlers[message.type]
-    handler(message)
 }
