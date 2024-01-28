@@ -1,5 +1,5 @@
-import {defineConfig} from 'vite'
-import vue from '@vitejs/plugin-vue'
+import {defineConfig} from "vite"
+import vue from "@vitejs/plugin-vue"
 import path from "path"
 import vuetify from "vite-plugin-vuetify"
 
@@ -18,6 +18,20 @@ export default defineConfig({
     },
     build: {
         sourcemap: true,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    lib: ["lib/index.ts"],
+                    vue: ["vue", "vue-router"],
+                    vuetify: ["vuetify"],
+                    three: ["three"],
+                    "misc-vendor": [
+                        "split-grid",
+                        "colorjs.io",
+                    ],
+                },
+            },
+        },
     },
     esbuild: {
         keepNames: true,
