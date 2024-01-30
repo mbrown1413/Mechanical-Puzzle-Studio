@@ -16,6 +16,11 @@ type ProgressMessage = {
     percent: number,
 }
 
+type LogMessage = {
+    type: "log",
+    message: string,
+}
+
 type FinishedMessage = {
     type: "finished",
     result: any,
@@ -27,7 +32,13 @@ type ErrorMessage = {
 }
 
 export type TaskToWorkerMessage = StartMessage
-export type WorkerToTaskMessage = ProgressMessage | FinishedMessage | ErrorMessage
+export type WorkerToTaskMessage = ProgressMessage | FinishedMessage | ErrorMessage | LogMessage
+
+export type TaskInfo = {
+    task: Task,
+    progressPercent: number | null,  // Null before progress is set by task
+    messages: string[],
+}
 
 /**
  * Singleton class which queues and runs tasks in a web worker. You will find
@@ -35,19 +46,19 @@ export type WorkerToTaskMessage = ProgressMessage | FinishedMessage | ErrorMessa
  */
 export class TaskRunner {
     queue: Task[]
-    currentTask: Task | null
+    currentTaskInfo: TaskInfo | null
     worker: Worker | null
 
     constructor() {
         this.queue = []
-        this.currentTask = null
+        this.currentTaskInfo = null
         this.worker = null
     }
 
     submitTask(task: Task) {
         this.queue.push(task)
 
-        if(this.currentTask === null && this.queue.length === 1) {
+        if(this.currentTaskInfo === null && this.queue.length === 1) {
             this.startNextTask()
         }
     }
@@ -55,7 +66,7 @@ export class TaskRunner {
     terminateRunningTask() {
         this.worker?.terminate()
         this.worker = null
-        this.currentTask = null
+        this.currentTaskInfo = null
         if(this.queue.length === 1) {
             this.startNextTask()
         }
@@ -70,19 +81,23 @@ export class TaskRunner {
     }
 
     private startNextTask() {
-        if(this.currentTask) {
+        if(this.currentTaskInfo) {
             throw "Cannot start new task while one is running"
         }
         const task = this.queue.shift()
         if(!task) {
             throw "No task in queue to start"
         }
-        this.currentTask = task
+        this.currentTaskInfo = {
+            task,
+            progressPercent: null,
+            messages: [],
+        }
         try {
-            this.currentTask.setup()
+            this.currentTaskInfo.task.setup()
             this.sendMessage({
                 type: "start",
-                task: this.currentTask,
+                task: this.currentTaskInfo.task,
             })
         } catch(e) {
             this.finishTask(false, null, String(e))
@@ -92,8 +107,8 @@ export class TaskRunner {
     private finishTask(success: boolean, result: any, error: string | null) {
         if(success) {
             try {
-                this.currentTask?.processResult(result)
-                this.currentTask?.onSuccess()
+                this.currentTaskInfo?.task.processResult(result)
+                this.currentTaskInfo?.task.onSuccess()
             } catch(e) {
                 success = false
                 error = String(e)
@@ -102,12 +117,14 @@ export class TaskRunner {
 
         if(!success) {
             try {
-                this.currentTask?.onFailure(error || "Unknown worker error")
+                this.currentTaskInfo?.task.onFailure(
+                    error || "Unknown worker error"
+                )
             } catch(e) {
                 console.error(e)
             }
         }
-        this.currentTask = null
+        this.currentTaskInfo = null
 
         if(this.queue.length) {
             this.startNextTask()
@@ -133,6 +150,7 @@ export class TaskRunner {
         const message = deserialize(event.data) as WorkerToTaskMessage
         switch(message.type) {
             case "progress": this.onProgressMessage(message); break
+            case "log": this.onLogMessage(message); break
             case "finished": this.onFinishedMessage(message); break
             case "error": this.onErrorMessage(message); break
             default:
@@ -142,7 +160,13 @@ export class TaskRunner {
     }
 
     private onProgressMessage(data: ProgressMessage) {
-        console.log("Progress:", data.percent)
+        if(this.currentTaskInfo) {
+            this.currentTaskInfo.progressPercent = data.percent
+        }
+    }
+    
+    private onLogMessage(data: LogMessage) {
+        this.currentTaskInfo?.messages.push(data.message)
     }
 
     private onFinishedMessage(data: FinishedMessage) {

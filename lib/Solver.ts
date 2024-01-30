@@ -2,14 +2,24 @@ import {AssemblyProblem, Problem} from "~/lib/Problem.ts"
 import {Puzzle, PiecePlacement, Piece} from "~/lib/Puzzle.ts"
 import {AssemblySolution, Solution} from "~/lib/Solution.ts"
 
+import {TaskCallbacks} from "~/ui/tasks.ts"
+
 export abstract class Solver {
-    abstract solve(puzzle: Puzzle, problem: Problem): Solution[]
+    abstract solve(
+        puzzle: Puzzle,
+        problem: Problem,
+        callbacks: TaskCallbacks,
+    ): Solution[]
 }
 
 export class AssemblySolver extends Solver {
-    solve(puzzle: Puzzle, problem: Problem): AssemblySolution[] {
-
+    solve(
+        puzzle: Puzzle,
+        problem: Problem,
+        {logCallback}: TaskCallbacks,
+    ): AssemblySolution[] {
         const {rows, rowPlacements} = this.getCoverProblem(puzzle, problem)
+        logCallback(`Cover problem: ${rows[0].length} columns by ${rows.length} rows`)
         const solutions = solveExactCoverNaive(rows)
 
         const ret = []

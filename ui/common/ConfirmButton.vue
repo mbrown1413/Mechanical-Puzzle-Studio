@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {ref, Ref} from "vue"
+import {VBtn} from "vuetify/components";
 
 import Modal from "~/ui/common/Modal.vue"
 
@@ -7,6 +8,8 @@ withDefaults(
     defineProps<{
         title?: string,
         text?: string,
+        buttonColor?: VBtn["color"],
+        buttonVariant?: VBtn["variant"],
         confirmText?: string,
         confirmButtonColor?: string,
     }>(), {
@@ -26,6 +29,8 @@ const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 
 <template>
     <VBtn
+        :color="buttonColor"
+        :variant="buttonVariant"
         @click="modal?.open()"
     >
         <slot></slot>
@@ -34,7 +39,7 @@ const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
             ref="modal"
             :title="title"
             :okText="confirmText"
-            @ok="$emit('confirm')"
+            @ok="$emit('confirm'); modal?.close()"
             :okColor="confirmButtonColor"
     >
         {{ text }}

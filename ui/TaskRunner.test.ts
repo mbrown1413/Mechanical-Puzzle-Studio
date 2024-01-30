@@ -31,6 +31,8 @@ class TestTask extends Task {
         this.state = null
         this.error = null
     }
+    
+    getDescription(): string { return "Test Task" }
 
     setup() {
         if(this.errorAt === "setup") {

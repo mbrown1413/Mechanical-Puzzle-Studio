@@ -30,6 +30,9 @@ const app_title = import.meta.env.VITE_APP_TITLE
 </template>
 
 <style>
+
+/* Evenly space item centers so when the task display changes size, the title
+ * does not shift over. */
 .v-toolbar__content {
     align-items: center;
 }

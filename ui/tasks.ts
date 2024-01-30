@@ -1,8 +1,9 @@
 import {SerializableClass, registerClass, SerializableType} from "~lib"
 import {Puzzle, Problem, Solver, Solution} from "~lib"
 
-type TaskCallbacks = {
-    updateProgress: (percent: number) => void,
+export type TaskCallbacks = {
+    progressCallback: (percent: number) => void,
+    logCallback: (message: string) => void,
 }
 
 /**
@@ -94,10 +95,10 @@ export class ProblemSolveTask extends Task {
         problem.solutions = null
     }
 
-    run() {
+    run(callbacks: TaskCallbacks) {
         const problem = this.getProblem()
         const solver = this.getSolver()
-        const solutions = solver.solve(this.puzzle, problem)
+        const solutions = solver.solve(this.puzzle, problem, callbacks)
         return solutions
     }
 

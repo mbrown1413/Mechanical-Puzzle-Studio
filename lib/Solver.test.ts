@@ -5,6 +5,7 @@ import {CubicGrid} from "./grids/CubicGrid.ts"
 import {AssemblyProblem} from "./Problem"
 import {AssemblySolution} from "./Solution.ts"
 import {Voxel} from "./types.ts"
+import {TaskCallbacks} from "~/ui/tasks.ts"
 
 type SolutionShorthand = {[pieceId: string]: Voxel[]}
 function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShorthand) {
@@ -13,6 +14,11 @@ function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShort
         actual[pieceId] = placement.transformedPiece.voxels
     }
     expect(actual).toMatchObject(expected)
+}
+
+const voidTaskCallbacks: TaskCallbacks = {
+    logCallback: (_message: string) => {},
+    progressCallback: (_progressPercent: number) => {},
 }
 
 describe("AssemblySolver", () => {
@@ -84,7 +90,7 @@ describe("AssemblySolver", () => {
     })
     
     test("solve problem 0", () => {
-        const solutions = solver.solve(puzzle, problem0)
+        const solutions = solver.solve(puzzle, problem0, voidTaskCallbacks)
         expect(solutions.length).toEqual(2)
         assertSolutionEqual(solutions[0], {
             "problem-0-piece-0": ["1,1,0", "2,1,0", "2,0,0"],
@@ -97,7 +103,7 @@ describe("AssemblySolver", () => {
     })
 
     test("solve problem 1", () => {
-        const solutions = solver.solve(puzzle, problem1)
+        const solutions = solver.solve(puzzle, problem1, voidTaskCallbacks)
         expect(solutions.length).toEqual(4)
         assertSolutionEqual(solutions[0], {
             "problem-1-piece-0": ["0,1,0", "0,2,0", "1,2,0", "2,2,0", "2,1,0"],

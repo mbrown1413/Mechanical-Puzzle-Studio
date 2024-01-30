@@ -14,12 +14,16 @@ function sendMessage(message: WorkerToTaskMessage) {
     postMessage(serialize(message))
 }
 
+const callbacks = {
+    progressCallback(percent: number) {
+        sendMessage({type: "progress", percent})
+    },
+    logCallback(message: string) {
+        sendMessage({type: "log", message})
+    },
+}
+
 function onStart(data: StartMessage) {
-    const callbacks = {
-        updateProgress(percent: number) {
-            sendMessage({type: "progress", percent: percent})
-        }
-    }
     const result = data.task.run(callbacks)
     sendMessage({
         type: "finished",
