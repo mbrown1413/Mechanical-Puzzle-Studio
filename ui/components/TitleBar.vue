@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {PuzzleFile} from "~lib"
+import TaskStatusDisplay from "./TaskStatusDisplay.vue";
 
 withDefaults(
     defineProps<{
@@ -13,19 +14,32 @@ const app_title = import.meta.env.VITE_APP_TITLE
 </script>
 
 <template>
-    <VAppBar>
-        <RouterLink to="/" style="height: 60px;" class="main-logo">
-            <img src="/logo/logo-98x50.png" :alt="app_title" />
-        </RouterLink>
+    <VAppBar class="title-bar">
+        <div class="main-logo">
+            <RouterLink to="/">
+                <img src="/logo/logo-98x50.png" :alt="app_title" />
+            </RouterLink>
+        </div>
 
         <VAppBarTitle v-if="puzzleFile" class="page-title">
             {{ puzzleFile.name }}
         </VAppBarTitle>
+        
+        <TaskStatusDisplay />
     </VAppBar>
 </template>
 
 <style>
+.v-toolbar__content {
+    align-items: center;
+}
+.v-toolbar__content > * {
+    flex-basis: 0;
+    flex-grow: 1;
+}
+
 .main-logo {
+    height: 60px;
     padding-left: 1em;
 
     /* Style alt text as a title */

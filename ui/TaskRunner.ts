@@ -36,30 +36,43 @@ export type WorkerToTaskMessage = ProgressMessage | FinishedMessage | ErrorMessa
 export class TaskRunner {
     queue: Task[]
     currentTask: Task | null
-    worker: Worker
+    worker: Worker | null
 
     constructor() {
         this.queue = []
         this.currentTask = null
-        this.worker = new TaskWorker()
-        this.worker.onmessage = this.handleMessage.bind(this)
-        this.worker.onerror = this.handleWorkerError.bind(this)
-        this.worker.onmessageerror = this.handleMessageError.bind(this)
+        this.worker = null
     }
 
     submitTask(task: Task) {
         this.queue.push(task)
 
-        if(!this.isTaskRunning && this.queue.length === 1) {
+        if(this.currentTask === null && this.queue.length === 1) {
             this.startNextTask()
         }
     }
-
-    get isTaskRunning() {
-        return this.currentTask !== null
+    
+    terminateRunningTask() {
+        this.worker?.terminate()
+        this.worker = null
+        this.currentTask = null
+        if(this.queue.length === 1) {
+            this.startNextTask()
+        }
+    }
+    
+    private createWorker(): Worker {
+        const worker = new TaskWorker()
+        worker.onmessage = this.handleMessage.bind(this)
+        worker.onerror = this.handleWorkerError.bind(this)
+        worker.onmessageerror = this.handleMessageError.bind(this)
+        return worker
     }
 
     private startNextTask() {
+        if(this.currentTask) {
+            throw "Cannot start new task while one is running"
+        }
         const task = this.queue.shift()
         if(!task) {
             throw "No task in queue to start"
@@ -102,6 +115,9 @@ export class TaskRunner {
     }
 
     private sendMessage(message: TaskToWorkerMessage) {
+        if(!this.worker) {
+            this.worker = this.createWorker()
+        }
         this.worker.postMessage(serialize(message))
     }
     

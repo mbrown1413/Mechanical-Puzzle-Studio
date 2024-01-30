@@ -25,6 +25,8 @@ export abstract class Task extends SerializableClass {
         super(null)
     }
 
+    abstract getDescription(): string
+
     /** 
      * Set up any state needed in the main thread before the worker is run.
      */
@@ -56,6 +58,11 @@ export class ProblemSolveTask extends Task {
         super()
         this.puzzle = puzzle
         this.problemId = problemId
+    }
+    
+    getDescription(): string {
+        const problem = this.getProblem()
+        return `Solving ${problem.label}`
     }
     
     getProblem(): Problem {

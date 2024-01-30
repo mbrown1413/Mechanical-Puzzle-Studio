@@ -11,4 +11,6 @@ watch(title, () => {
     }
 }, {immediate: true})
 
-export const taskRunner = reactive(new TaskRunner())
+export const taskRunner = reactive(
+    new TaskRunner() as any
+) as TaskRunner
