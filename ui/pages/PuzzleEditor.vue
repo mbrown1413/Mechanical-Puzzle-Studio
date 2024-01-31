@@ -241,4 +241,12 @@ onMounted(() => {
 .solution-list h4 {
     margin: 1em 1em .5em 1em;
 }
+.solution-list {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.solution-list .list-container {
+    flex-grow: 1;
+}
 </style>
