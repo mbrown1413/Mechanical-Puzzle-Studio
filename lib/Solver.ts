@@ -1,5 +1,5 @@
 import {AssemblyProblem, Problem} from "~/lib/Problem.ts"
-import {Puzzle, PiecePlacement, Piece} from "~/lib/Puzzle.ts"
+import {Puzzle, PiecePlacement} from "~/lib/Puzzle.ts"
 import {AssemblySolution, Solution} from "~/lib/Solution.ts"
 
 import {TaskCallbacks} from "~/ui/tasks.ts"
@@ -18,24 +18,35 @@ export class AssemblySolver extends Solver {
         problem: Problem,
         callbacks: TaskCallbacks,
     ): AssemblySolution[] {
-        const {rows, rowPlacements} = this.getCoverProblem(puzzle, problem)
+        // We don't exactly set up a proper cover problem here. We do have a
+        // set of rows, each corresponding to a placement of one piece, but
+        // there are only columns for each voxel, and no columns for each
+        // piece. Instead, rows are pre-sorted based on the piece they belong
+        // to. We'll only choose one row for each piece.
+
+        // `placementsByPieceIdx[pieceIdx][i]` - The `i`th placement of piece at `pieceIdx`
+        // `coverRowsByPieceIdx[pieceIdx][i]` - The `i`th cover row of piece at `pieceIdx`
+        const {
+            placementsByPieceIdx,
+            coverRowsByPieceIdx
+        } = this.getPlacementRows(puzzle, problem)
 
         callbacks.logCallback(
-            `Cover problem: ${rows[0].length} columns by ${rows.length} rows`
+            `Number of placements options for each piece: ${placementsByPieceIdx.map(placements => placements.length)}`
         )
 
-        const solutions = solveExactCoverNaive(rows, callbacks)
+        const solutions = this.solveCover(coverRowsByPieceIdx, callbacks)
 
         const ret = []
         for(const pickedRows of solutions) {
             ret.push(new AssemblySolution(
-                pickedRows.map((rowIndex) => rowPlacements[rowIndex])
+                pickedRows.map((placementIdx, pieceIdx) => placementsByPieceIdx[pieceIdx][placementIdx])
             ))
         }
         return ret
     }
 
-    getCoverProblem(puzzle: Puzzle, problem: Problem) {
+    getPlacementRows(puzzle: Puzzle, problem: Problem) {
         if(!(problem instanceof AssemblyProblem)) {
             throw "Assembly Solver can only solve Assembly Problems"
         }
@@ -58,102 +69,112 @@ export class AssemblySolver extends Solver {
             }
         }
 
-        const rowPlacements = []
-        const rows: Boolean[][] = []
-        for(const [i, piece] of pieces.entries()) {
-            for(const placement of puzzle.getPiecePlacements(piece, goal.voxels)) {
-                rowPlacements.push(placement)
-                rows.push(this.getPlacementRow(pieces, i, placement, goal))
+        const placementsByPieceIdx: PiecePlacement[][] = []
+        const coverRowsByPieceIdx: boolean[][][] = []
+        for(const piece of pieces) {
+            const placements = [...puzzle.getPiecePlacements(piece, goal.voxels)]
+            const coverRows: boolean[][] = []
+            for(const placement of placements) {
+                coverRows.push(
+                    goal.voxels.map((voxel) =>
+                        placement.transformedPiece.voxels.includes(voxel)
+                    )
+                )
             }
+            placementsByPieceIdx.push(placements)
+            coverRowsByPieceIdx.push(coverRows)
+        }
+        return {pieces, placementsByPieceIdx, coverRowsByPieceIdx}
+    }
+
+    solveCover(
+        coverRowsByPieceIdx: boolean[][][],
+        {progressCallback}: TaskCallbacks,
+    ): number[][] {
+        const solutions: number[][] = []
+        const nCols = coverRowsByPieceIdx[0][0].length
+
+        /**
+         * Do the set of rows exactly cover the columns?
+         * 
+         * Note that we make the assumption that none of the rows have
+         * conflicting columns already, so we can just count the columns which
+         * are true.
+         */
+        function coversExactly(rows: boolean[][]): boolean {
+            let nPicked = 0
+            for(const row of rows) {
+                for(const col of row) {
+                    if(col) {
+                        nPicked++
+                    }
+                }
+            }
+            return nPicked === nCols
         }
 
-        return {rows, rowPlacements}
-    }
-
-    getPlacementRow(
-        pieces: Piece[],
-        pieceIdx: number,
-        placement: PiecePlacement,
-        goal: Piece,
-    ): Boolean[] {
-        const pieceColumns: Boolean[] = new Array(pieces.length).fill(false)
-        pieceColumns[pieceIdx] = true
-
-        const voxelColumns: Boolean[] = goal.voxels.map((voxel) =>
-            placement.transformedPiece.voxels.includes(voxel)
-        )
-
-        return pieceColumns.concat(voxelColumns)
-    }
-}
-
-function solveExactCoverNaive(matrix: Boolean[][], {progressCallback}: TaskCallbacks) {
-    const matches: number[][] = []
-
-    const nCols = matrix[0].length
-    for(const row of matrix) {
-        if(row.length !== nCols) {
-            throw "Bad cover problem: Not all rows have the same length"
+        /**
+         * Given rows, does the new row conflict? That is, if we have already
+         * picked `rows`, can we pick `newRow`?
+         */
+        function canPick(rows: boolean[][], newRow: boolean[]): boolean {
+            for(const row of rows) {
+                for(let i=0; i<nCols; i++) {
+                    if(row[i] && newRow[i]) {
+                        return false
+                    }
+                }
+            }
+            return true
         }
-    }
 
-    function canPick(rowsPicked: number[], newPick: number): boolean {
-        const newRow = matrix[newPick]
-        for(const rowIndex of rowsPicked) {
-            const row = matrix[rowIndex]
-            for(let i=0; i<nCols; i++) {
-                if(row[i] && newRow[i]) {
-                    return false
+        // Progress tracks based on how many placements of the first piece we
+        // have tried.
+        let progress = 0
+        let progressMax = coverRowsByPieceIdx[0].length
+
+        // List of row indexes, and the rows themselves, which we're currently
+        // considering.
+        const rowIndexes: number[] = []
+        const rowsPicked: boolean[][] = []
+
+        // Depth-first search
+        // At each depth `depth` we choose the placement of the piece at index
+        // `depth`.
+        let depth: number, pick: number
+        const depthStack = [0]
+        const pickStack = [-1]
+        while(depthStack.length) {
+            depth = depthStack.pop() as number
+            pick = pickStack.pop() as number
+
+            if(depth !== 0) {
+                rowIndexes.length = depth-1
+                rowIndexes.push(pick)
+
+                rowsPicked.length = depth-1
+                rowsPicked.push(coverRowsByPieceIdx[depth-1][pick])
+            }
+            
+            if(depth === 1) {
+                progress++
+                progressCallback(progress / progressMax)
+            }
+
+            if(coversExactly(rowsPicked)) {
+                solutions.push([...rowIndexes])
+                continue
+            }
+
+            const nextCoverRows = coverRowsByPieceIdx[depth]
+            for(let i=nextCoverRows.length-1; i>=0; i--) {
+                if(canPick(rowsPicked, nextCoverRows[i])) {
+                    depthStack.push(depth+1)
+                    pickStack.push(i)
                 }
             }
         }
-        return true
+
+        return solutions
     }
-
-    function coversExactly(rowIndexes: number[]): boolean {
-        let nCovered = 0
-        for(const rowIndex of rowIndexes) {
-            const row = matrix[rowIndex]
-            for(const value of row) {
-                if(value) {
-                    nCovered++
-                }
-            }
-        }
-        return nCovered === nCols
-    }
-
-    let progress = 0
-    let depth: number, pick: number
-    const depthStack = [0]
-    const pickStack = [-1]
-    const rowsPicked: number[] = []
-    while(depthStack.length) {
-        depth = depthStack.pop() as number
-        pick = pickStack.pop() as number
-
-        if(depth !== 0) {
-            rowsPicked.length = depth-1
-            rowsPicked.push(pick)
-        }
-
-        if(depth === 1) {
-            progressCallback(progress / matrix.length)
-            progress++
-        }
-
-        if(coversExactly(rowsPicked)) {
-            matches.push([...rowsPicked])
-            continue
-        }
-
-        for(let i=matrix.length-1; i>=pick+1; i--) {
-            if(canPick(rowsPicked, i)) {
-                depthStack.push(depth+1)
-                pickStack.push(i)
-            }
-        }
-    }
-
-    return matches
 }

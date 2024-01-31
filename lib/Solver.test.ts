@@ -1,11 +1,14 @@
 import {test, expect, describe} from "vitest"
-import {AssemblySolver} from "./Solver.ts"
-import {Piece, Puzzle} from "./Puzzle.ts"
-import {CubicGrid} from "./grids/CubicGrid.ts"
-import {AssemblyProblem} from "./Problem"
-import {AssemblySolution} from "./Solution.ts"
-import {Voxel} from "./types.ts"
+
 import {TaskCallbacks} from "~/ui/tasks.ts"
+
+import {Piece, Puzzle} from "~/lib/Puzzle.ts"
+import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
+import {AssemblyProblem} from "~/lib/Problem"
+import {AssemblySolution} from "~/lib/Solution.ts"
+import {Voxel} from "~/lib/types.ts"
+
+import {AssemblySolver} from "./Solver.ts"
 
 type SolutionShorthand = {[pieceId: string]: Voxel[]}
 function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShorthand) {
@@ -76,18 +79,6 @@ describe("AssemblySolver", () => {
     problem1.usedPieceCounts.set("problem-1-piece-1", 1)
 
     const solver = new AssemblySolver()
-
-    test("cover matrix for problem 0", () => {
-        const {rows} = solver.getCoverProblem(puzzle, problem0)
-        expect(rows).toMatchObject([
-            [true, false, false, false, true, true, true],
-            [true, false, true, true, true, false, false],
-            [false, true, true, true, false, false, false],
-            [false, true, false, false, false, true, true],
-            [false, true, false, true, true, false, false],
-            [false, true, false, false, true, true, false],
-        ])
-    })
     
     test("solve problem 0", () => {
         const solutions = solver.solve(puzzle, problem0, voidTaskCallbacks)
