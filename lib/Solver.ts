@@ -16,11 +16,15 @@ export class AssemblySolver extends Solver {
     solve(
         puzzle: Puzzle,
         problem: Problem,
-        {logCallback}: TaskCallbacks,
+        callbacks: TaskCallbacks,
     ): AssemblySolution[] {
         const {rows, rowPlacements} = this.getCoverProblem(puzzle, problem)
-        logCallback(`Cover problem: ${rows[0].length} columns by ${rows.length} rows`)
-        const solutions = solveExactCoverNaive(rows)
+
+        callbacks.logCallback(
+            `Cover problem: ${rows[0].length} columns by ${rows.length} rows`
+        )
+
+        const solutions = solveExactCoverNaive(rows, callbacks)
 
         const ret = []
         for(const pickedRows of solutions) {
@@ -83,7 +87,7 @@ export class AssemblySolver extends Solver {
     }
 }
 
-function solveExactCoverNaive(matrix: Boolean[][]) {
+function solveExactCoverNaive(matrix: Boolean[][], {progressCallback}: TaskCallbacks) {
     const matches: number[][] = []
 
     const nCols = matrix[0].length
@@ -107,39 +111,49 @@ function solveExactCoverNaive(matrix: Boolean[][]) {
     }
 
     function coversExactly(rowIndexes: number[]): boolean {
-        const colsCovered = []
+        let nCovered = 0
         for(const rowIndex of rowIndexes) {
             const row = matrix[rowIndex]
-            for(const [colIndex, value] of row.entries()) {
+            for(const value of row) {
                 if(value) {
-                    colsCovered.push(colIndex)
+                    nCovered++
                 }
             }
         }
-
-        for(let i=0; i<nCols; i++) {
-            if(!colsCovered.includes(i)) {
-                return false
-            }
-        }
-        return true
+        return nCovered === nCols
     }
 
-    function recurse(rowsPicked: number[]) {
+    let progress = 0
+    let depth: number, pick: number
+    const depthStack = [0]
+    const pickStack = [-1]
+    const rowsPicked: number[] = []
+    while(depthStack.length) {
+        depth = depthStack.pop() as number
+        pick = pickStack.pop() as number
+
+        if(depth !== 0) {
+            rowsPicked.length = depth-1
+            rowsPicked.push(pick)
+        }
+
+        if(depth === 1) {
+            progressCallback(progress / matrix.length)
+            progress++
+        }
+
         if(coversExactly(rowsPicked)) {
-            matches.push(Array.from(rowsPicked))
+            matches.push([...rowsPicked])
+            continue
         }
 
-        const next = rowsPicked.length === 0 ? 0 : rowsPicked[rowsPicked.length-1]
-        for(let i=next; i<matrix.length; i++) {
+        for(let i=matrix.length-1; i>=pick+1; i--) {
             if(canPick(rowsPicked, i)) {
-                rowsPicked.push(i)
-                recurse(rowsPicked)
-                rowsPicked.pop()
+                depthStack.push(depth+1)
+                pickStack.push(i)
             }
         }
     }
 
-    recurse([])
     return matches
 }

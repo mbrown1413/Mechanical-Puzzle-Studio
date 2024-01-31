@@ -6,6 +6,10 @@ import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import {VTable} from "vuetify/components";
 
 const info = computed(() => taskRunner.currentTaskInfo)
+const percentString = computed(() => {
+    const percent = info.value?.progressPercent || 0
+    return (percent * 100).toFixed(2) + "%"
+})
 </script>
 
 <template>
@@ -18,7 +22,8 @@ const info = computed(() => taskRunner.currentTaskInfo)
         >
             <VProgressCircular
                 :indeterminate="info.progressPercent === null"
-                :model-value="info.progressPercent === null ? 360 : info.progressPercent"
+                :model-value="percentString"
+                :title="percentString"
                 :size="25"
                 class="progress"
             />
@@ -49,7 +54,8 @@ const info = computed(() => taskRunner.currentTaskInfo)
                     </VCardActions>
 
                     <VCardTitle>
-                        {{ info.task.getDescription() }}
+                        {{ info.task.getDescription() }}<br>
+                        <small>{{ percentString }}</small>
                     </VCardTitle>
 
                     <VCardText>
