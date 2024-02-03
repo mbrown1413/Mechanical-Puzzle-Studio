@@ -65,10 +65,6 @@ switch(props.itemType) {
                 label: "Name",
                 type: "string",
             }, {
-                property: "goalPieceId",
-                label: "Goal",
-                type: "piece",
-            }, {
                 property: "piecesId",
                 label: "Pieces Used",
                 type: "pieces",

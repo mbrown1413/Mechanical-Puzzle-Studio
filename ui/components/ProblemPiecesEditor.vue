@@ -23,33 +23,41 @@ const emit = defineEmits<{
     action: [action: Action]
 }>()
 
-const tableHeaders = [
+const tableHeaders: VDataTable["headers"] = [
     {title: "Piece Name", key: "label"},
-    {title: "Count", key: "count"},
+    {title: "Count", key: "count", align: "center"},
     {title: "", key: "display", sortable: false},
+    {title: "", key: "actions", sortable: false, align: "center"},
 ]
 
 const tableItems = computed(() => {
     const pieces = Array.from(props.puzzle.pieces.values())
     return pieces.map((piece) => {
-        const disabled = piece.id ? props.disabledPieceIds.includes(piece.id) : false
         return {
             id: piece.id,
             piece: piece,
             label: piece.label,
             count: props.problem.usedPieceCounts.get(piece.id) || 0,
-            disabled,
-            messages: disabled ? ["Goal Piece"] : [],
+            isGoal: piece.id === props.problem.goalPieceId,
         }
     })
 })
 
-function onUpdate(pieceId: string, count: number) {
+function updatePieceCount(pieceId: string, count: number) {
     const newPieceCounts = new Map(props.problem.usedPieceCounts)
     newPieceCounts.set(pieceId, count)
     const action = new EditProblemMetadataAction(
         props.problem.id, {
             usedPieceCounts: newPieceCounts
+        }
+    )
+    emit("action", action)
+}
+
+function updateGoal(pieceId: string | null) {
+    const action = new EditProblemMetadataAction(
+        props.problem.id, {
+            goalPieceId: pieceId
         }
     )
     emit("action", action)
@@ -73,10 +81,9 @@ function onUpdate(pieceId: string, count: number) {
             <VTextField
                     type="number"
                     min="0"
-                    :value="item.disabled ? '' : item.count"
-                    @update:model-value="onUpdate(item.id, Number($event))"
-                    :disabled="item.disabled"
-                    :messages="item.messages"
+                    :disabled="item.isGoal"
+                    :value="item.isGoal ? '' : item.count"
+                    @update:model-value="updatePieceCount(item.id, Number($event))"
                     hide-details="auto"
                     variant="solo-filled"
             />
@@ -90,5 +97,31 @@ function onUpdate(pieceId: string, count: number) {
                     :size="200"
             />
         </template>
+        
+        <template v-slot:item.actions="{item}">
+            <VBtn
+                    v-if="!item.isGoal"
+                    @click="updateGoal(item.id)"
+            >
+                Set Goal
+            </VBtn>
+            <VChip
+                v-if="item.isGoal"
+                closable
+                size="x-large"
+                @click:close="updateGoal(null)"
+            >
+                Goal
+            </VChip>
+        </template>
     </VDataTable>
 </template>
+
+<style>
+.v-data-table-column--align-center .v-data-table-header__content span {
+    /* We want the header text to be centered, not header text + sort icon. We
+     * add left padding equal to the size of the icon on the right so the text
+     * itself is centered. */
+    padding-left: 21px;
+}
+</style>
