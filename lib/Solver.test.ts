@@ -1,7 +1,5 @@
 import {test, expect, describe} from "vitest"
 
-import {TaskCallbacks} from "~/ui/tasks.ts"
-
 import {Piece, Puzzle} from "~/lib/Puzzle.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 import {AssemblyProblem} from "~/lib/Problem"
@@ -17,11 +15,6 @@ function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShort
         actual[pieceId] = placement.transformedPiece.voxels
     }
     expect(actual).toMatchObject(expected)
-}
-
-const voidTaskCallbacks: TaskCallbacks = {
-    logCallback: (_message: string) => {},
-    progressCallback: (_progressPercent: number) => {},
 }
 
 describe("AssemblySolver", () => {
@@ -81,7 +74,7 @@ describe("AssemblySolver", () => {
     const solver = new AssemblySolver()
     
     test("solve problem 0", () => {
-        const solutions = solver.solve(puzzle, problem0, voidTaskCallbacks)
+        const solutions = solver.solve(puzzle, problem0)
         expect(solutions.length).toEqual(2)
         assertSolutionEqual(solutions[0], {
             "problem-0-piece-0": ["1,1,0", "2,1,0", "2,0,0"],
@@ -94,7 +87,7 @@ describe("AssemblySolver", () => {
     })
 
     test("solve problem 1", () => {
-        const solutions = solver.solve(puzzle, problem1, voidTaskCallbacks)
+        const solutions = solver.solve(puzzle, problem1)
         expect(solutions.length).toEqual(4)
         assertSolutionEqual(solutions[0], {
             "problem-1-piece-0": ["0,1,0", "0,2,0", "1,2,0", "2,2,0", "2,1,0"],

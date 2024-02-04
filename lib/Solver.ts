@@ -1,8 +1,7 @@
 import {AssemblyProblem, Problem} from "~/lib/Problem.ts"
 import {Puzzle, PiecePlacement} from "~/lib/Puzzle.ts"
 import {AssemblySolution, Solution} from "~/lib/Solution.ts"
-
-import {TaskCallbacks} from "~/ui/tasks.ts"
+import {TaskCallbacks, voidTaskCallbacks} from "~/lib/types.ts"
 
 export abstract class Solver {
     abstract solve(
@@ -16,7 +15,7 @@ export class AssemblySolver extends Solver {
     solve(
         puzzle: Puzzle,
         problem: Problem,
-        callbacks: TaskCallbacks,
+        callbacks: TaskCallbacks = voidTaskCallbacks,
     ): AssemblySolution[] {
         // We don't exactly set up a proper cover problem here. We do have a
         // set of rows, each corresponding to a placement of one piece, but

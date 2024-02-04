@@ -54,3 +54,12 @@ export type BoolWithReason = {
     bool: false,
     reason: string
 }
+
+export type TaskCallbacks = {
+    progressCallback: (percent: number) => void,
+    logCallback: (message: string) => void,
+}
+export const voidTaskCallbacks: TaskCallbacks = {
+    logCallback: (_message: string) => {},
+    progressCallback: (_progressPercent: number) => {},
+}

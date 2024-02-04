@@ -1,10 +1,5 @@
 import {SerializableClass, registerClass, SerializableType} from "~lib"
-import {Puzzle, Problem, Solver, Solution} from "~lib"
-
-export type TaskCallbacks = {
-    progressCallback: (percent: number) => void,
-    logCallback: (message: string) => void,
-}
+import {Puzzle, Problem, Solver, Solution, TaskCallbacks} from "~lib"
 
 /**
  * Encapsulates all of the code and data to run a specific task.
@@ -28,7 +23,7 @@ export abstract class Task extends SerializableClass {
 
     abstract getDescription(): string
 
-    /** 
+    /**
      * Set up any state needed in the main thread before the worker is run.
      */
     setup(): void {}
