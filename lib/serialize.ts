@@ -104,6 +104,28 @@
  *   * List of expected types passed to `deserialize()`, not just one.
  */
 
+class SerializerError extends Error {
+    path: string[] | null
+
+    constructor(message: string) {
+        super(message)
+        this.path = null
+    }
+    
+    setErrorPath(path: string[]) {
+        this.path = path
+        this.message += `\nAttribute path: ${path.join(".")}`
+    }
+    
+    setSerialize() {
+        this.message = `Serialization failed: ${this.message}`
+    }
+
+    setDeserialize() {
+        this.message = `Deserialization failed: ${this.message}`
+    }
+}
+
 
 ///////////////////////////////////
 ////////// Serialization //////////
@@ -169,8 +191,11 @@ export function serialize(value: SerializableType): SerializedData {
     try {
         root = _serialize(value, refs, path, "root")
     } catch(e) {
-        throw "Serialization failed: " + e + "\n" +
-            "Attribute path: " + path.join(".")
+        if(e instanceof SerializerError) {
+            e.setSerialize()
+            e.setErrorPath(path)
+        }
+        throw e
     }
     const ret: SerializedData = {root}
     if(Object.keys(refs).length) {
@@ -208,7 +233,7 @@ function _serialize(
                 for(const [k, v] of value.entries()) {
                     if(typeof k !== "string") {
                         path.push(k)
-                        throw "Only string keys are supported for Map"
+                        throw new SerializerError("Only string keys are supported for Map")
                     }
                     entries[k] = _serialize(v, refs, path, k)
                 }
@@ -256,13 +281,13 @@ function _serialize(
             }
         
             if(type === "Object") {
-                throw "Non-class objects cannot be serialized"
+                throw new SerializerError("Non-class objects cannot be serialized")
             }
 
-            throw `Reference to unregistered class "${type}"`
+            throw new SerializerError(`Reference to unregistered class "${type}"`)
         }
 
-        throw `Unsupported primitive type "${typeof value}"`
+        throw new SerializerError(`Unsupported primitive type "${typeof value}"`)
     } catch(e) {
         errorFlag = true
         throw e
@@ -289,9 +314,10 @@ export function deserialize<T extends SerializableType>(
     data: SerializedData,
     expectedType?: string
 ): T {
-    const dataRootTypeError = 'Incorrectly formatted data. Expected object with "root" attribute.'
     if(typeof data !== "object" || data === null || data.root === undefined) {
-        throw dataRootTypeError
+        throw new SerializerError(
+            'Incorrectly formatted data. Expected object with "root" attribute.'
+        )
     }
     const refs = data.refs || {}
     const path: string[] = []
@@ -299,8 +325,11 @@ export function deserialize<T extends SerializableType>(
     try {
         value = _deserialize(data.root, refs, new Map(), path, "root")
     } catch(e) {
-        throw "Deserialization failed: " + e + "\n" +
-            "Attribute path: " + path.join(".")
+        if(e instanceof SerializerError) {
+            e.setDeserialize()
+            e.setErrorPath(path)
+        }
+        throw e
     }
 
     if(expectedType !== undefined) {
@@ -309,7 +338,9 @@ export function deserialize<T extends SerializableType>(
             typeof value === "object" ? value.constructor.name :
             typeof value
         if(actualType !== expectedType) {
-            throw `Expected "${expectedType}" after deserializing, not "${actualType}"`
+            throw new SerializerError(
+                `Expected "${expectedType}" after deserializing, not "${actualType}"`
+            )
         }
     }
 
@@ -340,7 +371,7 @@ function _deserialize(
 
         if(typeof data === "object") {
             if(data.type === undefined) {
-                throw `Malformed data: No type attribute on object`
+                throw new SerializerError(`Malformed data: No type attribute on object`)
             }
         
             // Read data either directly, or from refs
@@ -360,11 +391,11 @@ function _deserialize(
             } else if(data.id !== undefined) {
                 const ref = refs[data.id]
                 if(ref === undefined) {
-                    throw `Could not find reference for ID "${data.id}"`
+                    throw new SerializerError(`Could not find reference for ID "${data.id}"`)
                 }
                 objData = ref.data
             } else {
-                throw "Malformed data: No data or ID found in reference"
+                throw new SerializerError("Malformed data: No data or ID found in reference")
             }
             
             // Map
@@ -386,10 +417,10 @@ function _deserialize(
             } else {
                 const classInfo = getRegisteredClass(data.type)
                 if(classInfo === null) {
-                    throw `Reference to unregistered class "${data.type}"`
+                    throw new SerializerError(`Reference to unregistered class "${data.type}"`)
                 }
                 if(typeof objData !== "object") {
-                    throw `Expected instance data to be an object, not ${typeof objData}`
+                    throw new SerializerError(`Expected instance data to be an object, not ${typeof objData}`)
                 }
                 obj = {}
                 for(const [key, value] of Object.entries(objData)) {
@@ -403,7 +434,7 @@ function _deserialize(
             }
             return obj
         }
-        throw `Cannot deserialize type "${typeof data}"`
+        throw new SerializerError(`Cannot deserialize type "${typeof data}"`)
     } catch(e) {
         errorFlag = true
         throw e
@@ -431,7 +462,7 @@ export function registerClass(
     cls: { new(...args: any): SerializableClass },
 ): void {
     if(registeredClasses[cls.name] !== undefined) {
-        throw `Class "${cls.name}" is already registered`
+        throw new Error(`Class "${cls.name}" is already registered`)
     }
     registeredClasses[cls.name] = {
         cls,
