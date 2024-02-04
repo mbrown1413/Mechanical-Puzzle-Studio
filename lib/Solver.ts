@@ -31,7 +31,7 @@ export class AssemblySolver extends Solver {
         } = this.getPlacementRows(puzzle, problem)
 
         callbacks.logCallback(
-            `Number of placements options for each piece: ${placementsByPieceIdx.map(placements => placements.length)}`
+            `Number of placements options for each piece: ${placementsByPieceIdx.map(placements => placements.length).join(", ")}`
         )
 
         const solutions = this.solveCover(coverRowsByPieceIdx, callbacks)
@@ -39,7 +39,9 @@ export class AssemblySolver extends Solver {
         const ret = []
         for(const pickedRows of solutions) {
             ret.push(new AssemblySolution(
-                pickedRows.map((placementIdx, pieceIdx) => placementsByPieceIdx[pieceIdx][placementIdx])
+                pickedRows.map(
+                    (placementIdx, pieceIdx) => placementsByPieceIdx[pieceIdx][placementIdx]
+                )
             ))
         }
         return ret

@@ -11,7 +11,11 @@ import {AssemblySolver} from "./Solver.ts"
 type SolutionShorthand = {[pieceId: string]: Voxel[]}
 function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShorthand) {
     const actual: SolutionShorthand = {}
-    for(const [pieceId, placement] of solution.placements.entries()) {
+    for(const placement of solution.placements) {
+        const pieceId = placement.originalPiece.id
+        if(pieceId === null) {
+            throw "Piece should have an ID"
+        }
         actual[pieceId] = placement.transformedPiece.voxels
     }
     expect(actual).toMatchObject(expected)

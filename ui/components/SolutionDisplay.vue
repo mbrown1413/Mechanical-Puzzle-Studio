@@ -3,7 +3,7 @@ import {computed} from "vue"
 
 import {Puzzle, Solution, AssemblySolution} from "~lib"
 
-import GridDisplay from "~/ui/components/GridDisplay.vue";
+import GridDisplay from "~/ui/components/GridDisplay.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
@@ -15,7 +15,7 @@ const pieces = computed(() => {
         return []
     }
     const solution = props.solution as AssemblySolution
-    const placements = Array.from(solution.placements.values())
+    const placements = Array.from(solution.placements)
     return placements.map((placement) => placement.transformedPiece)
 })
 </script>
