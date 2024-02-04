@@ -34,7 +34,7 @@ function voxelClicked(event: MouseEvent, voxel: Voxel) {
         toAdd = [voxel]
     }
     if(piece.value.id === null) {
-        throw "Cannot edit piece with no ID"
+        throw new Error("Cannot edit piece with no ID")
     }
     emit("action", new EditPieceAction(piece.value.id, toAdd, toRemove))
 }

@@ -44,6 +44,9 @@ const sideTabs = [
     {id: "solutions", text: "Solutions"},
 ]
 
+const errorShow = ref(false)
+const errorMessage = ref("")
+
 const solutionItems = computed(() => {
     if(selectedProblemIds.value.length !== 1) {
         return []
@@ -71,7 +74,14 @@ const selectedSolutions = computed(() => {
 })
 
 function performAction(action: Action) {
-    action.perform(puzzleFile.puzzle)
+    try {
+        action.perform(puzzleFile.puzzle)
+    } catch(e) {
+        const msg = `Error performing action: ${action.toString()}`
+        errorShow.value = true
+        errorMessage.value = msg + "\n" + stripIfStartsWith(String(e), "Error:")
+        console.error(msg, "\n", e)
+    }
     puzzleStorage.save(puzzleFile)
     
     if(action instanceof ProblemSolveAction) {
@@ -96,6 +106,12 @@ onMounted(() => {
         })
     }
 })
+
+function stripIfStartsWith(input: string, toStrip: string) {
+    return input.startsWith(toStrip) ?
+        input.slice(toStrip.length).trimStart()
+        : input
+}
 </script>
 
 <template>
@@ -183,6 +199,14 @@ onMounted(() => {
             />
         </div>
 
+        <VSnackbar
+            v-model="errorShow"
+            timeout="5000"
+            color="red"
+            style="white-space: pre;"
+        >
+            {{ errorMessage }}
+        </VSnackbar>
     </VMain>
 </template>
 

@@ -1,4 +1,4 @@
-import {Voxel, BoolWithReason, Puzzle, Piece, Problem, AssemblyProblem} from "~lib"
+import {Voxel, Puzzle, Piece, Problem, AssemblyProblem} from "~lib"
 
 import {ProblemSolveTask} from "~/ui/tasks.ts"
 import {taskRunner} from "~/ui/globals.ts"
@@ -7,7 +7,8 @@ import {taskRunner} from "~/ui/globals.ts"
 ////////// Base Classes //////////
 
 export abstract class Action {
-    abstract perform(puzzle: Puzzle): BoolWithReason
+    abstract perform(puzzle: Puzzle): void
+    abstract toString(): string
 }
 
 export abstract class EditItemMetadataAction<T extends Object> extends Action {
@@ -25,21 +26,22 @@ export abstract class EditItemMetadataAction<T extends Object> extends Action {
         this.itemId = itemId
         this.metadata = metadata
     }
+    
+    toString() {
+        const constructor = <typeof EditItemMetadataAction> this.constructor
+        return `Edit ${constructor.itemName.toLowerCase()}`
+    }
 
-    perform(puzzle: Puzzle): BoolWithReason {
+    perform(puzzle: Puzzle) {
         const constructor = <typeof EditItemMetadataAction> this.constructor
         const itemContainer = puzzle[constructor.itemAttribute] as Map<string, T>
         const item = itemContainer.get(this.itemId)
         if(item === undefined) {
-            return {
-                bool: false,
-                reason: `${constructor.itemName} with ID ${this.itemId} not found`
-            }
+            throw new Error(`${constructor.itemName} with ID ${this.itemId} not found`)
         }
         
         Object.assign(item, this.metadata)
         this.postEdit(item, puzzle)
-        return {bool: true}
     }
 
     postEdit(_item: T, _puzzle: Puzzle) { }
@@ -55,7 +57,12 @@ abstract class DeleteItemsAction extends Action {
         this.itemIds = itemIds
     }
     
-    perform(puzzle: Puzzle): BoolWithReason {
+    toString() {
+        const constructor = <typeof DeleteItemsAction> this.constructor
+        return `Delete ${constructor.itemName.toLowerCase()}`
+    }
+
+    perform(puzzle: Puzzle) {
         const constructor = <typeof DeleteItemsAction> this.constructor
         const itemMap = puzzle[constructor.itemAttribute]
 
@@ -66,16 +73,12 @@ abstract class DeleteItemsAction extends Action {
             }
         }
         if(missingIds.length) {
-            return {
-                bool: false,
-                reason: `${constructor.itemName} IDs not found: ${missingIds}`
-            }
+            throw new Error(`${constructor.itemName} IDs not found: ${missingIds}`)
         }
         
         for(const id of this.itemIds) {
             itemMap.delete(id)
         }
-        return {bool: true}
     }
 
 }
@@ -84,14 +87,17 @@ abstract class DeleteItemsAction extends Action {
 ////////// Piece Actions //////////
 
 export class NewPieceAction extends Action {
-    perform(puzzle: Puzzle): BoolWithReason {
+    perform(puzzle: Puzzle) {
         const piece = new Piece(
             puzzle.generateId("piece", "pieces"),
             puzzle.grid.getDefaultPieceBounds()
         )
         piece.color = puzzle.getNewPieceColor()
         puzzle.addPiece(piece)
-        return {bool: true}
+    }
+    
+    toString() {
+        return "Create new piece"
     }
 }
 
@@ -115,21 +121,21 @@ export class EditPieceAction extends Action {
         this.addVoxels = addVoxels
         this.removeVoxels = removeVoxels
     }
+
+    toString() {
+        return "Edit piece"
+    }
     
-    perform(puzzle: Puzzle): BoolWithReason {
+    perform(puzzle: Puzzle) {
         const piece = puzzle.pieces.get(this.pieceId)
         if(piece === undefined) {
-            return {
-                bool: false,
-                reason: `Piece with ID ${this.pieceId} not found`
-            }
+            throw new Error(`Piece with ID ${this.pieceId} not found`)
         }
 
         piece.voxels = piece.voxels.filter(
             (voxel) => !this.removeVoxels.includes(voxel)
         )
         piece.voxels.push(...this.addVoxels)
-        return {bool: true}
     }
 }
 
@@ -153,12 +159,15 @@ export class EditPieceMetadataAction extends EditItemMetadataAction<Piece> {
 ////////// Problem Actions //////////
 
 export class NewProblemAction extends Action {
-    perform(puzzle: Puzzle): BoolWithReason {
+    perform(puzzle: Puzzle) {
         const problem = new AssemblyProblem(
             puzzle.generateId("problem", "problems"),
         )
         puzzle.addProblem(problem)
-        return {bool: true}
+    }
+
+    toString() {
+        return "Create new problem"
     }
 }
 
@@ -198,8 +207,11 @@ export class ProblemSolveAction extends Action {
         this.problemId = problemId
     }
 
-    perform(puzzle: Puzzle): BoolWithReason {
+    toString() {
+        return `Solve problem`
+    }
+
+    perform(puzzle: Puzzle) {
         taskRunner.submitTask(new ProblemSolveTask(puzzle, this.problemId))
-        return {bool: true}
     }
 }

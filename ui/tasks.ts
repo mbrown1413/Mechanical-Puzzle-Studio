@@ -54,6 +54,9 @@ export class ProblemSolveTask extends Task {
         super()
         this.puzzle = puzzle
         this.problemId = problemId
+
+        // Throw error if misconfigured
+        this.getSolver()
     }
     
     getDescription(): string {
@@ -64,7 +67,7 @@ export class ProblemSolveTask extends Task {
     getProblem(): Problem {
         const problem = this.puzzle.problems.get(this.problemId)
         if(!problem) {
-            throw `Problem ID ${this.problemId} not found`
+            throw new Error(`Problem ID ${this.problemId} not found`)
         }
         return problem
     }
@@ -73,14 +76,14 @@ export class ProblemSolveTask extends Task {
         const problem = this.getProblem()
         const solvers = problem.getSolvers()
         if(problem.solverId === null) {
-            throw "No solver selected"
+            throw new Error("No solver selected")
         }
         const solverInfo = solvers[problem.solverId]
         if(!solverInfo) {
-            throw "Selected solver is not found"
+            throw new Error("Selected solver is not found")
         }
         if(!solverInfo.isUsable.bool) {
-            throw "Solver not usable: " + solverInfo.isUsable.reason
+            throw new Error("Solver not usable: " + solverInfo.isUsable.reason)
         }
         return new solverInfo.solver()
     }

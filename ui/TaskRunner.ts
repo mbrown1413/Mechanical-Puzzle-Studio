@@ -82,11 +82,11 @@ export class TaskRunner {
 
     private startNextTask() {
         if(this.currentTaskInfo) {
-            throw "Cannot start new task while one is running"
+            throw new Error("Cannot start new task while one is running")
         }
         const task = this.queue.shift()
         if(!task) {
-            throw "No task in queue to start"
+            throw new Error("No task in queue to start")
         }
         this.currentTaskInfo = {
             task,

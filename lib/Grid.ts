@@ -38,7 +38,7 @@ export abstract class Grid extends SerializableClass {
     getDefaultPieceBounds(): Bounds {
         return this.getDimensions().map((dimension) => {
             if(!dimension.defaultBound) {
-                throw "No default dimension size specified in grid"
+                throw new Error("No default dimension size specified in grid")
             }
             return dimension.defaultBound
         })

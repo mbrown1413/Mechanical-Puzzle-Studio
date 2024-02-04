@@ -14,7 +14,7 @@ function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShort
     for(const placement of solution.placements) {
         const pieceId = placement.originalPiece.id
         if(pieceId === null) {
-            throw "Piece should have an ID"
+            throw new Error("Piece should have an ID")
         }
         actual[pieceId] = placement.transformedPiece.voxels
     }

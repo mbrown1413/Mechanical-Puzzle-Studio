@@ -55,10 +55,10 @@ export class Puzzle extends SerializableClass {
 
     addPiece(piece: Piece): Piece {
         if(!piece.hasId()) {
-            throw "Cannot add piece without ID"
+            throw new Error("Cannot add piece without ID")
         }
         if(this.pieces.has(piece.id)) {
-            throw `Duplicate piece ID: ${piece.id}`
+            throw new Error(`Duplicate piece ID: ${piece.id}`)
         }
         this.pieces.set(piece.id, piece)
         return piece
@@ -74,19 +74,19 @@ export class Puzzle extends SerializableClass {
         let id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
         if(id === null) {
             if(throwErrors) {
-                throw "Cannot remove piece without ID"
+                throw new Error("Cannot remove piece without ID")
             }
             return
         }
         if(throwErrors && !this.pieces.has(id)) {
-            throw `Piece ID not found: ${id}`
+            throw new Error(`Piece ID not found: ${id}`)
         }
         this.pieces.delete(id)
     }
 
     addProblem(problem: Problem): Problem {
         if(this.problems.has(problem.id)) {
-            throw `Duplicate problem ID: ${problem.id}`
+            throw new Error(`Duplicate problem ID: ${problem.id}`)
         }
         this.problems.set(problem.id, problem)
         return problem
@@ -100,7 +100,7 @@ export class Puzzle extends SerializableClass {
     removeProblem(problemOrId: Problem | string, throwErrors=true) {
         let id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
         if(throwErrors && !this.problems.has(id)) {
-            throw `Problem ID not found: ${id}`
+            throw new Error(`Problem ID not found: ${id}`)
         }
         this.problems.delete(id)
     }
@@ -109,7 +109,7 @@ export class Puzzle extends SerializableClass {
         if(typeof pieceOrId === "string") {
             const piece = this.pieces.get(pieceOrId)
             if(!piece) {
-                throw `Piece ID not found: ${pieceOrId}`
+                throw new Error(`Piece ID not found: ${pieceOrId}`)
             }
             return piece
         } else {

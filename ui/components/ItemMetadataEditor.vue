@@ -74,7 +74,7 @@ switch(props.itemType) {
         break;
 
     default:
-        throw "Invalid itemType"
+        throw new Error("Invalid itemType")
 }
 
 const item = computed(() =>

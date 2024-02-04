@@ -65,7 +65,7 @@ export class ResourceTracker {
                 }
 
                 if((obj as any).dispose !== undefined) {
-                    throw "Unknown object with dispose method " + obj
+                    throw new Error("Unknown object with dispose method " + obj)
                 }
 
             } else if(obj instanceof THREE.Material) {
@@ -77,12 +77,12 @@ export class ResourceTracker {
                     }
                 }
                 if((obj as any).uniforms) {
-                    throw "Uniforms non supported"
+                    throw new Error("Uniforms non supported")
                 }
                 */
 
             } else {
-                throw "Unknown 3d object " + obj
+                throw new Error("Unknown 3d object " + obj)
             }
         }
     }

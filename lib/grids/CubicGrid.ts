@@ -41,7 +41,7 @@ export class CubicGrid extends Grid {
     private voxelToCoordinate(voxel: Voxel): Coordinate3d {
         const coord = voxel.split(",").map(Number)
         if(coord.length !== 3) {
-            throw `Invalid cubic coordinate: ${voxel}`
+            throw new Error(`Invalid cubic coordinate: ${voxel}`)
         }
         return {
             x: coord[0],

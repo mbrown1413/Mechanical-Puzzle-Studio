@@ -48,7 +48,7 @@ export class LocalPuzzleStorage extends PuzzleStorage {
     get(id: string): PuzzleFile {
         const item = localStorage.getItem(this._getKey(id))
         if(item === null) {
-            throw `Puzzle id not found in local storage: "${id}"`
+            throw new Error(`Puzzle id not found in local storage: "${id}"`)
         }
         return PuzzleFile.deserialize(item)
     }

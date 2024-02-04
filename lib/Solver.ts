@@ -49,21 +49,21 @@ export class AssemblySolver extends Solver {
 
     getPlacementRows(puzzle: Puzzle, problem: Problem) {
         if(!(problem instanceof AssemblyProblem)) {
-            throw "Assembly Solver can only solve Assembly Problems"
+            throw new Error("Assembly Solver can only solve Assembly Problems")
         }
         if(problem.goalPieceId === null) {
-            throw "Goal piece is not set"
+            throw new Error("Goal piece is not set")
         }
         const goal = puzzle.pieces.get(problem.goalPieceId)
         if(goal === undefined) {
-            throw `Goal piece ID ${problem.goalPieceId} not found`
+            throw new Error(`Goal piece ID ${problem.goalPieceId} not found`)
         }
 
         const pieces = []
         for(const [pieceId, count] of problem.usedPieceCounts.entries()) {
             const piece = puzzle.pieces.get(pieceId)
             if(!piece) {
-                throw `Piece ID ${pieceId} not found`
+                throw new Error(`Piece ID ${pieceId} not found`)
             }
             for(let i=0; i<count; i++) {
                 pieces.push(piece)
