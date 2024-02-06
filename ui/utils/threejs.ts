@@ -56,15 +56,19 @@ export class ResourceTracker {
                 stack.push(...obj.children)
                 
                 // Material and Geometry properties of Mesh and Line classes.
-                const objWithResources = obj as any
-                if((objWithResources as any).material) {
+                const objWithResources = obj as typeof obj & {
+                    material?: THREE.Material,
+                    geometry?: THREE.BufferGeometry,
+                    dispose: () => void,
+                }
+                if((objWithResources).material) {
                     stack.push(objWithResources.material)
                 }
                 if(objWithResources.geometry) {
                     stack.push(objWithResources.geometry)
                 }
 
-                if((obj as any).dispose !== undefined) {
+                if((objWithResources).dispose !== undefined) {
                     throw new Error("Unknown object with dispose method " + obj)
                 }
 
@@ -76,7 +80,7 @@ export class ResourceTracker {
                         yield value
                     }
                 }
-                if((obj as any).uniforms) {
+                if((objWithResources).uniforms) {
                     throw new Error("Uniforms non supported")
                 }
                 */

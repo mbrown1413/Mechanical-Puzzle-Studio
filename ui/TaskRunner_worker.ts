@@ -2,15 +2,15 @@ import {serialize, deserialize} from "~lib"
 
 import {
     StartMessage,
-    TaskToWorkerMessage,
-    WorkerToTaskMessage,
+    RunnerToWorkerMessage,
+    WorkerToRunnerMessage,
 } from "./TaskRunner.ts"
 
 // Imports needed for registered classes which may be deserialized
 import "~lib"
 import "~/ui/tasks.ts"
 
-function sendMessage(message: WorkerToTaskMessage) {
+function sendMessage(message: WorkerToRunnerMessage) {
     postMessage(serialize(message))
 }
 
@@ -33,10 +33,10 @@ function onStart(data: StartMessage) {
 
 self.onmessage = (event: MessageEvent) => {
     try {
-        const handlers: {[type: string]: (data: any) => void} = {
+        const handlers: {[type: string]: (data: RunnerToWorkerMessage) => void} = {
             start: onStart,
         }
-        const message = deserialize(event.data) as TaskToWorkerMessage
+        const message = deserialize(event.data) as RunnerToWorkerMessage
         const handler = handlers[message.type]
         handler(message)
     } catch(e) {

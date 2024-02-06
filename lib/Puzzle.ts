@@ -65,13 +65,13 @@ export class Puzzle extends SerializableClass {
     }
 
     hasPiece(pieceOrId: Piece | string): boolean {
-        let id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
+        const id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
         if(id === null) return false
         return this.pieces.has(id)
     }
 
     removePiece(pieceOrId: Piece | string, throwErrors=true) {
-        let id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
+        const id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
         if(id === null) {
             if(throwErrors) {
                 throw new Error("Cannot remove piece without ID")
@@ -93,12 +93,12 @@ export class Puzzle extends SerializableClass {
     }
 
     hasProblem(problemOrId: Problem | string): boolean {
-        let id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
+        const id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
         return this.problems.has(id)
     }
 
     removeProblem(problemOrId: Problem | string, throwErrors=true) {
-        let id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
+        const id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
         if(throwErrors && !this.problems.has(id)) {
             throw new Error(`Problem ID not found: ${id}`)
         }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed} from "vue"
+import {computed, ComputedRef} from "vue"
 
 import {Bounds, Piece, Puzzle, AssemblyProblem} from  "~lib"
 
@@ -82,6 +82,10 @@ const item = computed(() =>
         null :
         props.puzzle[puzzleProperty].get(props.itemId) || null
 )
+/* Until we get a proper form system, there's not really a way to make this
+ * type safe without a ton of code repetition. We should be able to make the
+ * base class for objects enforce the type safety. */
+const typeUnsafeItem = item as ComputedRef<any>
 
 const pieceItems = computed(() => {
     const pieces = Array.from(props.puzzle.pieces.values())
@@ -112,7 +116,7 @@ function handlePieceInput(field: Field, piece: Piece) {
 function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputElement) {
     if(props.itemId === null || item.value === null) return
     const metadata: any = {}
-    metadata[field.property] = item.value[field.property]
+    metadata[field.property] = typeUnsafeItem.value[field.property]
     metadata[field.property][dimensionIndex] = Number(el.value)
     const action = new actionClass(props.itemId, metadata)
     emit("action", action)
@@ -130,13 +134,13 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
                     v-if="field.type === 'string'"
                     :label="field.label"
                     :required="field.required === true"
-                    :model-value="item[field.property]"
+                    :model-value="typeUnsafeItem[field.property]"
                     @input="handleTextInput(field, $event.target.value)"
             />
 
             <ColorInput
                     v-if="field.type === 'color'"
-                    :value="item[field.property] as string"
+                    :value="typeUnsafeItem[field.property] as string"
                     @input="handleTextInput(field, $event)"
             />
             
@@ -145,7 +149,7 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
                     :label="field.label"
                     :required="field.required !== false"
                     :items="pieceItems"
-                    :modelValue="puzzle.pieces.get(item[field.property] as string)"
+                    :modelValue="puzzle.pieces.get(typeUnsafeItem[field.property] as string)"
                     no-data-text="No pieces in puzzle!"
                     @update:modelValue="handlePieceInput(field, $event as Piece)"
             />
@@ -170,7 +174,7 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
                                 :label="dimension.name"
                                 type="number"
                                 min="1"
-                                :model-value="(item[field.property] as Bounds)[i]"
+                                :model-value="(typeUnsafeItem[field.property] as Bounds)[i]"
                                 @input="handleBoundsInput(field, i, $event.target as HTMLInputElement)"
                         />
                     </VCol>

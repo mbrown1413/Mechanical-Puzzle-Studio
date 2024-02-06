@@ -1,4 +1,4 @@
-import {SerializableClass, registerClass, SerializableType} from "~lib"
+import {SerializableClass, registerClass, Serializable} from "~lib"
 import {Puzzle, Problem, Solver, Solution, TaskCallbacks} from "~lib"
 
 /**
@@ -16,7 +16,7 @@ import {Puzzle, Problem, Solver, Solution, TaskCallbacks} from "~lib"
  * state based on the result.
  */
 
-export abstract class Task extends SerializableClass {
+export abstract class Task<Result extends Serializable> extends SerializableClass {
     constructor() {
         super(null)
     }
@@ -31,12 +31,12 @@ export abstract class Task extends SerializableClass {
     /**
      * Perform blocking/long-running processing, called in a worker.
      */
-    abstract run(callbacks: TaskCallbacks): SerializableType
+    abstract run(_callbacks: TaskCallbacks): Result
     
     /**
      * Process results returned from `run()` in main thread.
      */
-    abstract processResult(result: SerializableType): void
+    abstract processResult(result: Result): void
 
     /**
      * One of these methods is always called main thread when the task
@@ -46,7 +46,7 @@ export abstract class Task extends SerializableClass {
     onFailure(_error: string) { }
 }
 
-export class ProblemSolveTask extends Task {
+export class ProblemSolveTask extends Task<Solution[]> {
     puzzle: Puzzle
     problemId: string
 
@@ -93,7 +93,7 @@ export class ProblemSolveTask extends Task {
         problem.solutions = null
     }
 
-    run(callbacks: TaskCallbacks) {
+    run(callbacks: TaskCallbacks): Solution[] {
         const problem = this.getProblem()
         const solver = this.getSolver()
         const solutions = solver.solve(this.puzzle, problem, callbacks)

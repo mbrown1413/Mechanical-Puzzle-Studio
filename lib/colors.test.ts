@@ -10,6 +10,6 @@ describe("colors", () => {
                 swatchesColors.add(color)
             }
         }
-        expect(swatchesColors).toMatchObject(new Set(flatPalette))
+        expect(swatchesColors).toEqual(new Set(flatPalette))
     })
 })

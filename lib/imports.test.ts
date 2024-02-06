@@ -2,7 +2,7 @@ import {test, expect, describe} from "vitest"
 import * as fs from "fs"
 import * as path from "path"
 
-function forEachFile(dir: string, func: (filePath: string) => any) {
+function forEachFile(dir: string, func: (filePath: string) => void) {
     fs.readdirSync(
         dir,
         {
@@ -33,15 +33,15 @@ function findMatchingFiles(dir: string, regex: RegExp) {
 describe("imports", () => {
     test("in lib/ should not import ui/", () => {
         expect(
-            findMatchingFiles("lib/", new RegExp("^import.*~ui\/", "gm"))
-        ).toMatchObject([])
+            findMatchingFiles("lib/", new RegExp("^import.*~ui/", "gm"))
+        ).toEqual([])
     })
 })
 
 describe("imports", () => {
     test('in ui/ may only import lib/ via index.ts at "~lib"', () => {
         expect(
-            findMatchingFiles("ui/", new RegExp("^import.*~\/?lib\/", "gm"))
-        ).toMatchObject([])
+            findMatchingFiles("ui/", new RegExp("^import.*~/?lib/", "gm"))
+        ).toEqual([])
     })
 })

@@ -11,16 +11,16 @@ export abstract class Action {
     abstract toString(): string
 }
 
-export abstract class EditItemMetadataAction<T extends Object> extends Action {
+export abstract class EditItemMetadataAction<T extends object> extends Action {
     itemId: string
-    metadata: any
+    metadata: object
     
     static itemName: string
-    static itemAttribute: string
+    static itemAttribute: "pieces" | "problems"
     
     constructor(
         itemId: string,
-        metadata: any,
+        metadata: object,
     ) {
         super()
         this.itemId = itemId
@@ -102,8 +102,8 @@ export class NewPieceAction extends Action {
 }
 
 export class DeletePiecesAction extends DeleteItemsAction {
-    static itemAttribute: "pieces" = "pieces"
-    static itemName: "Piece" = "Piece"
+    static itemAttribute = "pieces" as const
+    static itemName = "Piece" as const
 }
 
 export class EditPieceAction extends Action {
@@ -140,8 +140,8 @@ export class EditPieceAction extends Action {
 }
 
 export class EditPieceMetadataAction extends EditItemMetadataAction<Piece> {
-    static itemAttribute: "pieces" = "pieces"
-    static itemName: "Piece" = "Piece"
+    static itemAttribute = "pieces" as const
+    static itemName = "Piece" as const
     static metadata: {
         label?: string
         color?: string
@@ -172,13 +172,13 @@ export class NewProblemAction extends Action {
 }
 
 export class DeleteProblemsAction extends DeleteItemsAction {
-    static itemAttribute: "problems" = "problems"
-    static itemName: "Problem" = "Problem"
+    static itemAttribute = "problems" as const
+    static itemName = "Problem" as const
 }
 
 export class EditProblemMetadataAction extends EditItemMetadataAction<Problem> {
-    static itemAttribute: "problems" = "problems"
-    static itemName: "Problem" = "Problem"
+    static itemAttribute = "problems" as const
+    static itemName = "Problem" as const
     static metadata: {
         label?: string
     }

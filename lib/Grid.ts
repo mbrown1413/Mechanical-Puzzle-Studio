@@ -44,7 +44,7 @@ export abstract class Grid extends SerializableClass {
         })
     }
 
-    abstract isInBounds(voxel: Voxel, bounds: Bounds): Boolean
+    abstract isInBounds(voxel: Voxel, bounds: Bounds): boolean
     
     getMaxBounds(...bounds: Bounds[]) {
         if(bounds.length === 0) {
@@ -84,11 +84,12 @@ export abstract class Grid extends SerializableClass {
      * Same as `getAdjacent()`, but adjacent voxels out of bounds are returned as null.
      */
     getAdjacentInBounds(voxel: Voxel, direction: Direction, bounds: Bounds): [Voxel|null, Direction] {
-        let [neighbor, oppositeDir] = this.getAdjacent(voxel, direction)
+        const [neighbor, oppositeDir] = this.getAdjacent(voxel, direction)
         if(neighbor !== null && !this.isInBounds(neighbor, bounds)) {
-            neighbor = null
+            return [null, oppositeDir]
+        } else {
+            return [neighbor, oppositeDir]
         }
-        return [neighbor, oppositeDir]
     }
   
     abstract getOrientations(): Orientation[]

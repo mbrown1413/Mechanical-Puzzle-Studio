@@ -4,7 +4,7 @@ import {Solver, AssemblySolver} from "~/lib/Solver.ts"
 import {Solution} from "~/lib/Solution.ts"
 
 type SolverInfo = {
-    solver: new(...args: any) => Solver,
+    solver: new(...args: unknown[]) => Solver,
     isUsable: BoolWithReason,
 }
 
@@ -43,7 +43,7 @@ export class AssemblyProblem extends Problem {
         return {
             assembly: {
                 solver: AssemblySolver,
-                isUsable: {bool: true as true},
+                isUsable: {bool: true as const},
             },
         }
     }

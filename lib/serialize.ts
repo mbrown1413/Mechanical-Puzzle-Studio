@@ -4,7 +4,7 @@
  * This can serialize and deserialize most common types, including objects and
  * classes. Trying to serialize something not serializable should be caught
  * statically by typescript. To see what types may be serialized, see the
- * `SerializableType` type. Classes must be registered upfront.
+ * `Serializable` type. Classes must be registered upfront.
  * 
  * To serialize:
  *     1. Pass any serializable type into `serialize`
@@ -20,7 +20,7 @@
  * 
  * Example usage of registered classes:
  * 
- *     import { SerializableClass, registerClass, serialize, deserialize } from "./serialize.ts"
+ *     import { SerializableClass, registerClass, serialize, deserialize } from "~/lib/serialize.ts"
  *     
  *      class MyClass extends SerializableClass {
  *      
@@ -78,8 +78,8 @@
  *     // Casting like this fixes the issue sometimes
  *     const c1 = reactive(new MyClass("myclass-1")) as MyClass
  *     
- *     // Casting to `any` then back should always work
- *     const c2 = reactive(new MyClass("myclass-1") as any) as MyClass
+ *     // Casting to `never` then back should always work
+ *     const c2 = reactive(new MyClass("myclass-1") as never) as MyClass
  *      
  *      
  * ## Requirements
@@ -127,24 +127,13 @@ class SerializerError extends Error {
 }
 
 
-///////////////////////////////////
-////////// Serialization //////////
-///////////////////////////////////
-
-/* These are primitives which can be passed directly to be JSON serialized */
-const passthroughPrimitives = ["string", "number", "boolean"]
-
-/* Maps a serializable class's ID to it's type and serialized data. */
-type RefData = {
-    [id: string]: {
-        type: string,
-        data: {[k: string]: SerializableType},
-    }
-}
+////////////////////////////////////
+////////// Exported Types //////////
+////////////////////////////////////
 
 /* Resulting data structure after serialization */
 export type SerializedData = {
-    root: any,
+    root: SerializedNode,
     refs?: RefData,
 }
 
@@ -153,13 +142,11 @@ export type SerializedData = {
  * implemented, and they will automatically pass typechecks in
  * SerializableClass subclasses.
  */
-export type SerializableType = number | string | boolean | null |
+export type Serializable = number | string | boolean | null |
     SerializableObject |
     SerializableClass |
-    SerializableType[] |
-    Map<string, SerializableType>
-
-export type SerializableObject = {[key: string]: SerializableType}
+    Serializable[] |
+    Map<string, Serializable>
 
 /**
  * Subclass this and use `registerClass` to make a class serializable. If you
@@ -176,15 +163,34 @@ export abstract class SerializableClass {
      */
     id: string | null
 
-    [s: string]: SerializableType | Function
-
     constructor(id: string | null) {
         this.id = id
     }
 }
 
+
+///////////////////////////////////
+////////// Serialization //////////
+///////////////////////////////////
+
+/* Maps a serializable class's ID to it's type and serialized data. */
+type RefData = {
+    [id: string]: {
+        type: string,
+        data: {[k: string]: SerializedNode},
+    }
+}
+
+/* One recursive node, part of SerializedData. */
+type SerializedNode = string | number | boolean | null |
+    SerializedNode[] |
+    {type: string, data: object} |
+    {type: string, id: string}
+
+type SerializableObject = {[key: string]: Serializable}
+
 /* Return an object which can be passed to JSON.stringify to serialize. */
-export function serialize(value: SerializableType): SerializedData {
+export function serialize(value: Serializable): SerializedData {
     const refs: RefData = {}
     const path: string[] = []
     let root
@@ -205,16 +211,33 @@ export function serialize(value: SerializableType): SerializedData {
 }
 
 function _serialize(
-    value: SerializableType,
+    value: Serializable,
     refs: RefData,
     path: string[],
     attribute: string
-): any {
+): SerializedNode {
+
+    function getClassData(value: SerializableClass | SerializableObject) {
+        const data: {[k: string]: SerializedNode} = {}
+        for(const [k, v] of Object.entries(value)) {
+            if(typeof v !== "function") {
+                data[k] = _serialize(v, refs, path, k)
+            }
+        }
+        return data
+    }
+
+
     let errorFlag = false
     try {
         path.push(attribute)
 
-        if(passthroughPrimitives.includes(typeof value) || value === null) {
+        if(
+            typeof value === "string" ||
+            typeof value === "number" ||
+            typeof value === "boolean" ||
+            value === null
+        ) {
             return value
         }
 
@@ -222,14 +245,14 @@ function _serialize(
             // Array
             if(value instanceof Array) {
                 return value.map(
-                    (item: SerializableType, i: number) =>
+                    (item: Serializable, i: number) =>
                     _serialize(item, refs, path, String(i))
                 )
             }
 
             // Map
             if(value instanceof Map) {
-                const entries: {[key: string | number]: SerializableType} = {}
+                const entries: {[key: string | number]: SerializedNode} = {}
                 for(const [k, v] of value.entries()) {
                     if(typeof k !== "string") {
                         path.push(k)
@@ -241,16 +264,6 @@ function _serialize(
                     type: "Map",
                     data: entries,
                 }
-            }
-
-            function getClassData(value: SerializableClass | SerializableObject) {
-                const data: {[k: string]: SerializableType} = {}
-                for(let [k, v] of Object.entries(value)) {
-                    if(typeof v !== "function") {
-                        data[k] = _serialize(v, refs, path, k)
-                    }
-                }
-                return data
             }
 
             // Object
@@ -310,7 +323,7 @@ function _serialize(
  * error is thrown if they don't match. Pass in a class name, or for primitive
  * types the expected output of a typeof call.
  */
-export function deserialize<T extends SerializableType>(
+export function deserialize<T extends Serializable>(
     data: SerializedData,
     expectedType?: string
 ): T {
@@ -348,23 +361,28 @@ export function deserialize<T extends SerializableType>(
 }
 
 function _deserialize(
-    data: any,
+    data: SerializedNode,
     refs: RefData,
-    cache: Map<string, SerializableType>,
+    cache: Map<string, Serializable>,
     path: string[],
     attribute: string
-): SerializableType {
+): Serializable {
     let errorFlag = false
     try {
         path.push(attribute)
 
-        if(passthroughPrimitives.includes(typeof data) || data === null) {
+        if(
+            typeof data === "string" ||
+            typeof data === "number" ||
+            typeof data === "boolean" ||
+            data === null
+        ) {
             return data
         }
 
         if(Array.isArray(data)) {
             return data.map(
-                (x: SerializableType, i: number) =>
+                (x: SerializedNode, i: number) =>
                 _deserialize(x, refs, cache, path, String(i))
             )
         }
@@ -375,7 +393,7 @@ function _deserialize(
             }
         
             // Read data either directly, or from refs
-            if(data.id !== undefined) {
+            if("id" in data) {
                 // Check if we already deserialized the object with this ID
                 const obj = cache.get(data.id)
                 if(obj !== undefined) {
@@ -384,9 +402,9 @@ function _deserialize(
             }
 
             // Get data, either here inline or from refs
-            let obj: any
+            let obj: Serializable
             let objData
-            if(data.data !== undefined) {
+            if("data" in data) {
                 objData = data.data
             } else if(data.id !== undefined) {
                 const ref = refs[data.id]
@@ -400,7 +418,7 @@ function _deserialize(
             
             // Map
             if(data.type === "Map") {
-                const map: Map<SerializableType, SerializableType> = new Map()
+                const map: Map<string, Serializable> = new Map()
                 for(const [k, v] of Object.entries(objData)) {
                     map.set(k, _deserialize(v, refs, cache, path, k))
                 }
@@ -429,7 +447,7 @@ function _deserialize(
                 Object.setPrototypeOf(obj, classInfo.cls.prototype)
             }
 
-            if(data.id !== undefined) {
+            if("id" in data) {
                 cache.set(data.id, obj)
             }
             return obj
@@ -451,7 +469,8 @@ function _deserialize(
 ////////////////////////////////////////
 
 type ClassInfo = {
-    cls: { new(...args: any): SerializableClass },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    cls: { new(...args: any[]): SerializableClass },
 }
 
 const registeredClasses: {[name: string]: ClassInfo} = {}
@@ -459,7 +478,8 @@ const registeredClasses: {[name: string]: ClassInfo} = {}
 /* Register a class, required before a `serialize` or `deserialize` call is
  * made containing a class instance of a given type. */
 export function registerClass(
-    cls: { new(...args: any): SerializableClass },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    cls: { new(...args: any[]): SerializableClass },
 ): void {
     if(registeredClasses[cls.name] !== undefined) {
         throw new Error(`Class "${cls.name}" is already registered`)

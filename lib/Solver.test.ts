@@ -18,7 +18,7 @@ function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShort
         }
         actual[pieceId] = placement.transformedPiece.voxels
     }
-    expect(actual).toMatchObject(expected)
+    expect(actual).toEqual(expected)
 }
 
 describe("AssemblySolver", () => {

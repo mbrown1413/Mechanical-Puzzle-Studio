@@ -77,7 +77,7 @@ export function useGridMouseComposible(
         });
         renderer.domElement.addEventListener("mousemove", (event: MouseEvent) => {
             if(mouseDownPosition === null) return
-            let distSquared = (
+            const distSquared = (
                 (event.clientX - mouseDownPosition[0])**2 +
                 (event.clientY - mouseDownPosition[1])**2
             )

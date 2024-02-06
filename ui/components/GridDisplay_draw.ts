@@ -21,7 +21,7 @@ export function useGridDrawComposible(
     const scene = new THREE.Scene()
     const fov = 75
     const camera = new THREE.PerspectiveCamera(fov, 2, 0.1, 10)
-    let controls = new OrbitControls(camera, renderer.domElement)
+    const controls = new OrbitControls(camera, renderer.domElement)
     const hitTestObjects: Ref<THREE.Object3D[]> = ref([])
     
     const resourceTracker = new ResourceTracker()
@@ -167,7 +167,7 @@ export function useGridDrawComposible(
         })
 
         obj = new THREE.Object3D()
-        for(let polygon of Object.values(voxelInfo.sidePolygons)) {
+        for(const polygon of Object.values(voxelInfo.sidePolygons)) {
             const geometry = new ConvexGeometry(polygon)
             const mesh = new THREE.Mesh(geometry, material)
             mesh.renderOrder = renderOrder
@@ -192,7 +192,7 @@ export function useGridDrawComposible(
         })
 
         const obj = new THREE.Object3D()
-        for(let polygon of Object.values(voxelInfo.sidePolygons)) {
+        for(const polygon of Object.values(voxelInfo.sidePolygons)) {
             const geometry = new THREE.BufferGeometry()
             geometry.setFromPoints(polygon)
             const line = new THREE.LineLoop(geometry, material)
@@ -216,7 +216,7 @@ export function useGridDrawComposible(
         const divisions = 10
 
         const obj = new THREE.Object3D()
-        for(let polygon of Object.values(voxelInfo.sidePolygons)) {
+        for(const polygon of Object.values(voxelInfo.sidePolygons)) {
             for(let i=0; i<polygon.length; i++) {
                 const point1 = polygon[i]
                 const point2 = polygon[(i+1) % polygon.length]
@@ -280,12 +280,12 @@ export function useGridDrawComposible(
             ...pieces.value.map(piece => piece.bounds)
         )
 
-        for(let voxel of grid.getVoxels(bounds)) {
+        for(const voxel of grid.getVoxels(bounds)) {
             const voxelInfo = grid.getVoxelInfo(voxel)
             const inLayer = viewpoint.value.isInLayer(voxel, layerN.value)
             const pieceAtVoxel = getPieceAtVoxel(voxel)
 
-            let highlighted = voxel === highlightedVoxel.value
+            const highlighted = voxel === highlightedVoxel.value
 
             const solid = getVoxelSolid(
                 pieceAtVoxel,

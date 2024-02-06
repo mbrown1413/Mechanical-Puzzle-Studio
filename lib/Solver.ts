@@ -132,7 +132,7 @@ export class AssemblySolver extends Solver {
         // Progress tracks based on how many placements of the first piece we
         // have tried.
         let progress = 0
-        let progressMax = coverRowsByPieceIdx[0].length
+        const progressMax = coverRowsByPieceIdx[0].length
 
         // List of row indexes, and the rows themselves, which we're currently
         // considering.

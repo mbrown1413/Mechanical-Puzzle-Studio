@@ -56,7 +56,7 @@ describe("Cubic grid", () => {
     test("getVoxels()", () => {
         expect(
             grid.getVoxels([2, 2, 2])
-        ).toMatchObject([
+        ).toEqual([
             "0,0,0",
             "0,0,1",
             "0,1,0",
@@ -68,22 +68,22 @@ describe("Cubic grid", () => {
         ])
         expect(
             grid.getVoxels([1, 1, 1])
-        ).toMatchObject(["0,0,0"])
+        ).toEqual(["0,0,0"])
         expect(
             grid.getVoxels([0, 0, 0])
-        ).toMatchObject([])
+        ).toEqual([])
     })
 
     test("getAdjacent()", () => {
-        expect(grid.getAdjacent("0,0,0", "+X")).toMatchObject(["1,0,0", "-X"])
-        expect(grid.getAdjacent("0,0,0", "-X")).toMatchObject(["-1,0,0", "+X"])
+        expect(grid.getAdjacent("0,0,0", "+X")).toEqual(["1,0,0", "-X"])
+        expect(grid.getAdjacent("0,0,0", "-X")).toEqual(["-1,0,0", "+X"])
 
-        expect(grid.getAdjacent("5,5,5", "+X")).toMatchObject(["6,5,5", "-X"])
-        expect(grid.getAdjacent("5,5,5", "-X")).toMatchObject(["4,5,5", "+X"])
-        expect(grid.getAdjacent("5,5,5", "+Y")).toMatchObject(["5,6,5", "-Y"])
-        expect(grid.getAdjacent("5,5,5", "-Y")).toMatchObject(["5,4,5", "+Y"])
-        expect(grid.getAdjacent("5,5,5", "+Z")).toMatchObject(["5,5,6", "-Z"])
-        expect(grid.getAdjacent("5,5,5", "-Z")).toMatchObject(["5,5,4", "+Z"])
+        expect(grid.getAdjacent("5,5,5", "+X")).toEqual(["6,5,5", "-X"])
+        expect(grid.getAdjacent("5,5,5", "-X")).toEqual(["4,5,5", "+X"])
+        expect(grid.getAdjacent("5,5,5", "+Y")).toEqual(["5,6,5", "-Y"])
+        expect(grid.getAdjacent("5,5,5", "-Y")).toEqual(["5,4,5", "+Y"])
+        expect(grid.getAdjacent("5,5,5", "+Z")).toEqual(["5,5,6", "-Z"])
+        expect(grid.getAdjacent("5,5,5", "-Z")).toEqual(["5,5,4", "+Z"])
     })
 
     test("orientations", () => {
@@ -92,19 +92,19 @@ describe("Cubic grid", () => {
         for(let i=0; i<24; i++) {
             expect(
                 orientations[i].orientationFunc(orientationTestShape)
-            ).toMatchObject(orientationTestResultingShapes[i])
+            ).toEqual(orientationTestResultingShapes[i])
         }
     })
 
     test("translations", () => {
         let transform = grid.getTranslation("0,0,0", "1,2,3")
-        expect(transform).toMatchObject([1, 2, 3])
-        expect(grid.translate("0,0,0", transform)).toMatchObject("1,2,3")
-        expect(grid.translate("1,2,3", transform)).toMatchObject("2,4,6")
+        expect(transform).toEqual([1, 2, 3])
+        expect(grid.translate("0,0,0", transform)).toEqual("1,2,3")
+        expect(grid.translate("1,2,3", transform)).toEqual("2,4,6")
 
         transform = grid.getTranslation("3,7,1", "1,2,3")
-        expect(transform).toMatchObject([-2, -5, 2])
-        expect(grid.translate("0,0,0", transform)).toMatchObject("-2,-5,2")
-        expect(grid.translate("10,10,10", transform)).toMatchObject("8,5,12")
+        expect(transform).toEqual([-2, -5, 2])
+        expect(grid.translate("0,0,0", transform)).toEqual("-2,-5,2")
+        expect(grid.translate("10,10,10", transform)).toEqual("8,5,12")
     })
 })

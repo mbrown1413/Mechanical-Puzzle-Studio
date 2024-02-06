@@ -1,6 +1,6 @@
 import {test, expect, describe} from "vitest"
 
-import {deserialize, serialize, SerializableType, SerializedData, SerializableClass, registerClass} from "./serialize"
+import {deserialize, serialize, Serializable, SerializedData, SerializableClass, registerClass} from "./serialize"
 
 // Classes to test out serializable classes
 class A extends SerializableClass {
@@ -32,12 +32,12 @@ registerClass(Circular)
  * input data to serialize and the resuting serializable object.
  */
 function serializeMatches(
-    data: SerializableType,
+    data: Serializable,
     serialized: SerializedData,
     expectedType: string
 ) {
-    expect(serialize(data)).toMatchObject(serialized)
-    expect(deserialize(serialized, expectedType)).toMatchObject(data as any)
+    expect(serialize(data)).toEqual(serialized)
+    expect(deserialize(serialized, expectedType)).toEqual(data)
     
     // `serialized` object must convertable to a string via `JSON.stringify()`
     JSON.stringify(serialized)
@@ -211,7 +211,7 @@ describe("error on serialization", () => {
 
     test("unregistered class", () => {
         expect(() => {
-            serialize(new Unregistered("u-1") as any)
+            serialize(new Unregistered("u-1"))
         }).toThrowErrorMatchingInlineSnapshot(`
           "Serialization failed: Reference to unregistered class \\"Unregistered\\"
           Attribute path: root"
@@ -220,7 +220,7 @@ describe("error on serialization", () => {
 
     test("unsupported type", () => {
         expect(() => {
-            serialize(undefined as any)
+            serialize(undefined as unknown as Serializable)
         }).toThrowErrorMatchingInlineSnapshot(`
           "Serialization failed: Unsupported primitive type \\"undefined\\"
           Attribute path: root"
@@ -230,7 +230,7 @@ describe("error on serialization", () => {
     test("non-string Map keys", () => {
         expect(() => {
             serialize(
-                new Map<number, number>([[1, 1]]) as any
+                new Map<number, number>([[1, 1]]) as unknown as Serializable
             )
         }).toThrowErrorMatchingInlineSnapshot(`
           "Serialization failed: Only string keys are supported for Map
@@ -244,7 +244,7 @@ describe("error on serialization", () => {
                 [
                     "foo",
                     new Map([[
-                        "three", ["foo", "bar", undefined as any]
+                        "three", ["foo", "bar", undefined as unknown as Serializable]
                     ]])
                 ]
             )
@@ -254,7 +254,7 @@ describe("error on serialization", () => {
         `)
         expect(() => {
             serialize(
-                new B("b-1", new A(undefined as any))
+                new B("b-1", new A(undefined as unknown as string))
             )
         }).toThrowErrorMatchingInlineSnapshot(`
           "Serialization failed: Unsupported primitive type \\"undefined\\"
@@ -264,8 +264,9 @@ describe("error on serialization", () => {
 
     test.skip("circular references", () => {
         expect(() => {
-            const a: any = []
-            const b : any= [a]
+            type RecursiveArray = Array<RecursiveArray>
+            const a: RecursiveArray = []
+            const b: RecursiveArray = [a]
             a.push(b)
             serialize(a)
         }).toThrowError("Circular reference in data")
@@ -283,25 +284,25 @@ describe("deserialization error", () => {
     test("malformed root data", () => {
         const formatError = 'Incorrectly formatted data. Expected object with "root" attribute.'
         expect(() => {
-            deserialize({} as any)
+            deserialize({} as unknown as SerializedData)
         }).toThrowError(formatError)
         expect(() => {
-            deserialize(undefined as any)
+            deserialize(undefined as unknown as SerializedData)
         }).toThrowError(formatError)
         expect(() => {
-            deserialize(null as any)
+            deserialize(null as unknown as SerializedData)
         }).toThrowError(formatError)
     })
 
     test("unsupported type", () => {
         expect(() => {
-            deserialize({root: [undefined]})
+            deserialize({root: [undefined]} as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
           "Deserialization failed: Cannot deserialize type \\"undefined\\"
           Attribute path: root.0"
         `)
         expect(() => {
-            deserialize({root: (arg1: string) => console.log(arg1)})
+            deserialize({root: (arg1: string) => console.log(arg1)} as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
           "Deserialization failed: Cannot deserialize type \\"function\\"
           Attribute path: root"
@@ -346,7 +347,7 @@ describe("deserialization error", () => {
         expect(() => {
             deserialize({
                 root: {}
-            })
+            } as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
           "Deserialization failed: Malformed data: No type attribute on object
           Attribute path: root"
@@ -354,7 +355,7 @@ describe("deserialization error", () => {
         expect(() => {
             deserialize({
                 root: {id: "a-1"}
-            })
+            } as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
           "Deserialization failed: Malformed data: No type attribute on object
           Attribute path: root"
@@ -362,7 +363,7 @@ describe("deserialization error", () => {
         expect(() => {
             deserialize({
                 root: {type: "A"}
-            })
+            } as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
           "Deserialization failed: Malformed data: No data or ID found in reference
           Attribute path: root"
@@ -379,13 +380,13 @@ describe("deserialization error", () => {
                     },
                     "a-1": {
                         type: "Z",
-                    } as any
+                    }
                 },
                 root: [
                     "hello", 
                     {type: "B", id: "b-1"}
                 ]
-            })
+            } as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
           "Deserialization failed: Expected instance data to be an object, not undefined
           Attribute path: root.1.nested"

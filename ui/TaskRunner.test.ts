@@ -8,18 +8,18 @@ import {Task} from "./tasks.ts"
 
 type TaskErrorLocation = null | "setup" | "run" | "processResult" | "onSuccess" | "onFailure"
 
-class TestTask extends Task {
+class TestTask extends Task<string> {
     errorAt: TaskErrorLocation
     input: string
-    doneCallback: (result: any) => void
+    doneCallback: (result: string) => void
 
-    result: string | null
+    result: string
     state: null | "running" | "succeeded" | "failed"
     error: string | null
     
     constructor(
         input: string,
-        doneCallback: (result: any) => void,
+        doneCallback: (result: string) => void,
         errorAt: TaskErrorLocation = null,
     ) {
         super()
@@ -27,7 +27,7 @@ class TestTask extends Task {
         this.doneCallback = doneCallback
         this.errorAt = errorAt
 
-        this.result = null
+        this.result = ""
         this.state = null
         this.error = null
     }
@@ -48,7 +48,7 @@ class TestTask extends Task {
         return `${this.input}, world!`
     }
     
-    processResult(result: any) {
+    processResult(result: string) {
         if(this.errorAt === "processResult") {
             throw "Error in processResult!"
         }

@@ -1,4 +1,4 @@
-import {serialize, deserialize} from "~lib"
+import {serialize, deserialize, Serializable} from "~lib"
 
 import {Task} from "~/ui/tasks.ts"
 
@@ -8,7 +8,7 @@ import TaskWorker from "./TaskRunner_worker.ts?worker"
 
 export type StartMessage = {
     type: "start",
-    task: Task,
+    task: Task<Serializable>,
 }
 
 type ProgressMessage = {
@@ -23,6 +23,7 @@ type LogMessage = {
 
 type FinishedMessage = {
     type: "finished",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     result: any,
 }
 
@@ -31,11 +32,11 @@ type ErrorMessage = {
     message: string,
 }
 
-export type TaskToWorkerMessage = StartMessage
-export type WorkerToTaskMessage = ProgressMessage | FinishedMessage | ErrorMessage | LogMessage
+export type RunnerToWorkerMessage = StartMessage
+export type WorkerToRunnerMessage = ProgressMessage | FinishedMessage | ErrorMessage | LogMessage
 
 export type TaskInfo = {
-    task: Task,
+    task: Task<Serializable>,
     progressPercent: number | null,  // Null before progress is set by task
     messages: string[],
 }
@@ -45,7 +46,7 @@ export type TaskInfo = {
  * the single instance of this in globals.ts
  */
 export class TaskRunner {
-    queue: Task[]
+    queue: Task<Serializable>[]
     currentTaskInfo: TaskInfo | null
     worker: Worker | null
 
@@ -55,7 +56,7 @@ export class TaskRunner {
         this.worker = null
     }
 
-    submitTask(task: Task) {
+    submitTask(task: Task<Serializable>) {
         this.queue.push(task)
 
         if(this.currentTaskInfo === null && this.queue.length === 1) {
@@ -104,6 +105,7 @@ export class TaskRunner {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private finishTask(success: boolean, result: any, error: string | null) {
         if(success) {
             try {
@@ -131,7 +133,7 @@ export class TaskRunner {
         }
     }
 
-    private sendMessage(message: TaskToWorkerMessage) {
+    private sendMessage(message: RunnerToWorkerMessage) {
         if(!this.worker) {
             this.worker = this.createWorker()
         }
@@ -147,14 +149,15 @@ export class TaskRunner {
     }
 
     private handleMessage(event: MessageEvent) {
-        const message = deserialize(event.data) as WorkerToTaskMessage
+        const message = deserialize(event.data) as WorkerToRunnerMessage
+        let _exhaustiveCheck: never
         switch(message.type) {
             case "progress": this.onProgressMessage(message); break
             case "log": this.onLogMessage(message); break
             case "finished": this.onFinishedMessage(message); break
             case "error": this.onErrorMessage(message); break
             default:
-                const _exhaustiveCheck: never = message
+                _exhaustiveCheck = message
                 return _exhaustiveCheck
         }
     }

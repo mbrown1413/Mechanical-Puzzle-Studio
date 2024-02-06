@@ -61,12 +61,12 @@ describe("Puzzle", () => {
         const piece0 = new Piece("piece-0", [])
         const copy0 = piece0.copy()
         expect(copy0).not.toBe(piece0)
-        expect(copy0).toMatchObject(Object.assign(piece0, {id: null}))
+        expect(copy0).toEqual(Object.assign(piece0, {id: null}))
 
         const piece1 = new Piece(null, [])
         const copy1 = piece1.copy()
         expect(copy1).not.toBe(piece1)
-        expect(copy1).toMatchObject(piece1)
+        expect(copy1).toEqual(piece1)
     })
 
     test("Piece variations", () => {
@@ -83,7 +83,7 @@ describe("Puzzle", () => {
         for(let i=0; i<24; i++) {
             expect(
                 variations[i].transformedPiece.voxels
-            ).toMatchObject(orientationTestResultingShapes[i])
+            ).toEqual(orientationTestResultingShapes[i])
         }
     })
 
@@ -151,7 +151,7 @@ describe("Puzzle", () => {
         expect(placements.length).toEqual(20)
         expect(
             makePlacementSet(placements.map((p) => p.transformedPiece.voxels))
-        ).toMatchObject(
+        ).toEqual(
             makePlacementSet([
                 ["0,0,0", "1,0,0"],
                 ["0,1,0", "1,1,0"],
@@ -191,7 +191,7 @@ describe("Puzzle", () => {
         expect(placements.length).toEqual(1)
         expect(
             placements.map((p) => p.transformedPiece.voxels)
-        ).toMatchObject([
+        ).toEqual([
             ["0,0,0", "0,1,0", "1,1,0"],
         ])
     })

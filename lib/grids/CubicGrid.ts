@@ -62,7 +62,7 @@ export class CubicGrid extends Grid {
         ]
     }
 
-    isInBounds(voxel: Voxel, bounds: CubicBounds): Boolean {
+    isInBounds(voxel: Voxel, bounds: CubicBounds): boolean {
         const {x, y, z} = this.voxelToCoordinate(voxel)
         return (
             x >= 0 && x < bounds[0] &&
@@ -73,7 +73,7 @@ export class CubicGrid extends Grid {
 
     getVoxelInfo(voxel: Voxel): CubicVoxelInfo {
         const {x, y, z} = this.voxelToCoordinate(voxel)
-        let v = (x: number, y: number, z: number) => new Vector3(x, y, z)
+        const v = (x: number, y: number, z: number) => new Vector3(x, y, z)
         return {
             voxel: voxel,
             shape: "cube",  // The only shape of voxel in this grid
@@ -90,7 +90,7 @@ export class CubicGrid extends Grid {
     }
 
     getVoxels(bounds: Bounds) {
-        let ret = []
+        const ret = []
         for(let x=0; x<bounds[0]; x++) {
             for(let y=0; y<bounds[1]; y++) {
                 for(let z=0; z<bounds[2]; z++) {
@@ -103,10 +103,10 @@ export class CubicGrid extends Grid {
 
     getAdjacent(voxel: Voxel, direction: CubicDirection): [Voxel, CubicDirection] {
         const {x, y, z} = this.voxelToCoordinate(voxel)
-        let [dx, dy, dz] = CUBIC_DIR_DELTAS[direction]
-        let [nx, ny, nz] = [x+dx, y+dy, z+dz]
-        let neighbor: Voxel|null = this.coordinateToVoxel({x: nx, y: ny, z: nz})
-        let oppositeDir = CUBIC_OPPOSITES[direction]
+        const [dx, dy, dz] = CUBIC_DIR_DELTAS[direction]
+        const [nx, ny, nz] = [x+dx, y+dy, z+dz]
+        const neighbor: Voxel|null = this.coordinateToVoxel({x: nx, y: ny, z: nz})
+        const oppositeDir = CUBIC_OPPOSITES[direction]
         return [neighbor, oppositeDir]
     }
 
@@ -143,7 +143,7 @@ export class CubicGrid extends Grid {
         // axis 0-3 times. This covers all possible orientations.
         const orientationMatrices = []
         for(const faceXMatrix of Object.values(faceXMatrices)) {
-            for(let nXRotations of [0, 1, 2, 3]) {
+            for(const nXRotations of [0, 1, 2, 3]) {
                 const matrix = faceXMatrix.clone()
                 for(let i=0; i<nXRotations; i++) {
                     matrix.multiply(rotateX)
@@ -165,9 +165,9 @@ export class CubicGrid extends Grid {
                 const newCoordinates = voxels.map(
                     (v) => coordinateMultiply(this.voxelToCoordinate(v), matrix)
                 )
-                let minX = Math.min(...newCoordinates.map(c => c.x))
-                let minY = Math.min(...newCoordinates.map(c => c.y))
-                let minZ = Math.min(...newCoordinates.map(c => c.z))
+                const minX = Math.min(...newCoordinates.map(c => c.x))
+                const minY = Math.min(...newCoordinates.map(c => c.y))
+                const minZ = Math.min(...newCoordinates.map(c => c.z))
                 return newCoordinates.map(c => {
                     return this.coordinateToVoxel({
                         x: c.x-minX,
@@ -200,7 +200,7 @@ export class CubicGrid extends Grid {
     }
 
     getViewpoints() {
-        let xy: Viewpoint = {
+        const xy: Viewpoint = {
             id: "xy",
             name: "X-Y Plane",
             forwardVector: new Vector3(0, 0, -1),
@@ -208,7 +208,7 @@ export class CubicGrid extends Grid {
             getNLayers(bounds) { return bounds[2] },
             isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).z == layerIndex,
         }
-        let xz: Viewpoint = {
+        const xz: Viewpoint = {
             id: "xz",
             name: "X-Z Plane",
             forwardVector: new Vector3(0, -1, 0),
@@ -216,7 +216,7 @@ export class CubicGrid extends Grid {
             getNLayers(bounds) { return bounds[1] },
             isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).y == layerIndex,
         }
-        let yz: Viewpoint = {
+        const yz: Viewpoint = {
             id: "yz",
             name: "Y-Z Plane",
             forwardVector: new Vector3(-1, 0, 0),
