@@ -1,6 +1,6 @@
 import {test, expect, describe} from "vitest"
 
-import {deserialize, serialize, Serializable, SerializedData, SerializableClass, registerClass} from "./serialize"
+import {deserialize, deserializeSafeMode, serialize, Serializable, SerializedData, SerializableClass, registerClass} from "./serialize.ts"
 
 // Classes to test out serializable classes
 class A extends SerializableClass {
@@ -412,4 +412,54 @@ describe("unexpected type error", () => {
         }).toThrowError('Expected "aoeu" after deserializing, not "null"')
     })
 
+})
+
+describe("deserialize safe mode", () => {
+    test("error at root", () => {
+        expect(
+            deserializeSafeMode(
+                {} as unknown as SerializedData
+            )
+        ).toEqual(null)
+        expect(
+            deserializeSafeMode(
+                {
+                    refs: {},
+                    root: {}
+                } as unknown as SerializedData
+            )
+        ).toEqual(null)
+        expect(
+            deserializeSafeMode(
+                {
+                    refs: {},
+                    root: {type: "UnregisteredClass", data: {}}
+                } as unknown as SerializedData
+            )
+        ).toEqual(null)
+    })
+    test("error inside object", () => {
+        expect(
+            deserializeSafeMode(
+                {
+                    refs: {},
+                    root: ["foo", undefined]
+                } as unknown as SerializedData
+            )
+        ).toEqual(["foo", null])
+        expect(
+            deserializeSafeMode(
+                {
+                    refs: {},
+                    root: ["bar", {
+                        type: "Object",
+                        data: {
+                            foo: "bar",
+                            baz: undefined
+                        }
+                    }]
+                } as unknown as SerializedData
+            )
+        ).toEqual(["bar", {foo: "bar", baz: null}])
+    })
 })

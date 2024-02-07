@@ -195,7 +195,7 @@ export function serialize(value: Serializable): SerializedData {
     const path: string[] = []
     let root
     try {
-        root = _serialize(value, refs, path, "root")
+        root = _serializeNode(value, refs, path, "root")
     } catch(e) {
         if(e instanceof SerializerError) {
             e.setSerialize()
@@ -210,7 +210,7 @@ export function serialize(value: Serializable): SerializedData {
     return ret
 }
 
-function _serialize(
+function _serializeNode(
     value: Serializable,
     refs: RefData,
     path: string[],
@@ -221,7 +221,7 @@ function _serialize(
         const data: {[k: string]: SerializedNode} = {}
         for(const [k, v] of Object.entries(value)) {
             if(typeof v !== "function") {
-                data[k] = _serialize(v, refs, path, k)
+                data[k] = _serializeNode(v, refs, path, k)
             }
         }
         return data
@@ -246,7 +246,7 @@ function _serialize(
             if(value instanceof Array) {
                 return value.map(
                     (item: Serializable, i: number) =>
-                    _serialize(item, refs, path, String(i))
+                    _serializeNode(item, refs, path, String(i))
                 )
             }
 
@@ -258,7 +258,7 @@ function _serialize(
                         path.push(k)
                         throw new SerializerError("Only string keys are supported for Map")
                     }
-                    entries[k] = _serialize(v, refs, path, k)
+                    entries[k] = _serializeNode(v, refs, path, k)
                 }
                 return {
                     type: "Map",
@@ -325,47 +325,73 @@ function _serialize(
  */
 export function deserialize<T extends Serializable>(
     data: SerializedData,
-    expectedType?: string
+    expectedType?: string,
+    _safeMode=false,
 ): T {
-    if(typeof data !== "object" || data === null || data.root === undefined) {
-        throw new SerializerError(
-            'Incorrectly formatted data. Expected object with "root" attribute.'
-        )
-    }
-    const refs = data.refs || {}
-    const path: string[] = []
-    let value
     try {
-        value = _deserialize(data.root, refs, new Map(), path, "root")
-    } catch(e) {
-        if(e instanceof SerializerError) {
-            e.setDeserialize()
-            e.setErrorPath(path)
-        }
-        throw e
-    }
 
-    if(expectedType !== undefined) {
-        const actualType =
-            value === null ? "null" :
-            typeof value === "object" ? value.constructor.name :
-            typeof value
-        if(actualType !== expectedType) {
+        if(typeof data !== "object" || data === null || data.root === undefined) {
             throw new SerializerError(
-                `Expected "${expectedType}" after deserializing, not "${actualType}"`
+                'Incorrectly formatted data. Expected object with "root" attribute.'
             )
         }
-    }
+        const refs = data.refs || {}
+        const path: string[] = []
+        let value
+        try {
+            value = _deserializeNode(data.root, refs, new Map(), path, "root", _safeMode)
+        } catch(e) {
+            if(e instanceof SerializerError) {
+                e.setDeserialize()
+                e.setErrorPath(path)
+            }
+            throw e
+        }
 
-    return value as T
+        if(expectedType !== undefined) {
+            const actualType =
+                value === null ? "null" :
+                typeof value === "object" ? value.constructor.name :
+                typeof value
+            if(actualType !== expectedType) {
+                throw new SerializerError(
+                    `Expected "${expectedType}" after deserializing, not "${actualType}"`
+                )
+            }
+        }
+
+        return value as T
+        
+    } catch(e) {
+        if(_safeMode) {
+            return null as T
+        } else {
+            throw e
+        }
+    }
 }
 
-function _deserialize(
+/**
+ * Like `deserialize()`, but any part of data that fails to deserialize is
+ * replaced with `null`.
+ * 
+ * You probably don't want to call this unless you've already tried
+ * `deserialize()` and it has failed. You can use safe mode to pull out parts
+ * of the data that aren't causing the error. Just remember, any attribute you
+ * access could potentially be `null`, so you'll have to carefully check for
+ * this. The root return value itself could also be `null`!
+ */
+export function deserializeSafeMode(data: SerializedData): Serializable {
+    return deserialize(data, undefined, true)
+}
+
+function _deserializeNode(
     data: SerializedNode,
     refs: RefData,
     cache: Map<string, Serializable>,
     path: string[],
-    attribute: string
+    attribute: string,
+    safeMode: boolean
 ): Serializable {
     let errorFlag = false
     try {
@@ -383,7 +409,7 @@ function _deserialize(
         if(Array.isArray(data)) {
             return data.map(
                 (x: SerializedNode, i: number) =>
-                _deserialize(x, refs, cache, path, String(i))
+                _deserializeNode(x, refs, cache, path, String(i), safeMode)
             )
         }
 
@@ -419,8 +445,8 @@ function _deserialize(
             // Map
             if(data.type === "Map") {
                 const map: Map<string, Serializable> = new Map()
-                for(const [k, v] of Object.entries(objData)) {
-                    map.set(k, _deserialize(v, refs, cache, path, k))
+                for(const [key, value] of Object.entries(objData)) {
+                    map.set(key, _deserializeNode(value, refs, cache, path, key, safeMode))
                 }
                 obj = map
                 
@@ -428,7 +454,7 @@ function _deserialize(
             } else if(data.type === "Object") {
                 obj = {}
                 for(const [key, value] of Object.entries(objData)) {
-                    obj[key] = _deserialize(value, refs, cache, path, key)
+                    obj[key] = _deserializeNode(value, refs, cache, path, key, safeMode)
                 }
 
             // Registered class
@@ -442,7 +468,7 @@ function _deserialize(
                 }
                 obj = {}
                 for(const [key, value] of Object.entries(objData)) {
-                    obj[key] = _deserialize(value, refs, cache, path, key)
+                    obj[key] = _deserializeNode(value, refs, cache, path, key, safeMode)
                 }
                 Object.setPrototypeOf(obj, classInfo.cls.prototype)
             }
@@ -455,7 +481,11 @@ function _deserialize(
         throw new SerializerError(`Cannot deserialize type "${typeof data}"`)
     } catch(e) {
         errorFlag = true
-        throw e
+        if(safeMode) {
+            return null
+        } else {
+            throw e
+        }
     } finally {
         if(!errorFlag) {
             path.pop()

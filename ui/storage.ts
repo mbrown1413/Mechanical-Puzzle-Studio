@@ -33,13 +33,15 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         const ret = []
         for(let i=0; i<localStorage.length; i++) {
             const key = localStorage.key(i)
-            if(key?.startsWith("puzzle:")) {
-                const item = localStorage.getItem(key)
-                if(item !== null) {
-                    //TODO: Catch errors and return ValueOrError<PuzzleFile>
-                    const puzzleFile = PuzzleFile.deserialize(item)
-                    ret.push(puzzleFile.getMetadata())
-                }
+            if(!key?.startsWith("puzzle:")) {
+                continue
+            }
+            const id = key.slice("puzzle:".length)
+            const item = localStorage.getItem(key)
+            if(item !== null) {
+                ret.push(
+                    PuzzleFile.getMetadataSafe(item, id)
+                )
             }
         }
         return ret

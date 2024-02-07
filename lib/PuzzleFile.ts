@@ -1,17 +1,25 @@
-import { v4 as uuid } from "uuid";
+import { v4 as uuid } from "uuid"
 
 import {Puzzle} from "~/lib/Puzzle.ts"
-import {SerializableClass, deserialize, registerClass, serialize} from "~/lib/serialize.ts"
+import {SerializableClass, deserialize, deserializeSafeMode, registerClass, serialize} from "~/lib/serialize.ts"
+
+function stripIfStartsWith(input: string, toStrip: string) {
+    return input.startsWith(toStrip) ?
+        input.slice(toStrip.length).trimStart()
+        : input
+}
 
 export type PuzzleMetadata = {
+    error: string | null,
+
     id: string,
-    name: string,
-    author: string,
-    description: string,
+    name: string | null,
+    author: string | null,
+    description: string | null,
 
     // Dates in UTC timestamp strings
-    created: string,
-    modified: string,
+    created: string | null,
+    modified: string | null,
 }
 
 export class PuzzleFile extends SerializableClass {
@@ -44,12 +52,52 @@ export class PuzzleFile extends SerializableClass {
         return JSON.stringify(serialize(this))
     }
 
-    static deserialize(data: string) {
+    static deserialize(data: string): PuzzleFile {
         return deserialize<PuzzleFile>(JSON.parse(data), "PuzzleFile")
+    }
+
+    /**
+     * Attempts to get metadata from a possibly corrupted serialized
+     * PuzzleFile. Uses the `id` passed in if it can't be obtained from the
+    * serialized data.
+     */
+    static getMetadataSafe(data: string, id: string): PuzzleMetadata {
+        try {
+            return this.deserialize(data).getMetadata()
+        } catch(e) {
+            console.error("Puzzle failed to deserialize:\n", e)
+            let objData
+            try {
+                objData = JSON.parse(data)
+            } catch {
+                objData = {}
+            }
+            const puzzleFile = deserializeSafeMode(objData)
+            let metadata
+            if(puzzleFile instanceof PuzzleFile) {
+                metadata = puzzleFile.getMetadata()
+                metadata.error = stripIfStartsWith(String(e), "Error:")
+                if(typeof metadata.id !== "string") {
+                    metadata.id = id
+                }
+                return metadata
+            } else {
+                return {
+                    error: stripIfStartsWith(String(e), "Error:"),
+                    id,
+                    name: null,
+                    author: null,
+                    description: null,
+                    created: null,
+                    modified: null,
+                }
+            }
+        }
     }
     
     getMetadata(): PuzzleMetadata {
         return {
+            error: null,
             id: this.id,
             name: this.name,
             author: this.author,

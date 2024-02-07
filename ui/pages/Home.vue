@@ -124,8 +124,26 @@ const tableHeaders: {
                 </template>
                 <template v-slot:item.name="{item}">
                     <RouterLink :to="{name: 'puzzle', params: {storageId: storage.id, puzzleId: item.id}}">
-                        {{ item.name }}
+                        {{ item.name === null ? "(unknown name)" : item.name }}
                     </RouterLink>
+
+                    <VTooltip v-if="item.error !== null">
+                        <template v-slot:activator="{props}">
+                            <VChip
+                                v-if="item.error !== null"
+                                v-bind="props"
+                                color="red"
+                                density="compact"
+                                class="ml-2"
+                            >
+                                Error
+                            </VChip>
+                        </template>
+                        <template v-slot>
+                            <pre>{{ item.error }}</pre>
+                        </template>
+                    </VTooltip>
+
                 </template>
                 <template v-slot:item.actions="{item}">
                     <ConfirmButton
