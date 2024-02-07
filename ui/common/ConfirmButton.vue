@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {ref, Ref} from "vue"
-import {VBtn} from "vuetify/components";
+import {VBtn} from "vuetify/components"
 
 import Modal from "~/ui/common/Modal.vue"
 

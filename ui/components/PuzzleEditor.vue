@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {computed, ref, Ref, reactive, onMounted, watchEffect} from "vue"
+import {computed, ref, Ref, onMounted} from "vue"
 import Split from "split-grid"
 
 import {PuzzleFile} from "~lib"
 
-import {title} from "~/ui/globals.ts"
 import {Action, ProblemSolveAction} from "~/ui/actions.ts"
-import {getStorageInstances} from "~/ui/storage.ts"
 import TabLayout from "~/ui/common/TabLayout.vue"
 import PieceEditor from "~/ui/components/PieceEditor.vue"
 import SolutionDisplay from "~/ui/components/SolutionDisplay.vue"
@@ -15,21 +13,14 @@ import PieceList from "~/ui/components/PieceList.vue"
 import ProblemList from "~/ui/components/ProblemList.vue"
 import ProblemSolverForm from "~/ui/components/ProblemSolverForm.vue"
 import ListSelect from "~/ui/common/ListSelect.vue"
-import TitleBar from "~/ui/components/TitleBar.vue"
 
 const props = defineProps<{
-    storageId: string,
-    puzzleId: string,
+    puzzleFile: PuzzleFile,
 }>()
 
-const puzzleStorage = getStorageInstances()[props.storageId]
-const puzzleFile = reactive(
-    puzzleStorage.get(props.puzzleId as string) as any
-) as PuzzleFile
-
-watchEffect(() => {
-    title.value = puzzleFile.name
-})
+const emit = defineEmits<{
+    action: [action: Action]
+}>()
 
 const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
 const selectedProblemIds: Ref<string[]> = ref(["problem-0"])
@@ -44,14 +35,11 @@ const sideTabs = [
     {id: "solutions", text: "Solutions"},
 ]
 
-const errorShow = ref(false)
-const errorMessage = ref("")
-
 const solutionItems = computed(() => {
     if(selectedProblemIds.value.length !== 1) {
         return []
     }
-    const problem = puzzleFile.puzzle.problems.get(selectedProblemIds.value[0])
+    const problem = props.puzzleFile.puzzle.problems.get(selectedProblemIds.value[0])
     if(!problem || problem.solutions === null) {
         return []
     }
@@ -73,22 +61,6 @@ const selectedSolutions = computed(() => {
     )
 })
 
-function performAction(action: Action) {
-    try {
-        action.perform(puzzleFile.puzzle)
-    } catch(e) {
-        const msg = `Error performing action: ${action.toString()}`
-        errorShow.value = true
-        errorMessage.value = msg + "\n" + stripIfStartsWith(String(e), "Error:")
-        console.error(msg, "\n", e)
-    }
-    puzzleStorage.save(puzzleFile)
-    
-    if(action instanceof ProblemSolveAction) {
-        currentTabId.value = "solutions"
-    }
-}
-
 const columnSlider: Ref<HTMLDivElement | null> = ref(null)
 const rowSlider: Ref<HTMLDivElement | null> = ref(null)
 onMounted(() => {
@@ -107,15 +79,15 @@ onMounted(() => {
     }
 })
 
-function stripIfStartsWith(input: string, toStrip: string) {
-    return input.startsWith(toStrip) ?
-        input.slice(toStrip.length).trimStart()
-        : input
+function performAction(action: Action) {
+    emit("action", action)
+    if(action instanceof ProblemSolveAction) {
+        currentTabId.value = "solutions"
+    }
 }
 </script>
 
 <template>
-    <TitleBar :puzzleFile="puzzleFile" />
     <VMain class="puzzleEditor-container">
 
         <div class="slider col-slide" ref="columnSlider"></div>
@@ -198,15 +170,6 @@ function stripIfStartsWith(input: string, toStrip: string) {
                 :solution="selectedSolutions[0] || null"
             />
         </div>
-
-        <VSnackbar
-            v-model="errorShow"
-            timeout="5000"
-            color="red"
-            style="white-space: pre;"
-        >
-            {{ errorMessage }}
-        </VSnackbar>
     </VMain>
 </template>
 

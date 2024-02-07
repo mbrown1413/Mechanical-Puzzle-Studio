@@ -6,7 +6,7 @@ import {mdi} from "vuetify/iconsets/mdi"
 
 import App from "~/ui/App.vue"
 import Home from "~/ui/pages/Home.vue"
-import PuzzleEditor from "~/ui/pages/PuzzleEditor.vue"
+import EditPuzzle from "~/ui/pages/EditPuzzle.vue"
 
 import "~/ui/style.scss"
 import "@mdi/font/css/materialdesignicons.css"
@@ -22,7 +22,7 @@ const routes: RouteRecordRaw[] = [
         name: "puzzle",
         path: "/puzzle/:storageId/:puzzleId",
         props: true,
-        component: PuzzleEditor
+        component: EditPuzzle
     },
 ]
 
