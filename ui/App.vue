@@ -1,5 +1,7 @@
 <template>
-    <VLayout>
-        <RouterView />
-    </VLayout>
+    <VApp>
+        <VLayout>
+            <RouterView />
+        </VLayout>
+    </VApp>
 </template>
