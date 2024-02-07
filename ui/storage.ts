@@ -1,6 +1,8 @@
 
 import {PuzzleFile, PuzzleMetadata} from "~lib"
 
+export class PuzzleNotFoundError extends Error { }
+
 export function getStorageInstances(): {[id: string]: PuzzleStorage} {
     const storages = [
         new LocalPuzzleStorage()
@@ -14,7 +16,7 @@ export abstract class PuzzleStorage {
     abstract get id(): string
     abstract get name(): string
     abstract list(): PuzzleMetadata[]
-    abstract get(id: string): PuzzleFile
+    abstract get(id: string, ignoreErrors: boolean): PuzzleFile
     abstract save(puzzleFile: PuzzleFile): void
     abstract delete(id: string): void
 }
@@ -47,12 +49,16 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         return ret
     }
     
-    get(id: string): PuzzleFile {
+    get(id: string, ignoreErrors: boolean): PuzzleFile {
         const item = localStorage.getItem(this._getKey(id))
         if(item === null) {
-            throw new Error(`Puzzle id not found in local storage: "${id}"`)
+            throw new PuzzleNotFoundError(`Puzzle id not found in local storage: "${id}"`)
         }
-        return PuzzleFile.deserialize(item)
+        if(ignoreErrors) {
+            return PuzzleFile.deserializeIgnoreErrors(item)
+        } else {
+            return PuzzleFile.deserialize(item)
+        }
     }
     
     save(puzzleFile: PuzzleFile) {

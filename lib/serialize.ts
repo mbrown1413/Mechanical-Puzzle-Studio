@@ -326,7 +326,7 @@ function _serializeNode(
 export function deserialize<T extends Serializable>(
     data: SerializedData,
     expectedType?: string,
-    _safeMode=false,
+    _ignoreErrors=false,
 ): T {
     try {
 
@@ -339,7 +339,7 @@ export function deserialize<T extends Serializable>(
         const path: string[] = []
         let value
         try {
-            value = _deserializeNode(data.root, refs, new Map(), path, "root", _safeMode)
+            value = _deserializeNode(data.root, refs, new Map(), path, "root", _ignoreErrors)
         } catch(e) {
             if(e instanceof SerializerError) {
                 e.setDeserialize()
@@ -363,7 +363,7 @@ export function deserialize<T extends Serializable>(
         return value as T
         
     } catch(e) {
-        if(_safeMode) {
+        if(_ignoreErrors) {
             return null as T
         } else {
             throw e
@@ -381,7 +381,7 @@ export function deserialize<T extends Serializable>(
  * access could potentially be `null`, so you'll have to carefully check for
  * this. The root return value itself could also be `null`!
  */
-export function deserializeSafeMode(data: SerializedData): Serializable {
+export function deserializeIgnoreErrors(data: SerializedData): Serializable {
     return deserialize(data, undefined, true)
 }
 
@@ -391,7 +391,7 @@ function _deserializeNode(
     cache: Map<string, Serializable>,
     path: string[],
     attribute: string,
-    safeMode: boolean
+    ignoreErrors: boolean
 ): Serializable {
     let errorFlag = false
     try {
@@ -409,7 +409,7 @@ function _deserializeNode(
         if(Array.isArray(data)) {
             return data.map(
                 (x: SerializedNode, i: number) =>
-                _deserializeNode(x, refs, cache, path, String(i), safeMode)
+                _deserializeNode(x, refs, cache, path, String(i), ignoreErrors)
             )
         }
 
@@ -446,7 +446,7 @@ function _deserializeNode(
             if(data.type === "Map") {
                 const map: Map<string, Serializable> = new Map()
                 for(const [key, value] of Object.entries(objData)) {
-                    map.set(key, _deserializeNode(value, refs, cache, path, key, safeMode))
+                    map.set(key, _deserializeNode(value, refs, cache, path, key, ignoreErrors))
                 }
                 obj = map
                 
@@ -454,7 +454,7 @@ function _deserializeNode(
             } else if(data.type === "Object") {
                 obj = {}
                 for(const [key, value] of Object.entries(objData)) {
-                    obj[key] = _deserializeNode(value, refs, cache, path, key, safeMode)
+                    obj[key] = _deserializeNode(value, refs, cache, path, key, ignoreErrors)
                 }
 
             // Registered class
@@ -468,7 +468,7 @@ function _deserializeNode(
                 }
                 obj = {}
                 for(const [key, value] of Object.entries(objData)) {
-                    obj[key] = _deserializeNode(value, refs, cache, path, key, safeMode)
+                    obj[key] = _deserializeNode(value, refs, cache, path, key, ignoreErrors)
                 }
                 Object.setPrototypeOf(obj, classInfo.cls.prototype)
             }
@@ -481,7 +481,7 @@ function _deserializeNode(
         throw new SerializerError(`Cannot deserialize type "${typeof data}"`)
     } catch(e) {
         errorFlag = true
-        if(safeMode) {
+        if(ignoreErrors) {
             return null
         } else {
             throw e

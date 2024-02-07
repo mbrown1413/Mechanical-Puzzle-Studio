@@ -4,18 +4,29 @@ import {ref} from "vue"
 withDefaults(
     defineProps<{
         title: string,
+        persistent?: boolean,
+
         okText?: string,
         okColor?: string,
+        okShow?: boolean,
+
+        cancelText?: string,
         cancelShow?: boolean,
     }>(), {
+        persistent: true,
+
         okText: "Ok",
         okColor: "blue-darken-1",
+        okShow: true,
+
+        cancelText: "Cancel",
         cancelShow: true,
     }
 )
 
 defineEmits<{
     ok: []
+    cancel: []
 }>()
 
 const modalOpen = ref(false)
@@ -30,6 +41,7 @@ defineExpose({
     <VDialog
             v-model="modalOpen"
             max-width="500px"
+            :persistent="persistent"
     >
         <VCard>
             <VCardTitle>
@@ -46,11 +58,12 @@ defineExpose({
                         v-if="cancelShow"
                         color="blue-darken-1"
                         variant="outlined"
-                        @click="modalOpen = false"
+                        @click="modalOpen = false; $emit('cancel')"
                 >
-                    Cancel
+                    {{ cancelText }}
                 </VBtn>
                 <VBtn
+                        v-if="okShow"
                         :color="okColor"
                         variant="elevated"
                         @click="$emit('ok')"

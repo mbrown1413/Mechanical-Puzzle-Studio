@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid"
 
 import {Puzzle} from "~/lib/Puzzle.ts"
-import {SerializableClass, deserialize, deserializeSafeMode, registerClass, serialize} from "~/lib/serialize.ts"
+import {SerializableClass, deserialize, deserializeIgnoreErrors, registerClass, serialize} from "~/lib/serialize.ts"
 
 function stripIfStartsWith(input: string, toStrip: string) {
     return input.startsWith(toStrip) ?
@@ -56,6 +56,10 @@ export class PuzzleFile extends SerializableClass {
         return deserialize<PuzzleFile>(JSON.parse(data), "PuzzleFile")
     }
 
+    static deserializeIgnoreErrors(data: string): PuzzleFile {
+        return deserializeIgnoreErrors(JSON.parse(data)) as PuzzleFile
+    }
+
     /**
      * Attempts to get metadata from a possibly corrupted serialized
      * PuzzleFile. Uses the `id` passed in if it can't be obtained from the
@@ -72,7 +76,7 @@ export class PuzzleFile extends SerializableClass {
             } catch {
                 objData = {}
             }
-            const puzzleFile = deserializeSafeMode(objData)
+            const puzzleFile = deserializeIgnoreErrors(objData)
             let metadata
             if(puzzleFile instanceof PuzzleFile) {
                 metadata = puzzleFile.getMetadata()
