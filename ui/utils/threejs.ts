@@ -9,10 +9,10 @@ type Trackable = THREE.Object3D | THREE.Material | THREE.BufferGeometry
 
 /**
  * Track resources and dispose of unused ones.
- * 
+ *
  * Together with Object3DCache, this allows you to dramatically reduce the WebGL
  * objects that are allocated and disposed. For example:
- * 
+ *
  *     const scene = new THREE.scene()
  *     const resourceTracker = new ResourceTracker()
  *     const objectCache = new Object3DCache()
@@ -22,7 +22,7 @@ type Trackable = THREE.Object3D | THREE.Material | THREE.BufferGeometry
  *
  *         // Update scene here, optionally using `scene.clear()`.
  *         // Use objectCache to get previously used values.
- *         
+ *
  *         resourceTracker.markUsed(scene)
  *         resourceTracker.releaseUnused()
  *     }
@@ -30,12 +30,12 @@ type Trackable = THREE.Object3D | THREE.Material | THREE.BufferGeometry
 export class ResourceTracker {
     used: Set<Disposible>
     unused: Set<Disposible>
-    
+
     constructor() {
         this.used = new Set()
         this.unused = new Set()
     }
-    
+
     private *iterResources(objOrObjs: Trackable | Trackable[]): Iterable<Disposible> {
         const stack: Array<Trackable | Trackable[]> = [objOrObjs]
         while(stack.length) {
@@ -44,17 +44,17 @@ export class ResourceTracker {
                 stack.push(...obj)
                 continue
             }
-            
+
             if(obj instanceof THREE.Light) {
                 yield obj
             } else if(obj instanceof THREE.AxesHelper) {
                 yield obj
             } else if(obj instanceof THREE.BufferGeometry) {
                 yield obj
-            
+
             } else if(obj instanceof THREE.Object3D) {
                 stack.push(...obj.children)
-                
+
                 // Material and Geometry properties of Mesh and Line classes.
                 const objWithResources = obj as typeof obj & {
                     material?: THREE.Material,
@@ -138,10 +138,10 @@ export class Object3DCache {
         misses: number,
         expired: number,
     }
-    
+
     /* Number of scene changes in which an object is unused before it is disposed. */
     sceneTimeout: number
-    
+
     constructor(sceneCountTimeout: number=4) {
         this.cache = new Map()
         this.sceneTimeout = sceneCountTimeout
@@ -166,7 +166,7 @@ export class Object3DCache {
         entry.scenesSinceUsed = 0
         return entry.obj
     }
-    
+
     getOrSet(key: string, produceValue: () => THREE.Object3D) {
         let value = this.get(key)
         if(value === null) {
@@ -175,11 +175,11 @@ export class Object3DCache {
         }
         return value
     }
-    
+
     clear() {
         this.cache.clear()
     }
-    
+
     newScene() {
         for(const [key, entry] of this.cache.entries()) {
             entry.scenesSinceUsed++;
@@ -189,7 +189,7 @@ export class Object3DCache {
             }
         }
     }
-    
+
     resetStats() {
         this.stats = {
             hits: 0,

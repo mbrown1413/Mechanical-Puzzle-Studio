@@ -1,49 +1,3 @@
-import { Vector3 } from 'three'
-
-/** 
- * Represents one cell in a `Grid`.
- * 
- * This should be treated as an opaque type by anything other than a `Grid`
- * implementation.
- */
-export type Voxel = string
-
-export type Bounds = Array<number>
-export type Direction = string
-
-export type Dimension = {
-    name: string,
-    defaultBound?: number,
-}
-
-export type VoxelShape = string
-
-export type VoxelInfo = {
-    voxel: Voxel,
-
-    /* Corresponds to the voxel's shape when made physically. A voxel may "fit
-    * into" another voxel only if the shapes match. */
-    shape: VoxelShape,
-
-    sides: Array<Direction>,
-    sidePolygons: {[key: Direction]: Vector3[]}
-}
-
-export type Viewpoint = {
-    id: string,
-    name: string,
-    forwardVector: Vector3,
-    xVector: Vector3,
-    getNLayers(bounds: Bounds): number,
-    isInLayer(voxel: Voxel, layerIndex: number): boolean,
-}
-
-export type OrientationFunc = (oldVoxels: Voxel[]) => Voxel[] | null
-export type Orientation = {
-    orientationFunc: OrientationFunc
-}
-
-export type Translation = Array<number>
 
 /* Stores a boolean, and an optional reason for its value. If `false`, the
  * reason is required. Used for success/failure return values. */
@@ -55,10 +9,23 @@ export type BoolWithReason = {
     reason: string
 }
 
+/**
+ * A set of callback functions for use with long-running tasks which may be run
+ * asynchronously.
+ *
+ * This is mostly used for the task runner, which lives in "/ui/", but the type
+ * is here since any function which needs to be run in a task and update
+ * progress uses it.
+ */
 export type TaskCallbacks = {
     progressCallback: (percent: number) => void,
     logCallback: (message: string) => void,
 }
+
+/**
+ * Preset callbacks object with callbacks that do nothing. A convenience in
+ * case you want no callbacks, or want to set just a few callbacks.
+ */
 export const voidTaskCallbacks: TaskCallbacks = {
     logCallback: (_message: string) => {},
     progressCallback: (_progressPercent: number) => {},

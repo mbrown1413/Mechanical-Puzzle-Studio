@@ -5,7 +5,7 @@
  * classes. Trying to serialize something not serializable should be caught
  * statically by typescript. To see what types may be serialized, see the
  * `Serializable` type. Classes must be registered upfront.
- * 
+ *
  * To serialize:
  *     1. Pass any serializable type into `serialize`
  *     2. If you want the serialized form to be a string instead of an object,
@@ -13,84 +13,84 @@
  *
  * To deserialize:
  *     * Pass the return value of `serialize()` to `deserialize()`
- * 
+ *
  * To make a class serializable:
  *     * Extend it from `SerializableClass`
  *     * Register it with `registerClass()`
- * 
+ *
  * Example usage of registered classes:
- * 
+ *
  *     import { SerializableClass, registerClass, serialize, deserialize } from "~/lib/serialize.ts"
- *     
+ *
  *      class MyClass extends SerializableClass {
- *      
+ *
  *          // Make attributes as normal, including other subclasses of
  *          // SerializableClass. Non-serializable types will throw a type error
  *          label: string
- *      
+ *
  *          constructor(id: string, label: string) {
  *              super(id)  // Superclass takes a required `id` argument
  *              this.label = label
  *          }
  *      }
- *      
+ *
  *      // Register with the serializer
  *      // Note that before deserializing, you need to make sure the same code
  *      // is run to define and register the class, or you'll get an error that
  *      // the class you're trying to deserialize isn't registered.
  *      registerClass(MyClass)
- *      
+ *
  *      const instance = new MyClass("myclass-0", "Hello, world!")
  *      const serialized = serialize(instance)
  *      const deserialized = deserialize<MyClass>(serialized, "MyClass")
  *
  *      console.log(deserialized.label)  // "Hello, world!"
- *     
+ *
  *
  * ## Caveat: Constructors and adding new attributes
  *
  * Deserializing a class does not call the constructor. Instead, it creates an
  * object with the same attributes and sets the prototype. This has two
  * consequences:
- * 
+ *
  *     * The constructor is not called
- * 
+ *
  *     * Added attributes will be undefined: Suppose you serialize a class,
  *     then at a later date add attributes to that class. If you then try to
  *     deserialize, the class will have those attributes set to `undefined`.
- * 
+ *
  *
  * ## Caveat: Vue reactivity typing
  *
  * Using vue's `ref` or `reactive` doesn't play nicely with recursive
  * types. You might get the error:
- * 
+ *
  *     Type instantiation is excessively deep and possibly infinite.
  *
  * When passing a SerializableClass instance into `ref` or `reactive`, you
  * should instead do some casting to make the types come out correctly:
- *     
+ *
  *     class MyClass extends SerializableClass { }
  *
  *     // `reactive` unrolls the types to be infinitely deep
  *     const c0 = reactive(new MyClass("myclass-0"))
- *     
+ *
  *     // Casting like this fixes the issue sometimes
  *     const c1 = reactive(new MyClass("myclass-1")) as MyClass
- *     
+ *
  *     // Casting to `never` then back should always work
  *     const c2 = reactive(new MyClass("myclass-1") as never) as MyClass
- *      
- *      
+ *
+ *
  * ## Requirements
- * 
+ *
  * This framework has the following requirements, which it hopefully meets:
  *     * Human-readable serialized format
  *     * Make it super easy to write new classes (no manually writing serialize
  *       and deserialize methods for each class).
  *     * Only store a single copy of an instance when it's referenced multiple
  *       times.
- *       
+ *
  * Things we're not particularly concerned about:
  *     * Speed
  *     * Circular references (for now at least)
@@ -111,12 +111,12 @@ class SerializerError extends Error {
         super(message)
         this.path = null
     }
-    
+
     setErrorPath(path: string[]) {
         this.path = path
         this.message += `\nAttribute path: ${path.join(".")}`
     }
-    
+
     setSerialize() {
         this.message = `Serialization failed: ${this.message}`
     }
@@ -156,7 +156,7 @@ export abstract class SerializableClass {
 
     /** Unique identifier used to deduplicate instances after serializing. If
      * `null`, instances will be serialized inline and not deduplicated.
-     * 
+     *
      * If you want to require an ID on a particular class, re-declare the
      * property like this:
      *     declare id: string
@@ -292,7 +292,7 @@ function _serializeNode(
                     return {type, id: value.id}
                 }
             }
-        
+
             if(type === "Object") {
                 throw new SerializerError("Non-class objects cannot be serialized")
             }
@@ -318,7 +318,7 @@ function _serializeNode(
 
 /* Produce the original serialized object passed to `serialize` given its
  * output.
- * 
+ *
  * If expectedType is given, it's checked against the return value and an
  * error is thrown if they don't match. Pass in a class name, or for primitive
  * types the expected output of a typeof call.
@@ -361,7 +361,7 @@ export function deserialize<T extends Serializable>(
         }
 
         return value as T
-        
+
     } catch(e) {
         if(_ignoreErrors) {
             return null as T
@@ -374,7 +374,7 @@ export function deserialize<T extends Serializable>(
 /**
  * Like `deserialize()`, but any part of data that fails to deserialize is
  * replaced with `null`.
- * 
+ *
  * You probably don't want to call this unless you've already tried
  * `deserialize()` and it has failed. You can use safe mode to pull out parts
  * of the data that aren't causing the error. Just remember, any attribute you
@@ -417,7 +417,7 @@ function _deserializeNode(
             if(data.type === undefined) {
                 throw new SerializerError(`Malformed data: No type attribute on object`)
             }
-        
+
             // Read data either directly, or from refs
             if("id" in data) {
                 // Check if we already deserialized the object with this ID
@@ -441,7 +441,7 @@ function _deserializeNode(
             } else {
                 throw new SerializerError("Malformed data: No data or ID found in reference")
             }
-            
+
             // Map
             if(data.type === "Map") {
                 const map: Map<string, Serializable> = new Map()
@@ -449,7 +449,7 @@ function _deserializeNode(
                     map.set(key, _deserializeNode(value, refs, cache, path, key, ignoreErrors))
                 }
                 obj = map
-                
+
             // Object
             } else if(data.type === "Object") {
                 obj = {}

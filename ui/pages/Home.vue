@@ -69,7 +69,7 @@ function newPuzzleSubmit(event?: Event) {
 
 function deletePuzzle(storage: PuzzleStorage, puzzleId: string) {
     storage.delete(puzzleId)
-    
+
     // Remove puzzle from puzzlesByStorage
     const entry = puzzlesByStorage.find(
         (item) => item.storage === storage
@@ -158,7 +158,7 @@ const tableHeaders: {
             </VDataTable>
         </VRow>
     </VMain>
-    
+
     <Modal
             ref="newPuzzleModal"
             title="New Puzzle"

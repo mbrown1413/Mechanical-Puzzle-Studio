@@ -1,3 +1,7 @@
+<!--
+    Edit the pieces used and the goal piece in an AssemblyProblem.
+-->
+
 <script setup lang="ts">
 import {computed} from "vue"
 import {VDataTable} from "vuetify/components/VDataTable"
@@ -17,7 +21,7 @@ const props = withDefaults(
     }>(), {
         disabledPieceIds: () => [],
     }
-) 
+)
 
 const emit = defineEmits<{
     action: [action: Action]
@@ -76,7 +80,7 @@ function updateGoal(pieceId: string | null) {
             <VToolbar flat density="compact" :title="label" />
         </template>
         <template v-slot:bottom />
-            
+
         <template v-slot:item.count="{item}">
             <VTextField
                     type="number"
@@ -88,7 +92,7 @@ function updateGoal(pieceId: string | null) {
                     variant="solo-filled"
             />
         </template>
-        
+
         <template v-slot:item.display="{item}">
             <GridDisplay
                     :puzzle="puzzle"
@@ -97,7 +101,7 @@ function updateGoal(pieceId: string | null) {
                     :size="200"
             />
         </template>
-        
+
         <template v-slot:item.actions="{item}">
             <VBtn
                     v-if="!item.isGoal"

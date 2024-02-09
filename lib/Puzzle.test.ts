@@ -1,9 +1,9 @@
 import {test, expect, describe} from "vitest"
 
 import {Piece, Puzzle} from "./Puzzle.ts"
+import {Voxel} from "./Grid.ts"
 import {CubicGrid} from "./grids/CubicGrid.ts"
 import {orientationTestResultingShapes, orientationTestShape} from "./grids/CubicGrid.test.ts"
-import {Voxel} from "./types.ts"
 
 function makePlacementSet(voxelLists: Voxel[][]): Set<string> {
     const set: Set<string> = new Set()
@@ -76,7 +76,7 @@ describe("Puzzle", () => {
             puzzle.grid.getDefaultPieceBounds(),
             orientationTestShape
         )
-        const variations = Array.from(puzzle.getPieceVariations(piece))
+        const variations = Array.from(puzzle.getPieceOrientations(piece))
         expect(variations.length).toEqual(24)
         expect(variations[0].originalPiece).toEqual(piece)
         expect(variations[0].transformedPiece).not.toEqual(piece)

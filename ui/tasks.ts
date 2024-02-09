@@ -7,9 +7,7 @@ import {Puzzle, Problem, Solver, Solution, TaskCallbacks} from "~lib"
  * When a task is run by `TaskRunner`, the `Task` is serialized and sent to a
  * worker process. `run()` is executed in the worker process where it cannot
  * access any global state. Any data needed here should be a property of the
- * task and assigned in the constructor so it is serialized and available. The
- * return value from `run()` is serialized and passed to `processResult()`,
- * which runs in the main thread.
+ * task and assigned in the constructor so it is serialized and available.
  *
  * The typical workflow is for `run()` to handle long-running processing so it
  * doesn't block the main thread, then have `processResult()` modify global
@@ -21,6 +19,7 @@ export abstract class Task<Result extends Serializable> extends SerializableClas
         super(null)
     }
 
+    /** User-displayed description of the task. */
     abstract getDescription(): string
 
     /**

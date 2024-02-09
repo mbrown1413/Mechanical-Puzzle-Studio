@@ -1,8 +1,13 @@
+<!--
+    Main component for editing a puzzle. Uses grid-based layout intended to
+    take most of the page.
+-->
+
 <script setup lang="ts">
 import {computed, ref, Ref, onMounted} from "vue"
 import Split from "split-grid"
 
-import {PuzzleFile} from "~lib"
+import {Puzzle} from "~lib"
 
 import {Action, ProblemSolveAction} from "~/ui/actions.ts"
 import TabLayout from "~/ui/common/TabLayout.vue"
@@ -15,7 +20,7 @@ import ProblemSolverForm from "~/ui/components/ProblemSolverForm.vue"
 import ListSelect from "~/ui/common/ListSelect.vue"
 
 const props = defineProps<{
-    puzzleFile: PuzzleFile,
+    puzzle: Puzzle,
 }>()
 
 const emit = defineEmits<{
@@ -39,7 +44,7 @@ const solutionItems = computed(() => {
     if(selectedProblemIds.value.length !== 1) {
         return []
     }
-    const problem = props.puzzleFile.puzzle.problems.get(selectedProblemIds.value[0])
+    const problem = props.puzzle.problems.get(selectedProblemIds.value[0])
     if(!problem || problem.solutions === null) {
         return []
     }
@@ -100,14 +105,14 @@ function performAction(action: Action) {
             >
                 <template v-slot:pieces>
                     <PieceList
-                        :puzzle="puzzleFile.puzzle"
+                        :puzzle="puzzle"
                         v-model:selectedPieceIds="selectedPieceIds"
                         @action="performAction"
                     />
                 </template>
                 <template v-slot:problems>
                     <ProblemList
-                        :puzzle="puzzleFile.puzzle"
+                        :puzzle="puzzle"
                         :allowCreateDelete="true"
                         v-model:selectedProblemIds="selectedProblemIds"
                         @action="performAction"
@@ -115,7 +120,7 @@ function performAction(action: Action) {
                 </template>
                 <template v-slot:solutions>
                     <ProblemList
-                        :puzzle="puzzleFile.puzzle"
+                        :puzzle="puzzle"
                         :allowCreateDelete="false"
                         v-model:selectedProblemIds="selectedProblemIds"
                         @action="performAction"
@@ -129,14 +134,14 @@ function performAction(action: Action) {
         <div class="grid-cell side-bot">
             <ItemMetadataEditor
                 v-show="currentTabId === 'pieces'"
-                :puzzle="puzzleFile.puzzle"
+                :puzzle="puzzle"
                 itemType="piece"
                 :itemId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
                 @action="performAction"
             />
             <ProblemSolverForm
                 v-show="currentTabId === 'problems' && selectedProblemIds"
-                :puzzle="puzzleFile.puzzle"
+                :puzzle="puzzle"
                 :problemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
                 @action="performAction"
             />
@@ -153,20 +158,20 @@ function performAction(action: Action) {
             <PieceEditor
                 ref="pieceEditor"
                 v-show="currentTabId === 'pieces'"
-                :puzzle="puzzleFile.puzzle"
+                :puzzle="puzzle"
                 :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
                 @action="performAction"
             />
             <ItemMetadataEditor
                 v-show="currentTabId === 'problems'"
-                :puzzle="puzzleFile.puzzle"
+                :puzzle="puzzle"
                 itemType="problem"
                 :itemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
                 @action="performAction"
             />
             <SolutionDisplay
                 v-show="currentTabId === 'solutions'"
-                :puzzle="puzzleFile.puzzle"
+                :puzzle="puzzle"
                 :solution="selectedSolutions[0] || null"
             />
         </div>
@@ -220,11 +225,11 @@ function performAction(action: Action) {
     grid-area: main;
     overflow: auto;
 }
-    
+
 .home-link {
     font-size: 200%;
 }
-    
+
 .solution-list h4 {
     margin: 1em 1em .5em 1em;
 }

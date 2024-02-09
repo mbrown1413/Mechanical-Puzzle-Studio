@@ -22,6 +22,12 @@ export class AssemblySolver extends Solver {
         // there are only columns for each voxel, and no columns for each
         // piece. Instead, rows are pre-sorted based on the piece they belong
         // to. We'll only choose one row for each piece.
+        //
+        // Another way to think about this is that we have a set of placements,
+        // one set for each piece, and we're going through the cartesian
+        // product of those sets. I'm calling this a "cover" problem, since
+        // internally each piece placement is converted into a row of booleans
+        // which should not overlap in a valid solution.
 
         // `placementsByPieceIdx[pieceIdx][i]` - The `i`th placement of piece at `pieceIdx`
         // `coverRowsByPieceIdx[pieceIdx][i]` - The `i`th cover row of piece at `pieceIdx`
@@ -97,7 +103,7 @@ export class AssemblySolver extends Solver {
 
         /**
          * Do the set of rows exactly cover the columns?
-         * 
+         *
          * Note that we make the assumption that none of the rows have
          * conflicting columns already, so we can just count the columns which
          * are true.
@@ -156,7 +162,7 @@ export class AssemblySolver extends Solver {
                 rowsPicked.length = depth-1
                 rowsPicked.push(coverRowsByPieceIdx[depth-1][pick])
             }
-            
+
             if(depth === 1) {
                 progress++
                 progressCallback(progress / progressMax)

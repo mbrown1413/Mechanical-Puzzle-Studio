@@ -23,7 +23,7 @@ export function useGridDrawComposible(
     const camera = new THREE.PerspectiveCamera(fov, 2, 0.1, 10)
     const controls = new OrbitControls(camera, renderer.domElement)
     const hitTestObjects: Ref<THREE.Object3D[]> = ref([])
-    
+
     const resourceTracker = new ResourceTracker()
     const objectCache = new Object3DCache()
 
@@ -40,13 +40,13 @@ export function useGridDrawComposible(
             refresh()
         })
     })
-    
+
     onUnmounted(() => {
         resourceTracker.releaseAll()
         controls.dispose()
         renderer.dispose()
     })
-    
+
     const voxelPieceMap = computed(() => {
         const map = new Map()
         for(const piece of pieces.value) {
@@ -92,13 +92,13 @@ export function useGridDrawComposible(
             light2.position.set(-5, -5, -5)
             light2.lookAt(new Vector3(0, 0, 0))
             scene.add(light2)
-            
+
             const obj = new THREE.Object3D()
             obj.add(light1, light2)
             return obj
         })
     }
-    
+
     function initializeCamera() {
         const boundingBox = new THREE.Box3().setFromObject(scene)  // Calculated _before_ AxisHeper added
         const boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere())
@@ -112,14 +112,14 @@ export function useGridDrawComposible(
         )
         cameraPosition.add(center)
         camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z)
-    
+
         // Center view on the center of the grid.
         // Only do this once on initialization though, since the user can
         // right-click drag to change the OrbitControls target location.
         controls.target = center
         camera.lookAt(center)
     }
-    
+
     function getRenderOrder(inLayer: boolean, highlighted: boolean): number {
         if(highlighted) {
             return 2
@@ -177,7 +177,7 @@ export function useGridDrawComposible(
         objectCache.set(key, obj)
         return obj
     }
-    
+
     function getVoxelThinWireframe(
         piece: Piece | null,
         voxelInfo: VoxelInfo,
@@ -228,7 +228,7 @@ export function useGridDrawComposible(
                 const tube = new THREE.Mesh(tubeGeometry, material)
                 tube.renderOrder = renderOrder
                 obj.add(tube)
-                
+
                 const sphereGeometry = new THREE.SphereGeometry(thickness, divisions, divisions)
                 sphereGeometry.translate(point1.x, point1.y, point1.z)
                 const sphere = new THREE.Mesh(sphereGeometry, material)
@@ -273,7 +273,7 @@ export function useGridDrawComposible(
         resourceTracker.markUnused(scene)
         scene.clear()
         scene.add(getLights())
-        
+
         hitTestObjects.value = []
 
         const bounds = grid.getMaxBounds(
@@ -300,7 +300,7 @@ export function useGridDrawComposible(
 
             const wireframe = getVoxelWireframe(pieceAtVoxel, voxelInfo, inLayer, highlighted)
             scene.add(wireframe)
-            
+
             if(inLayer) {
                 // Populate hitTestObjects and save what voxel the object was
                 // drawn for so we can pull it out later after a raycast
@@ -312,7 +312,7 @@ export function useGridDrawComposible(
                 hitTestObjects.value.push(solid)
             }
         }
-        
+
         if(isInitialRebuild) {
             initializeCamera()
         }

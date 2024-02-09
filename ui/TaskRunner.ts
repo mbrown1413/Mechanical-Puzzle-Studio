@@ -63,7 +63,7 @@ export class TaskRunner {
             this.startNextTask()
         }
     }
-    
+
     terminateRunningTask() {
         this.worker?.terminate()
         this.worker = null
@@ -72,7 +72,7 @@ export class TaskRunner {
             this.startNextTask()
         }
     }
-    
+
     private createWorker(): Worker {
         const worker = new TaskWorker()
         worker.onmessage = this.handleMessage.bind(this)
@@ -139,7 +139,7 @@ export class TaskRunner {
         }
         this.worker.postMessage(serialize(message))
     }
-    
+
     private handleWorkerError(event: ErrorEvent) {
         this.finishTask(false, null, event.message)
     }
@@ -167,7 +167,7 @@ export class TaskRunner {
             this.currentTaskInfo.progressPercent = data.percent
         }
     }
-    
+
     private onLogMessage(data: LogMessage) {
         this.currentTaskInfo?.messages.push(data.message)
     }
@@ -179,5 +179,5 @@ export class TaskRunner {
     private onErrorMessage(data: ErrorMessage) {
         this.finishTask(false, null, data.message)
     }
-    
+
 }

@@ -6,18 +6,29 @@ import {taskRunner} from "~/ui/globals.ts"
 
 ////////// Base Classes //////////
 
+/**
+ * Action instances represent a potential modification to a puzzle.
+ *
+ * Almost all modifications to a puzzle are done through actions instead of
+ * modifying the puzzle itself. Keeping this rigid structure lends itself to
+ * better error handling and allows for features such as undo.
+ */
 export abstract class Action {
+
+    /** Modify the puzzle according to this action. */
     abstract perform(puzzle: Puzzle): void
+
+    /** A short string shown to the user which describes this action. */
     abstract toString(): string
 }
 
 export abstract class EditItemMetadataAction<T extends object> extends Action {
     itemId: string
     metadata: object
-    
+
     static itemName: string
     static itemAttribute: "pieces" | "problems"
-    
+
     constructor(
         itemId: string,
         metadata: object,
@@ -26,7 +37,7 @@ export abstract class EditItemMetadataAction<T extends object> extends Action {
         this.itemId = itemId
         this.metadata = metadata
     }
-    
+
     toString() {
         const constructor = <typeof EditItemMetadataAction> this.constructor
         return `Edit ${constructor.itemName.toLowerCase()}`
@@ -39,7 +50,7 @@ export abstract class EditItemMetadataAction<T extends object> extends Action {
         if(item === undefined) {
             throw new Error(`${constructor.itemName} with ID ${this.itemId} not found`)
         }
-        
+
         Object.assign(item, this.metadata)
         this.postEdit(item, puzzle)
     }
@@ -56,7 +67,7 @@ abstract class DeleteItemsAction extends Action {
         super()
         this.itemIds = itemIds
     }
-    
+
     toString() {
         const constructor = <typeof DeleteItemsAction> this.constructor
         return `Delete ${constructor.itemName.toLowerCase()}`
@@ -75,7 +86,7 @@ abstract class DeleteItemsAction extends Action {
         if(missingIds.length) {
             throw new Error(`${constructor.itemName} IDs not found: ${missingIds}`)
         }
-        
+
         for(const id of this.itemIds) {
             itemMap.delete(id)
         }
@@ -95,7 +106,7 @@ export class NewPieceAction extends Action {
         piece.color = puzzle.getNewPieceColor()
         puzzle.addPiece(piece)
     }
-    
+
     toString() {
         return "Create new piece"
     }
@@ -110,7 +121,7 @@ export class EditPieceAction extends Action {
     pieceId: string
     addVoxels: Voxel[]
     removeVoxels: Voxel[]
-    
+
     constructor(
         pieceId: string,
         addVoxels: Voxel[],
@@ -125,7 +136,7 @@ export class EditPieceAction extends Action {
     toString() {
         return "Edit piece"
     }
-    
+
     perform(puzzle: Puzzle) {
         const piece = puzzle.pieces.get(this.pieceId)
         if(piece === undefined) {
@@ -182,7 +193,7 @@ export class EditProblemMetadataAction extends EditItemMetadataAction<Problem> {
     static metadata: {
         label?: string
     }
-    
+
     postEdit(problem: Problem) {
         if(problem instanceof AssemblyProblem) {
             // Remove used piece entries with "0" count
@@ -201,7 +212,7 @@ export class EditProblemMetadataAction extends EditItemMetadataAction<Problem> {
 
 export class ProblemSolveAction extends Action {
     problemId: string
-    
+
     constructor(problemId: string) {
         super()
         this.problemId = problemId

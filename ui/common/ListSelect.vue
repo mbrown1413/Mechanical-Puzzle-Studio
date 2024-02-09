@@ -1,3 +1,8 @@
+<!--
+    Displays a list of items which can be selected, with optional buttons for
+    adding and removing items.
+-->
+
 <script setup lang="ts">
 import {ref, Ref} from "vue"
 

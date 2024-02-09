@@ -1,13 +1,19 @@
 # Mechanical Puzzle Studio
 
-Mechanical puzzle design software.
+The Swiss Army knife of mechanical puzzle design.
 
-The focus is on put-together / take-apart / interlocking puzzles. Mechanical
-Puzzle Studio is very extensible; with some programming knowledge, you can
-create new grid types, arbitrary constraints for when a puzzle is considered
-solved, and more.
+The focus is on any assembly, disassembly, or interlocking puzzle which can be
+placed on a grid. MPS is very extensible: with some programming knowledge, you
+can create new grid types, arbitrary constraints for when a puzzle is
+considered solved, and more.
 
-**Note: This software is in pre-alpha development.** To track progress, see the [MVP Planning](https://github.com/mbrown1413/Mechanical-Puzzle-Studio/issues/1) issue.
+[Try it online](https://mbrown1413.github.io/Mechanical-Puzzle-Studio/)! It
+runs completely in the browser. You will want to use a relatively recent
+browser version.
+
+**Note: This software is in pre-alpha development.** To track progress, see the
+[MVP Planning](https://github.com/mbrown1413/Mechanical-Puzzle-Studio/issues/1)
+issue.
 
 
 ## Puzzling Resources
@@ -25,9 +31,27 @@ Other puzzle programs
 * [BCPBOX / GENDA](https://billcutlerpuzzles.com/stock/program.html) - Discontinued
 
 
+## Why not BurrTools?
+
+BurrTools is great! It's a powerful piece of software and the interface is
+usable after getting acquainted with it. While it's the industry-standard in
+designing many types of puzzles, it's now very old software, and it's missing
+some modern design patterns and standards. It's also not actively maintained
+and difficult to add features to.
+
+I'd like MPD to:
+* have an "Undo" button
+* run on the web
+* be easy to add new grids, solving algorithms, problem types, ways of inputting pieces, etc.
+* be written using modern tools (Typescript and Vue) accessable to more developers
+* explore faster solver algorithms including running on the GPU and/or distributed computations
+* easily share puzzles
+
+
 ## Developing
 
 Requirements:
+  * node (version v20+)
   * [yarn 1 / classic](https://classic.yarnpkg.com/en/docs/install)
 
 Getting started:
@@ -38,18 +62,22 @@ Getting started:
 Testing:
 
     $ yarn test  # Run tests and watch for changes
-    $ yarn coverage  # Coverage output to coverage/
-    $ yarn test --coverage  # Watch for changes plus output coverage
+    $ yarn coverage  # Coverage outputs in coverage/
+    $ yarn test --coverage  # Watch for changes plus outputs coverage
+
+Linting:
+
+    $ yarn lint
 
 Production build:
 
     $ yarn build  # Outputs static site to dist/
 
-    # Use webserver to run the build:
+    # Use a webserver to test the build:
     $ cd dist/ && python -m http.server
-    
-    # Note that without server-side redirects,
-    # starting at apage other than `/` won't work.
+
+Note that without server-side redirects, starting at a page other than `/` will
+throw a 404-not-found error.
 
 The source code is divided into two main sections:
   * [`lib/`](lib/): Contains the data structures and algorithms for puzzles. Basically, a stand-alone puzzle library without a gui.

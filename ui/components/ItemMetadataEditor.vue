@@ -120,16 +120,16 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
     metadata[field.property][dimensionIndex] = Number(el.value)
     const action = new actionClass(props.itemId, metadata)
     emit("action", action)
-    
+
 }
 </script>
 
 <template>
     <div v-if="item" class="metadata-form">
         <h4>{{ title }}</h4>
-        
+
         <template v-for="field in fields">
-            
+
             <VTextField
                     v-if="field.type === 'string'"
                     :label="field.label"
@@ -143,7 +143,7 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
                     :value="typeUnsafeItem[field.property] as string"
                     @input="handleTextInput(field, $event)"
             />
-            
+
             <VSelect
                     v-if="field.type === 'piece'"
                     :label="field.label"
@@ -153,7 +153,7 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
                     no-data-text="No pieces in puzzle!"
                     @update:modelValue="handlePieceInput(field, $event as Piece)"
             />
-            
+
             <ProblemPiecesEditor
                     v-if="field.type === 'pieces' && item instanceof AssemblyProblem"
                     :puzzle="puzzle"
@@ -162,7 +162,7 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
                     @action="emit('action', $event)"
                     :disabledPieceIds="field.getDisabledPieceIds ? field.getDisabledPieceIds(item as AssemblyProblem) : []"
             />
-            
+
             <VContainer
                     v-if="field.type === 'bounds' && puzzle !== null && item instanceof Piece"
             >

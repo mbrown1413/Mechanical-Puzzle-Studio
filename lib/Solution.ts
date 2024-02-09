@@ -5,7 +5,7 @@ export abstract class Solution extends SerializableClass { }
 
 export class AssemblySolution extends Solution {
     placements: PiecePlacement[]
-    
+
     constructor(placements: PiecePlacement[]) {
         super(null)
         this.placements = placements

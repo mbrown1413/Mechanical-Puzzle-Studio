@@ -38,14 +38,14 @@ function serializeMatches(
 ) {
     expect(serialize(data)).toEqual(serialized)
     expect(deserialize(serialized, expectedType)).toEqual(data)
-    
+
     // `serialized` object must convertable to a string via `JSON.stringify()`
     JSON.stringify(serialized)
 }
 
 
 describe("serialization and deserialization of", () => {
-    
+
     test("primitive values", () => {
         serializeMatches(7, {root: 7}, "number")
         serializeMatches("seven", {root: "seven"}, "string")
@@ -81,7 +81,7 @@ describe("serialization and deserialization of", () => {
             "Map"
         )
     })
-    
+
     test("Objects", () => {
         serializeMatches(
             {a: 1, b: 2},
@@ -118,7 +118,7 @@ describe("serialization and deserialization of", () => {
             "A"
         )
     })
-    
+
     test("nested SerializableClass instances", () => {
         serializeMatches(
             new B("b-1", new A("a-1")),
@@ -155,7 +155,7 @@ describe("serialization and deserialization of", () => {
         expect(deserialized[0]).toBe(deserialized[1])
         expect(deserialized[0]).toBe(deserialized[2])
     })
-    
+
     test("inline class", () => {
         serializeMatches(
             new A(null),
@@ -183,7 +183,7 @@ describe("serialization and deserialization of", () => {
             },
             "B"
         )
-        
+
         const a = new A(null)
         serializeMatches(
             [a, a],
@@ -369,7 +369,7 @@ describe("deserialization error", () => {
           Attribute path: root"
         `)
     })
-    
+
     test("error path reported correctly", () => {
         expect(() => {
             deserialize({
@@ -383,7 +383,7 @@ describe("deserialization error", () => {
                     }
                 },
                 root: [
-                    "hello", 
+                    "hello",
                     {type: "B", id: "b-1"}
                 ]
             } as unknown as SerializedData)

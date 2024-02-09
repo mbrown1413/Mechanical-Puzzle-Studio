@@ -1,10 +1,10 @@
 import {test, expect, describe} from "vitest"
 
 import {Piece, Puzzle} from "~/lib/Puzzle.ts"
+import {Voxel} from "~/lib/Grid.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 import {AssemblyProblem} from "~/lib/Problem"
 import {AssemblySolution} from "~/lib/Solution.ts"
-import {Voxel} from "~/lib/types.ts"
 
 import {AssemblySolver} from "./Solver.ts"
 
@@ -46,7 +46,7 @@ describe("AssemblySolver", () => {
     problem0.goalPieceId = "problem-0-goal-piece"
     problem0.usedPieceCounts.set("problem-0-piece-0", 1)
     problem0.usedPieceCounts.set("problem-0-piece-1", 1)
-    
+
     // Problem 1
     // 000
     // 010
@@ -76,7 +76,7 @@ describe("AssemblySolver", () => {
     problem1.usedPieceCounts.set("problem-1-piece-1", 1)
 
     const solver = new AssemblySolver()
-    
+
     test("solve problem 0", () => {
         const solutions = solver.solve(puzzle, problem0)
         expect(solutions.length).toEqual(2)

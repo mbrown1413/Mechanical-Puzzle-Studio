@@ -115,7 +115,7 @@ function stripIfStartsWith(input: string, toStrip: string) {
     <TitleBar :puzzleFile="puzzleFile" />
     <PuzzleEditor
         v-if="puzzleFile"
-        :puzzleFile="puzzleFile"
+        :puzzle="puzzleFile.puzzle"
         @action="performAction"
     />
     <VSnackbar
@@ -126,7 +126,7 @@ function stripIfStartsWith(input: string, toStrip: string) {
     >
         {{ actionErrorMessage }}
     </VSnackbar>
-    
+
     <Modal
         ref="puzzleErrorModal"
         @ok="puzzleErrorModal?.close(); setPuzzleFile(true)"

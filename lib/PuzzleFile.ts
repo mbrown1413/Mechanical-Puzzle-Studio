@@ -1,4 +1,4 @@
-import { v4 as uuid } from "uuid"
+import {v4 as uuid} from "uuid"
 
 import {Puzzle} from "~/lib/Puzzle.ts"
 import {SerializableClass, deserialize, deserializeIgnoreErrors, registerClass, serialize} from "~/lib/serialize.ts"
@@ -17,11 +17,12 @@ export type PuzzleMetadata = {
     author: string | null,
     description: string | null,
 
-    // Dates in UTC timestamp strings
-    created: string | null,
-    modified: string | null,
+    createdUTCString: string | null,
+    modifiedUTCString: string | null,
 }
 
+/** A `Puzzle` with some extra metadata and conveniences for dealing with
+* saving/loading puzzles. */
 export class PuzzleFile extends SerializableClass {
     declare id: string
     puzzle: Puzzle
@@ -29,8 +30,8 @@ export class PuzzleFile extends SerializableClass {
     name: string
     author: string
     description: string
-    created: string
-    modified: string
+    createdUTCString: string
+    modifiedUTCString: string
 
     constructor(
         puzzle: Puzzle,
@@ -43,12 +44,12 @@ export class PuzzleFile extends SerializableClass {
         this.name = name
         this.author = author
         this.description = description
-        this.created = new Date().toUTCString()
-        this.modified = this.created
+        this.createdUTCString = new Date().toUTCString()
+        this.modifiedUTCString = this.createdUTCString
     }
 
     serialize() {
-        this.modified = new Date().toUTCString()
+        this.modifiedUTCString = new Date().toUTCString()
         return JSON.stringify(serialize(this))
     }
 
@@ -56,6 +57,8 @@ export class PuzzleFile extends SerializableClass {
         return deserialize<PuzzleFile>(JSON.parse(data), "PuzzleFile")
     }
 
+    /** Tries to retrieve as much data as possible when deserializing, setting
+     * errored parts to null. */
     static deserializeIgnoreErrors(data: string): PuzzleFile {
         return deserializeIgnoreErrors(JSON.parse(data)) as PuzzleFile
     }
@@ -63,7 +66,7 @@ export class PuzzleFile extends SerializableClass {
     /**
      * Attempts to get metadata from a possibly corrupted serialized
      * PuzzleFile. Uses the `id` passed in if it can't be obtained from the
-    * serialized data.
+     * serialized data.
      */
     static getMetadataSafe(data: string, id: string): PuzzleMetadata {
         try {
@@ -92,13 +95,13 @@ export class PuzzleFile extends SerializableClass {
                     name: null,
                     author: null,
                     description: null,
-                    created: null,
-                    modified: null,
+                    createdUTCString: null,
+                    modifiedUTCString: null,
                 }
             }
         }
     }
-    
+
     getMetadata(): PuzzleMetadata {
         return {
             error: null,
@@ -106,8 +109,8 @@ export class PuzzleFile extends SerializableClass {
             name: this.name,
             author: this.author,
             description: this.description,
-            created: this.created,
-            modified: this.modified,
+            createdUTCString: this.createdUTCString,
+            modifiedUTCString: this.modifiedUTCString,
         }
     }
 }

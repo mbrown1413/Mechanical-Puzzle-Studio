@@ -24,7 +24,7 @@ const app_title = import.meta.env.VITE_APP_TITLE
         <VAppBarTitle v-if="puzzleFile" class="page-title">
             {{ puzzleFile.name }}
         </VAppBarTitle>
-        
+
         <TaskStatusDisplay />
     </VAppBar>
 </template>
@@ -57,8 +57,8 @@ const app_title = import.meta.env.VITE_APP_TITLE
     /* Vertically center alt text */
     line-height: 60px;
 }
-    
+
 .page-title {
-    text-align: center;   
+    text-align: center;
 }
 </style>

@@ -26,7 +26,7 @@ export function getNextColor(existingColors: string[]): string {
             }
         }
     }
-    
+
     let minNumSimilar
     if(similarCount.size < flatPalette.length) {
         minNumSimilar = 0
@@ -46,16 +46,16 @@ export function getNextColor(existingColors: string[]): string {
 
 /**
  * List of predefined colors that are all perceivably different.
- * 
+ *
  * This list was made by taking multiple seaborn palettes and eliminating colors
  * which are too similar to previous ones. Color similarity was calculated using
  * deltaE ITP and removed if less than 40.
- * 
+ *
  * See:
  *   https://seaborn.pydata.org/generated/seaborn.color_palette.html
  *   https://seaborn.pydata.org/tutorial/color_palettes.html
  *   https://colorjs.io/docs/color-difference
- *   
+ *
  * This produces much more distinct colors than going through the RGB
  * colorspace systematically (#ff0000, #00ff00, etc.). I'm sure there could be
  * many more improvements to this, but this will do for now.
@@ -84,7 +84,7 @@ export const flatPalette = [
     //"#cfcfcf",  // Gray, close to background
     "#fffea3",
     //"#b9f2f0",  // Too close to #d8e5a1
-    
+
     // Seaborn "dark"
     "#001c7f",
     //"#b1400d",  // Too close to #9f4800

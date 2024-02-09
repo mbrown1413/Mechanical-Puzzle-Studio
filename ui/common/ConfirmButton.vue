@@ -1,3 +1,8 @@
+<!--
+    Button which opens a confirmation dialog before performing an action
+    (emitting the @confirm event).
+-->
+
 <script setup lang="ts">
 import {ref, Ref} from "vue"
 import {VBtn} from "vuetify/components"

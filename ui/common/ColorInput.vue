@@ -1,3 +1,5 @@
+<!-- A button which opens a modal for picking a color. -->
+
 <script setup lang="ts">
 import {ref, Ref} from "vue"
 

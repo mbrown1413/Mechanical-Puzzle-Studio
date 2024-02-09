@@ -16,7 +16,7 @@ export function useGridMouseComposible(
     highlightedVoxel: Ref<Voxel | null>,
 ) {
     const raycaster = new THREE.Raycaster()
-    
+
     /* from x, y position on screen (typically from a mouse event.clientX/Y)
      * get the object drawn at that location. */
     function getObjectOnScreen(x: number, y: number) {

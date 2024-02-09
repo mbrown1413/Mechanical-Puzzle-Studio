@@ -1,14 +1,26 @@
-import {Bounds, Voxel, Translation} from "~/lib/types.ts"
 import {SerializableClass, deserialize, registerClass, serialize} from "~/lib/serialize.ts"
-import {Grid} from "~/lib/Grid.ts"
+import {Grid, Bounds, Voxel, Translation} from "~/lib/Grid.ts"
 import {Problem} from "~/lib/Problem.ts"
 import {getNextColor} from "~/lib/colors.ts"
 
+/**
+ * Defines a piece's position and orientation on the puzzle's grid.
+ */
 export class PiecePlacement extends SerializableClass {
+
+    /** The piece as defined in the puzzle. */
     originalPiece: Piece
+
+    /**
+     * A copy of the piece after it is transformed and moved to a new location.
+     */
     transformedPiece: Piece
+
+    /**
+     * The translation used to move from originalPiece to transformedPiece.
+     */
     translation: Translation | null
-    
+
     constructor(
         originalPiece: Piece,
         transformedPiece: Piece,
@@ -117,7 +129,10 @@ export class Puzzle extends SerializableClass {
         }
     }
 
-    *getPieceVariations(pieceOrId: Piece | string): Iterable<PiecePlacement> {
+    /**
+     * Get all possible orientations a piece may be in.
+     */
+    *getPieceOrientations(pieceOrId: Piece | string): Iterable<PiecePlacement> {
         const piece = this.getPieceFromPieceOrId(pieceOrId)
         const orientations = this.grid.getOrientations()
         for(const orientation of orientations) {
@@ -129,6 +144,11 @@ export class Puzzle extends SerializableClass {
         }
     }
 
+    /**
+     * Get all possible translations for a piece (without changing
+     * orientations), given that the voxels in the resulting placement must be
+     * in `availableVoxels`.
+     */
     *getPieceTranslations(
         pieceOrId: Piece | string,
         availableVoxels: Voxel[]
@@ -157,11 +177,16 @@ export class Puzzle extends SerializableClass {
         }
     }
 
+    /**
+     * Get all possible placements for a piece, given that all of the
+     * transformed piece's voxels must be in `availableVoxels`.
+     */
     *getPiecePlacements(
         pieceOrId: Piece | string,
         availableVoxels: Voxel[]
     ): Iterable<PiecePlacement> {
 
+        // Deduplicate returned placements
         const usedPlacements: Set<string> = new Set()
         function getPlacementKey(piece: Piece): string {
             const sortedVoxels = [...piece.voxels].sort()
@@ -169,14 +194,12 @@ export class Puzzle extends SerializableClass {
         }
 
         const piece = this.getPieceFromPieceOrId(pieceOrId)
-        for(const pieceVariation of this.getPieceVariations(piece)) {
-            const pieceTranslations = this.getPieceTranslations(
+        for(const pieceVariation of this.getPieceOrientations(piece)) {
+            const pieceTranslations = Array.from(this.getPieceTranslations(
                 pieceVariation.transformedPiece,
                 availableVoxels
-            )
-            const z = Array.from(pieceTranslations)
-            for(const pieceTranslation of z) {
-
+            ))
+            for(const pieceTranslation of pieceTranslations) {
                 const key = getPlacementKey(pieceTranslation.transformedPiece)
                 if(usedPlacements.has(key)) continue
                 usedPlacements.add(key)
@@ -204,7 +227,7 @@ export class Piece extends SerializableClass {
         this.label = id || "unlabeled-piece"
         this.color = "#00ff00"
     }
-    
+
     hasId(): this is PieceWithId {
         return typeof this.id === "string"
     }

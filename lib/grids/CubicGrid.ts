@@ -1,8 +1,7 @@
 import {Vector3, Matrix3} from "three"
 
-import {Bounds, Voxel, Viewpoint} from "~/lib/types.ts"
 import {registerClass} from '~/lib/serialize.ts'
-import {Grid} from "~/lib/Grid.ts"
+import {Grid, Bounds, Voxel, Viewpoint} from "~/lib/Grid.ts"
 
 type Coordinate3d = {x: number, y: number, z: number}
 type CubicBounds = [number, number, number]

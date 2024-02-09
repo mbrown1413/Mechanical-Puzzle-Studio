@@ -16,7 +16,7 @@ class TestTask extends Task<string> {
     result: string
     state: null | "running" | "succeeded" | "failed"
     error: string | null
-    
+
     constructor(
         input: string,
         doneCallback: (result: string) => void,
@@ -31,7 +31,7 @@ class TestTask extends Task<string> {
         this.state = null
         this.error = null
     }
-    
+
     getDescription(): string { return "Test Task" }
 
     setup() {
@@ -40,14 +40,14 @@ class TestTask extends Task<string> {
         }
         this.state = "running"
     }
-    
+
     run() {
         if(this.errorAt === "run") {
             throw "Error in run!"
         }
         return `${this.input}, world!`
     }
-    
+
     processResult(result: string) {
         if(this.errorAt === "processResult") {
             throw "Error in processResult!"

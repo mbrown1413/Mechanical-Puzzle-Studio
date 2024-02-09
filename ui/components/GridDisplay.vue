@@ -1,3 +1,8 @@
+<!--
+    Main component for displaying a WebGL canvas of the puzzle grid including
+    pieces placed on that grid.
+-->
+
 <script setup lang="ts">
 import {ref, Ref, computed} from "vue"
 
