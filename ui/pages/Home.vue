@@ -92,11 +92,40 @@ const tableHeaders: {
     //{title: "Modified", key: "modified"},
     {title: "Actions", key: "actions", sortable: false, align: "center"},
 ]
+
+const appTitle = import.meta.env.VITE_APP_TITLE
 </script>
 
 <template>
     <TitleBar />
     <VMain>
+        <VRow justify="center" align="center" class="mt-5">
+            <VCol style="max-width: 425px;">
+                <VCard
+                    color="red-lighten-4"
+                >
+                    <template v-slot:text>
+                        <strong>Note: This software is in pre-alpha development.</strong><br>
+                        View the project on Github to read more about it and track progress.
+                    </template>
+                </VCard>
+            </VCol>
+            <VCol style="max-width: 425px;">
+                <VCard
+                    :title="appTitle"
+                    prepend-icon="mdi-github"
+                    append-icon="mdi-open-in-new"
+                    href="https://github.com/mbrown1413/Mechanical-Puzzle-Studio/"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    <template v-slot:text>
+                        The Swiss Army knife of mechanical puzzle design.
+                    </template>
+                </VCard>
+            </VCol>
+        </VRow>
+
         <VRow justify="center">
             <VDataTable
                     v-for="{storage, puzzles} of puzzlesByStorage"
