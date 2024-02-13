@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {ref} from "vue"
+import {VDialog} from "vuetify/components"
 
 withDefaults(
     defineProps<{
@@ -12,8 +13,10 @@ withDefaults(
 
         cancelText?: string,
         cancelShow?: boolean,
+
+        dialogMaxWidth?: VDialog["maxWidth"],
     }>(), {
-        persistent: true,
+        persistent: false,
 
         okText: "Ok",
         okColor: "blue-darken-1",
@@ -21,6 +24,8 @@ withDefaults(
 
         cancelText: "Cancel",
         cancelShow: true,
+
+        dialogMaxWidth: "500px",
     }
 )
 
@@ -40,7 +45,7 @@ defineExpose({
 <template>
     <VDialog
             v-model="modalOpen"
-            max-width="500px"
+            :maxWidth="dialogMaxWidth"
             :persistent="persistent"
     >
         <VCard>

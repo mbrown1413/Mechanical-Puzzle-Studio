@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import {ref, Ref, reactive, computed} from "vue"
 import {useRouter} from "vue-router"
+import {saveAs} from "file-saver"
 
-import {Puzzle, PuzzleFile, CubicGrid} from "~lib"
+import {Puzzle, PuzzleFile, CubicGrid, PuzzleMetadata} from "~lib"
 
 import {title} from "~/ui/globals.ts"
 import {getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
 import Modal from "~/ui/common/Modal.vue"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
+import RawDataButton from "~/ui/components/RawDataButton.vue"
+import {VDataTable} from "vuetify/components"
 
 title.value = ""
 
@@ -81,16 +84,18 @@ function deletePuzzle(storage: PuzzleStorage, puzzleId: string) {
     }
 }
 
-const tableHeaders: {
-    title: string,
-    key?: string,
-    sortable?: boolean,
-    align?: "start" | "center"
-}[] = [
+function downloadPuzzle(storage: PuzzleStorage, meta: PuzzleMetadata) {
+    const [raw, _error] = storage.getRawFormatted(meta.id)
+    const blob = new Blob([raw], {type: "application/json;charset=utf-8"})
+    const filename = (meta.name || meta.id) + ".json"
+    saveAs(blob, filename)
+}
+
+const tableHeaders: VDataTable["headers"] = [
     {title: "Name", key: "name", align: "start"},
-    //{title: "Created", key: "created"},
-    //{title: "Modified", key: "modified"},
-    {title: "Actions", key: "actions", sortable: false, align: "center"},
+    //{title: "Created", key: "createdUTCString"},
+    //{title: "Modified", key: "modifiedUTCString"},
+    {title: "", key: "actions", sortable: false, align: "end"},
 ]
 
 const appTitle = import.meta.env.VITE_APP_TITLE
@@ -115,7 +120,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                     :title="appTitle"
                     prepend-icon="mdi-github"
                     append-icon="mdi-open-in-new"
-                    href="https://github.com/mbrown1413/Mechanical-Puzzle-Studio/"
+                    href="https://github.com/mbrown1413/Mechanical-Puzzle-Studio/#mechanical-puzzle-studio"
                     target="_blank"
                     rel="noopener"
                 >
@@ -132,10 +137,11 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                     :headers="tableHeaders"
                     :items="puzzles"
                     no-data-text="No puzzles in this storage location"
-                    class="mt-10 ml-10 mr-10"
+                    class="mt-10 ml-10 mr-10 table-striped"
                     style="max-width: 800px;"
             >
                 <template v-slot:bottom v-if="puzzles.length <= 10" />
+
                 <template v-slot:top>
                     <VToolbar
                             flat
@@ -145,13 +151,16 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                         <VBtn
                             color="primary"
                             dark
+                            style="flex: 0 0 auto;"
                             @click="openNewPuzzleModal(storage)"
                         >
                             New Puzzle
                         </VBtn>
                     </VToolbar>
                 </template>
+
                 <template v-slot:item.name="{item}">
+
                     <RouterLink :to="{name: 'puzzle', params: {storageId: storage.id, puzzleId: item.id}}">
                         {{ item.name === null ? "(unknown name)" : item.name }}
                     </RouterLink>
@@ -174,9 +183,22 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                     </VTooltip>
 
                 </template>
+
                 <template v-slot:item.actions="{item}">
+                    <VTooltip text="Download">
+                        <template v-slot:activator="{props}">
+                            <VBtn
+                                v-bind="props"
+                                @click="downloadPuzzle(storage, item)"
+                            >
+                                <VIcon icon="mdi-download" aria-label="Download" aria-hidden="false" />
+                            </VBtn>
+                        </template>
+                    </VTooltip>
+                    <RawDataButton :storage="storage" :id="item.id" />
                     <ConfirmButton
                         :text="`Delete Puzzle ${item.name}?`"
+                        tooltip="Delete"
                         confirmText="Delete"
                         confirmButtonColor="red"
                         @confirm="deletePuzzle(storage, item.id)"
@@ -184,6 +206,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                         <VIcon icon="mdi-delete" aria-label="Delete" aria-hidden="false" />
                     </ConfirmButton>
                 </template>
+
             </VDataTable>
         </VRow>
     </VMain>
@@ -192,6 +215,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
             ref="newPuzzleModal"
             title="New Puzzle"
             okText="Create"
+            dialogMaxWidth="500px"
             @ok="newPuzzleSubmit()"
     >
         <form ref="newPuzzleForm" :onSubmit="newPuzzleSubmit">

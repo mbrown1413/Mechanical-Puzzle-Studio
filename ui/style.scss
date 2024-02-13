@@ -1,3 +1,10 @@
+code {
+    display: block;
+    white-space: pre-wrap;
+    margin-bottom: 1em;
+    padding-left: 2em;
+}
+
 .v-data-table-header__content {
     font-weight: bolder;
 }
@@ -6,4 +13,8 @@
 }
 .v-data-table-rows-no-data {
     background-color: rgba(var(--v-theme-on-surface-variant), 0.25);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background: rgba(0, 0, 0, .02);
 }

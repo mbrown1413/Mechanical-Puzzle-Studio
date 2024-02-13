@@ -24,7 +24,7 @@ export abstract class PuzzleStorage {
     abstract get name(): string
 
     /** List puzzles in this storage.
-     * 
+     *
      * Failure to retrieve or deserialize any individual puzzle should never
      * cause this to throw an error. `PuzzleMetadata.error` should be set for
      * any puzzle which cannot be cleanly read, and whatever data can be read
@@ -33,15 +33,47 @@ export abstract class PuzzleStorage {
     abstract list(): PuzzleMetadata[]
 
     /**
-     * Retrieve puzzle from storage.
-     * 
+     * Retrieve serialized string form of the puzzle from storage.
+     *
      * @throws PuzzleNotFoundError - When a puzzle with the given ID does not
      * exist in the storage.
-     * @param ignoreErorrs - Ignore any errors that can be ignored. This should
-     * only be used after trying without it, then catching and displaying the
-     * error to the user.
      */
-    abstract get(id: string, ignoreErrors: boolean): PuzzleFile
+    abstract getRaw(id: string): string
+
+    /**
+     * Get unserialized PuzzleFile instance from storage.
+     *
+     * @param ignoreErorrs - Ignore any deserialization errors that can be
+     * ignored. This should only be used after trying without it, then catching
+     * and displaying the error to the user.
+     */
+    get(id: string, ignoreErrors=false): PuzzleFile {
+        const str = this.getRaw(id)
+        if(ignoreErrors) {
+            return PuzzleFile.deserializeIgnoreErrors(str)
+        } else {
+            return PuzzleFile.deserialize(str)
+        }
+    }
+
+    /**
+     * Get a pretty-formatted string representation of the puzzle. On any
+     * formatting issue, the returned `error` is a string containing the error
+     * and `formatted` will be the raw unformatted string.
+     */
+    getRawFormatted(id: string): [formatted: string, error: string | null] {
+        const raw = this.getRaw(id)
+
+        // Try returning pretty formatted, but fail gracefully
+        let formatted = null
+        try {
+            const deserialized = JSON.parse(raw)
+            formatted = JSON.stringify(deserialized, null, 4)
+            return [formatted, null]
+        } catch(e) {
+            return [raw, String(e)]
+        }
+    }
 
     /** Save a puzzle, using `PuzzleFile.id` as a key which can be used to
      * retrieve it later. */
@@ -78,16 +110,12 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         return ret
     }
 
-    get(id: string, ignoreErrors: boolean): PuzzleFile {
-        const item = localStorage.getItem(this._getKey(id))
-        if(item === null) {
+    getRaw(id: string): string {
+        const str = localStorage.getItem(this._getKey(id))
+        if(str === null) {
             throw new PuzzleNotFoundError(id)
         }
-        if(ignoreErrors) {
-            return PuzzleFile.deserializeIgnoreErrors(item)
-        } else {
-            return PuzzleFile.deserialize(item)
-        }
+        return str
     }
 
     save(puzzleFile: PuzzleFile) {

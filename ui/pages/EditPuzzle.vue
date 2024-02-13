@@ -150,12 +150,3 @@ function stripIfStartsWith(input: string, toStrip: string) {
         </p>
     </Modal>
 </template>
-
-<style scoped>
-code {
-    display: block;
-    white-space: pre-wrap;
-    margin-bottom: 1em;
-    padding-left: 2em;
-}
-</style>

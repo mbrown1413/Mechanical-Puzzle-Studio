@@ -12,6 +12,7 @@ import Modal from "~/ui/common/Modal.vue"
 withDefaults(
     defineProps<{
         title?: string,
+        tooltip?: string | null,
         text?: string,
         buttonColor?: VBtn["color"],
         buttonVariant?: VBtn["variant"],
@@ -19,6 +20,7 @@ withDefaults(
         confirmButtonColor?: string,
     }>(), {
         title: "Confirm",
+        tooltip: null,
         text: "Are you sure?",
         confirmText: "Confirm",
         confirmButtonColor: undefined,
@@ -33,13 +35,19 @@ const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 </script>
 
 <template>
-    <VBtn
-        :color="buttonColor"
-        :variant="buttonVariant"
-        @click="modal?.open()"
-    >
-        <slot></slot>
-    </VBtn>
+    <VTooltip :text="tooltip || ''">
+        <template v-slot:activator="{props}">
+            <VBtn
+                :color="buttonColor"
+                :variant="buttonVariant"
+                @click="modal?.open()"
+                v-bind="tooltip ? props : {}"
+            >
+                <slot></slot>
+            </VBtn>
+        </template>
+    </VTooltip>
+
     <Modal
             ref="modal"
             :title="title"

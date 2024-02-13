@@ -10,14 +10,14 @@ withDefaults(
     }
 )
 
-const app_title = import.meta.env.VITE_APP_TITLE
+const appTitle = import.meta.env.VITE_APP_TITLE
 </script>
 
 <template>
     <VAppBar class="title-bar">
         <div class="main-logo">
             <RouterLink to="/">
-                <img src="/logo/logo-98x50.png" :alt="app_title" />
+                <img src="/logo/logo-98x50.png" :alt="appTitle" />
             </RouterLink>
         </div>
 
