@@ -13,7 +13,7 @@ import {onMounted} from "vue"
 
 const props = defineProps<{
     storageId: string,
-    puzzleId: string,
+    puzzleName: string,
 }>()
 
 type PuzzleErrorInfo = {
@@ -47,7 +47,7 @@ function setPuzzleFile(ignoreErrors=false) {
     puzzleError.value = null
     puzzleFile.value = null
     try {
-        puzzleFile.value = puzzleStorage.get(props.puzzleId, ignoreErrors)
+        puzzleFile.value = puzzleStorage.get(props.puzzleName, ignoreErrors)
     } catch(e) {
         console.error(e)
         if(e instanceof PuzzleNotFoundError) {
@@ -64,7 +64,7 @@ function setPuzzleFile(ignoreErrors=false) {
         // If it fails now, we know it's unrecoverable.
         let recoverable = true
         try {
-            puzzleStorage.get(props.puzzleId, true)
+            puzzleStorage.get(props.puzzleName, true)
         } catch {
             recoverable = false
         }

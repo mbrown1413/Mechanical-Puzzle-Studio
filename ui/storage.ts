@@ -2,8 +2,8 @@
 import {PuzzleFile, PuzzleMetadata} from "~lib"
 
 export class PuzzleNotFoundError extends Error {
-    constructor(id: string) {
-        super(`Puzzle id not found: "${id}"`)
+    constructor(puzzleName: string) {
+        super(`Puzzle not found: "${puzzleName}"`)
     }
 }
 
@@ -35,10 +35,10 @@ export abstract class PuzzleStorage {
     /**
      * Retrieve serialized string form of the puzzle from storage.
      *
-     * @throws PuzzleNotFoundError - When a puzzle with the given ID does not
+     * @throws PuzzleNotFoundError - When a puzzle with the given name does not
      * exist in the storage.
      */
-    abstract getRaw(id: string): string
+    abstract getRaw(puzzleName: string): string
 
     /**
      * Get unserialized PuzzleFile instance from storage.
@@ -47,8 +47,8 @@ export abstract class PuzzleStorage {
      * ignored. This should only be used after trying without it, then catching
      * and displaying the error to the user.
      */
-    get(id: string, ignoreErrors=false): PuzzleFile {
-        const str = this.getRaw(id)
+    get(puzzleName: string, ignoreErrors=false): PuzzleFile {
+        const str = this.getRaw(puzzleName)
         if(ignoreErrors) {
             return PuzzleFile.deserializeIgnoreErrors(str)
         } else {
@@ -61,8 +61,8 @@ export abstract class PuzzleStorage {
      * formatting issue, the returned `error` is a string containing the error
      * and `formatted` will be the raw unformatted string.
      */
-    getRawFormatted(id: string): [formatted: string, error: string | null] {
-        const raw = this.getRaw(id)
+    getRawFormatted(puzzleName: string): [formatted: string, error: string | null] {
+        const raw = this.getRaw(puzzleName)
 
         // Try returning pretty formatted, but fail gracefully
         let formatted = null
@@ -75,11 +75,11 @@ export abstract class PuzzleStorage {
         }
     }
 
-    /** Save a puzzle, using `PuzzleFile.id` as a key which can be used to
+    /** Save a puzzle, using `PuzzleFile.name` as a key which can be used to
      * retrieve it later. */
     abstract save(puzzleFile: PuzzleFile): void
 
-    abstract delete(id: string): void
+    abstract delete(puzzleName: string): void
 }
 
 export class LocalPuzzleStorage extends PuzzleStorage {
@@ -99,21 +99,21 @@ export class LocalPuzzleStorage extends PuzzleStorage {
             if(!key?.startsWith("puzzle:")) {
                 continue
             }
-            const id = key.slice("puzzle:".length)
+            const puzzleName = key.slice("puzzle:".length)
             const item = localStorage.getItem(key)
             if(item !== null) {
                 ret.push(
-                    PuzzleFile.getMetadataSafe(item, id)
+                    PuzzleFile.getMetadataSafe(item, puzzleName)
                 )
             }
         }
         return ret
     }
 
-    getRaw(id: string): string {
-        const str = localStorage.getItem(this._getKey(id))
+    getRaw(puzzleName: string): string {
+        const str = localStorage.getItem(this._getKey(puzzleName))
         if(str === null) {
-            throw new PuzzleNotFoundError(id)
+            throw new PuzzleNotFoundError(puzzleName)
         }
         return str
     }
@@ -125,19 +125,19 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         )
     }
 
-    delete(id: string) {
+    delete(puzzleName: string) {
         localStorage.removeItem(
-            this._getKey(id)
+            this._getKey(puzzleName)
         )
     }
 
     _getKey(puzzleFile: PuzzleFile): string
-    _getKey(puzzleFileId: string): string
-    _getKey(puzzleFileOrId: PuzzleFile | string): string {
-        if(typeof puzzleFileOrId === "string") {
-            return "puzzle:" + puzzleFileOrId
+    _getKey(puzzleFileName: string): string
+    _getKey(puzzleFileOrName: PuzzleFile | string): string {
+        if(typeof puzzleFileOrName === "string") {
+            return "puzzle:" + puzzleFileOrName
         } else {
-            return "puzzle:" + puzzleFileOrId.id
+            return "puzzle:" + puzzleFileOrName.name
         }
     }
 

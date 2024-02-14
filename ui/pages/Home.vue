@@ -65,12 +65,12 @@ function newPuzzleSubmit(event?: Event) {
     storage.save(puzzleFile)
     router.push({
         name: "puzzle",
-        params: {storageId: storage.id, puzzleId: puzzleFile.id}
+        params: {storageId: storage.id, puzzleName: puzzleFile.name}
     })
 }
 
-function deletePuzzle(storage: PuzzleStorage, puzzleId: string) {
-    storage.delete(puzzleId)
+function deletePuzzle(storage: PuzzleStorage, puzzleName: string) {
+    storage.delete(puzzleName)
 
     // Remove puzzle from puzzlesByStorage
     const entry = puzzlesByStorage.find(
@@ -78,15 +78,15 @@ function deletePuzzle(storage: PuzzleStorage, puzzleId: string) {
     )
     if(entry !== undefined) {
         entry.puzzles = entry.puzzles.filter(
-            (puzzle) => puzzle.id !== puzzleId
+            (puzzle) => puzzle.name !== puzzleName
         )
     }
 }
 
 function downloadPuzzle(storage: PuzzleStorage, meta: PuzzleMetadata) {
-    const [raw, _error] = storage.getRawFormatted(meta.id)
+    const [raw, _error] = storage.getRawFormatted(meta.name)
     const blob = new Blob([raw], {type: "application/json;charset=utf-8"})
-    const filename = (meta.name || meta.id) + ".json"
+    const filename = meta.name + ".json"
     saveAs(blob, filename)
 }
 
@@ -160,8 +160,8 @@ const appTitle = import.meta.env.VITE_APP_TITLE
 
                 <template v-slot:item.name="{item}">
 
-                    <RouterLink :to="{name: 'puzzle', params: {storageId: storage.id, puzzleId: item.id}}">
-                        {{ item.name === null ? "(unknown name)" : item.name }}
+                    <RouterLink :to="{name: 'puzzle', params: {storageId: storage.id, puzzleName: item.name}}">
+                        {{ item.name }}
                     </RouterLink>
 
                     <VTooltip v-if="item.error !== null">
@@ -194,13 +194,13 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                             </VBtn>
                         </template>
                     </VTooltip>
-                    <RawDataButton :storage="storage" :id="item.id" />
+                    <RawDataButton :storage="storage" :puzzleName="item.name" />
                     <ConfirmButton
                         :text="`Delete Puzzle ${item.name}?`"
                         tooltip="Delete"
                         confirmText="Delete"
                         confirmButtonColor="red"
-                        @confirm="deletePuzzle(storage, item.id)"
+                        @confirm="deletePuzzle(storage, item.name)"
                     >
                         <VIcon icon="mdi-delete" aria-label="Delete" aria-hidden="false" />
                     </ConfirmButton>

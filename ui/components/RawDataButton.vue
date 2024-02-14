@@ -6,7 +6,7 @@ import {PuzzleStorage} from "~/ui/storage"
 
 const props = defineProps<{
     storage: PuzzleStorage,
-    id: string,
+    puzzleName: string,
 }>()
 
 const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
@@ -14,7 +14,7 @@ const raw = ref("")
 const error: Ref<string | null> = ref(null)
 
 function open() {
-    [raw.value, error.value] = props.storage.getRawFormatted(props.id)
+    [raw.value, error.value] = props.storage.getRawFormatted(props.puzzleName)
     modal.value?.open()
 }
 </script>
