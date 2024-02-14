@@ -11,7 +11,7 @@ import Modal from "~/ui/common/Modal.vue"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import RawDataButton from "~/ui/components/RawDataButton.vue"
-import {VDataTable} from "vuetify/components"
+import {VDataTable, VTextField} from "vuetify/components"
 
 title.value = ""
 
@@ -28,7 +28,7 @@ const puzzlesByStorage = reactive(
 
 // Refs for puzzle creation
 const newPuzzleModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
-const newPuzzleForm: Ref<HTMLFormElement | null> = ref(null)
+const newPuzzleFormValid = ref(false)
 const newPuzzleFields = reactive({
     name: "",
     storage: puzzlesByStorage[0].storage,
@@ -50,8 +50,7 @@ function openNewPuzzleModal(storage: PuzzleStorage) {
 
 function newPuzzleSubmit(event?: Event) {
     event?.preventDefault()
-    if(!newPuzzleForm.value?.checkValidity()) {
-        newPuzzleForm.value?.reportValidity()
+    if(!newPuzzleFormValid.value) {
         return
     }
 
@@ -69,15 +68,31 @@ function newPuzzleSubmit(event?: Event) {
     })
 }
 
+const nameValidationRules: VTextField["rules"] = [
+    (name: string) => {
+        const storageEntry = puzzlesByStorage.find(
+            (item) => item.storage === newPuzzleFields.storage
+        )
+        if(storageEntry === undefined) {
+            return "Storage not found"
+        }
+        const allNames = storageEntry.puzzles.map(puzzleMeta => puzzleMeta.name)
+        if(allNames.includes(name)) {
+            return "Puzzle name already exists"
+        }
+        return true
+    }
+]
+
 function deletePuzzle(storage: PuzzleStorage, puzzleName: string) {
     storage.delete(puzzleName)
 
     // Remove puzzle from puzzlesByStorage
-    const entry = puzzlesByStorage.find(
+    const storageEntry = puzzlesByStorage.find(
         (item) => item.storage === storage
     )
-    if(entry !== undefined) {
-        entry.puzzles = entry.puzzles.filter(
+    if(storageEntry !== undefined) {
+        storageEntry.puzzles = storageEntry.puzzles.filter(
             (puzzle) => puzzle.name !== puzzleName
         )
     }
@@ -217,11 +232,15 @@ const appTitle = import.meta.env.VITE_APP_TITLE
             dialogMaxWidth="500px"
             @ok="newPuzzleSubmit()"
     >
-        <form ref="newPuzzleForm" :onSubmit="newPuzzleSubmit">
+        <VForm
+            :submit="newPuzzleSubmit"
+            v-model="newPuzzleFormValid"
+        >
             <VTextField
                     label="Name"
                     required
                     v-model="newPuzzleFields.name"
+                    :rules="nameValidationRules"
                     autofocus
             />
             <VSelect
@@ -231,6 +250,6 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                     :items="storageSelectItems"
             />
             <input type="submit" style="display: none;" />
-        </form>
+        </VForm>
     </Modal>
 </template>
