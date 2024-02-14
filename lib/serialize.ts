@@ -163,6 +163,9 @@ export abstract class SerializableClass {
      */
     id: string | null
 
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    [s: string]: Serializable | Function
+
     constructor(id: string | null) {
         this.id = id
     }

@@ -8,6 +8,8 @@ class A extends SerializableClass {
         return this.id
     }
 }
+registerClass(A)
+
 class B extends SerializableClass {
     nested: A
     constructor(id: string | null, nested: A) {
@@ -15,6 +17,8 @@ class B extends SerializableClass {
         this.nested = nested
     }
 }
+registerClass(B)
+
 class Circular extends SerializableClass {
     circle: SerializableClass | null
     constructor(id: string, circle: SerializableClass | null) {
@@ -22,10 +26,22 @@ class Circular extends SerializableClass {
         this.circle = circle
     }
 }
-class Unregistered extends SerializableClass {}
-registerClass(A)
-registerClass(B)
 registerClass(Circular)
+
+class NotSerializable extends SerializableClass {
+
+    // @ts-expect-error: Not serializable classes should error when
+    // typechecked.
+    foo: string | undefined
+
+    constructor(foo: string | undefined) {
+        super(null)
+        this.foo = foo
+    }
+}
+registerClass(NotSerializable)
+
+class Unregistered extends SerializableClass {}
 
 /**
  * Test serialization and deserialization matches expected values, given the
@@ -224,6 +240,12 @@ describe("error on serialization", () => {
         }).toThrowErrorMatchingInlineSnapshot(`
           "Serialization failed: Unsupported primitive type \\"undefined\\"
           Attribute path: root"
+        `)
+        expect(() => {
+            serialize(new NotSerializable(undefined))
+        }).toThrowErrorMatchingInlineSnapshot(`
+          "Serialization failed: Unsupported primitive type \\"undefined\\"
+          Attribute path: root.foo"
         `)
     })
 
