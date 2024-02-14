@@ -235,19 +235,42 @@ describe("error on serialization", () => {
         `)
     })
 
-    test.skip("circular references", () => {
+    test("duplicate references", () => {
+        const obj = {}
+        const array: string[] = []
+        expect(() => {
+            serialize([obj, obj])
+        }).toThrowErrorMatchingInlineSnapshot(`
+          "Serialization failed: Object referenced twice (same object as root.0)
+          Attribute path: root.1"
+        `)
+        expect(() => {
+            serialize([array, array])
+        }).toThrowErrorMatchingInlineSnapshot(`
+          "Serialization failed: Object referenced twice (same object as root.0)
+          Attribute path: root.1"
+        `)
+    })
+
+    test("circular references", () => {
         expect(() => {
             type RecursiveArray = Array<RecursiveArray>
             const a: RecursiveArray = []
             const b: RecursiveArray = [a]
             a.push(b)
             serialize(a)
-        }).toThrowError("Circular reference in data")
+        }).toThrowErrorMatchingInlineSnapshot(`
+          "Serialization failed: Object referenced twice (same object as root)
+          Attribute path: root.0.0"
+        `)
         expect(() => {
             const a = new Circular("c-1", null)
             a.circle = a
             serialize(a)
-        }).toThrowError("Circular reference in data")
+        }).toThrowErrorMatchingInlineSnapshot(`
+          "Serialization failed: Object referenced twice (same object as root)
+          Attribute path: root.circle"
+        `)
     })
 
 })

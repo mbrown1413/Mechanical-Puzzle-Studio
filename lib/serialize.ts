@@ -91,7 +91,8 @@
  *
  * Things we're not particularly concerned about:
  *     * Speed
- *     * Circular references (for now at least)
+ *     * Supporting duplicates of objects - Currently if the same object is
+ *       used twice, serialization will error.
  *
  *
  * ## Future plans
@@ -166,7 +167,7 @@ export function serialize(value: Serializable): SerializedData {
     const path: string[] = []
     let root
     try {
-        root = _serializeNode(value, path, "root")
+        root = _serializeNode(value, path, "root", new Map())
     } catch(e) {
         if(e instanceof SerializerError) {
             e.setSerialize()
@@ -180,14 +181,15 @@ export function serialize(value: Serializable): SerializedData {
 function _serializeNode(
     value: Serializable,
     path: string[],
-    attribute: string
+    attribute: string,
+    seenObjectPaths: Map<Serializable, string>,
 ): SerializedData {
 
     function getClassData(value: SerializableClass | SerializableObject) {
         const data: {[k: string]: SerializedData} = {}
         for(const [k, v] of Object.entries(value)) {
             if(typeof v !== "function") {
-                data[k] = _serializeNode(v, path, k)
+                data[k] = _serializeNode(v, path, k, seenObjectPaths)
             }
         }
         return data
@@ -207,54 +209,61 @@ function _serializeNode(
             return value
         }
 
-        if(typeof value === "object") {
-            // Array
-            if(value instanceof Array) {
-                return value.map(
-                    (item: Serializable, i: number) =>
-                    _serializeNode(item, path, String(i))
-                )
-            }
-
-            // Map
-            if(value instanceof Map) {
-                const entries: {[key: string | number]: SerializedData} = {}
-                for(const [k, v] of value.entries()) {
-                    if(typeof k !== "string") {
-                        path.push(k)
-                        throw new SerializerError("Only string keys are supported for Map")
-                    }
-                    entries[k] = _serializeNode(v, path, k)
-                }
-                return {
-                    type: "Map",
-                    data: entries,
-                }
-            }
-
-            // Object
-            const type = value.constructor.name
-            if(value.constructor.name === "Object") {
-                const data = getClassData(value)
-                return {type: "Object", data}
-            }
-
-            // Registered class
-            const classInfo = getRegisteredClass(type)
-            if(classInfo !== null) {
-                value = value as SerializableClass
-                const data = getClassData(value)
-                return {type, data}
-            }
-
-            if(type === "Object") {
-                throw new SerializerError("Non-class objects cannot be serialized")
-            }
-
-            throw new SerializerError(`Reference to unregistered class "${type}"`)
+        if(typeof value !== "object") {
+            throw new SerializerError(`Unsupported primitive type "${typeof value}"`)
         }
 
-        throw new SerializerError(`Unsupported primitive type "${typeof value}"`)
+        if(seenObjectPaths.has(value)) {
+            const duplicatePath = seenObjectPaths.get(value)
+            throw new SerializerError(`Object referenced twice (same object as ${duplicatePath})`)
+        }
+        seenObjectPaths.set(value, path.join("."))
+
+        // Array
+        if(value instanceof Array) {
+            return value.map(
+                (item: Serializable, i: number) =>
+                _serializeNode(item, path, String(i), seenObjectPaths)
+            )
+        }
+
+        // Map
+        if(value instanceof Map) {
+            const entries: {[key: string | number]: SerializedData} = {}
+            for(const [k, v] of value.entries()) {
+                if(typeof k !== "string") {
+                    path.push(k)
+                    throw new SerializerError("Only string keys are supported for Map")
+                }
+                entries[k] = _serializeNode(v, path, k, seenObjectPaths)
+            }
+            return {
+                type: "Map",
+                data: entries,
+            }
+        }
+
+        // Object
+        const type = value.constructor.name
+        if(value.constructor.name === "Object") {
+            const data = getClassData(value)
+            return {type: "Object", data}
+        }
+
+        // Registered class
+        const classInfo = getRegisteredClass(type)
+        if(classInfo !== null) {
+            value = value as SerializableClass
+            const data = getClassData(value)
+            return {type, data}
+        }
+
+        if(type === "Object") {
+            throw new SerializerError("Non-class objects cannot be serialized")
+        }
+
+        throw new SerializerError(`Reference to unregistered class "${type}"`)
+
     } catch(e) {
         errorFlag = true
         throw e
@@ -358,52 +367,54 @@ function _deserializeNode(
             )
         }
 
-        if(typeof data === "object") {
-            if(data.type === undefined) {
-                throw new SerializerError(`Malformed data: No type attribute on object`)
-            }
-
-            // Get data, either here inline or from refs
-            let obj: Serializable
-            if(!("data" in data)) {
-                throw new SerializerError("Required data attribute missing")
-            }
-            const objData = data.data
-            if(typeof objData !== "object") {
-                throw new SerializerError(`Expected data to be an object, not ${typeof objData}`)
-            }
-
-            // Map
-            if(data.type === "Map") {
-                const map: Map<string, Serializable> = new Map()
-                for(const [key, value] of Object.entries(objData)) {
-                    map.set(key, _deserializeNode(value, path, key, ignoreErrors))
-                }
-                obj = map
-
-            // Object
-            } else if(data.type === "Object") {
-                obj = {}
-                for(const [key, value] of Object.entries(objData)) {
-                    obj[key] = _deserializeNode(value, path, key, ignoreErrors)
-                }
-
-            // Registered class
-            } else {
-                const classInfo = getRegisteredClass(data.type)
-                if(classInfo === null) {
-                    throw new SerializerError(`Reference to unregistered class "${data.type}"`)
-                }
-                obj = {}
-                for(const [key, value] of Object.entries(objData)) {
-                    obj[key] = _deserializeNode(value, path, key, ignoreErrors)
-                }
-                Object.setPrototypeOf(obj, classInfo.cls.prototype)
-            }
-
-            return obj
+        if(typeof data !== "object") {
+            throw new SerializerError(`Cannot deserialize type "${typeof data}"`)
         }
-        throw new SerializerError(`Cannot deserialize type "${typeof data}"`)
+
+        if(data.type === undefined) {
+            throw new SerializerError(`Malformed data: No type attribute on object`)
+        }
+
+        // Get data, either here inline or from refs
+        let obj: Serializable
+        if(!("data" in data)) {
+            throw new SerializerError("Required data attribute missing")
+        }
+        const objData = data.data
+        if(typeof objData !== "object") {
+            throw new SerializerError(`Expected data to be an object, not ${typeof objData}`)
+        }
+
+        // Map
+        if(data.type === "Map") {
+            const map: Map<string, Serializable> = new Map()
+            for(const [key, value] of Object.entries(objData)) {
+                map.set(key, _deserializeNode(value, path, key, ignoreErrors))
+            }
+            obj = map
+
+        // Object
+        } else if(data.type === "Object") {
+            obj = {}
+            for(const [key, value] of Object.entries(objData)) {
+                obj[key] = _deserializeNode(value, path, key, ignoreErrors)
+            }
+
+        // Registered class
+        } else {
+            const classInfo = getRegisteredClass(data.type)
+            if(classInfo === null) {
+                throw new SerializerError(`Reference to unregistered class "${data.type}"`)
+            }
+            obj = {}
+            for(const [key, value] of Object.entries(objData)) {
+                obj[key] = _deserializeNode(value, path, key, ignoreErrors)
+            }
+            Object.setPrototypeOf(obj, classInfo.cls.prototype)
+        }
+
+        return obj
+
     } catch(e) {
         errorFlag = true
         if(ignoreErrors) {
