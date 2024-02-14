@@ -22,29 +22,29 @@
  *
  *     import { SerializableClass, registerClass, serialize, deserialize } from "~/lib/serialize.ts"
  *
- *      class MyClass extends SerializableClass {
+ *     class MyClass extends SerializableClass {
  *
- *          // Make attributes as normal, including other subclasses of
- *          // SerializableClass. Non-serializable types will throw a type error
- *          label: string
+ *         // Make attributes as normal, including other subclasses of
+ *         // SerializableClass. Non-serializable types will throw a type error
+ *         label: string
  *
- *          constructor(id: string, label: string) {
- *              super(id)  // Superclass takes a required `id` argument
- *              this.label = label
- *          }
- *      }
+ *         constructor(label: string) {
+ *             super()
+ *             this.label = label
+ *         }
+ *     }
  *
- *      // Register with the serializer
- *      // Note that before deserializing, you need to make sure the same code
- *      // is run to define and register the class, or you'll get an error that
- *      // the class you're trying to deserialize isn't registered.
- *      registerClass(MyClass)
+ *     // Register with the serializer
+ *     // Note that before deserializing, you need to make sure the same code
+ *     // is run to define and register the class, or you'll get an error that
+ *     // the class you're trying to deserialize isn't registered.
+ *     registerClass(MyClass)
  *
- *      const instance = new MyClass("myclass-0", "Hello, world!")
- *      const serialized = serialize(instance)
- *      const deserialized = deserialize<MyClass>(serialized, "MyClass")
+ *     const instance = new MyClass("Hello, world!")
+ *     const serialized = serialize(instance)
+ *     const deserialized = deserialize<MyClass>(serialized, "MyClass")
  *
- *      console.log(deserialized.label)  // "Hello, world!"
+ *     console.log(deserialized.label)  // "Hello, world!"
  *
  *
  * ## Caveat: Constructors and adding new attributes
@@ -88,8 +88,6 @@
  *     * Human-readable serialized format
  *     * Make it super easy to write new classes (no manually writing serialize
  *       and deserialize methods for each class).
- *     * Only store a single copy of an instance when it's referenced multiple
- *       times.
  *
  * Things we're not particularly concerned about:
  *     * Speed
@@ -132,10 +130,9 @@ class SerializerError extends Error {
 ////////////////////////////////////
 
 /* Resulting data structure after serialization */
-export type SerializedData = {
-    root: SerializedNode,
-    refs?: RefData,
-}
+export type SerializedData = string | number | boolean | null |
+    SerializedData[] |
+    {type: string, data: object}
 
 /**
  * Any type which can be serialized. Add to this when built-in types are
@@ -153,22 +150,8 @@ export type Serializable = number | string | boolean | null |
  * use attributes which cannot be serialized, a type error should occur.
  */
 export abstract class SerializableClass {
-
-    /** Unique identifier used to deduplicate instances after serializing. If
-     * `null`, instances will be serialized inline and not deduplicated.
-     *
-     * If you want to require an ID on a particular class, re-declare the
-     * property like this:
-     *     declare id: string
-     */
-    id: string | null
-
     // eslint-disable-next-line @typescript-eslint/ban-types
     [s: string]: Serializable | Function
-
-    constructor(id: string | null) {
-        this.id = id
-    }
 }
 
 
@@ -176,29 +159,14 @@ export abstract class SerializableClass {
 ////////// Serialization //////////
 ///////////////////////////////////
 
-/* Maps a serializable class's ID to it's type and serialized data. */
-type RefData = {
-    [id: string]: {
-        type: string,
-        data: {[k: string]: SerializedNode},
-    }
-}
-
-/* One recursive node, part of SerializedData. */
-type SerializedNode = string | number | boolean | null |
-    SerializedNode[] |
-    {type: string, data: object} |
-    {type: string, id: string}
-
 type SerializableObject = {[key: string]: Serializable}
 
 /* Return an object which can be passed to JSON.stringify to serialize. */
 export function serialize(value: Serializable): SerializedData {
-    const refs: RefData = {}
     const path: string[] = []
     let root
     try {
-        root = _serializeNode(value, refs, path, "root")
+        root = _serializeNode(value, path, "root")
     } catch(e) {
         if(e instanceof SerializerError) {
             e.setSerialize()
@@ -206,25 +174,20 @@ export function serialize(value: Serializable): SerializedData {
         }
         throw e
     }
-    const ret: SerializedData = {root}
-    if(Object.keys(refs).length) {
-        ret.refs = refs
-    }
-    return ret
+    return root
 }
 
 function _serializeNode(
     value: Serializable,
-    refs: RefData,
     path: string[],
     attribute: string
-): SerializedNode {
+): SerializedData {
 
     function getClassData(value: SerializableClass | SerializableObject) {
-        const data: {[k: string]: SerializedNode} = {}
+        const data: {[k: string]: SerializedData} = {}
         for(const [k, v] of Object.entries(value)) {
             if(typeof v !== "function") {
-                data[k] = _serializeNode(v, refs, path, k)
+                data[k] = _serializeNode(v, path, k)
             }
         }
         return data
@@ -249,19 +212,19 @@ function _serializeNode(
             if(value instanceof Array) {
                 return value.map(
                     (item: Serializable, i: number) =>
-                    _serializeNode(item, refs, path, String(i))
+                    _serializeNode(item, path, String(i))
                 )
             }
 
             // Map
             if(value instanceof Map) {
-                const entries: {[key: string | number]: SerializedNode} = {}
+                const entries: {[key: string | number]: SerializedData} = {}
                 for(const [k, v] of value.entries()) {
                     if(typeof k !== "string") {
                         path.push(k)
                         throw new SerializerError("Only string keys are supported for Map")
                     }
-                    entries[k] = _serializeNode(v, refs, path, k)
+                    entries[k] = _serializeNode(v, path, k)
                 }
                 return {
                     type: "Map",
@@ -280,20 +243,8 @@ function _serializeNode(
             const classInfo = getRegisteredClass(type)
             if(classInfo !== null) {
                 value = value as SerializableClass
-
-                // Store inline
-                if(value.id === null) {
-                    const data = getClassData(value)
-                    return {type, data}
-
-                // Store in a reference
-                } else {
-                    if(refs[value.id] === undefined) {
-                        const data = getClassData(value)
-                        refs[value.id] = {type, data}
-                    }
-                    return {type, id: value.id}
-                }
+                const data = getClassData(value)
+                return {type, data}
             }
 
             if(type === "Object") {
@@ -332,17 +283,10 @@ export function deserialize<T extends Serializable>(
     _ignoreErrors=false,
 ): T {
     try {
-
-        if(typeof data !== "object" || data === null || data.root === undefined) {
-            throw new SerializerError(
-                'Incorrectly formatted data. Expected object with "root" attribute.'
-            )
-        }
-        const refs = data.refs || {}
         const path: string[] = []
         let value
         try {
-            value = _deserializeNode(data.root, refs, new Map(), path, "root", _ignoreErrors)
+            value = _deserializeNode(data, path, "root", _ignoreErrors)
         } catch(e) {
             if(e instanceof SerializerError) {
                 e.setDeserialize()
@@ -389,9 +333,7 @@ export function deserializeIgnoreErrors(data: SerializedData): Serializable {
 }
 
 function _deserializeNode(
-    data: SerializedNode,
-    refs: RefData,
-    cache: Map<string, Serializable>,
+    data: SerializedData,
     path: string[],
     attribute: string,
     ignoreErrors: boolean
@@ -411,8 +353,8 @@ function _deserializeNode(
 
         if(Array.isArray(data)) {
             return data.map(
-                (x: SerializedNode, i: number) =>
-                _deserializeNode(x, refs, cache, path, String(i), ignoreErrors)
+                (x: SerializedData, i: number) =>
+                _deserializeNode(x, path, String(i), ignoreErrors)
             )
         }
 
@@ -421,35 +363,21 @@ function _deserializeNode(
                 throw new SerializerError(`Malformed data: No type attribute on object`)
             }
 
-            // Read data either directly, or from refs
-            if("id" in data) {
-                // Check if we already deserialized the object with this ID
-                const obj = cache.get(data.id)
-                if(obj !== undefined) {
-                    return obj
-                }
-            }
-
             // Get data, either here inline or from refs
             let obj: Serializable
-            let objData
-            if("data" in data) {
-                objData = data.data
-            } else if(data.id !== undefined) {
-                const ref = refs[data.id]
-                if(ref === undefined) {
-                    throw new SerializerError(`Could not find reference for ID "${data.id}"`)
-                }
-                objData = ref.data
-            } else {
-                throw new SerializerError("Malformed data: No data or ID found in reference")
+            if(!("data" in data)) {
+                throw new SerializerError("Required data attribute missing")
+            }
+            const objData = data.data
+            if(typeof objData !== "object") {
+                throw new SerializerError(`Expected data to be an object, not ${typeof objData}`)
             }
 
             // Map
             if(data.type === "Map") {
                 const map: Map<string, Serializable> = new Map()
                 for(const [key, value] of Object.entries(objData)) {
-                    map.set(key, _deserializeNode(value, refs, cache, path, key, ignoreErrors))
+                    map.set(key, _deserializeNode(value, path, key, ignoreErrors))
                 }
                 obj = map
 
@@ -457,7 +385,7 @@ function _deserializeNode(
             } else if(data.type === "Object") {
                 obj = {}
                 for(const [key, value] of Object.entries(objData)) {
-                    obj[key] = _deserializeNode(value, refs, cache, path, key, ignoreErrors)
+                    obj[key] = _deserializeNode(value, path, key, ignoreErrors)
                 }
 
             // Registered class
@@ -466,19 +394,13 @@ function _deserializeNode(
                 if(classInfo === null) {
                     throw new SerializerError(`Reference to unregistered class "${data.type}"`)
                 }
-                if(typeof objData !== "object") {
-                    throw new SerializerError(`Expected instance data to be an object, not ${typeof objData}`)
-                }
                 obj = {}
                 for(const [key, value] of Object.entries(objData)) {
-                    obj[key] = _deserializeNode(value, refs, cache, path, key, ignoreErrors)
+                    obj[key] = _deserializeNode(value, path, key, ignoreErrors)
                 }
                 Object.setPrototypeOf(obj, classInfo.cls.prototype)
             }
 
-            if("id" in data) {
-                cache.set(data.id, obj)
-            }
             return obj
         }
         throw new SerializerError(`Cannot deserialize type "${typeof data}"`)
@@ -517,9 +439,7 @@ export function registerClass(
     if(registeredClasses[cls.name] !== undefined) {
         throw new Error(`Class "${cls.name}" is already registered`)
     }
-    registeredClasses[cls.name] = {
-        cls,
-    }
+    registeredClasses[cls.name] = {cls}
 }
 
 /* Return classInfo passed to `registerClass` for the given class name, or null

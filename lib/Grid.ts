@@ -126,9 +126,6 @@ export type Translation = number[]
  * of graphs and not arrays will take some getting used to though.
  */
 export abstract class Grid extends SerializableClass {
-    constructor(id: string|null = null) {
-        super(id)
-    }
 
     abstract getDimensions(): Dimension[]
 

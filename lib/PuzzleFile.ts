@@ -24,14 +24,14 @@ export type PuzzleMetadata = {
 /** A `Puzzle` with some extra metadata and conveniences for dealing with
 * saving/loading puzzles. */
 export class PuzzleFile extends SerializableClass {
-    declare id: string
-    puzzle: Puzzle
+    id: string
 
     name: string
     author: string
     description: string
     createdUTCString: string
     modifiedUTCString: string
+    puzzle: Puzzle
 
     constructor(
         puzzle: Puzzle,
@@ -39,13 +39,14 @@ export class PuzzleFile extends SerializableClass {
         author: string="",
         description: string="",
     ) {
-        super(uuid())
-        this.puzzle = puzzle
+        super()
+        this.id = uuid()
         this.name = name
         this.author = author
         this.description = description
         this.createdUTCString = new Date().toUTCString()
         this.modifiedUTCString = this.createdUTCString
+        this.puzzle = puzzle
     }
 
     serialize() {

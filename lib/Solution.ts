@@ -7,7 +7,7 @@ export class AssemblySolution extends Solution {
     placements: PiecePlacement[]
 
     constructor(placements: PiecePlacement[]) {
-        super(null)
+        super()
         this.placements = placements
     }
 }

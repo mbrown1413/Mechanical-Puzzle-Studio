@@ -12,13 +12,14 @@ type SolverInfo = {
  * Describes an objective of the puzzle.
  */
 export abstract class Problem extends SerializableClass {
-    declare id: string
+    id: string
     label: string
     solverId: string
     solutions: Solution[] | null
 
     constructor(id: string) {
-        super(id)
+        super()
+        this.id = id
         this.label = id
         this.solverId = Object.keys(this.getSolvers())[0]
         this.solutions = null

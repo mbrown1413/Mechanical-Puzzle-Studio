@@ -9,6 +9,7 @@ import {getNextColor} from "~/lib/colors.ts"
 export class PiecePlacement extends SerializableClass {
 
     /** The piece as defined in the puzzle. */
+    originalPieceId: string | null
     originalPiece: Piece
 
     /**
@@ -26,8 +27,9 @@ export class PiecePlacement extends SerializableClass {
         transformedPiece: Piece,
         translation: Translation | null = null,
     ) {
-        super(null)
-        this.originalPiece = originalPiece
+        super()
+        this.originalPieceId = originalPiece.id
+        this.originalPiece = originalPiece.copy()
         this.transformedPiece = transformedPiece
         this.translation = translation
     }
@@ -39,8 +41,8 @@ export class Puzzle extends SerializableClass {
     pieces: Map<string, PieceWithId>
     problems: Map<string, Problem>
 
-    constructor(id: string, grid: Grid) {
-        super(id)
+    constructor(grid: Grid) {
+        super()
         this.grid = grid
         this.pieces = new Map()
         this.problems = new Map()
@@ -215,13 +217,16 @@ export class Puzzle extends SerializableClass {
 }
 
 export class Piece extends SerializableClass {
+    id: string | null
+
     bounds: Bounds
     voxels: Voxel[]
     label: string
     color: string
 
     constructor(id: string | null, bounds: Bounds, voxels: Voxel[]=[]) {
-        super(id)
+        super()
+        this.id = id
         this.bounds = bounds
         this.voxels = voxels
         this.label = id || "unlabeled-piece"

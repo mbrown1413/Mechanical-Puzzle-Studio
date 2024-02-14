@@ -4,25 +4,36 @@ import {deserialize, deserializeIgnoreErrors, serialize, Serializable, Serialize
 
 // Classes to test out serializable classes
 class A extends SerializableClass {
+    name: string
+
+    constructor(name: string) {
+        super()
+        this.name = name
+    }
+
     func1() {
-        return this.id
+        return this.name
     }
 }
 registerClass(A)
 
 class B extends SerializableClass {
+    name: string
     nested: A
-    constructor(id: string | null, nested: A) {
-        super(id)
+    constructor(name: string, nested: A) {
+        super()
+        this.name = name
         this.nested = nested
     }
 }
 registerClass(B)
 
 class Circular extends SerializableClass {
+    name: string
     circle: SerializableClass | null
-    constructor(id: string, circle: SerializableClass | null) {
-        super(id)
+    constructor(name: string, circle: SerializableClass | null) {
+        super()
+        this.name = name
         this.circle = circle
     }
 }
@@ -35,13 +46,19 @@ class NotSerializable extends SerializableClass {
     foo: string | undefined
 
     constructor(foo: string | undefined) {
-        super(null)
+        super()
         this.foo = foo
     }
 }
 registerClass(NotSerializable)
 
-class Unregistered extends SerializableClass {}
+class Unregistered extends SerializableClass {
+    name: string
+    constructor(name: string) {
+        super()
+        this.name = name
+    }
+}
 
 /**
  * Test serialization and deserialization matches expected values, given the
@@ -63,36 +80,32 @@ function serializeMatches(
 describe("serialization and deserialization of", () => {
 
     test("primitive values", () => {
-        serializeMatches(7, {root: 7}, "number")
-        serializeMatches("seven", {root: "seven"}, "string")
-        serializeMatches(true, {root: true}, "boolean")
-        serializeMatches(null, {root: null}, "null")
+        serializeMatches(7, 7, "number")
+        serializeMatches("seven", "seven", "string")
+        serializeMatches(true, true, "boolean")
+        serializeMatches(null, null, "null")
     })
 
     test("Array", () => {
-        serializeMatches([], {root: []}, "Array")
-        serializeMatches([7, "seven"], {root: [7, "seven"]}, "Array")
-        serializeMatches([[1], [2, [3]]], {root: [[1], [2, [3]]]}, "Array")
+        serializeMatches([], [], "Array")
+        serializeMatches([7, "seven"], [7, "seven"], "Array")
+        serializeMatches([[1], [2, [3]]], [[1], [2, [3]]], "Array")
     })
 
     test("Map", () => {
         serializeMatches(
             new Map<string, number>([["one", 1]]),
             {
-                root: {
-                    type: "Map",
-                    data: {"one": 1}
-                }
+                type: "Map",
+                data: {"one": 1}
             },
             "Map"
         )
         serializeMatches(
             new Map<string, number[]>([["one", [1, 2, 3]]]),
             {
-                root: {
-                    type: "Map",
-                    data: {"one": [1, 2, 3]}
-                }
+                type: "Map",
+                data: {"one": [1, 2, 3]}
             },
             "Map"
         )
@@ -101,23 +114,23 @@ describe("serialization and deserialization of", () => {
     test("Objects", () => {
         serializeMatches(
             {a: 1, b: 2},
-            {root: {
+            {
                 type: "Object",
                 data: {a: 1, b: 2},
-            }},
+            },
             "Object"
         )
         serializeMatches(
             {a: 1, b: {
                 c: 2
             }},
-            {root: {
+            {
                 type: "Object",
                 data: {a: 1, b: {
                     type: "Object",
                     data: {c: 2}
                 }},
-            }},
+            },
             "Object"
         )
     })
@@ -126,10 +139,7 @@ describe("serialization and deserialization of", () => {
         serializeMatches(
             new A("a-1"),
             {
-                refs: {
-                    "a-1": {type: "A", data: {id: "a-1"}}
-                },
-                root: {type: "A", id: "a-1"}
+                type: "A", data: {name: "a-1"}
             },
             "A"
         )
@@ -139,77 +149,18 @@ describe("serialization and deserialization of", () => {
         serializeMatches(
             new B("b-1", new A("a-1")),
             {
-                refs: {
-                    "a-1": {type: "A", data: {id: "a-1"}},
-                    "b-1": {type: "B", data: {id: "b-1", nested: {type: "A", id: "a-1"}}},
-                },
-                root: {type: "B", id: "b-1"}
-            },
-            "B"
-        )
-    })
-
-    test("reference deduplication", () => {
-        const a = new A("a-1")
-        const serialized = {
-            refs: {
-                "a-1": {type: "A", data: {id: "a-1"}},
-            },
-            root: [
-                {type: "A", id: "a-1"},
-                {type: "A", id: "a-1"},
-                {type: "A", id: "a-1"},
-            ]
-        }
-        serializeMatches(
-            [a, a, a],
-            serialized,
-            "Array"
-        )
-        // Ensure all copies are actually the same object
-        const deserialized = deserialize(serialized, "Array") as A[]
-        expect(deserialized[0]).toBe(deserialized[1])
-        expect(deserialized[0]).toBe(deserialized[2])
-    })
-
-    test("inline class", () => {
-        serializeMatches(
-            new A(null),
-            {
-                root: {
-                    type: "A",
-                    data: {id: null}
-                }
-            },
-            "A"
-        )
-        serializeMatches(
-            new B(null, new A(null)),
-            {
-                root: {
-                    type: "B",
-                    data: {
-                        id: null,
-                        nested: {
-                            type: "A",
-                            data: {id: null}
+                type: "B",
+                data: {
+                    name: "b-1",
+                    nested: {
+                        type: "A",
+                        data: {
+                            name: "a-1"
                         }
                     }
                 }
             },
             "B"
-        )
-
-        const a = new A(null)
-        serializeMatches(
-            [a, a],
-            {
-                root: [
-                    {type: "A", data: {id: null}},
-                    {type: "A", data: {id: null}},
-                ]
-            },
-            "Array"
         )
     })
 
@@ -280,7 +231,7 @@ describe("error on serialization", () => {
             )
         }).toThrowErrorMatchingInlineSnapshot(`
           "Serialization failed: Unsupported primitive type \\"undefined\\"
-          Attribute path: root.nested.id"
+          Attribute path: root.nested.name"
         `)
     })
 
@@ -303,28 +254,15 @@ describe("error on serialization", () => {
 
 describe("deserialization error", () => {
 
-    test("malformed root data", () => {
-        const formatError = 'Incorrectly formatted data. Expected object with "root" attribute.'
-        expect(() => {
-            deserialize({} as unknown as SerializedData)
-        }).toThrowError(formatError)
-        expect(() => {
-            deserialize(undefined as unknown as SerializedData)
-        }).toThrowError(formatError)
-        expect(() => {
-            deserialize(null as unknown as SerializedData)
-        }).toThrowError(formatError)
-    })
-
     test("unsupported type", () => {
         expect(() => {
-            deserialize({root: [undefined]} as unknown as SerializedData)
+            deserialize([undefined as unknown as SerializedData])
         }).toThrowErrorMatchingInlineSnapshot(`
           "Deserialization failed: Cannot deserialize type \\"undefined\\"
           Attribute path: root.0"
         `)
         expect(() => {
-            deserialize({root: (arg1: string) => console.log(arg1)} as unknown as SerializedData)
+            deserialize(((arg1: string) => console.log(arg1)) as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
           "Deserialization failed: Cannot deserialize type \\"function\\"
           Attribute path: root"
@@ -334,10 +272,8 @@ describe("deserialization error", () => {
     test("unregistered class", () => {
         expect(() => {
             deserialize({
-                refs: {
-                    "u-1": {type: "Unregistered", data: {id: "u-1"}}
-                },
-                root: {type: "Unregistered", id: "u-1"}
+                type: "Unregistered",
+                data: {name: "u-1"}
             })
         }).toThrowErrorMatchingInlineSnapshot(`
           "Deserialization failed: Reference to unregistered class \\"Unregistered\\"
@@ -345,72 +281,45 @@ describe("deserialization error", () => {
         `)
     })
 
-    test("missing reference", () => {
-        expect(() => {
-            deserialize({
-                refs: {},
-                root: {type: "A", id: "a-1"}
-            })
-        }).toThrowErrorMatchingInlineSnapshot(`
-          "Deserialization failed: Could not find reference for ID \\"a-1\\"
-          Attribute path: root"
-        `)
-        expect(() => {
-            deserialize({
-                root: {type: "A", id: "a-1"}
-            })
-        }).toThrowErrorMatchingInlineSnapshot(`
-          "Deserialization failed: Could not find reference for ID \\"a-1\\"
-          Attribute path: root"
-        `)
-    })
-
     test("malformed object", () => {
         expect(() => {
-            deserialize({
-                root: {}
-            } as unknown as SerializedData)
+            deserialize({} as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
           "Deserialization failed: Malformed data: No type attribute on object
           Attribute path: root"
         `)
         expect(() => {
-            deserialize({
-                root: {id: "a-1"}
-            } as unknown as SerializedData)
+            deserialize({name: "a-1"} as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
           "Deserialization failed: Malformed data: No type attribute on object
           Attribute path: root"
         `)
         expect(() => {
-            deserialize({
-                root: {type: "A"}
-            } as unknown as SerializedData)
+            deserialize({type: "A"} as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Deserialization failed: Malformed data: No data or ID found in reference
+          "Deserialization failed: Required data attribute missing
           Attribute path: root"
         `)
     })
 
     test("error path reported correctly", () => {
         expect(() => {
-            deserialize({
-                refs: {
-                    "b-1": {
-                        type: "B",
-                        data: {id: "b-1", nested: {type: "A", id: "a-1"}}
-                    },
-                    "a-1": {
-                        type: "Z",
-                    }
-                },
-                root: [
+            deserialize(
+                [
                     "hello",
-                    {type: "B", id: "b-1"}
+                    {
+                        type: "B",
+                        data: {
+                            name: "b-1",
+                            nested: {
+                                type: "A",
+                            }
+                        }
+                    }
                 ]
-            } as unknown as SerializedData)
+            )
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Deserialization failed: Expected instance data to be an object, not undefined
+          "Deserialization failed: Required data attribute missing
           Attribute path: root.1.nested"
         `)
     })
@@ -421,16 +330,16 @@ describe("unexpected type error", () => {
 
     test("primitive values", () => {
         expect(() => {
-            deserialize({root: 7}, "aoeu")
+            deserialize(7, "aoeu")
         }).toThrowError('Expected "aoeu" after deserializing, not "number"')
         expect(() => {
-            deserialize({root: "seven"}, "aoeu")
+            deserialize("seven", "aoeu")
         }).toThrowError('Expected "aoeu" after deserializing, not "string"')
         expect(() => {
-            deserialize({root: true}, "aoeu")
+            deserialize(true, "aoeu")
         }).toThrowError('Expected "aoeu" after deserializing, not "boolean"')
         expect(() => {
-            deserialize({root: null}, "aoeu")
+            deserialize(null, "aoeu")
         }).toThrowError('Expected "aoeu" after deserializing, not "null"')
     })
 
@@ -463,25 +372,19 @@ describe("deserialize safe mode", () => {
     test("error inside object", () => {
         expect(
             deserializeIgnoreErrors(
-                {
-                    refs: {},
-                    root: ["foo", undefined]
-                } as unknown as SerializedData
+                ["foo", undefined as unknown as SerializedData]
             )
         ).toEqual(["foo", null])
         expect(
-            deserializeIgnoreErrors(
-                {
-                    refs: {},
-                    root: ["bar", {
-                        type: "Object",
-                        data: {
-                            foo: "bar",
-                            baz: undefined
-                        }
-                    }]
-                } as unknown as SerializedData
-            )
+            deserializeIgnoreErrors([
+                "bar", {
+                    type: "Object",
+                    data: {
+                        foo: "bar",
+                        baz: undefined
+                    }
+                }
+            ])
         ).toEqual(["bar", {foo: "bar", baz: null}])
     })
 })

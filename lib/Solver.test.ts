@@ -12,7 +12,7 @@ type SolutionShorthand = {[pieceId: string]: Voxel[]}
 function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShorthand) {
     const actual: SolutionShorthand = {}
     for(const placement of solution.placements) {
-        const pieceId = placement.originalPiece.id
+        const pieceId = placement.originalPieceId
         if(pieceId === null) {
             throw new Error("Piece should have an ID")
         }
@@ -22,7 +22,7 @@ function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShort
 }
 
 describe("AssemblySolver", () => {
-    const puzzle = new Puzzle("puzzle-0", new CubicGrid())
+    const puzzle = new Puzzle(new CubicGrid())
 
     // Problem 0
     // 001

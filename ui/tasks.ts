@@ -15,9 +15,6 @@ import {Puzzle, Problem, Solver, Solution, TaskCallbacks} from "~lib"
  */
 
 export abstract class Task<Result extends Serializable> extends SerializableClass {
-    constructor() {
-        super(null)
-    }
 
     /** User-displayed description of the task. */
     abstract getDescription(): string

@@ -57,7 +57,6 @@ function newPuzzleSubmit(event?: Event) {
 
     const puzzleFile = new PuzzleFile(
         new Puzzle(
-            "puzzle-0",
             new CubicGrid()
         ),
         newPuzzleFields.name

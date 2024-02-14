@@ -18,7 +18,7 @@ function makePlacementSet(voxelLists: Voxel[][]): Set<string> {
 
 describe("Puzzle", () => {
     test("Piece editing", () => {
-        const puzzle = new Puzzle("puzzle-0", new CubicGrid())
+        const puzzle = new Puzzle(new CubicGrid())
 
         const pieceWithId = new Piece("piece-0", puzzle.grid.getDefaultPieceBounds())
         expect(puzzle.hasPiece("piece-0")).toBeFalsy()
@@ -70,7 +70,7 @@ describe("Puzzle", () => {
     })
 
     test("Piece variations", () => {
-        const puzzle = new Puzzle("puzzle-0", new CubicGrid())
+        const puzzle = new Puzzle(new CubicGrid())
         const piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
@@ -78,7 +78,7 @@ describe("Puzzle", () => {
         )
         const variations = Array.from(puzzle.getPieceOrientations(piece))
         expect(variations.length).toEqual(24)
-        expect(variations[0].originalPiece).toEqual(piece)
+        expect(variations[0].originalPiece).toEqual(Object.assign({}, piece, {id: null}))
         expect(variations[0].transformedPiece).not.toEqual(piece)
         for(let i=0; i<24; i++) {
             expect(
@@ -88,7 +88,7 @@ describe("Puzzle", () => {
     })
 
     test("Piece translations", () => {
-        let puzzle = new Puzzle("puzzle-0", new CubicGrid())
+        let puzzle = new Puzzle(new CubicGrid())
         let piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
@@ -118,7 +118,7 @@ describe("Puzzle", () => {
         expect(placements[6].transformedPiece.voxels).toEqual(["1,1,0", "2,1,0"])
         expect(placements[7].transformedPiece.voxels).toEqual(["1,1,1", "2,1,1"])
 
-        puzzle = new Puzzle("puzzle-0", new CubicGrid())
+        puzzle = new Puzzle(new CubicGrid())
         piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
@@ -138,7 +138,7 @@ describe("Puzzle", () => {
     })
 
     test("Piece placements", () => {
-        let puzzle = new Puzzle("puzzle-0", new CubicGrid())
+        let puzzle = new Puzzle(new CubicGrid())
         let piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
@@ -178,7 +178,7 @@ describe("Puzzle", () => {
             ])
         )
 
-        puzzle = new Puzzle("puzzle-0", new CubicGrid())
+        puzzle = new Puzzle(new CubicGrid())
         piece = new Piece(
             "piece-0",
             puzzle.grid.getDefaultPieceBounds(),
