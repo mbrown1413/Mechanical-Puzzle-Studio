@@ -1,21 +1,20 @@
 <script setup lang="ts">
-import {ref, Ref, reactive, computed} from "vue"
-import {useRouter} from "vue-router"
+import {ref, Ref, reactive} from "vue"
+import {VDataTable} from "vuetify/components"
 import {saveAs} from "file-saver"
 
-import {Puzzle, PuzzleFile, CubicGrid, PuzzleMetadata} from "~lib"
+import {PuzzleMetadata} from "~lib"
 
 import {title} from "~/ui/globals.ts"
 import {getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
-import Modal from "~/ui/common/Modal.vue"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import RawDataButton from "~/ui/components/RawDataButton.vue"
-import {VDataTable, VTextField} from "vuetify/components"
+import NewPuzzleModal from "~/ui/components/NewPuzzleModal.vue"
 
 title.value = ""
 
-const router = useRouter()
+const newPuzzleModal: Ref<InstanceType<typeof NewPuzzleModal> | null> = ref(null)
 
 const puzzlesByStorage = reactive(
     Object.values(getStorageInstances()).map((storage) => {
@@ -25,64 +24,6 @@ const puzzlesByStorage = reactive(
         }
     })
 )
-
-// Refs for puzzle creation
-const newPuzzleModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
-const newPuzzleFormValid = ref(false)
-const newPuzzleFields = reactive({
-    name: "",
-    storage: puzzlesByStorage[0].storage,
-})
-
-const storageSelectItems = computed(() =>
-    Object.values(getStorageInstances()).map((storage) => {
-        return {
-            title: storage.name,
-            value: storage,
-        }
-    })
-)
-
-function openNewPuzzleModal(storage: PuzzleStorage) {
-    newPuzzleFields.storage = storage
-    newPuzzleModal.value?.open()
-}
-
-function newPuzzleSubmit(event?: Event) {
-    event?.preventDefault()
-    if(!newPuzzleFormValid.value) {
-        return
-    }
-
-    const puzzleFile = new PuzzleFile(
-        new Puzzle(
-            new CubicGrid()
-        ),
-        newPuzzleFields.name
-    )
-    const storage = newPuzzleFields.storage
-    storage.save(puzzleFile)
-    router.push({
-        name: "puzzle",
-        params: {storageId: storage.id, puzzleName: puzzleFile.name}
-    })
-}
-
-const nameValidationRules: VTextField["rules"] = [
-    (name: string) => {
-        const storageEntry = puzzlesByStorage.find(
-            (item) => item.storage === newPuzzleFields.storage
-        )
-        if(storageEntry === undefined) {
-            return "Storage not found"
-        }
-        const allNames = storageEntry.puzzles.map(puzzleMeta => puzzleMeta.name)
-        if(allNames.includes(name)) {
-            return "Puzzle name already exists"
-        }
-        return true
-    }
-]
 
 function deletePuzzle(storage: PuzzleStorage, puzzleName: string) {
     storage.delete(puzzleName)
@@ -110,6 +51,19 @@ const tableHeaders: VDataTable["headers"] = [
     //{title: "Created", key: "createdUTCString"},
     //{title: "Modified", key: "modifiedUTCString"},
     {title: "", key: "actions", sortable: false, align: "end"},
+]
+
+const storageButtons = [
+    {
+        text: "Upload",
+        icon: "mdi-file-upload",
+        action: (storage: PuzzleStorage) => newPuzzleModal.value?.open("upload", storage),
+    },
+    {
+        text: "New",
+        icon: "mdi-plus-box",
+        action: (storage: PuzzleStorage) => newPuzzleModal.value?.open("new", storage),
+    },
 ]
 
 const appTitle = import.meta.env.VITE_APP_TITLE
@@ -163,12 +117,14 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                             :title="storage.name"
                     >
                         <VBtn
+                            v-for="storageButton in storageButtons"
                             color="primary"
-                            dark
+                            size="large"
                             style="flex: 0 0 auto;"
-                            @click="openNewPuzzleModal(storage)"
+                            @click="storageButton.action(storage)"
                         >
-                            New Puzzle
+                            <VIcon :icon="storageButton.icon" class="mr-1" />
+                            {{ storageButton.text }}
                         </VBtn>
                     </VToolbar>
                 </template>
@@ -225,31 +181,5 @@ const appTitle = import.meta.env.VITE_APP_TITLE
         </VRow>
     </VMain>
 
-    <Modal
-            ref="newPuzzleModal"
-            title="New Puzzle"
-            okText="Create"
-            dialogMaxWidth="500px"
-            @ok="newPuzzleSubmit()"
-    >
-        <VForm
-            :submit="newPuzzleSubmit"
-            v-model="newPuzzleFormValid"
-        >
-            <VTextField
-                    label="Name"
-                    required
-                    v-model="newPuzzleFields.name"
-                    :rules="nameValidationRules"
-                    autofocus
-            />
-            <VSelect
-                    label="Storage Location"
-                    required
-                    v-model="newPuzzleFields.storage"
-                    :items="storageSelectItems"
-            />
-            <input type="submit" style="display: none;" />
-        </VForm>
-    </Modal>
+    <NewPuzzleModal ref="newPuzzleModal" />
 </template>

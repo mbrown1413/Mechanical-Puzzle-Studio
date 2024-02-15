@@ -23,7 +23,7 @@
     "vuetify": "^3.4.4"
   },
   "devDependencies": {
-    "@mdi/font": "^7.3.67",
+    "@mdi/font": "^7.4.47",
     "@popperjs/core": "^2.11.8",
     "@types/node": "^20.8.10",
     "@types/three": "^0.154.0",
