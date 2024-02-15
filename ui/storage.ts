@@ -7,13 +7,17 @@ export class PuzzleNotFoundError extends Error {
     }
 }
 
+let _storageInstances: {[id: string]: PuzzleStorage} | undefined = undefined
 export function getStorageInstances(): {[id: string]: PuzzleStorage} {
-    const storages = [
-        new LocalPuzzleStorage()
-    ]
-    return Object.fromEntries(storages.map(
-        (storage: PuzzleStorage) => [storage.id, storage]
-    ))
+    if(!_storageInstances) {
+        const storages = [
+            new LocalPuzzleStorage()
+        ]
+        _storageInstances = Object.fromEntries(storages.map(
+            (storage: PuzzleStorage) => [storage.id, storage]
+        ))
+    }
+    return _storageInstances
 }
 
 export abstract class PuzzleStorage {
