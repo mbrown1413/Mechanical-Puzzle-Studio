@@ -39,6 +39,7 @@ export type TaskInfo = {
     task: Task<Serializable>,
     progressPercent: number | null,  // Null before progress is set by task
     messages: string[],
+    error: string | null,
 }
 
 /**
@@ -49,11 +50,13 @@ export class TaskRunner {
     queue: Task<Serializable>[]
     currentTaskInfo: TaskInfo | null
     worker: Worker | null
+    finishedTasks: TaskInfo[]
 
     constructor() {
         this.queue = []
         this.currentTaskInfo = null
         this.worker = null
+        this.finishedTasks = []
     }
 
     submitTask(task: Task<Serializable>) {
@@ -71,6 +74,16 @@ export class TaskRunner {
         if(this.queue.length === 1) {
             this.startNextTask()
         }
+    }
+
+    private log(message: string) {
+        let taskStr
+        if(this.currentTaskInfo) {
+            taskStr = this.currentTaskInfo?.task.getDescription()
+        } else {
+            taskStr = "TaskRunner"
+        }
+        console.log(`[${taskStr}] ${message}`)
     }
 
     private createWorker(): Worker {
@@ -93,9 +106,11 @@ export class TaskRunner {
             task,
             progressPercent: null,
             messages: [],
+            error: null,
         }
         try {
             this.currentTaskInfo.task.setup()
+            this.log("Starting task")
             this.sendMessage({
                 type: "start",
                 task: this.currentTaskInfo.task,
@@ -107,6 +122,10 @@ export class TaskRunner {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private finishTask(success: boolean, result: any, error: string | null) {
+        if(!this.currentTaskInfo) {
+            throw new Error("Cannot finish current task, none is running!")
+        }
+
         if(success) {
             try {
                 this.currentTaskInfo?.task.processResult(result)
@@ -117,7 +136,15 @@ export class TaskRunner {
             }
         }
 
+        this.currentTaskInfo.error = error
+        if(success) {
+            this.log("Task finished successfully")
+        } else {
+            this.log("Task failed")
+        }
+
         if(!success) {
+            console.error(error)
             try {
                 this.currentTaskInfo?.task.onFailure(
                     error || "Unknown worker error"
@@ -126,6 +153,8 @@ export class TaskRunner {
                 console.error(e)
             }
         }
+
+        this.finishedTasks.push(this.currentTaskInfo)
         this.currentTaskInfo = null
 
         if(this.queue.length) {

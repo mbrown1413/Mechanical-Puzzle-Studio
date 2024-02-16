@@ -40,6 +40,7 @@ self.onmessage = (event: MessageEvent) => {
         const handler = handlers[message.type]
         handler(message)
     } catch(e) {
+        console.error(e)
         sendMessage({
             type: "error",
             message: String(e)

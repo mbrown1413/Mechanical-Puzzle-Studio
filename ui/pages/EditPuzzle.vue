@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import {ref, Ref, watch, watchEffect, onErrorCaptured} from "vue"
+import {ref, Ref, watch, watchEffect, onMounted, onErrorCaptured} from "vue"
 
 import {PuzzleFile} from "~lib"
 
-import {title} from "~/ui/globals.ts"
+import {taskRunner, title} from "~/ui/globals.ts"
 import {getStorageInstances, PuzzleNotFoundError} from "~/ui/storage.ts"
 import {Action} from "~/ui/actions.ts"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import Modal from "~/ui/common/Modal.vue"
-import {onMounted} from "vue"
 
 const props = defineProps<{
     storageId: string,
@@ -88,8 +87,8 @@ onErrorCaptured((error: unknown) => {
     return false
 })
 
-const actionErrorShow = ref(false)
-const actionErrorMessage = ref("")
+const errorShow = ref(false)
+const errorMessage = ref("")
 
 function performAction(action: Action) {
     if(puzzleFile.value === null) { return }
@@ -97,8 +96,8 @@ function performAction(action: Action) {
         action.perform(puzzleFile.value.puzzle)
     } catch(e) {
         const msg = `Error performing action: ${action.toString()}`
-        actionErrorShow.value = true
-        actionErrorMessage.value = msg + "\n" + stripIfStartsWith(String(e), "Error:")
+        errorShow.value = true
+        errorMessage.value = msg + "\n" + stripIfStartsWith(String(e), "Error:")
         console.error(msg, "\n", e)
     }
     puzzleStorage.save(puzzleFile.value)
@@ -109,6 +108,22 @@ function stripIfStartsWith(input: string, toStrip: string) {
         input.slice(toStrip.length).trimStart()
         : input
 }
+
+let oldFinishedLength = 0
+watch(taskRunner.finished, () => {
+    // Only show snackbar if new task was added to `finished` list
+    const newLength = taskRunner.finished.length
+    if(newLength === oldFinishedLength) {
+        return
+    }
+    oldFinishedLength = newLength
+
+    const finished = taskRunner.finished[taskRunner.finished.length-1]
+    if(finished.error !== null) {
+        errorShow.value = true
+        errorMessage.value = finished.error
+    }
+})
 </script>
 
 <template>
@@ -119,12 +134,12 @@ function stripIfStartsWith(input: string, toStrip: string) {
         @action="performAction"
     />
     <VSnackbar
-        v-model="actionErrorShow"
+        v-model="errorShow"
         timeout="5000"
         color="red"
         style="white-space: pre;"
     >
-        {{ actionErrorMessage }}
+        {{ errorMessage }}
     </VSnackbar>
 
     <Modal
