@@ -8,7 +8,9 @@ export class AssemblySolution extends Solution {
 
     constructor(placements: PiecePlacement[]) {
         super()
-        this.placements = placements
+        this.placements = placements.map((placement) =>
+            structuredClone(placement)
+        )
     }
 }
 
