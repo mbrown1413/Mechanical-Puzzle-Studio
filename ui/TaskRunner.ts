@@ -37,6 +37,7 @@ export type WorkerToRunnerMessage = ProgressMessage | FinishedMessage | ErrorMes
 
 export type TaskInfo = {
     task: Task<Serializable>,
+    status: "queued" | "running" | "finished" | "canceled"
     progressPercent: number | null,  // Null before progress is set by task
     messages: string[],
     error: string | null,
@@ -47,30 +48,52 @@ export type TaskInfo = {
  * the single instance of this in globals.ts
  */
 export class TaskRunner {
-    queue: Task<Serializable>[]
-    currentTaskInfo: TaskInfo | null
+    queue: TaskInfo[]
+    current: TaskInfo | null
+    finished: TaskInfo[]
+
     worker: Worker | null
-    finishedTasks: TaskInfo[]
 
     constructor() {
         this.queue = []
-        this.currentTaskInfo = null
+        this.current = null
+        this.finished = []
         this.worker = null
-        this.finishedTasks = []
+    }
+
+    getTasks(): TaskInfo[] {
+        const tasks = []
+        tasks.push(...this.queue)
+        if(this.current) {
+            tasks.push(this.current)
+        }
+        tasks.push(...Array.from(this.finished).reverse())
+        return tasks
     }
 
     submitTask(task: Task<Serializable>) {
-        this.queue.push(task)
+        this.queue.push({
+            task,
+            status: "queued",
+            progressPercent: null,
+            messages: [],
+            error: null,
+        })
 
-        if(this.currentTaskInfo === null && this.queue.length === 1) {
+        if(this.current === null && this.queue.length === 1) {
             this.startNextTask()
         }
     }
 
     terminateRunningTask() {
         this.worker?.terminate()
+        this.log("Terminated worker")
         this.worker = null
-        this.currentTaskInfo = null
+        if(this.current) {
+            this.current.status = "canceled"
+            this.finished.push(this.current)
+        }
+        this.current = null
         if(this.queue.length === 1) {
             this.startNextTask()
         }
@@ -78,8 +101,8 @@ export class TaskRunner {
 
     private log(message: string) {
         let taskStr
-        if(this.currentTaskInfo) {
-            taskStr = this.currentTaskInfo?.task.getDescription()
+        if(this.current) {
+            taskStr = this.current?.task.getDescription()
         } else {
             taskStr = "TaskRunner"
         }
@@ -95,25 +118,21 @@ export class TaskRunner {
     }
 
     private startNextTask() {
-        if(this.currentTaskInfo) {
+        if(this.current) {
             throw new Error("Cannot start new task while one is running")
         }
-        const task = this.queue.shift()
-        if(!task) {
+        const nextTask = this.queue.shift()
+        if(!nextTask) {
             throw new Error("No task in queue to start")
         }
-        this.currentTaskInfo = {
-            task,
-            progressPercent: null,
-            messages: [],
-            error: null,
-        }
+        this.current = nextTask
+        this.current.status = "running"
         try {
-            this.currentTaskInfo.task.setup()
+            this.current.task.setup()
             this.log("Starting task")
             this.sendMessage({
                 type: "start",
-                task: this.currentTaskInfo.task,
+                task: this.current.task,
             })
         } catch(e) {
             this.finishTask(false, null, String(e))
@@ -122,21 +141,22 @@ export class TaskRunner {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private finishTask(success: boolean, result: any, error: string | null) {
-        if(!this.currentTaskInfo) {
+        if(!this.current) {
             throw new Error("Cannot finish current task, none is running!")
         }
 
         if(success) {
             try {
-                this.currentTaskInfo?.task.processResult(result)
-                this.currentTaskInfo?.task.onSuccess()
+                this.current?.task.processResult(result)
+                this.current?.task.onSuccess()
             } catch(e) {
                 success = false
                 error = String(e)
             }
         }
 
-        this.currentTaskInfo.error = error
+        this.current.error = error
+        this.current.status = "finished"
         if(success) {
             this.log("Task finished successfully")
         } else {
@@ -146,7 +166,7 @@ export class TaskRunner {
         if(!success) {
             console.error(error)
             try {
-                this.currentTaskInfo?.task.onFailure(
+                this.current?.task.onFailure(
                     error || "Unknown worker error"
                 )
             } catch(e) {
@@ -154,8 +174,8 @@ export class TaskRunner {
             }
         }
 
-        this.finishedTasks.push(this.currentTaskInfo)
-        this.currentTaskInfo = null
+        this.finished.push(this.current)
+        this.current = null
 
         if(this.queue.length) {
             this.startNextTask()
@@ -192,13 +212,13 @@ export class TaskRunner {
     }
 
     private onProgressMessage(data: ProgressMessage) {
-        if(this.currentTaskInfo) {
-            this.currentTaskInfo.progressPercent = data.percent
+        if(this.current) {
+            this.current.progressPercent = data.percent
         }
     }
 
     private onLogMessage(data: LogMessage) {
-        this.currentTaskInfo?.messages.push(data.message)
+        this.current?.messages.push(data.message)
     }
 
     private onFinishedMessage(data: FinishedMessage) {

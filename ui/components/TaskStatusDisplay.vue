@@ -1,43 +1,77 @@
 <script setup lang="ts">
-import {computed} from "vue"
-
 import {taskRunner} from "~/ui/globals.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
-import {VTable} from "vuetify/components";
+import {TaskInfo} from "~/ui/TaskRunner.ts"
 
-const info = computed(() => taskRunner.currentTaskInfo)
-const percentString = computed(() => {
-    const percent = info.value?.progressPercent || 0
+function getPercentString(info: TaskInfo): string {
+    const percent = info.progressPercent || 0
     return (percent * 100).toFixed(2) + "%"
-})
+}
+
+function getProgressString(info: TaskInfo): string {
+    if(info.error) {
+        return "Errored"
+    }
+    return {
+        "queued": "Queued",
+        "running": "Running: " + getPercentString(info),
+        "finished": "Finished",
+        "canceled": "Canceled",
+    }[info.status]
+}
+
+function getColor(info: TaskInfo): string | undefined {
+    if(info.error) {
+        return "red-darken-3"
+    }
+    return {
+        "queued": undefined,
+        "running": "blue-lighten-4",
+        "finished": "green-lighten-4",
+        "canceled": "red-darken-3",
+    }[info.status]
+}
 </script>
 
 <template>
     <div class="task-status">
         <VBtn
-            v-if="info !== null"
+            v-if="taskRunner.getTasks().length !== 0"
             class="main-button"
             variant="outlined"
             color="blue-darken-1"
         >
-            <VProgressCircular
-                :indeterminate="info.progressPercent === null"
-                :model-value="percentString"
-                :title="percentString"
-                :size="25"
-                class="progress"
-            />
 
-            {{ info.task.getDescription() }}
+            <template v-if="!taskRunner.current">
+                No tasks running
+            </template>
+
+            <template v-if="taskRunner.current">
+                <VProgressCircular
+                    :indeterminate="taskRunner.current.progressPercent === null"
+                    :model-value="(taskRunner.current.progressPercent || 0) * 100"
+                    :title="getProgressString(taskRunner.current)"
+                    :size="25"
+                    class="progress"
+                />
+                {{ taskRunner.current.task.getDescription() }}
+            </template>
 
             <VMenu
                 activator="parent"
                 :close-on-content-click="false"
                 location="bottom"
             >
-                <VCard>
 
-                    <VCardActions style="float: right;">
+                <VCard
+                    v-for="info in taskRunner.getTasks()"
+                    :color="getColor(info)"
+                    class="mb-2"
+                >
+                    <VCardActions
+                        v-if="info.status === 'running'"
+                        style="float: right;"
+                    >
                         <VSpacer />
                         <ConfirmButton
                             title="Stop running task?"
@@ -55,7 +89,7 @@ const percentString = computed(() => {
 
                     <VCardTitle>
                         {{ info.task.getDescription() }}<br>
-                        <small>{{ percentString }}</small>
+                        <small>{{ getProgressString(info) }}</small>
                     </VCardTitle>
 
                     <VCardText>
@@ -67,11 +101,14 @@ const percentString = computed(() => {
                                 >
                                     <td>{{ message }}</td>
                                 </tr>
+                                <tr v-if="info.error">
+                                    <td><pre>{{ info.error }}</pre></td>
+                                </tr>
                             </tbody>
                         </VTable>
                     </VCardText>
-
                 </VCard>
+
             </VMenu>
         </VBtn>
     </div>
