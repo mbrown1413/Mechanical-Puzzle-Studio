@@ -46,5 +46,6 @@ function voxelClicked(event: MouseEvent, voxel: Voxel) {
             :puzzle="puzzle"
             :pieces="pieces"
             @voxelClicked="voxelClicked"
+            boundsSizing="pieceBounds"
     />
 </template>

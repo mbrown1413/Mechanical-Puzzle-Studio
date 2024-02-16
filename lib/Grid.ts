@@ -150,9 +150,14 @@ export abstract class Grid extends SerializableClass {
     abstract isInBounds(voxel: Voxel, bounds: Bounds): boolean
 
     /**
-     * Returns the smallest bounds which contains all of the given bounds.
+     * Returns the smallest bounds which contains all of the given voxels.
      */
-    getMaxBounds(...bounds: Bounds[]): Bounds {
+    abstract getVoxelBounds(...voxels: Voxel[]): Bounds
+
+    /**
+     * Returns the smallest bounds which contains all of the bounds.
+     */
+    getBoundsMax(...bounds: Bounds[]): Bounds {
         if(bounds.length === 0) {
             return this.getDefaultPieceBounds()
         }

@@ -98,6 +98,7 @@ function updateGoal(pieceId: string | null) {
                     :puzzle="puzzle"
                     :pieces="[item.piece]"
                     displayOnly
+                    boundsSizing="pieceBounds"
                     :size="200"
             />
         </template>

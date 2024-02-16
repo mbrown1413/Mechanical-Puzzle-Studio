@@ -5,13 +5,14 @@ import {Vector3} from "three"
 import {OrbitControls} from "three/addons/controls/OrbitControls.js"
 import {ConvexGeometry} from "three/addons/geometries/ConvexGeometry.js"
 
-import {VoxelInfo, Voxel, Viewpoint, Grid, Piece, isColorSimilar} from "~lib"
+import {VoxelInfo, Voxel, Viewpoint, Grid, Piece, Bounds, isColorSimilar} from "~lib"
 import {Object3DCache, ResourceTracker} from "~/ui/utils/threejs.ts"
 
 export function useGridDrawComposible(
     element: Ref<HTMLElement>,
     grid: Grid,
     pieces: ComputedRef<Piece[]>,
+    bounds: ComputedRef<Bounds>,
     layerN: Ref<number>,
     viewpoint: Ref<Viewpoint>,
     highlightedVoxel: Ref<Voxel | null>,
@@ -276,11 +277,7 @@ export function useGridDrawComposible(
 
         hitTestObjects.value = []
 
-        const bounds = grid.getMaxBounds(
-            ...pieces.value.map(piece => piece.bounds)
-        )
-
-        for(const voxel of grid.getVoxels(bounds)) {
+        for(const voxel of grid.getVoxels(bounds.value)) {
             const voxelInfo = grid.getVoxelInfo(voxel)
             const inLayer = viewpoint.value.isInLayer(voxel, layerN.value)
             const pieceAtVoxel = getPieceAtVoxel(voxel)

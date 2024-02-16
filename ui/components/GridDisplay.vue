@@ -16,6 +16,7 @@ const props = withDefaults(
         puzzle: Puzzle,
         pieces: (Piece | string)[],
         displayOnly?: boolean,
+        boundsSizing: "voxels" | "pieceBounds",
         size?: "fill" | number,
     }>(), {
         displayOnly: false,
@@ -53,11 +54,19 @@ const pieces = computed(() =>
     props.pieces.map(props.puzzle.getPieceFromPieceOrId)
 )
 
-const bounds = computed(() =>
-    props.puzzle.grid.getMaxBounds(
-        ...pieces.value.map(piece => piece.bounds)
-    )
-)
+const bounds = computed(() => {
+    if(props.boundsSizing === "voxels") {
+        const allVoxels = []
+        for(const piece of pieces.value) {
+            allVoxels.push(...piece.voxels)
+        }
+        return props.puzzle.grid.getVoxelBounds(...allVoxels)
+    } else {
+        return props.puzzle.grid.getBoundsMax(
+            ...pieces.value.map(piece => piece.bounds)
+        )
+    }
+})
 
 const {
     renderer,
@@ -67,6 +76,7 @@ const {
     el,
     props.puzzle.grid,
     pieces,
+    bounds,
     layerN,
     viewpoint,
     highlightedVoxel,

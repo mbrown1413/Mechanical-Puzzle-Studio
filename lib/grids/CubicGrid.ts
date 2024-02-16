@@ -70,6 +70,20 @@ export class CubicGrid extends Grid {
         )
     }
 
+    getVoxelBounds(...voxels: Voxel[]): Bounds {
+        if(voxels.length === 0) {
+            return this.getDefaultPieceBounds()
+        }
+        const bounds = [0, 0, 0]
+        for(const voxel of voxels) {
+            const {x, y, z} = this.voxelToCoordinate(voxel)
+            bounds[0] = Math.max(bounds[0], x+1)
+            bounds[1] = Math.max(bounds[1], y+1)
+            bounds[2] = Math.max(bounds[2], z+1)
+        }
+        return bounds
+    }
+
     getVoxelInfo(voxel: Voxel): CubicVoxelInfo {
         const {x, y, z} = this.voxelToCoordinate(voxel)
         const v = (x: number, y: number, z: number) => new Vector3(x, y, z)

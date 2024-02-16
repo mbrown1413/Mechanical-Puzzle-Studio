@@ -24,5 +24,6 @@ const pieces = computed(() => {
     <GridDisplay
             :puzzle="puzzle"
             :pieces="pieces"
+            boundsSizing="voxels"
     />
 </template>
