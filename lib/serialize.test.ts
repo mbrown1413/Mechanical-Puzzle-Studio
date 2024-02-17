@@ -180,8 +180,8 @@ describe("error on serialization", () => {
         expect(() => {
             serialize(new Unregistered("u-1"))
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Serialization failed: Reference to unregistered class \\"Unregistered\\"
-          Attribute path: root"
+          [Error: Serialization failed: Reference to unregistered class "Unregistered"
+          Attribute path: root]
         `)
     })
 
@@ -189,14 +189,14 @@ describe("error on serialization", () => {
         expect(() => {
             serialize(undefined as unknown as Serializable)
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Serialization failed: Unsupported primitive type \\"undefined\\"
-          Attribute path: root"
+          [Error: Serialization failed: Unsupported primitive type "undefined"
+          Attribute path: root]
         `)
         expect(() => {
             serialize(new NotSerializable(undefined))
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Serialization failed: Unsupported primitive type \\"undefined\\"
-          Attribute path: root.foo"
+          [Error: Serialization failed: Unsupported primitive type "undefined"
+          Attribute path: root.foo]
         `)
     })
 
@@ -206,8 +206,8 @@ describe("error on serialization", () => {
                 new Map<number, number>([[1, 1]]) as unknown as Serializable
             )
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Serialization failed: Only string keys are supported for Map
-          Attribute path: root.1"
+          [Error: Serialization failed: Only string keys are supported for Map
+          Attribute path: root.1]
         `)
     })
 
@@ -222,16 +222,16 @@ describe("error on serialization", () => {
                 ]
             )
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Serialization failed: Unsupported primitive type \\"undefined\\"
-          Attribute path: root.1.three.2"
+          [Error: Serialization failed: Unsupported primitive type "undefined"
+          Attribute path: root.1.three.2]
         `)
         expect(() => {
             serialize(
                 new B("b-1", new A(undefined as unknown as string))
             )
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Serialization failed: Unsupported primitive type \\"undefined\\"
-          Attribute path: root.nested.name"
+          [Error: Serialization failed: Unsupported primitive type "undefined"
+          Attribute path: root.nested.name]
         `)
     })
 
@@ -241,14 +241,14 @@ describe("error on serialization", () => {
         expect(() => {
             serialize([obj, obj])
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Serialization failed: Object referenced twice (same object as root.0)
-          Attribute path: root.1"
+          [Error: Serialization failed: Object referenced twice (same object as root.0)
+          Attribute path: root.1]
         `)
         expect(() => {
             serialize([array, array])
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Serialization failed: Object referenced twice (same object as root.0)
-          Attribute path: root.1"
+          [Error: Serialization failed: Object referenced twice (same object as root.0)
+          Attribute path: root.1]
         `)
     })
 
@@ -260,16 +260,16 @@ describe("error on serialization", () => {
             a.push(b)
             serialize(a)
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Serialization failed: Object referenced twice (same object as root)
-          Attribute path: root.0.0"
+          [Error: Serialization failed: Object referenced twice (same object as root)
+          Attribute path: root.0.0]
         `)
         expect(() => {
             const a = new Circular("c-1", null)
             a.circle = a
             serialize(a)
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Serialization failed: Object referenced twice (same object as root)
-          Attribute path: root.circle"
+          [Error: Serialization failed: Object referenced twice (same object as root)
+          Attribute path: root.circle]
         `)
     })
 
@@ -281,14 +281,14 @@ describe("deserialization error", () => {
         expect(() => {
             deserialize([undefined as unknown as SerializedData])
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Deserialization failed: Cannot deserialize type \\"undefined\\"
-          Attribute path: root.0"
+          [Error: Deserialization failed: Cannot deserialize type "undefined"
+          Attribute path: root.0]
         `)
         expect(() => {
             deserialize(((arg1: string) => console.log(arg1)) as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Deserialization failed: Cannot deserialize type \\"function\\"
-          Attribute path: root"
+          [Error: Deserialization failed: Cannot deserialize type "function"
+          Attribute path: root]
         `)
     })
 
@@ -299,8 +299,8 @@ describe("deserialization error", () => {
                 data: {name: "u-1"}
             })
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Deserialization failed: Reference to unregistered class \\"Unregistered\\"
-          Attribute path: root"
+          [Error: Deserialization failed: Reference to unregistered class "Unregistered"
+          Attribute path: root]
         `)
     })
 
@@ -308,20 +308,20 @@ describe("deserialization error", () => {
         expect(() => {
             deserialize({} as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Deserialization failed: Malformed data: No type attribute on object
-          Attribute path: root"
+          [Error: Deserialization failed: Malformed data: No type attribute on object
+          Attribute path: root]
         `)
         expect(() => {
             deserialize({name: "a-1"} as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Deserialization failed: Malformed data: No type attribute on object
-          Attribute path: root"
+          [Error: Deserialization failed: Malformed data: No type attribute on object
+          Attribute path: root]
         `)
         expect(() => {
             deserialize({type: "A"} as unknown as SerializedData)
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Deserialization failed: Required data attribute missing
-          Attribute path: root"
+          [Error: Deserialization failed: Required data attribute missing
+          Attribute path: root]
         `)
     })
 
@@ -342,8 +342,8 @@ describe("deserialization error", () => {
                 ]
             )
         }).toThrowErrorMatchingInlineSnapshot(`
-          "Deserialization failed: Required data attribute missing
-          Attribute path: root.1.nested"
+          [Error: Deserialization failed: Required data attribute missing
+          Attribute path: root.1.nested]
         `)
     })
 
