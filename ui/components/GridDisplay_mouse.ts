@@ -7,7 +7,7 @@ import {Voxel} from "~lib"
 
 export function useGridMouseComposible(
     // Inputs
-    renderer: THREE.Renderer,
+    element: Ref<HTMLElement>,
     camera: THREE.Camera,
     hitTestObjects: Ref<THREE.Object3D[]>,
 
@@ -20,7 +20,7 @@ export function useGridMouseComposible(
     /* from x, y position on screen (typically from a mouse event.clientX/Y)
      * get the object drawn at that location. */
     function getObjectOnScreen(x: number, y: number) {
-        const canvas = renderer.domElement
+        const canvas = element.value
         const rect = canvas.getBoundingClientRect()
         const pickPosition = new Vector2(
             (x - rect.left) / rect.width * 2 - 1,
@@ -61,21 +61,21 @@ export function useGridMouseComposible(
     onMounted(() => {
 
         // Hovering to highlight
-        renderer.domElement.addEventListener("mousemove", (event: MouseEvent) => {
+        element.value.addEventListener("mousemove", (event: MouseEvent) => {
             highlightObjectAtPosition(event.clientX, event.clientY)
         })
-        renderer.domElement.addEventListener("mouseout", clearHighlight)
-        renderer.domElement.addEventListener("mouseout", clearHighlight)
+        element.value.addEventListener("mouseout", clearHighlight)
+        element.value.addEventListener("mouseout", clearHighlight)
 
         // Click to modify piece
         // Track position of mousedown and if we move further than
         // mouseTolerance pixels away, consider it a drag and not a click.
         let mouseDownPosition: [number, number] | null = null
         const movementTolerance = 5  // Pixels
-        renderer.domElement.addEventListener("mousedown", (event: MouseEvent) => {
+        element.value.addEventListener("mousedown", (event: MouseEvent) => {
             mouseDownPosition = [event.clientX, event.clientY]
         });
-        renderer.domElement.addEventListener("mousemove", (event: MouseEvent) => {
+        element.value.addEventListener("mousemove", (event: MouseEvent) => {
             if(mouseDownPosition === null) return
             const distSquared = (
                 (event.clientX - mouseDownPosition[0])**2 +
@@ -85,7 +85,7 @@ export function useGridMouseComposible(
                 mouseDownPosition = null
             }
         });
-        renderer.domElement.addEventListener("mouseup", (event: MouseEvent) => {
+        element.value.addEventListener("mouseup", (event: MouseEvent) => {
             if(mouseDownPosition !== null) {
                 clickObject(event)
             }

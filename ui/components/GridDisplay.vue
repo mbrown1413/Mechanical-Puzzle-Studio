@@ -35,7 +35,7 @@ const pieceDisplayStyle = computed(() => {
     }
 })
 
-const el = ref()
+const drawElement = ref()
 const viewpoints = props.puzzle.grid.getViewpoints()
 const viewpoint = ref(viewpoints[0])
 const layerN = ref(0)
@@ -69,11 +69,10 @@ const bounds = computed(() => {
 })
 
 const {
-    renderer,
     camera,
     hitTestObjects,
 } = useGridDrawComposible(
-    el,
+    drawElement,
     props.puzzle.grid,
     pieces,
     bounds,
@@ -83,7 +82,7 @@ const {
 )
 
 useGridMouseComposible(
-    renderer,
+    drawElement,
     camera,
     hitTestObjects,
     (mouseEvent, voxel) => emit("voxelClicked", mouseEvent, voxel),
@@ -92,7 +91,8 @@ useGridMouseComposible(
 </script>
 
 <template>
-    <div class="grid-display" :style="pieceDisplayStyle" ref="el">
+    <div class="grid-display" :style="pieceDisplayStyle">
+        <div class="draw-element" ref="drawElement"></div>
         <div class="controls" v-if="!displayOnly">
             <VSelect
                     v-model="viewpoint"
@@ -119,11 +119,20 @@ useGridMouseComposible(
 <style scoped>
 .grid-display {
     position: relative;  /* Make this the containing block for .controls */
+    background-color: #dddddd;
+}
+.draw-element {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 .controls {
     position: absolute;
     top: 0;
     left: 0;
+    z-index: 1001;  /* Greater than the MultiRenderer <canvas> */
     background: rgba(255, 255, 255, 0.5);
     border-bottom-right-radius: 10px;
 }

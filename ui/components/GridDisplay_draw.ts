@@ -7,6 +7,7 @@ import {ConvexGeometry} from "three/addons/geometries/ConvexGeometry.js"
 
 import {VoxelInfo, Voxel, Viewpoint, Grid, Piece, Bounds, isColorSimilar} from "~lib"
 import {Object3DCache, ResourceTracker} from "~/ui/utils/threejs.ts"
+import {multiRenderer} from "~/ui/utils/MultiRenderer.ts"
 
 export function useGridDrawComposible(
     element: Ref<HTMLElement>,
@@ -17,35 +18,32 @@ export function useGridDrawComposible(
     viewpoint: Ref<Viewpoint>,
     highlightedVoxel: Ref<Voxel | null>,
 ) {
-    const renderer = new THREE.WebGLRenderer({antialias: true})
-    renderer.setClearColor(0xdddddd, 1)
     const scene = new THREE.Scene()
     const fov = 75
     const camera = new THREE.PerspectiveCamera(fov, 2, 0.1, 10)
-    const controls = new OrbitControls(camera, renderer.domElement)
+    let controls: OrbitControls | null = null
     const hitTestObjects: Ref<THREE.Object3D[]> = ref([])
 
     const resourceTracker = new ResourceTracker()
     const objectCache = new Object3DCache()
-
-    controls.addEventListener('change', refresh)
+    let renderAreaId: string
 
     onMounted(() => {
-        const resizeObserver = new ResizeObserver(() => refresh())
-        resizeObserver.observe(element.value)
+        renderAreaId = multiRenderer.addRenderArea(element.value, render)
 
-        element.value.appendChild(renderer.domElement)
+        controls = new OrbitControls(camera, element.value)
+        controls.addEventListener('change', () => multiRenderer.requestRender())
 
         watchEffect(() => {
-            rebuild()
-            refresh()
+            buildScene()
+            multiRenderer.requestRender()
         })
     })
 
     onUnmounted(() => {
+        multiRenderer.removeRenderArea(renderAreaId)
         resourceTracker.releaseAll()
-        controls.dispose()
-        renderer.dispose()
+        controls?.dispose()
     })
 
     const voxelPieceMap = computed(() => {
@@ -63,16 +61,11 @@ export function useGridDrawComposible(
     }
 
     /* Call this when things like camera and window size change. */
-    function refresh(
-    ) {
-
-        if(element.value === null) return
+    function render(renderer: THREE.WebGLRenderer) {
         const width = element.value.offsetWidth
         const height = element.value.offsetHeight
         camera.aspect = width / height
         camera.updateProjectionMatrix()
-        renderer.setSize(width, height, false)
-        renderer.render(scene, camera)
 
         // Calculate camera near/far to fit entire scene
         const boundingBox = new THREE.Box3().setFromObject(scene)  // Calculated _after_ AxisHelper added
@@ -80,6 +73,8 @@ export function useGridDrawComposible(
         const sphereDistance = boundingSphere.distanceToPoint(camera.position)
         camera.near = Math.max(sphereDistance * .9, 0.1)
         camera.far = (sphereDistance + boundingSphere.radius*2) * 1.1
+
+        renderer.render(scene, camera)
     }
 
     function getLights(): THREE.Object3D {
@@ -117,8 +112,10 @@ export function useGridDrawComposible(
         // Center view on the center of the grid.
         // Only do this once on initialization though, since the user can
         // right-click drag to change the OrbitControls target location.
-        controls.target = center
-        camera.lookAt(center)
+        if(controls) {
+            controls.target = center
+            camera.lookAt(center)
+        }
     }
 
     function getRenderOrder(inLayer: boolean, highlighted: boolean): number {
@@ -268,7 +265,7 @@ export function useGridDrawComposible(
 
     /* Call rebuild() when the objects in the scene need to be updated. */
     let isInitialRebuild = true
-    function rebuild() {
+    function buildScene() {
         objectCache.newScene()
         objectCache.resetStats()
         resourceTracker.markUnused(scene)
@@ -329,10 +326,8 @@ export function useGridDrawComposible(
     }
 
     return {
-        renderer,
         scene,
         camera,
         hitTestObjects,
-        redraw: () => {rebuild(); refresh()},
     }
 }
