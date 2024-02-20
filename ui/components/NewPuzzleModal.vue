@@ -15,11 +15,21 @@ import Modal from "~/ui/common/Modal.vue"
 const router = useRouter()
 
 defineExpose({
-    open(newMode: Mode, storage: PuzzleStorage) {
+    open(newMode: Mode, storage: PuzzleStorage, copyFrom: string | null = null) {
         mode.value = newMode
         fields.storage = storage
-        if(newMode === "upload") {
+        if(newMode === "new") {
+            title.value = "New Puzzle"
+        } else if(newMode === "upload") {
+            title.value = "Upload Puzzle"
             fields.name = ""
+        } else if(newMode === "copy") {
+            if(!copyFrom) {
+                throw new Error("Copy mode reqires copyFrom argument")
+            }
+            title.value = `Copy "${copyFrom}"`
+            fields.name = copyFrom + " (copy)"
+            copyFromPuzzleName = copyFrom
         }
         modal.value?.open()
         nextTick(() => {
@@ -28,8 +38,10 @@ defineExpose({
     }
 })
 
-type Mode = "new" | "upload"
+type Mode = "new" | "upload" | "copy"
 const mode: Ref<Mode> = ref("new")
+const title = ref("")
+let copyFromPuzzleName = ""
 
 const storages = getStorageInstances()
 
@@ -105,24 +117,35 @@ async function submit(event?: Event) {
     }
 
     let puzzleFile: PuzzleFile
-    if(mode.value === "new") {
-        puzzleFile = new PuzzleFile(
-            new Puzzle(
-                new CubicGrid()
-            ),
-            fields.name
-        )
-    } else {
-        puzzleFile = await readPuzzleFile(fields.files[0])
-    }
-    
-    puzzleFile.name = fields.name
+    switch(mode.value) {
+        case "new":
+            puzzleFile = new PuzzleFile(
+                new Puzzle(
+                    new CubicGrid()
+                ),
+                fields.name
+            )
+        break
 
-    const storage = fields.storage
-    storage.save(puzzleFile)
+        case "upload":
+            puzzleFile = await readPuzzleFile(fields.files[0])
+        break
+
+        case "copy":
+            puzzleFile = fields.storage.get(copyFromPuzzleName, true)
+        break
+
+        default:
+            const _exhaustiveCheck: never = mode.value
+            return _exhaustiveCheck
+    }
+
+    puzzleFile.name = fields.name
+    fields.storage.save(puzzleFile)
+
     router.push({
         name: "puzzle",
-        params: {storageId: storage.id, puzzleName: puzzleFile.name}
+        params: {storageId: fields.storage.id, puzzleName: fields.name}
     })
 }
 
@@ -147,7 +170,7 @@ function readPuzzleFile(file: File): Promise<PuzzleFile> {
 <template>
     <Modal
         ref="modal"
-        :title="mode === 'new' ? 'New Puzzle' : 'Upload Puzzle'"
+        :title="title"
         okText="Create"
         dialogMaxWidth="500px"
         @ok="submit()"

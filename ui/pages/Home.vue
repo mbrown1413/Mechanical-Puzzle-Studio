@@ -155,6 +155,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                 </template>
 
                 <template v-slot:item.actions="{item}">
+                    
                     <VTooltip text="Download">
                         <template v-slot:activator="{props}">
                             <VBtn
@@ -165,7 +166,20 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                             </VBtn>
                         </template>
                     </VTooltip>
+
                     <RawDataButton :storage="storage" :puzzleName="item.name" />
+
+                    <VTooltip text="Copy">
+                        <template v-slot:activator="{props}">
+                            <VBtn
+                                v-bind="props"
+                                @click="newPuzzleModal?.open('copy', storage, item.name)"
+                            >
+                                <VIcon icon="mdi-content-copy" aria-label="Copy" aria-hidden="false" />
+                            </VBtn>
+                        </template>
+                    </VTooltip>
+
                     <ConfirmButton
                         :text="`Delete Puzzle ${item.name}?`"
                         tooltip="Delete"
@@ -175,6 +189,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                     >
                         <VIcon icon="mdi-delete" aria-label="Delete" aria-hidden="false" />
                     </ConfirmButton>
+
                 </template>
 
             </VDataTable>
