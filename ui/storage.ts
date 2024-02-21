@@ -1,3 +1,4 @@
+import {gzipSync, gunzipSync, strToU8, strFromU8} from "fflate"
 
 import {PuzzleFile, PuzzleMetadata} from "~lib"
 
@@ -18,6 +19,46 @@ export function getStorageInstances(): {[id: string]: PuzzleStorage} {
         ))
     }
     return _storageInstances
+}
+
+function compress(strIn: string): string {
+    const bufIn = strToU8(strIn)
+    const bufOut = gzipSync(bufIn)
+    const strOut = strFromU8(bufOut, true)
+    return strOut
+}
+
+function decompress(compressed: string): string {
+    const bufIn = strToU8(compressed, true)
+    const bufOut = gunzipSync(bufIn)
+    const strOut = strFromU8(bufOut)
+    return strOut
+}
+
+const compressBytesThreshold = 1024*1024
+const compressedPrefix = "compressed:"
+
+/** Compress if larger than a `compressBytesThreshold`. Compressed strings are
+ * prefixed with `compressedPrefix`. */
+function compressIfNeeded(strIn: string): string {
+    const isLarge = strIn.length > compressBytesThreshold
+    if(isLarge) {
+        return compressedPrefix + compress(strIn)
+    } else {
+        return strIn
+    }
+}
+
+/* Decompress string if it's prefixed with `compressedPrefix`, otherwise return
+ * the input string. */
+function decompressIfNeeded(strIn: string): string {
+    if(strIn.startsWith(compressedPrefix)) {
+        return decompress(
+            strIn.slice(compressedPrefix.length)
+        )
+    } else {
+        return strIn
+    }
 }
 
 export abstract class PuzzleStorage {
@@ -106,8 +147,9 @@ export class LocalPuzzleStorage extends PuzzleStorage {
             const puzzleName = key.slice("puzzle:".length)
             const item = localStorage.getItem(key)
             if(item !== null) {
+                const decompressed = decompressIfNeeded(item)
                 ret.push(
-                    PuzzleFile.getMetadataSafe(item, puzzleName)
+                    PuzzleFile.getMetadataSafe(decompressed, puzzleName)
                 )
             }
         }
@@ -119,13 +161,13 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         if(str === null) {
             throw new PuzzleNotFoundError(puzzleName)
         }
-        return str
+        return decompressIfNeeded(str)
     }
 
     save(puzzleFile: PuzzleFile) {
         localStorage.setItem(
             this._getKey(puzzleFile),
-            puzzleFile.serialize()
+            compressIfNeeded(puzzleFile.serialize())
         )
     }
 

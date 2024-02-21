@@ -15,6 +15,7 @@
     "@types/file-saver": "^2.0.7",
     "colorjs.io": "^0.4.5",
     "eslint": "^8.56.0",
+    "fflate": "^0.8.2",
     "file-saver": "^2.0.5",
     "three": "^0.153.0",
     "vite-plugin-vuetify": "^1.0.2",
