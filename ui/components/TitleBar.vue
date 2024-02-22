@@ -5,8 +5,10 @@ import TaskStatusDisplay from "./TaskStatusDisplay.vue";
 withDefaults(
     defineProps<{
         puzzleFile?: PuzzleFile | null,
+        flat?: boolean,
     }>(), {
         puzzleFile: null,
+        flat: false,
     }
 )
 
@@ -14,7 +16,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
 </script>
 
 <template>
-    <VAppBar class="title-bar">
+    <VAppBar class="title-bar" :flat="flat">
         <div class="main-logo">
             <RouterLink to="/">
                 <img src="/logo/logo-98x50.png" :alt="appTitle" />
@@ -39,6 +41,10 @@ const appTitle = import.meta.env.VITE_APP_TITLE
 .v-toolbar__content > * {
     flex-basis: 0;
     flex-grow: 1;
+}
+
+.v-toolbar__content > .v-toolbar-title {
+    margin-inline-start: 0;
 }
 
 .main-logo {

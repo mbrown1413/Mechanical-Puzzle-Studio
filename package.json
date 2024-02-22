@@ -17,6 +17,7 @@
     "eslint": "^8.56.0",
     "fflate": "^0.8.2",
     "file-saver": "^2.0.5",
+    "jsondiffpatch": "^0.6.0",
     "three": "^0.153.0",
     "vite-plugin-vuetify": "^1.0.2",
     "vue": "3.4.10",
