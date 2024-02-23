@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import {ref, Ref, watch, reactive, watchEffect, onMounted, onErrorCaptured} from "vue"
-import {diff, unpatch, Delta} from "jsondiffpatch"
+import {ref, Ref, watch, watchEffect, onMounted, onErrorCaptured} from "vue"
 
-import {PuzzleFile, deserialize, serialize} from "~lib"
+import {PuzzleFile} from "~lib"
 
 import {taskRunner, title} from "~/ui/globals.ts"
 import {getStorageInstances, PuzzleNotFoundError} from "~/ui/storage.ts"
+import {ActionManager} from "~/ui/ActionManager.ts"
 import {Action} from "~/ui/actions.ts"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
@@ -42,7 +42,8 @@ onMounted(() => {
     })
 })
 
-let puzzleFile: Ref<PuzzleFile | null> = ref(null)
+const puzzleFile: Ref<PuzzleFile | null> = ref(null)
+const editManager = new ActionManager(puzzleStorage, puzzleFile)
 function setPuzzleFile(ignoreErrors=false) {
     puzzleError.value = null
     puzzleFile.value = null
@@ -77,6 +78,17 @@ function setPuzzleFile(ignoreErrors=false) {
     }
 }
 
+function performAction(action: Action) {
+    try {
+        editManager.performAction(action)
+    } catch(e) {
+        const msg = `Error performing action: ${action.toString()}`
+        errorShow.value = true
+        errorMessage.value = msg + "\n" + stripIfStartsWith(String(e), "Error:")
+        console.error(msg, "\n", e)
+    }
+}
+
 onErrorCaptured((error: unknown) => {
     console.error(error)
     puzzleError.value = {
@@ -90,60 +102,6 @@ onErrorCaptured((error: unknown) => {
 
 const errorShow = ref(false)
 const errorMessage = ref("")
-
-type PerformedAction = {
-    action: Action,
-    patch: Delta,
-}
-const performedActions: PerformedAction[] = reactive([])
-const undoneActions: PerformedAction[] = reactive([])
-
-function performAction(action: Action) {
-    if(puzzleFile.value === null) { return }
-    const before = serialize(puzzleFile.value)
-
-    try {
-        action.perform(puzzleFile.value.puzzle)
-    } catch(e) {
-        const msg = `Error performing action: ${action.toString()}`
-        errorShow.value = true
-        errorMessage.value = msg + "\n" + stripIfStartsWith(String(e), "Error:")
-        console.error(msg, "\n", e)
-    }
-    const after = serialize(puzzleFile.value)
-    puzzleStorage.save(puzzleFile.value)
-    
-    performedActions.push({
-        action: action,
-        patch: diff(before, after),
-    })
-    undoneActions.length = 0
-}
-
-function getLastAction(): Action | null {
-    if(!performedActions.length) { return null }
-    return performedActions[performedActions.length-1].action
-}
-
-function canUndo(): boolean {
-    return puzzleFile.value !== null && performedActions.length > 0
-}
-
-function undo() {
-    if(puzzleFile.value === null) { return }
-    const performedAction = performedActions.pop()
-    if(!performedAction) { return }
-    undoneActions.push(performedAction)
-
-    const serialized = serialize(puzzleFile.value)
-    unpatch(serialized, performedAction.patch)
-    puzzleFile.value = deserialize<PuzzleFile>(serialized, "PuzzleFile")
-    puzzleStorage.save(puzzleFile.value)
-}
-
-function redo() {
-    // Not Implemented
-}
 
 function stripIfStartsWith(input: string, toStrip: string) {
     return input.startsWith(toStrip) ?
@@ -175,19 +133,19 @@ const tools: {
 }[] = [
     {
         text: () => {
-            const action = getLastAction()
+            const action = editManager.getUndoAction()
             const actionString = action ? ` "${action.toString()}"` : ""
             return "Undo" + actionString
         },
         icon: "mdi-undo",
-        perform: undo,
-        enabled: canUndo,
+        perform: () => editManager.undo(),
+        enabled: () => editManager.canUndo(),
     },
     {
         text: "Redo",
         icon: "mdi-redo",
-        perform: () => redo,
-        enabled: () => false,
+        perform: () => editManager.redo(),
+        enabled: () => editManager.canRedo(),
     },
 ]
 </script>
