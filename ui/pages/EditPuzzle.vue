@@ -142,7 +142,11 @@ const tools: {
         enabled: () => editManager.canUndo(),
     },
     {
-        text: "Redo",
+        text: () => {
+            const action = editManager.getRedoAction()
+            const actionString = action ? ` "${action.toString()}"` : ""
+            return "Redo" + actionString
+        },
         icon: "mdi-redo",
         perform: () => editManager.redo(),
         enabled: () => editManager.canRedo(),

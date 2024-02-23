@@ -1,5 +1,5 @@
 import {Ref, reactive} from "vue"
-import {diff, unpatch, Delta} from "jsondiffpatch"
+import {diff, patch as doPatch, unpatch as doUnpatch, Delta} from "jsondiffpatch"
 
 import {PuzzleFile, deserialize, serialize} from "~lib"
 import {Action} from "~/ui/actions.ts"
@@ -19,11 +19,13 @@ export class ActionManager {
     puzzleFileRef: Ref<PuzzleFile | null>
 
     performedActions: PerformedAction[]
+    undoneActions: PerformedAction[]
 
     constructor(storage: PuzzleStorage, puzzleFileRef: Ref<PuzzleFile | null>) {
         this.storage = storage
         this.puzzleFileRef = puzzleFileRef
         this.performedActions = reactive([])
+        this.undoneActions = reactive([])
     }
 
     get puzzleFile() {
@@ -44,20 +46,30 @@ export class ActionManager {
 
         const after = serialize(this.puzzleFile)
         this.storage.save(this.puzzleFile)
+
         this.performedActions.push({
             action: action,
             patch: diff(before, after),
         })
+        this.undoneActions.length = 0
+    }
+
+    private performPatch(patch: Delta, reverse: boolean) {
+        const serialized = serialize(this.puzzleFile)
+        if(reverse) {
+            doUnpatch(serialized, patch)
+        } else {
+            doPatch(serialized, patch)
+        }
+        this.puzzleFile = deserialize<PuzzleFile>(serialized, "PuzzleFile")
+        this.storage.save(this.puzzleFile)
     }
 
     undo() {
         const performedAction = this.performedActions.pop()
         if(!performedAction) { return }
-
-        const serialized = serialize(this.puzzleFile)
-        unpatch(serialized, performedAction.patch)
-        this.puzzleFile = deserialize<PuzzleFile>(serialized, "PuzzleFile")
-        this.storage.save(this.puzzleFile)
+        this.performPatch(performedAction.patch, true)
+        this.undoneActions.push(performedAction)
     }
 
     getUndoAction(): Action | null {
@@ -70,10 +82,15 @@ export class ActionManager {
     }
 
     redo() {
+        const undoneAction = this.undoneActions.pop()
+        if(!undoneAction) { return }
+        this.performPatch(undoneAction.patch, false)
+        this.performedActions.push(undoneAction)
     }
 
     getRedoAction(): Action | null {
-        return null
+        if(!this.undoneActions.length) { return null }
+        return this.undoneActions[this.undoneActions.length-1].action
     }
 
     canRedo(): boolean {
