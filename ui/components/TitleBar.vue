@@ -31,7 +31,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
     </VAppBar>
 </template>
 
-<style>
+<style scoped>
 
 /* Evenly space item centers so when the task display changes size, the title
  * does not shift over. */
