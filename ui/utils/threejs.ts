@@ -152,6 +152,14 @@ export class Object3DCache {
         }
     }
 
+    usedInCurrentScene(key: string): boolean {
+        const entry = this.cache.get(key)
+        if(!entry) {
+            return false
+        }
+        return entry.scenesSinceUsed === 0
+    }
+
     set(key: string, obj: THREE.Object3D) {
         this.cache.set(key, {obj, scenesSinceUsed: 0})
     }

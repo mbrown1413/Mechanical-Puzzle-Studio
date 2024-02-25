@@ -211,7 +211,7 @@ export function useGridDrawComposible(
             color: highlighted ? getHighlightColor(piece) : 0x000000,
         })
         const thickness = 0.005
-        const divisions = 10
+        const divisions = 4
 
         const obj = new THREE.Object3D()
         for(const polygon of Object.values(voxelInfo.sidePolygons)) {
@@ -222,16 +222,42 @@ export function useGridDrawComposible(
                     new Vector3(...point1),
                     new Vector3(...point2)
                 )
-                const tubeGeometry = new THREE.TubeGeometry(path, 2, thickness, divisions, false)
+
+                const tubeKey = JSON.stringify([
+                    "Tube",
+                    renderOrder,
+                    [
+                        `${point1.x},${point1.y},${point1.z}`,
+                        `${point2.x},${point2.y},${point2.z}`,
+                    ].sort()
+                ])
+                if(objectCache.usedInCurrentScene(tubeKey)) {
+                    continue
+                }
+
+                const tubeGeometry = new THREE.TubeGeometry(path, 1, thickness, divisions, false)
                 const tube = new THREE.Mesh(tubeGeometry, material)
                 tube.renderOrder = renderOrder
                 obj.add(tube)
+                objectCache.set(tubeKey, tube)
 
-                const sphereGeometry = new THREE.SphereGeometry(thickness, divisions, divisions)
-                sphereGeometry.translate(point1.x, point1.y, point1.z)
-                const sphere = new THREE.Mesh(sphereGeometry, material)
-                sphere.renderOrder = renderOrder
-                obj.add(sphere)
+                for(const spherePoint of [point1, point2]) {
+                    const sphereKey = JSON.stringify([
+                        "Sphere",
+                        `${spherePoint.x},${spherePoint.y},${spherePoint.z}`,
+                        renderOrder,
+                    ])
+                    if(objectCache.usedInCurrentScene(sphereKey)) {
+                        continue
+                    }
+
+                    const sphereGeometry = new THREE.SphereGeometry(thickness, divisions, divisions)
+                    sphereGeometry.translate(spherePoint.x, spherePoint.y, spherePoint.z)
+                    const sphere = new THREE.Mesh(sphereGeometry, material)
+                    sphere.renderOrder = renderOrder
+                    obj.add(sphere)
+                    objectCache.set(sphereKey, sphere)
+                }
             }
         }
         return obj
