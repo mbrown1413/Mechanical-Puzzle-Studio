@@ -116,7 +116,7 @@ function handlePieceInput(field: Field, piece: Piece) {
 function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputElement) {
     if(props.itemId === null || item.value === null) return
     const metadata: any = {}
-    metadata[field.property] = typeUnsafeItem.value[field.property]
+    metadata[field.property] = [...typeUnsafeItem.value[field.property]]
     metadata[field.property][dimensionIndex] = Number(el.value)
     const action = new actionClass(props.itemId, metadata)
     emit("action", action)
