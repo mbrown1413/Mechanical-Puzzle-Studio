@@ -61,6 +61,8 @@ function decompressIfNeeded(strIn: string): string {
     }
 }
 
+const metadataCache: {[storageId: string]: PuzzleMetadata[]} = {}
+
 export abstract class PuzzleStorage {
     /** Unique identifier used for this storage. */
     abstract get id(): string
@@ -74,8 +76,21 @@ export abstract class PuzzleStorage {
      * cause this to throw an error. `PuzzleMetadata.error` should be set for
      * any puzzle which cannot be cleanly read, and whatever data can be read
      * should be used to fill out the rest of the return fields.
+     * 
+     * The results are cached, which is important if anything makes this method
+     * slow, such as a large puzzle file or slow network speeds.
      */
-    abstract list(): PuzzleMetadata[]
+    list(): PuzzleMetadata[] {
+        if(metadataCache[this.id] === undefined) {
+            metadataCache[this.id] = this.listWithoutCaching()
+        }
+        return metadataCache[this.id]
+    }
+
+    /**
+     * Raw version of `list()` which does not handle caching results.
+     */
+    abstract listWithoutCaching(): PuzzleMetadata[]
 
     /**
      * Retrieve serialized string form of the puzzle from storage.
@@ -137,7 +152,7 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         return "Local Storage"
     }
 
-    list(): PuzzleMetadata[] {
+    listWithoutCaching(): PuzzleMetadata[] {
         const ret = []
         for(let i=0; i<localStorage.length; i++) {
             const key = localStorage.key(i)
