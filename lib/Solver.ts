@@ -1,7 +1,9 @@
 import {AssemblyProblem, Problem} from "~/lib/Problem.ts"
-import {Puzzle, PiecePlacement} from "~/lib/Puzzle.ts"
+import {Puzzle} from "~/lib/Puzzle.ts"
+import {PiecePlacement} from "~/lib/placements.ts"
 import {AssemblySolution, Solution} from "~/lib/Solution.ts"
 import {TaskCallbacks, voidTaskCallbacks} from "~/lib/types.ts"
+import {getPiecePlacements} from "~/lib/placements.ts"
 
 export abstract class Solver {
     abstract solve(
@@ -79,7 +81,7 @@ export class AssemblySolver extends Solver {
         const placementsByPieceIdx: PiecePlacement[][] = []
         const coverRowsByPieceIdx: boolean[][][] = []
         for(const piece of pieces) {
-            const placements = [...puzzle.getPiecePlacements(piece, goal.voxels)]
+            const placements = [...getPiecePlacements(puzzle.grid, piece, goal.voxels)]
             const coverRows: boolean[][] = []
             for(const placement of placements) {
                 coverRows.push(
