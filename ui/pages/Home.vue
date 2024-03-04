@@ -78,7 +78,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                     color="red-lighten-4"
                 >
                     <template v-slot:text>
-                        <strong>Note: This software is in pre-alpha development.</strong><br>
+                        <strong>Note: This software is in early development.</strong><br>
                         View the project on Github to read more about it and track progress.
                     </template>
                 </VCard>

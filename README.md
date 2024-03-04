@@ -8,10 +8,9 @@ can create new grid types, arbitrary constraints for when a puzzle is
 considered solved, and more.
 
 [Try it online](https://mbrown1413.github.io/Mechanical-Puzzle-Studio/)! It
-runs completely in the browser. You will want to use a relatively recent
-browser version.
+runs completely in the browser, with no data sent off your computer.
 
-**Note: This software is in pre-alpha development.** To track progress, see the
+**Note: This software is in early development.** To track progress, see the
 [MVP Planning](https://github.com/mbrown1413/Mechanical-Puzzle-Studio/issues/1)
 issue.
 
@@ -43,7 +42,7 @@ I'd like MPD to:
 * have an "Undo" button
 * run on the web
 * be easy to add new grids, solving algorithms, problem types, ways of inputting pieces, etc.
-* be written using modern tools (Typescript and Vue) accessable to more developers
+* be written using modern tools (Typescript and Vue) accessible to more developers
 * explore faster solver algorithms including running on the GPU and/or distributed computations
 * easily share puzzles
 
@@ -73,7 +72,7 @@ Production build:
 
     $ yarn build  # Outputs static site to dist/
 
-    # Use a webserver to test the build:
+    # Use a web-server to test the build:
     $ cd dist/ && python -m http.server
 
 Note that without server-side redirects, starting at a page other than `/` will

@@ -149,7 +149,7 @@ export class LocalPuzzleStorage extends PuzzleStorage {
     }
 
     get name() {
-        return "Local Storage"
+        return "Browser Storage"
     }
 
     listWithoutCaching(): PuzzleMetadata[] {
