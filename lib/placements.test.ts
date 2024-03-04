@@ -1,11 +1,10 @@
 import {test, expect, describe} from "vitest"
 
 import {Piece} from "~/lib/Puzzle.ts"
-import {Voxel} from "~/lib/Grid.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 import {
-    orientationTestResultingShapes,
-    orientationTestShape
+    orientationTestData,
+    makePlacementSet,
 } from "~/lib/grids/CubicGrid.test.ts"
 import {
     getPieceOrientations,
@@ -13,38 +12,31 @@ import {
     getPiecePlacements
 } from "~/lib/placements.ts"
 
-function makePlacementSet(voxelLists: Voxel[][]): Set<string> {
-    const set: Set<string> = new Set()
-    for(const voxels of voxelLists) {
-        const sortedVoxels = [...voxels].sort()
-        set.add(
-            sortedVoxels.join("; ")
-        )
-    }
-    return set
-}
+const grid = new CubicGrid()
 
-describe("Piece placement", () => {
-    const grid = new CubicGrid()
-
-    test("orientations", () => {
+describe("getPieceOrientations()", () => {
+    test("simple orientation", () => {
         const piece = new Piece(
             "piece-0",
             [3, 3, 3],
-            orientationTestShape
+            orientationTestData.originalPiece
         )
-        const orientations = Array.from(getPieceOrientations(grid, piece))
-        expect(orientations.length).toEqual(24)
-        expect(orientations[0].originalPiece).toEqual(Object.assign({}, piece, {id: null}))
+        const orientations = getPieceOrientations(grid, piece)
+        const actualOrientations = makePlacementSet(
+            orientations.map((placement) => placement.transformedPiece.voxels)
+        )
+        const expectedOrientations = makePlacementSet(
+            orientationTestData.orientationsMinusSymmetries
+        )
+        expect(actualOrientations).toEqual(expectedOrientations)
+        expect(orientations[0].originalPieceId).toEqual(piece.id)
         expect(orientations[0].transformedPiece).not.toEqual(piece)
-        for(let i=0; i<24; i++) {
-            expect(
-                orientations[i].transformedPiece.voxels
-            ).toEqual(orientationTestResultingShapes[i])
-        }
     })
 
-    test("translations", () => {
+})
+
+describe("getPieceTranslations()", () => {
+    test("simple translation", () => {
         let piece = new Piece(
             "piece-0",
             [3, 3, 3],
@@ -84,8 +76,10 @@ describe("Piece placement", () => {
         expect(placements[4].transformedPiece.voxels).toEqual(["2,0,0", "2,0,1"])
         expect(placements[5].transformedPiece.voxels).toEqual(["2,1,0", "2,1,1"])
     })
+})
 
-    test("placements", () => {
+describe("getPiecePlacements()", () => {
+    test("simple piece", () => {
         let piece = new Piece(
             "piece-0",
             grid.getDefaultPieceBounds(),
@@ -94,9 +88,8 @@ describe("Piece placement", () => {
         let placements = Array.from(getPiecePlacements(
             grid,
             piece,
-            grid.getVoxels([3, 2, 2])
+            grid.getVoxels([3, 2, 2]),
         ))
-        expect(placements.length).toEqual(20)
         expect(
             makePlacementSet(placements.map((p) => p.transformedPiece.voxels))
         ).toEqual(
@@ -134,7 +127,7 @@ describe("Piece placement", () => {
         placements = Array.from(getPiecePlacements(
             grid,
             piece,
-            ["0,0,0", "0,1,0", "1,1,0"]
+            ["0,0,0", "0,1,0", "1,1,0"],
         ))
         expect(placements.length).toEqual(1)
         expect(
@@ -144,5 +137,4 @@ describe("Piece placement", () => {
         ])
 
    })
-
 })

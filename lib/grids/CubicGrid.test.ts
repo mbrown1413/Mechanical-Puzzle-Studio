@@ -1,11 +1,24 @@
 import {test, expect, describe} from "vitest"
 
+import {Voxel} from "~/lib/Grid.ts"
 import {CubicGrid} from "./CubicGrid.ts"
 
-export const orientationTestShape = ["0,0,0", "1,0,0", "1,1,0"]
-export const orientationTestResultingShapes = [
+export function makePlacementSet(voxelLists: Voxel[][]): Set<string> {
+    const set: Set<string> = new Set()
+    for(const voxels of voxelLists) {
+        const sortedVoxels = [...voxels].sort()
+        set.add(
+            sortedVoxels.join("; ")
+        )
+    }
+    return set
+}
+
+export const orientationTestData = {
+    originalPiece: ["0,0,0", "1,0,0", "1,1,0"],
+    allOrientations: [
         // Original +X facing in +X
-        orientationTestShape,
+        ["0,0,0", "1,0,0", "1,1,0"],
         ["0,0,1", "1,0,1", "1,0,0"],
         ["0,1,0", "1,1,0", "1,0,0"],
         ["0,0,0", "1,0,0", "1,0,1"],
@@ -39,7 +52,30 @@ export const orientationTestResultingShapes = [
         ["0,0,1", "0,1,1", "0,1,0"],
         ["0,1,1", "0,1,0", "0,0,0"],
         ["0,1,0", "0,0,0", "0,0,1"],
-]
+    ],
+
+    /* Like `allOrientations` but removes placements which are equal
+    * due to symmetries in the original piece. */
+    orientationsMinusSymmetries: [
+        // Sticking up in +Z direction
+        ["0,0,1", "0,0,0", "1,0,0"],
+        ["0,1,1", "0,1,0", "0,0,0"],
+        ["1,0,1", "1,0,0", "0,0,0"],
+        ["0,0,1", "0,0,0", "0,1,0"],
+
+        // Sticking down in -Z direction
+        ["0,0,0", "0,0,1", "1,0,1"],
+        ["0,1,0", "0,1,1", "0,0,1"],
+        ["1,0,0", "1,0,1", "0,0,1"],
+        ["0,0,0", "0,0,1", "0,1,1"],
+
+        // Completely in the X/Y plane
+        ["0,1,0", "0,0,0", "1,0,0"],
+        ["0,0,0", "0,1,0", "1,1,0"],
+        ["0,1,0", "1,1,0", "1,0,0"],
+        ["0,0,0", "1,0,0", "1,1,0"],
+    ]
+}
 
 describe("Cubic grid", () => {
     const grid = new CubicGrid()
@@ -88,12 +124,15 @@ describe("Cubic grid", () => {
 
     test("orientations", () => {
         const orientations = grid.getOrientations()
-        expect(orientations.length).toEqual(24)
-        for(let i=0; i<24; i++) {
-            expect(
-                orientations[i].orientationFunc(orientationTestShape)
-            ).toEqual(orientationTestResultingShapes[i])
-        }
+        const actualOrientations = makePlacementSet(
+            orientations.map(
+                (orientation) => orientation.orientationFunc(orientationTestData.originalPiece)
+            )
+        )
+        const expectedOrientations = makePlacementSet(
+            orientationTestData.allOrientations
+        )
+        expect(actualOrientations).toEqual(expectedOrientations)
     })
 
     test("translations", () => {

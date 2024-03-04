@@ -1,9 +1,8 @@
 import {AssemblyProblem, Problem} from "~/lib/Problem.ts"
 import {Puzzle} from "~/lib/Puzzle.ts"
-import {PiecePlacement} from "~/lib/placements.ts"
+import {PiecePlacement, getPlacements} from "~/lib/placements.ts"
 import {AssemblySolution, Solution} from "~/lib/Solution.ts"
 import {TaskCallbacks, voidTaskCallbacks} from "~/lib/types.ts"
-import {getPiecePlacements} from "~/lib/placements.ts"
 
 export abstract class Solver {
     abstract solve(
@@ -14,6 +13,13 @@ export abstract class Solver {
 }
 
 export class AssemblySolver extends Solver {
+    removeSymmetries: boolean
+
+    constructor() {
+        super()
+        this.removeSymmetries = true
+    }
+
     solve(
         puzzle: Puzzle,
         problem: Problem,
@@ -36,7 +42,7 @@ export class AssemblySolver extends Solver {
         const {
             placementsByPieceIdx,
             coverRowsByPieceIdx
-        } = this.getPlacementRows(puzzle, problem)
+        } = this.getPlacementRows(puzzle, problem, callbacks)
 
         callbacks.logCallback(
             `Number of placements options for each piece: ${placementsByPieceIdx.map(placements => placements.length).join(", ")}`
@@ -55,7 +61,7 @@ export class AssemblySolver extends Solver {
         return ret
     }
 
-    getPlacementRows(puzzle: Puzzle, problem: Problem) {
+    getPlacementRows(puzzle: Puzzle, problem: Problem, {logCallback}: TaskCallbacks) {
         if(!(problem instanceof AssemblyProblem)) {
             throw new Error("Assembly Solver can only solve Assembly Problems")
         }
@@ -78,10 +84,29 @@ export class AssemblySolver extends Solver {
             }
         }
 
+        const placementResults = getPlacements(
+            puzzle.grid,
+            goal,
+            pieces,
+            this.removeSymmetries,
+        )
+
+        if(this.removeSymmetries && placementResults.symmetryInfo) {
+            const symInfo = placementResults.symmetryInfo
+            logCallback(
+                `Symmetry breaking piece: ${symInfo.piece.label}`
+            )
+            logCallback(
+                `Symmetry reduced the problem by ${symInfo.reduction} times`
+            )
+        } else if(this.removeSymmetries) {
+            logCallback("No symmetry breaking piece found")
+        }
+
         const placementsByPieceIdx: PiecePlacement[][] = []
         const coverRowsByPieceIdx: boolean[][][] = []
         for(const piece of pieces) {
-            const placements = [...getPiecePlacements(puzzle.grid, piece, goal.voxels)]
+            const placements = placementResults.placementsByPiece[piece.id]
             const coverRows: boolean[][] = []
             for(const placement of placements) {
                 coverRows.push(

@@ -88,14 +88,20 @@ export type Viewpoint = {
 
 /**
  * A transformation of voxels by rotating about some point in space.
+ *
+ * For now, all orientations must be applicable to any set of voxels, but this
+ * restriction could be relaxed in the future.
  */
 export type Orientation = {
-    orientationFunc: (oldVoxels: Voxel[]) => Voxel[] | null
+    orientationFunc: (oldVoxels: Voxel[]) => Voxel[]
 }
 
 /**
  * Represents a movement, without rotation, from one place in the grid to
  * another.
+ *
+ * For now, all translations must be applicable to any voxel, but this
+ * restriction could be relaxed in the future.
  */
 export type Translation = number[]
 
@@ -215,13 +221,13 @@ export abstract class Grid extends SerializableClass {
      * Return a translation which would move one voxel to another, or null if
      * no translation exists.
      */
-    abstract getTranslation(from: Voxel, to: Voxel): Translation | null
+    abstract getTranslation(from: Voxel, to: Voxel): Translation
 
     /**
      * Apply translation to a voxel, or null if the transformation cannot be
      * applied.
      */
-    abstract translate(voxel: Voxel, translation: Translation): Voxel | null
+    abstract translate(voxel: Voxel, translation: Translation): Voxel
 
     abstract getViewpoints(): Viewpoint[]
 }

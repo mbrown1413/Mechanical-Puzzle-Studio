@@ -125,6 +125,15 @@ export class Piece extends SerializableClass {
         coppied.id = null
         return coppied
     }
+
+    equals(other: Piece): boolean {
+        // Use sets so duplicate voxels don't affect equality
+        const thisVoxels = new Set(this.voxels)
+        const otherVoxels = new Set(other.voxels)
+        return thisVoxels.size === otherVoxels.size && [...thisVoxels].every(
+            v => otherVoxels.has(v)
+        )
+    }
 }
 
 export type PieceWithId = Piece & {id: string}

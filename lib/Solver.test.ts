@@ -78,6 +78,7 @@ describe("AssemblySolver", () => {
     const solver = new AssemblySolver()
 
     test("solve problem 0", () => {
+        solver.removeSymmetries = false
         const solutions = solver.solve(puzzle, problem0)
         expect(solutions.length).toEqual(2)
         assertSolutionEqual(solutions[0], {
@@ -90,7 +91,18 @@ describe("AssemblySolver", () => {
         })
     })
 
+    test("solve problem 0 with removed symmetries", () => {
+        solver.removeSymmetries = true
+        const solutions = solver.solve(puzzle, problem0)
+        expect(solutions.length).toEqual(1)
+        assertSolutionEqual(solutions[0], {
+            "problem-0-piece-0": ["1,1,0", "2,1,0", "2,0,0"],
+            "problem-0-piece-1": ["0,0,0", "0,1,0"],
+        })
+    })
+
     test("solve problem 1", () => {
+        solver.removeSymmetries = false
         const solutions = solver.solve(puzzle, problem1)
         expect(solutions.length).toEqual(4)
         assertSolutionEqual(solutions[0], {
@@ -108,6 +120,16 @@ describe("AssemblySolver", () => {
         assertSolutionEqual(solutions[3], {
             "problem-1-piece-0": ["1,0,0", "0,0,0", "0,1,0", "0,2,0", "1,2,0"],
             "problem-1-piece-1": ["2,0,0", "2,1,0", "2,2,0", "1,1,0"],
+        })
+    })
+
+    test("solve problem 1 with removed symmetries", () => {
+        solver.removeSymmetries = true
+        const solutions = solver.solve(puzzle, problem1)
+        expect(solutions.length).toEqual(1)
+        assertSolutionEqual(solutions[0], {
+            "problem-1-piece-0": ["0,1,0", "0,2,0", "1,2,0", "2,2,0", "2,1,0"],
+            "problem-1-piece-1": ["0,0,0", "1,0,0", "2,0,0", "1,1,0"],
         })
     })
 })
