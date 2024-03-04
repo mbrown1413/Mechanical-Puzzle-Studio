@@ -103,6 +103,8 @@ export class AssemblySolver extends Solver {
             logCallback("No symmetry breaking piece found")
         }
 
+        const goalVoxels = [...new Set(goal.voxels)]
+
         const placementsByPieceIdx: PiecePlacement[][] = []
         const coverRowsByPieceIdx: boolean[][][] = []
         for(const piece of pieces) {
@@ -110,7 +112,7 @@ export class AssemblySolver extends Solver {
             const coverRows: boolean[][] = []
             for(const placement of placements) {
                 coverRows.push(
-                    goal.voxels.map((voxel) =>
+                    goalVoxels.map((voxel) =>
                         placement.transformedPiece.voxels.includes(voxel)
                     )
                 )

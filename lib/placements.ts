@@ -59,6 +59,7 @@ export function getPieceTranslations(
     availableVoxels: Voxel[],
 ): PiecePlacement[] {
     const translations = []
+    availableVoxels = [...new Set(availableVoxels)]
     for(const toVoxel of availableVoxels) {
         const translation = grid.getTranslation(piece.voxels[0], toVoxel)
 
