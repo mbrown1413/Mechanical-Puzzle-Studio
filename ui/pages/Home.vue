@@ -118,6 +118,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                     >
                         <VBtn
                             v-for="storageButton in storageButtons"
+                            v-if="!storage.readOnly"
                             color="primary"
                             size="large"
                             style="flex: 0 0 auto;"
@@ -155,7 +156,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                 </template>
 
                 <template v-slot:item.actions="{item}">
-                    
+
                     <VTooltip text="Download">
                         <template v-slot:activator="{props}">
                             <VBtn
@@ -182,6 +183,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
 
                     <ConfirmButton
                         :text="`Delete Puzzle ${item.name}?`"
+                        :disabled="storage.readOnly"
                         tooltip="Delete"
                         confirmText="Delete"
                         confirmButtonColor="red"

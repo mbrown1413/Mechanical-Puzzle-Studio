@@ -12,7 +12,8 @@ let _storageInstances: {[id: string]: PuzzleStorage} | undefined = undefined
 export function getStorageInstances(): {[id: string]: PuzzleStorage} {
     if(!_storageInstances) {
         const storages = [
-            new LocalPuzzleStorage()
+            new LocalPuzzleStorage(),
+            new SampleStorage(),
         ]
         _storageInstances = Object.fromEntries(storages.map(
             (storage: PuzzleStorage) => [storage.id, storage]
@@ -69,6 +70,8 @@ export abstract class PuzzleStorage {
 
     /** Name to display to the user for this storage. */
     abstract get name(): string
+
+    get readOnly(): boolean { return false }
 
     /** List puzzles in this storage.
      *
@@ -202,4 +205,49 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         }
     }
 
+}
+
+/** Read-only storage of all puzzles in examples folder. */
+class SampleStorage extends PuzzleStorage {
+    puzzleStrings: {[puzzleName: string]: string}
+
+    constructor() {
+        super()
+        const modules = import.meta.glob("../examples/*.json", {eager: true})
+        this.puzzleStrings = Object.fromEntries(
+            Object.values(modules).map((object) => {
+                const serializedString = JSON.stringify(object)
+                const puzzleFile = PuzzleFile.deserialize(serializedString)
+                return [puzzleFile.name, serializedString]
+            })
+        )
+    }
+
+    get id() {
+        return "sample"
+    }
+
+    get name() {
+        return "Sample Puzzles"
+    }
+
+    get readOnly() { return true }
+
+    listWithoutCaching(): PuzzleMetadata[] {
+        return Object.values(this.puzzleStrings).map(
+            (serialized) => PuzzleFile.deserialize(serialized).getMetadata()
+        )
+    }
+
+    getRaw(puzzleName: string): string {
+        const raw = this.puzzleStrings[puzzleName]
+        if(!raw) {
+            throw new PuzzleNotFoundError(puzzleName)
+        }
+        return raw
+    }
+
+    save(_puzzleFile: PuzzleFile) { }
+
+    delete(_puzzleName: string) { }
 }

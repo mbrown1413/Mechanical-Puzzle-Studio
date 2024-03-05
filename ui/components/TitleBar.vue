@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import {PuzzleFile} from "~lib"
 import TaskStatusDisplay from "./TaskStatusDisplay.vue";
+import {PuzzleStorage} from "~/ui/storage.ts";
 
 withDefaults(
     defineProps<{
         puzzleFile?: PuzzleFile | null,
+        storage?: PuzzleStorage,
         flat?: boolean,
     }>(), {
-        puzzleFile: null,
         flat: false,
     }
 )
@@ -25,6 +26,24 @@ const appTitle = import.meta.env.VITE_APP_TITLE
 
         <VAppBarTitle v-if="puzzleFile" class="page-title">
             {{ puzzleFile.name }}
+
+            <VTooltip v-if="storage?.readOnly">
+                <template v-slot:activator="{props}">
+                    <VChip
+                        v-bind="props"
+                        color="red"
+                        density="compact"
+                        class="ml-2"
+                    >
+                        Read Only
+                    </VChip>
+                </template>
+                <template v-slot>
+                    <!-- Select "Save as" under the file menu to save this puzzle. -->
+                    Copy the puzzle on the home page in order to save edits.
+                </template>
+            </VTooltip>
+
         </VAppBarTitle>
 
         <TaskStatusDisplay />

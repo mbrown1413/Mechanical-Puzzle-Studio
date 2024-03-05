@@ -17,7 +17,11 @@ const router = useRouter()
 defineExpose({
     open(newMode: Mode, storage: PuzzleStorage, copyFrom: string | null = null) {
         mode.value = newMode
-        fields.storage = storage
+        if(storage.readOnly) {
+            fields.storage = Object.values(storages)[0]
+        } else {
+            fields.storage = storage
+        }
         if(newMode === "new") {
             title.value = "New Puzzle"
         } else if(newMode === "upload") {
@@ -29,6 +33,7 @@ defineExpose({
             }
             title.value = `Copy "${copyFrom}"`
             fields.name = copyFrom + " (copy)"
+            copyFromStorage = storage
             copyFromPuzzleName = copyFrom
         }
         modal.value?.open()
@@ -41,6 +46,7 @@ defineExpose({
 type Mode = "new" | "upload" | "copy"
 const mode: Ref<Mode> = ref("new")
 const title = ref("")
+let copyFromStorage: PuzzleStorage
 let copyFromPuzzleName = ""
 
 const storages = getStorageInstances()
@@ -73,7 +79,7 @@ watch(uploadedPuzzle, (newPuzzle, oldPuzzle) => {
 })
 
 const storageSelectItems = computed(() =>
-    Object.values(getStorageInstances()).map((storage) => {
+    Object.values(storages).filter(s => !s.readOnly).map((storage) => {
         return {
             title: storage.name,
             value: storage,
@@ -132,7 +138,7 @@ async function submit(event?: Event) {
         break
 
         case "copy":
-            puzzleFile = fields.storage.get(copyFromPuzzleName, true)
+            puzzleFile = copyFromStorage.get(copyFromPuzzleName, true)
         break
 
         default:

@@ -155,7 +155,7 @@ const tools: {
 </script>
 
 <template>
-    <TitleBar :puzzleFile="puzzleFile" flat />
+    <TitleBar :puzzleFile="puzzleFile" :storage="puzzleStorage" flat />
     <VAppBar
         density="compact"
         :height="48"

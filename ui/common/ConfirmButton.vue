@@ -18,12 +18,14 @@ withDefaults(
         buttonVariant?: VBtn["variant"],
         confirmText?: string,
         confirmButtonColor?: string,
+        disabled?: boolean,
     }>(), {
         title: "Confirm",
         tooltip: null,
         text: "Are you sure?",
         confirmText: "Confirm",
         confirmButtonColor: undefined,
+        disabled: false,
     }
 )
 
@@ -40,6 +42,7 @@ const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
             <VBtn
                 :color="buttonColor"
                 :variant="buttonVariant"
+                :disabled="disabled"
                 @click="modal?.open()"
                 v-bind="tooltip ? props : {}"
             >

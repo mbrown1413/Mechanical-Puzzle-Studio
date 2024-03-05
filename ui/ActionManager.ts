@@ -45,7 +45,9 @@ export class ActionManager {
         action.perform(this.puzzleFile.puzzle)
 
         const after = serialize(this.puzzleFile)
-        this.storage.save(this.puzzleFile)
+        if(!this.storage.readOnly) {
+            this.storage.save(this.puzzleFile)
+        }
 
         this.performedActions.push({
             action: action,
@@ -62,7 +64,9 @@ export class ActionManager {
             doPatch(serialized, patch)
         }
         this.puzzleFile = deserialize<PuzzleFile>(serialized, "PuzzleFile")
-        this.storage.save(this.puzzleFile)
+        if(!this.storage.readOnly) {
+            this.storage.save(this.puzzleFile)
+        }
     }
 
     undo() {
