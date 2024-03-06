@@ -99,9 +99,11 @@ const appTitle = import.meta.env.VITE_APP_TITLE
             </VCol>
         </VRow>
 
-        <VRow justify="center">
+        <VRow
+            v-for="{storage, puzzles} of puzzlesByStorage"
+            justify="center"
+        >
             <VDataTable
-                    v-for="{storage, puzzles} of puzzlesByStorage"
                     :headers="tableHeaders"
                     :items="puzzles"
                     no-data-text="No puzzles in this storage location"
