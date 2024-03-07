@@ -38,11 +38,11 @@ designing many types of puzzles, it's now very old software, and it's missing
 some modern design patterns and standards. It's also not actively maintained
 and difficult to add features to.
 
-I'd like MPD to:
+I'd like MPS to:
 * have an "Undo" button
 * run on the web
-* be easy to add new grids, solving algorithms, problem types, ways of inputting pieces, etc.
-* be written using modern tools (Typescript and Vue) accessible to more developers
+* allow to easily add new grids, solving algorithms, problem types, ways of inputting pieces, etc.
+* be written using modern tools (Typescript and Vue) which are accessible to more developers
 * explore faster solver algorithms including running on the GPU and/or distributed computations
 * easily share puzzles
 
