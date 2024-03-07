@@ -5,8 +5,8 @@ import {createVuetify} from "vuetify"
 import {mdi} from "vuetify/iconsets/mdi"
 
 import App from "~/ui/App.vue"
-import Home from "~/ui/pages/Home.vue"
-import EditPuzzle from "~/ui/pages/EditPuzzle.vue"
+import HomePage from "~/ui/pages/HomePage.vue"
+import EditPuzzlePage from "~/ui/pages/EditPuzzlePage.vue"
 
 import "~/ui/style.scss"
 import "@mdi/font/css/materialdesignicons.css"
@@ -16,13 +16,13 @@ const routes: RouteRecordRaw[] = [
     {
         name: "home",
         path: "/",
-        component: Home
+        component: HomePage
     },
     {
         name: "puzzle",
         path: "/puzzle/:storageId/:puzzleName",
         props: true,
-        component: EditPuzzle
+        component: EditPuzzlePage
     },
 ]
 
