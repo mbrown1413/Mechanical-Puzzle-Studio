@@ -22,11 +22,16 @@ defineExpose({
         } else {
             fields.storage = storage
         }
+
         if(newMode === "new") {
             title.value = "New Puzzle"
+            createButtonText.value = "Create"
+
         } else if(newMode === "upload") {
             title.value = "Upload Puzzle"
             fields.name = ""
+            createButtonText.value = "Upload"
+
         } else if(newMode === "copy") {
             if(!copyFrom) {
                 throw new Error("Copy mode reqires copyFrom argument")
@@ -35,6 +40,8 @@ defineExpose({
             fields.name = copyFrom + " (copy)"
             copyFromStorage = storage
             copyFromPuzzleName = copyFrom
+            createButtonText.value = "Copy"
+
         }
         modal.value?.open()
         nextTick(() => {
@@ -43,6 +50,7 @@ defineExpose({
     }
 })
 
+const createButtonText = ref("Create")
 type Mode = "new" | "upload" | "copy"
 const mode: Ref<Mode> = ref("new")
 const title = ref("")
@@ -177,7 +185,7 @@ function readPuzzleFile(file: File): Promise<PuzzleFile> {
     <Modal
         ref="modal"
         :title="title"
-        okText="Create"
+        :okText="createButtonText"
         dialogMaxWidth="500px"
         @ok="submit()"
     >
