@@ -4,7 +4,7 @@
 -->
 
 <script setup lang="ts">
-import {ref, Ref} from "vue"
+import {ref, Ref, watch} from "vue"
 
 const el: Ref<HTMLSelectElement | null> = ref(null)
 
@@ -14,7 +14,7 @@ type Item = {
     color?: string,
 }
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
         items: Item[],
         selectedIds: string[],
@@ -24,12 +24,49 @@ withDefaults(
     }
 )
 
-
 const emit = defineEmits<{
     "update:selectedIds": [ids: string[]],
     add: [],
     remove: [],
 }>()
+
+function arraysEqual<T>(array1: Array<T>, array2: Array<T>) {
+    if(array1.length !== array2.length) { return false }
+    return array1.every(x => array2.indexOf(x) !== -1)
+}
+
+let oldItems = [...props.items]
+watch(() => props.items, () => {
+    const oldSet = new Set(oldItems.map(item => item.id))
+    const newSet = new Set(props.items.map(item => item.id))
+    let newSelectedIds: string[]
+
+    if(newSet.size === oldSet.size + 1) {
+        // Added item: Select item that was added
+        newSelectedIds = [...newSet].filter(
+            item => !oldSet.has(item)
+        )
+
+    } else if(oldSet.size === newSet.size + 1) {
+        // Deleted item: Select item closest to it
+        const deletedId = [...oldSet].filter(
+            item => !newSet.has(item)
+        )[0]
+        const deletedItemIdx = oldItems.findIndex(item => item.id === deletedId)
+        const newSelectedIdx = Math.min(props.items.length-1, Math.max(0, deletedItemIdx))
+        const newSelectedItem = props.items[newSelectedIdx]
+        newSelectedIds = newSelectedItem ? [newSelectedItem.id] : []
+
+    } else {
+        newSelectedIds = props.selectedIds
+    }
+
+    newSelectedIds = newSelectedIds.filter(id => newSet.has(id))
+    if(!arraysEqual(newSelectedIds, props.selectedIds)) {
+        emit("update:selectedIds", newSelectedIds)
+    }
+    oldItems = [...props.items]
+})
 
 function onItemsSelect() {
     if(el.value === null) return
