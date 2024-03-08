@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import {ref, Ref, reactive} from "vue"
 import {VDataTable} from "vuetify/components"
-import {saveAs} from "file-saver"
-
-import {PuzzleMetadata} from "~lib"
 
 import {title} from "~/ui/globals.ts"
+import {downloadFromStorage} from "~/ui/utils/download.ts"
 import {getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
@@ -38,13 +36,6 @@ function deletePuzzle(storage: PuzzleStorage, puzzleName: string) {
             (puzzle) => puzzle.name !== puzzleName
         )
     }
-}
-
-function downloadPuzzle(storage: PuzzleStorage, meta: PuzzleMetadata) {
-    const [raw, _error] = storage.getRawFormatted(meta.name)
-    const blob = new Blob([raw], {type: "application/json;charset=utf-8"})
-    const filename = meta.name + ".json"
-    saveAs(blob, filename)
 }
 
 const tableHeaders: VDataTable["headers"] = [
@@ -164,7 +155,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                         <template v-slot:activator="{props}">
                             <VBtn
                                 v-bind="props"
-                                @click="downloadPuzzle(storage, item)"
+                                @click="downloadFromStorage(storage, item.name)"
                             >
                                 <VIcon icon="mdi-download" aria-label="Download" aria-hidden="false" />
                             </VBtn>

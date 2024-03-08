@@ -11,6 +11,7 @@ import TitleBar from "~/ui/components/TitleBar.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import Modal from "~/ui/common/Modal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
+import {downloadPuzzle} from "~/ui/utils/download.ts"
 
 const props = defineProps<{
     storageId: string,
@@ -134,21 +135,31 @@ type Menu = {
 
 type MenuItem = {
     text: string | (() => string),
-    icon: string | null,
+    icon?: string,
     perform: () => void,
-    enabled: () => boolean,
+    enabled?: () => boolean,
 }
 
 const menuItems: {[name: string]: MenuItem} = {
     rawData: {
         text: "Raw Data",
-        icon: null,
+        icon: "mdi-code-braces",
         perform() {
             if(puzzleFile.value) {
                 rawDataModal.value?.openFromPuzzle(puzzleFile.value)
             }
         },
-        enabled: () => Boolean(puzzleFile),
+        enabled: () => Boolean(puzzleFile.value),
+    },
+    download: {
+        text: "Download",
+        icon: "mdi-download",
+        perform() {
+            if(puzzleFile.value) {
+                downloadPuzzle(puzzleFile.value)
+            }
+        },
+        enabled: () => Boolean(puzzleFile.value)
     },
     undo: {
         text: () => {
@@ -176,7 +187,8 @@ const menus: Menu[] = [
     {
         text: "File",
         items: [
-            menuItems.rawData
+            menuItems.rawData,
+            menuItems.download,
         ],
     },
     {
@@ -212,8 +224,9 @@ const tools: MenuItem[] = [
                     <VListItem
                         v-for="menuItem in menu.items"
                         @click="menuItem.perform"
-                        :disabled="!menuItem.enabled()"
+                        :disabled="menuItem.enabled === undefined ? false : !menuItem.enabled()"
                     >
+                        <VIcon v-if="menuItem.icon" :icon="menuItem.icon" :aria-label="menuItem.text" aria-hidden="false" />
                         {{ typeof menuItem.text === 'string' ? menuItem.text : menuItem.text() }}
                     </VListItem>
                 </VList>
@@ -231,7 +244,7 @@ const tools: MenuItem[] = [
                     <span v-bind="props">
                         <VBtn
                             rounded
-                            :disabled="!tool.enabled()"
+                            :disabled="tool.enabled === undefined ? false : !tool.enabled()"
                             @click="tool.perform()"
                         >
                             <VIcon v-if="tool.icon" :icon="tool.icon" :aria-label="tool.text" aria-hidden="false" />
