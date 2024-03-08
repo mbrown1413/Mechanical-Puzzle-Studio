@@ -49,9 +49,13 @@ export class PuzzleFile extends SerializableClass {
         this.puzzle = puzzle
     }
 
-    serialize() {
+    serialize(formatted=false) {
         this.modifiedUTCString = new Date().toUTCString()
-        return JSON.stringify(serialize(this))
+        return JSON.stringify(
+            serialize(this),
+            null,
+            formatted ? 4 : undefined
+        )
     }
 
     static deserialize(data: string): PuzzleFile {

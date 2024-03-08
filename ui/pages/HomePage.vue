@@ -9,12 +9,13 @@ import {title} from "~/ui/globals.ts"
 import {getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
-import RawDataButton from "~/ui/components/RawDataButton.vue"
+import RawDataModal from "~/ui/components/RawDataModal.vue"
 import NewPuzzleModal from "~/ui/components/NewPuzzleModal.vue"
 
 title.value = ""
 
 const newPuzzleModal: Ref<InstanceType<typeof NewPuzzleModal> | null> = ref(null)
+const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
 
 const puzzlesByStorage = reactive(
     Object.values(getStorageInstances()).map((storage) => {
@@ -170,7 +171,16 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                         </template>
                     </VTooltip>
 
-                    <RawDataButton :storage="storage" :puzzleName="item.name" />
+                    <VTooltip text="Raw Data">
+                        <template v-slot:activator="{props}">
+                            <VBtn
+                                @click="rawDataModal?.openFromStorage(storage, item.name)"
+                                v-bind="props"
+                            >
+                                <VIcon icon="mdi-code-braces" aria-label="Raw Data" aria-hidden="false" />
+                            </VBtn>
+                        </template>
+                    </VTooltip>
 
                     <VTooltip text="Copy">
                         <template v-slot:activator="{props}">
@@ -200,5 +210,6 @@ const appTitle = import.meta.env.VITE_APP_TITLE
         </VRow>
     </VMain>
 
+    <RawDataModal ref="rawDataModal" />
     <NewPuzzleModal ref="newPuzzleModal" />
 </template>

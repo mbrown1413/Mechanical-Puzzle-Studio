@@ -10,6 +10,7 @@ import {Action} from "~/ui/actions.ts"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import Modal from "~/ui/common/Modal.vue"
+import RawDataModal from "~/ui/components/RawDataModal.vue"
 
 const props = defineProps<{
     storageId: string,
@@ -24,6 +25,7 @@ type PuzzleErrorInfo = {
 }
 const puzzleError: Ref<PuzzleErrorInfo | null> = ref(null)
 const puzzleErrorModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
+const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
 
 watch(puzzleError, () => {
     if(puzzleError.value === null) {
@@ -125,6 +127,25 @@ watch(taskRunner.finished, () => {
     }
 })
 
+const fileMenu = {
+    text: "File",
+    items: [
+        {
+            text: "Raw Data",
+            click() {
+                if(puzzleFile.value) {
+                    rawDataModal.value?.openFromPuzzle(puzzleFile.value)
+                }
+            },
+            disabled: () => puzzleFile ? false : undefined
+        },
+    ],
+}
+
+const menus = [
+    fileMenu
+]
+
 const tools: {
     text: string | (() => string),
     icon: string,
@@ -162,15 +183,24 @@ const tools: {
         class="toolbar"
     >
 
-        <div class="left">
-            <!--
-            <VBtn>File</VBtn>
-            <VBtn>Edit</VBtn>
-            <VBtn>Settings</VBtn>
-            -->
+        <div class="toolbar-left">
+            <VMenu v-for="menu in menus">
+                <template v-slot:activator="{props}">
+                    <VBtn v-bind="props">{{ menu.text }}</VBtn>
+                </template>
+                <VList>
+                    <VListItem
+                        v-for="menuItem in menu.items"
+                        @click="menuItem.click"
+                        :disabled="menuItem.disabled()"
+                    >
+                        {{ menuItem.text }}
+                    </VListItem>
+                </VList>
+            </VMenu>
         </div>
 
-        <div class="center">
+        <div class="toolbar-center">
             <VTooltip
                 v-for="tool in tools"
                 :text="typeof tool.text === 'string' ? tool.text : tool.text()"
@@ -191,7 +221,7 @@ const tools: {
             </VTooltip>
         </div>
 
-        <div class="right">
+        <div class="toolbar-right">
         </div>
 
     </VAppBar>
@@ -231,6 +261,8 @@ const tools: {
             Since this error cannot be ignored, the puzzle cannot be viewed.
         </p>
     </Modal>
+
+    <RawDataModal ref="rawDataModal" />
 </template>
 
 <style scoped>
@@ -241,10 +273,10 @@ const tools: {
     flex-basis: 0;
     flex-grow: 1;
 }
-.toolbar .center {
+.toolbar .toolbar-center {
     text-align: center;
 }
-.toolbar .right {
+.toolbar .toolbar-right {
     text-align: right;
 }
 </style>

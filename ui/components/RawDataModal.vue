@@ -1,36 +1,34 @@
 <script setup lang="ts">
 import {ref, Ref} from "vue"
 
+import {PuzzleFile} from "~lib"
 import Modal from "~/ui/common/Modal.vue"
 import {PuzzleStorage} from "~/ui/storage"
-
-const props = defineProps<{
-    storage: PuzzleStorage,
-    puzzleName: string,
-}>()
 
 const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 const raw = ref("")
 const error: Ref<string | null> = ref(null)
 
-function open() {
-    [raw.value, error.value] = props.storage.getRawFormatted(props.puzzleName)
-    modal.value?.open()
-}
+defineExpose({
+
+    openFromStorage(storage: PuzzleStorage, puzzleName: string) {
+        [raw.value, error.value] = storage.getRawFormatted(puzzleName)
+        if(error.value) {
+            error.value = error.value
+        }
+        modal.value?.open()
+    },
+
+    openFromPuzzle(puzzleFile: PuzzleFile) {
+        raw.value = puzzleFile.serialize(true)
+        error.value = null
+        modal.value?.open()
+    },
+
+})
 </script>
 
 <template>
-    <VTooltip text="Raw Data">
-        <template v-slot:activator="{props}">
-            <VBtn
-                @click="open"
-                v-bind="props"
-            >
-                <VIcon icon="mdi-code-braces" aria-label="Raw Data" aria-hidden="false" />
-            </VBtn>
-        </template>
-    </VTooltip>
-
     <Modal
             ref="modal"
             title="Raw Data"
