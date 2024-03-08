@@ -127,32 +127,30 @@ watch(taskRunner.finished, () => {
     }
 })
 
-const fileMenu = {
-    text: "File",
-    items: [
-        {
-            text: "Raw Data",
-            click() {
-                if(puzzleFile.value) {
-                    rawDataModal.value?.openFromPuzzle(puzzleFile.value)
-                }
-            },
-            disabled: () => puzzleFile ? false : undefined
-        },
-    ],
+type Menu = {
+    text: string,
+    items: MenuItem[],
 }
 
-const menus = [
-    fileMenu
-]
-
-const tools: {
+type MenuItem = {
     text: string | (() => string),
-    icon: string,
+    icon: string | null,
     perform: () => void,
     enabled: () => boolean,
-}[] = [
-    {
+}
+
+const menuItems: {[name: string]: MenuItem} = {
+    rawData: {
+        text: "Raw Data",
+        icon: null,
+        perform() {
+            if(puzzleFile.value) {
+                rawDataModal.value?.openFromPuzzle(puzzleFile.value)
+            }
+        },
+        enabled: () => Boolean(puzzleFile),
+    },
+    undo: {
         text: () => {
             const action = editManager.getUndoAction()
             const actionString = action ? ` "${action.toString()}"` : ""
@@ -162,7 +160,7 @@ const tools: {
         perform: () => editManager.undo(),
         enabled: () => editManager.canUndo(),
     },
-    {
+    redo: {
         text: () => {
             const action = editManager.getRedoAction()
             const actionString = action ? ` "${action.toString()}"` : ""
@@ -172,6 +170,28 @@ const tools: {
         perform: () => editManager.redo(),
         enabled: () => editManager.canRedo(),
     },
+}
+
+const menus: Menu[] = [
+    {
+        text: "File",
+        items: [
+            menuItems.rawData
+        ],
+    },
+    {
+        text: "Edit",
+        items: [
+            menuItems.undo,
+            menuItems.redo,
+        ],
+    },
+]
+
+
+const tools: MenuItem[] = [
+    menuItems.undo,
+    menuItems.redo,
 ]
 </script>
 
@@ -191,10 +211,10 @@ const tools: {
                 <VList>
                     <VListItem
                         v-for="menuItem in menu.items"
-                        @click="menuItem.click"
-                        :disabled="menuItem.disabled()"
+                        @click="menuItem.perform"
+                        :disabled="!menuItem.enabled()"
                     >
-                        {{ menuItem.text }}
+                        {{ typeof menuItem.text === 'string' ? menuItem.text : menuItem.text() }}
                     </VListItem>
                 </VList>
             </VMenu>
@@ -214,7 +234,7 @@ const tools: {
                             :disabled="!tool.enabled()"
                             @click="tool.perform()"
                         >
-                            <VIcon :icon="tool.icon" :aria-label="tool.text" aria-hidden="false" />
+                            <VIcon v-if="tool.icon" :icon="tool.icon" :aria-label="tool.text" aria-hidden="false" />
                         </VBtn>
                     </span>
                 </template>
