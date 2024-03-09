@@ -39,8 +39,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                     </VChip>
                 </template>
                 <template v-slot>
-                    <!-- Select "Save as" under the file menu to save this puzzle. -->
-                    Copy the puzzle on the home page in order to save edits.
+                    Select "Save As" under the File menu to save changes
                 </template>
             </VTooltip>
 

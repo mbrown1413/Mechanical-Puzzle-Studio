@@ -14,6 +14,10 @@ import Modal from "~/ui/common/Modal.vue"
 
 const router = useRouter()
 
+const emit = defineEmits<{
+    save: [PuzzleFile]
+}>()
+
 defineExpose({
     open(newMode: Mode, storage: PuzzleStorage, copyFrom: string | null = null) {
         mode.value = newMode
@@ -32,15 +36,15 @@ defineExpose({
             fields.name = ""
             createButtonText.value = "Upload"
 
-        } else if(newMode === "copy") {
+        } else if(newMode === "copy" || newMode === "saveas") {
             if(!copyFrom) {
                 throw new Error("Copy mode reqires copyFrom argument")
             }
-            title.value = `Copy "${copyFrom}"`
+            title.value = newMode === "copy" ? `Copy "${copyFrom}"` : "Save As"
             fields.name = copyFrom + " (copy)"
             copyFromStorage = storage
             copyFromPuzzleName = copyFrom
-            createButtonText.value = "Copy"
+            createButtonText.value = newMode === "copy" ? "Copy" : "Save As"
 
         }
         modal.value?.open()
@@ -51,7 +55,7 @@ defineExpose({
 })
 
 const createButtonText = ref("Create")
-type Mode = "new" | "upload" | "copy"
+type Mode = "new" | "upload" | "copy" | "saveas"
 const mode: Ref<Mode> = ref("new")
 const title = ref("")
 let copyFromStorage: PuzzleStorage
@@ -146,6 +150,7 @@ async function submit(event?: Event) {
         break
 
         case "copy":
+        case "saveas":
             puzzleFile = copyFromStorage.get(copyFromPuzzleName, true)
         break
 
@@ -161,6 +166,8 @@ async function submit(event?: Event) {
         name: "puzzle",
         params: {storageId: fields.storage.id, puzzleName: fields.name}
     })
+    modal.value?.close()
+    emit("save", puzzleFile)
 }
 
 function readPuzzleFile(file: File): Promise<PuzzleFile> {

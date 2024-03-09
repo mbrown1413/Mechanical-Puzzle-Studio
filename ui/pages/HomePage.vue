@@ -8,11 +8,11 @@ import {getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
-import NewPuzzleModal from "~/ui/components/NewPuzzleModal.vue"
+import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
 
 title.value = ""
 
-const newPuzzleModal: Ref<InstanceType<typeof NewPuzzleModal> | null> = ref(null)
+const saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null> = ref(null)
 const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
 
 const puzzlesByStorage = reactive(
@@ -49,12 +49,12 @@ const storageButtons = [
     {
         text: "Upload",
         icon: "mdi-file-upload",
-        action: (storage: PuzzleStorage) => newPuzzleModal.value?.open("upload", storage),
+        action: (storage: PuzzleStorage) => saveModal.value?.open("upload", storage),
     },
     {
         text: "New",
         icon: "mdi-plus-box",
-        action: (storage: PuzzleStorage) => newPuzzleModal.value?.open("new", storage),
+        action: (storage: PuzzleStorage) => saveModal.value?.open("new", storage),
     },
 ]
 
@@ -177,7 +177,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                         <template v-slot:activator="{props}">
                             <VBtn
                                 v-bind="props"
-                                @click="newPuzzleModal?.open('copy', storage, item.name)"
+                                @click="saveModal?.open('copy', storage, item.name)"
                             >
                                 <VIcon icon="mdi-content-copy" aria-label="Copy" aria-hidden="false" />
                             </VBtn>
@@ -202,5 +202,5 @@ const appTitle = import.meta.env.VITE_APP_TITLE
     </VMain>
 
     <RawDataModal ref="rawDataModal" />
-    <NewPuzzleModal ref="newPuzzleModal" />
+    <PuzzleSaveModal ref="saveModal" />
 </template>

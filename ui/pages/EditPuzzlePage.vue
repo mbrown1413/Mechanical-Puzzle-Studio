@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, Ref, watch, watchEffect, onMounted, onErrorCaptured} from "vue"
+import {computed, ref, Ref, watch, watchEffect, onErrorCaptured} from "vue"
 
 import {PuzzleFile} from "~lib"
 
@@ -7,16 +7,21 @@ import {taskRunner, title} from "~/ui/globals.ts"
 import {getStorageInstances, PuzzleNotFoundError} from "~/ui/storage.ts"
 import {ActionManager} from "~/ui/ActionManager.ts"
 import {Action} from "~/ui/actions.ts"
+import {downloadPuzzle} from "~/ui/utils/download.ts"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import Modal from "~/ui/common/Modal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
-import {downloadPuzzle} from "~/ui/utils/download.ts"
+import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
 
 const props = defineProps<{
     storageId: string,
     puzzleName: string,
 }>()
+
+const storage = computed(() => getStorageInstances()[props.storageId])
+const puzzleFile: Ref<PuzzleFile | null> = ref(null)
+const editManager = new ActionManager(storage, puzzleFile)
 
 type PuzzleErrorInfo = {
     title: string,
@@ -27,6 +32,7 @@ type PuzzleErrorInfo = {
 const puzzleError: Ref<PuzzleErrorInfo | null> = ref(null)
 const puzzleErrorModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
+const saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null> = ref(null)
 
 watch(puzzleError, () => {
     if(puzzleError.value === null) {
@@ -36,22 +42,17 @@ watch(puzzleError, () => {
     }
 })
 
-const puzzleStorage = getStorageInstances()[props.storageId]
-
-onMounted(() => {
-    setPuzzleFile()
-    watchEffect(() => {
-        title.value = puzzleFile.value?.name || ""
-    })
+watchEffect(() => {
+    title.value = props.puzzleName
 })
 
-const puzzleFile: Ref<PuzzleFile | null> = ref(null)
-const editManager = new ActionManager(puzzleStorage, puzzleFile)
+setPuzzleFile()
+
 function setPuzzleFile(ignoreErrors=false) {
     puzzleError.value = null
     puzzleFile.value = null
     try {
-        puzzleFile.value = puzzleStorage.get(props.puzzleName, ignoreErrors)
+        puzzleFile.value = storage.value.get(props.puzzleName, ignoreErrors)
     } catch(e) {
         console.error(e)
         if(e instanceof PuzzleNotFoundError) {
@@ -68,7 +69,7 @@ function setPuzzleFile(ignoreErrors=false) {
         // If it fails now, we know it's unrecoverable.
         let recoverable = true
         try {
-            puzzleStorage.get(props.puzzleName, true)
+            storage.value.get(props.puzzleName, true)
         } catch {
             recoverable = false
         }
@@ -141,6 +142,13 @@ type MenuItem = {
 }
 
 const menuItems: {[name: string]: MenuItem} = {
+    saveAs: {
+        text: "Save As...",
+        icon: "mdi-content-save-all",
+        perform() {
+            saveModal.value?.open("saveas", storage.value, props.puzzleName)
+        },
+    },
     rawData: {
         text: "Raw Data",
         icon: "mdi-code-braces",
@@ -189,6 +197,7 @@ const menus: Menu[] = [
         items: [
             menuItems.rawData,
             menuItems.download,
+            menuItems.saveAs,
         ],
     },
     {
@@ -208,7 +217,7 @@ const tools: MenuItem[] = [
 </script>
 
 <template>
-    <TitleBar :puzzleFile="puzzleFile" :storage="puzzleStorage" flat />
+    <TitleBar :puzzleFile="puzzleFile" :storage="storage" flat />
     <VAppBar
         density="compact"
         :height="48"
@@ -296,6 +305,7 @@ const tools: MenuItem[] = [
     </Modal>
 
     <RawDataModal ref="rawDataModal" />
+    <PuzzleSaveModal ref="saveModal" @save="puzzleFile = $event" />
 </template>
 
 <style scoped>

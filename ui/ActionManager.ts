@@ -15,17 +15,21 @@ type PerformedAction = {
  * functionality.
  */
 export class ActionManager {
-    storage: PuzzleStorage
+    storageRef: Ref<PuzzleStorage>
     puzzleFileRef: Ref<PuzzleFile | null>
 
     performedActions: PerformedAction[]
     undoneActions: PerformedAction[]
 
-    constructor(storage: PuzzleStorage, puzzleFileRef: Ref<PuzzleFile | null>) {
-        this.storage = storage
+    constructor(storageRef: Ref<PuzzleStorage>, puzzleFileRef: Ref<PuzzleFile | null>) {
+        this.storageRef = storageRef
         this.puzzleFileRef = puzzleFileRef
         this.performedActions = reactive([])
         this.undoneActions = reactive([])
+    }
+
+    get storage() {
+        return this.storageRef.value
     }
 
     get puzzleFile() {
