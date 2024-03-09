@@ -1,4 +1,4 @@
-import {Voxel, Puzzle, Piece, Problem, AssemblyProblem} from "~lib"
+import {Voxel, Puzzle, Piece, Problem, AssemblyProblem, PuzzleFile} from "~lib"
 
 import {ProblemSolveTask} from "~/ui/tasks.ts"
 import {taskRunner} from "~/ui/globals.ts"
@@ -15,8 +15,13 @@ import {taskRunner} from "~/ui/globals.ts"
  */
 export abstract class Action {
 
-    /** Modify the puzzle according to this action. */
-    abstract perform(puzzle: Puzzle): void
+    /**
+     * Modify the puzzle file according to this action.
+     *
+     * The first argument is the Puzzle, since almost all actions won't need
+     * access to the full PuzzleFile.
+     */
+    abstract perform(puzzle: Puzzle, puzzleFile: PuzzleFile): void
 
     /** A short string shown to the user which describes this action. */
     abstract toString(): string
@@ -92,6 +97,28 @@ abstract class DeleteItemsAction extends Action {
         }
     }
 
+}
+
+
+////////// Puzzle Actions //////////
+
+export class EditPuzzleMetadataAction extends Action {
+    metadata: object
+
+    constructor(
+        metadata: object,
+    ) {
+        super()
+        this.metadata = metadata
+    }
+
+    toString() {
+        return "Edit puzzle metadata"
+    }
+
+    perform(_puzzle: Puzzle, puzzleFile: PuzzleFile) {
+        Object.assign(puzzleFile, this.metadata)
+    }
 }
 
 

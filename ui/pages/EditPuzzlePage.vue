@@ -13,6 +13,7 @@ import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import Modal from "~/ui/common/Modal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
 import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
+import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
 
 const props = defineProps<{
     storageId: string,
@@ -31,6 +32,7 @@ type PuzzleErrorInfo = {
 }
 const puzzleError: Ref<PuzzleErrorInfo | null> = ref(null)
 const puzzleErrorModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
+const metadataModal: Ref<InstanceType<typeof PuzzleMetadataModal> | null> = ref(null)
 const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
 const saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null> = ref(null)
 
@@ -141,7 +143,15 @@ type MenuItem = {
     enabled?: () => boolean,
 }
 
+/** Flat list of all available menu items. */
 const menuItems: {[name: string]: MenuItem} = {
+    metadata: {
+        text: "Metadata",
+        icon: "mdi-file-code",
+        perform() {
+            metadataModal.value?.open()
+        },
+    },
     saveAs: {
         text: "Save As...",
         icon: "mdi-content-save-all",
@@ -193,8 +203,9 @@ const menuItems: {[name: string]: MenuItem} = {
 
 const menus: Menu[] = [
     {
-        text: "File",
+        text: "Puzzle",
         items: [
+            menuItems.metadata,
             menuItems.rawData,
             menuItems.download,
             menuItems.saveAs,
@@ -208,7 +219,6 @@ const menus: Menu[] = [
         ],
     },
 ]
-
 
 const tools: MenuItem[] = [
     menuItems.undo,
@@ -304,6 +314,13 @@ const tools: MenuItem[] = [
         </p>
     </Modal>
 
+    <PuzzleMetadataModal
+        v-if="puzzleFile"
+        ref="metadataModal"
+        :puzzleFile="puzzleFile"
+        :storage="storage"
+        @action="performAction"
+    />
     <RawDataModal ref="rawDataModal" />
     <PuzzleSaveModal ref="saveModal" @save="puzzleFile = $event" />
 </template>

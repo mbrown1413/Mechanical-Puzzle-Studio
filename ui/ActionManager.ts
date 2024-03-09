@@ -46,7 +46,7 @@ export class ActionManager {
     performAction(action: Action) {
         const before = serialize(this.puzzleFile)
 
-        action.perform(this.puzzleFile.puzzle)
+        action.perform(this.puzzleFile.puzzle, this.puzzleFile)
 
         const after = serialize(this.puzzleFile)
         if(!this.storage.readOnly) {

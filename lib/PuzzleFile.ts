@@ -21,10 +21,10 @@ export type PuzzleMetadata = {
 /** A `Puzzle` with some extra metadata and conveniences for dealing with
 * saving/loading puzzles. */
 export class PuzzleFile extends SerializableClass {
-    
+
     /**
      * Used both as an internal identifier, and a human-readable name.
-     * Identifies the puzzle uniquely within a stroage. 
+     * Identifies the puzzle uniquely within a stroage.
      */
     name: string
 
