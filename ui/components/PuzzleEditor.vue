@@ -44,7 +44,7 @@ const solutionItems = computed(() => {
     if(selectedProblemIds.value.length !== 1) {
         return []
     }
-    const problem = props.puzzle.problems.get(selectedProblemIds.value[0])
+    const problem = props.puzzle.getProblem(selectedProblemIds.value[0])
     if(!problem || problem.solutions === null) {
         return []
     }

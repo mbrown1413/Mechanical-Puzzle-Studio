@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, ComputedRef} from "vue"
 
-import {Bounds, Piece, Puzzle, AssemblyProblem} from  "~lib"
+import {Bounds, Piece, Puzzle, Problem, AssemblyProblem} from  "~lib"
 
 import {Action, EditPieceMetadataAction, EditProblemMetadataAction} from "~/ui/actions.ts"
 import ProblemPiecesEditor from "~/ui/components/ProblemPiecesEditor.vue"
@@ -77,11 +77,17 @@ switch(props.itemType) {
         throw new Error("Invalid itemType")
 }
 
-const item = computed(() =>
-    props.itemId === null ?
-        null :
-        props.puzzle[puzzleProperty].get(props.itemId) || null
-)
+const item: ComputedRef<Piece | Problem | null> = computed(() => {
+    if(props.itemId === null) {
+        return null
+    }
+    if(puzzleProperty === "pieces") {
+        return props.puzzle.getPiece(props.itemId)
+    } else {
+        return props.puzzle.getProblem(props.itemId)
+    }
+})
+
 /* Until we get a proper form system, there's not really a way to make this
  * type safe without a ton of code repetition. We should be able to make the
  * base class for objects enforce the type safety. */
@@ -149,7 +155,7 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
                     :label="field.label"
                     :required="field.required !== false"
                     :items="pieceItems"
-                    :modelValue="puzzle.pieces.get(typeUnsafeItem[field.property] as string)"
+                    :modelValue="puzzle.getPiece(typeUnsafeItem[field.property] as string)"
                     no-data-text="No pieces in puzzle!"
                     @update:modelValue="handlePieceInput(field, $event as Piece)"
             />

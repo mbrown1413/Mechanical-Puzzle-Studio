@@ -5,24 +5,25 @@ import {getNextColor} from "~/lib/colors.ts"
 
 export class Puzzle extends SerializableClass {
     grid: Grid
-    pieces: Map<string, PieceWithId>
-    problems: Map<string, Problem>
+    pieces: PieceWithId[]
+    problems: Problem[]
 
     constructor(grid: Grid) {
         super()
         this.grid = grid
-        this.pieces = new Map()
-        this.problems = new Map()
+        this.pieces = []
+        this.problems = []
     }
 
     generateId(
         prefix: string,
-        listAttribute: "pieces" | "problems"
+        type: "pieces" | "problems"
     ): string {
         //TODO: Make this O(1), not O(n)
+        const idExistsFunc = type === "pieces" ? this.hasPiece.bind(this) : this.hasProblem.bind(this)
         for(let i=0; ; i++) {
             const id = prefix+"-"+i
-            if(!this[listAttribute].has(id)) {
+            if(!idExistsFunc(id)) {
                 return id
             }
         }
@@ -38,17 +39,21 @@ export class Puzzle extends SerializableClass {
         if(!piece.hasId()) {
             throw new Error("Cannot add piece without ID")
         }
-        if(this.pieces.has(piece.id)) {
+        if(this.hasPiece(piece.id)) {
             throw new Error(`Duplicate piece ID: ${piece.id}`)
         }
-        this.pieces.set(piece.id, piece)
+        this.pieces.push(piece)
         return piece
     }
 
-    hasPiece(pieceOrId: Piece | string): boolean {
+    getPiece(pieceOrId: Piece | string): PieceWithId | null {
         const id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
-        if(id === null) return false
-        return this.pieces.has(id)
+        if(id === null) return null
+        return this.pieces.find(piece => piece.id === id) || null
+    }
+
+    hasPiece(pieceOrId: Piece | string): boolean {
+        return Boolean(this.getPiece(pieceOrId))
     }
 
     removePiece(pieceOrId: Piece | string, throwErrors=true) {
@@ -59,43 +64,41 @@ export class Puzzle extends SerializableClass {
             }
             return
         }
-        if(throwErrors && !this.pieces.has(id)) {
+        const idx = this.pieces.findIndex(piece => piece.id === id)
+        if(throwErrors && idx === -1) {
             throw new Error(`Piece ID not found: ${id}`)
         }
-        this.pieces.delete(id)
-    }
-
-    getPieceFromPieceOrId(pieceOrId: Piece | string): Piece {
-        if(typeof pieceOrId === "string") {
-            const piece = this.pieces.get(pieceOrId)
-            if(!piece) {
-                throw new Error(`Piece ID not found: ${pieceOrId}`)
-            }
-            return piece
-        } else {
-            return pieceOrId
+        if(idx !== -1) {
+            this.pieces.splice(idx, 1)
         }
     }
 
     addProblem(problem: Problem): Problem {
-        if(this.problems.has(problem.id)) {
+        if(this.hasProblem(problem.id)) {
             throw new Error(`Duplicate problem ID: ${problem.id}`)
         }
-        this.problems.set(problem.id, problem)
+        this.problems.push(problem)
         return problem
     }
 
-    hasProblem(problemOrId: Problem | string): boolean {
+    getProblem(problemOrId: Problem | string): Problem | null {
         const id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
-        return this.problems.has(id)
+        return this.problems.find(problem => problem.id === id) || null
+    }
+
+    hasProblem(problemOrId: Problem | string): boolean {
+        return Boolean(this.getProblem(problemOrId))
     }
 
     removeProblem(problemOrId: Problem | string, throwErrors=true) {
         const id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
-        if(throwErrors && !this.problems.has(id)) {
+        const idx = this.problems.findIndex(problem => problem.id === id)
+        if(throwErrors && idx === -1) {
             throw new Error(`Problem ID not found: ${id}`)
         }
-        this.problems.delete(id)
+        if(idx !== -1) {
+            this.problems.splice(idx, 1)
+        }
     }
 }
 

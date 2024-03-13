@@ -14,7 +14,7 @@ import {useGridMouseComposible} from "./GridDisplay_mouse.ts"
 const props = withDefaults(
     defineProps<{
         puzzle: Puzzle,
-        pieces: (Piece | string)[],
+        pieces: Piece[],
         displayOnly?: boolean,
         boundsSizing: "voxels" | "pieceBounds",
         size?: "fill" | number,
@@ -50,9 +50,7 @@ const viewpointOptions = computed(() =>
     })
 )
 
-const pieces = computed(() =>
-    props.pieces.map(props.puzzle.getPieceFromPieceOrId)
-)
+const pieces = computed(() => props.pieces)
 
 const bounds = computed(() => {
     if(props.boundsSizing === "voxels") {

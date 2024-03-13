@@ -68,14 +68,17 @@ export class AssemblySolver extends Solver {
         if(problem.goalPieceId === null) {
             throw new Error("Goal piece is not set")
         }
-        const goal = puzzle.pieces.get(problem.goalPieceId)
+        const goal = puzzle.getPiece(problem.goalPieceId)
+        if(goal === null) {
+            throw new Error("Goal piece is not set")
+        }
         if(goal === undefined) {
             throw new Error(`Goal piece ID ${problem.goalPieceId} not found`)
         }
 
         const pieces = []
         for(const [pieceId, count] of problem.usedPieceCounts.entries()) {
-            const piece = puzzle.pieces.get(pieceId)
+            const piece = puzzle.getPiece(pieceId)
             if(!piece) {
                 throw new Error(`Piece ID ${pieceId} not found`)
             }

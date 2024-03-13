@@ -32,7 +32,6 @@ export abstract class EditItemMetadataAction<T extends object> extends Action {
     metadata: object
 
     static itemName: string
-    static itemAttribute: "pieces" | "problems"
 
     constructor(
         itemId: string,
@@ -48,11 +47,19 @@ export abstract class EditItemMetadataAction<T extends object> extends Action {
         return `Edit ${constructor.itemName.toLowerCase()}`
     }
 
+    getItem(puzzle: Puzzle, itemId: string): Piece | Problem | null {
+        const constructor = <typeof DeleteItemsAction> this.constructor
+        if(constructor.itemName === "Piece") {
+            return puzzle.getPiece(itemId)
+        } else {
+            return puzzle.getProblem(itemId)
+        }
+    }
+
     perform(puzzle: Puzzle) {
         const constructor = <typeof EditItemMetadataAction> this.constructor
-        const itemContainer = puzzle[constructor.itemAttribute] as Map<string, T>
-        const item = itemContainer.get(this.itemId)
-        if(item === undefined) {
+        const item = this.getItem(puzzle, this.itemId) as T
+        if(item === null) {
             throw new Error(`${constructor.itemName} with ID ${this.itemId} not found`)
         }
 
@@ -64,7 +71,6 @@ export abstract class EditItemMetadataAction<T extends object> extends Action {
 }
 
 abstract class DeleteItemsAction extends Action {
-    static itemAttribute: "pieces" | "problems"
     static itemName: "Piece" | "Problem"
     itemIds: string[]
 
@@ -78,13 +84,30 @@ abstract class DeleteItemsAction extends Action {
         return `Delete ${constructor.itemName.toLowerCase()}`
     }
 
+    hasItem(puzzle: Puzzle, itemId: string) {
+        const constructor = <typeof DeleteItemsAction> this.constructor
+        if(constructor.itemName === "Piece") {
+            return puzzle.hasPiece(itemId)
+        } else {
+            return puzzle.hasProblem(itemId)
+        }
+    }
+
+    deleteItem(puzzle: Puzzle, itemId: string) {
+        const constructor = <typeof DeleteItemsAction> this.constructor
+        if(constructor.itemName === "Piece") {
+            return puzzle.removePiece(itemId)
+        } else {
+            return puzzle.removeProblem(itemId)
+        }
+    }
+
     perform(puzzle: Puzzle) {
         const constructor = <typeof DeleteItemsAction> this.constructor
-        const itemMap = puzzle[constructor.itemAttribute]
 
         const missingIds = []
         for(const id of this.itemIds) {
-            if(!itemMap.has(id)) {
+            if(!this.hasItem(puzzle, id)) {
                 missingIds.push(id)
             }
         }
@@ -93,7 +116,7 @@ abstract class DeleteItemsAction extends Action {
         }
 
         for(const id of this.itemIds) {
-            itemMap.delete(id)
+            this.deleteItem(puzzle, id)
         }
     }
 
@@ -140,7 +163,6 @@ export class NewPieceAction extends Action {
 }
 
 export class DeletePiecesAction extends DeleteItemsAction {
-    static itemAttribute = "pieces" as const
     static itemName = "Piece" as const
 }
 
@@ -165,8 +187,8 @@ export class EditPieceAction extends Action {
     }
 
     perform(puzzle: Puzzle) {
-        const piece = puzzle.pieces.get(this.pieceId)
-        if(piece === undefined) {
+        const piece = puzzle.getPiece(this.pieceId)
+        if(piece === null) {
             throw new Error(`Piece with ID ${this.pieceId} not found`)
         }
 
@@ -178,7 +200,6 @@ export class EditPieceAction extends Action {
 }
 
 export class EditPieceMetadataAction extends EditItemMetadataAction<Piece> {
-    static itemAttribute = "pieces" as const
     static itemName = "Piece" as const
     static metadata: {
         label?: string
@@ -210,12 +231,10 @@ export class NewProblemAction extends Action {
 }
 
 export class DeleteProblemsAction extends DeleteItemsAction {
-    static itemAttribute = "problems" as const
     static itemName = "Problem" as const
 }
 
 export class EditProblemMetadataAction extends EditItemMetadataAction<Problem> {
-    static itemAttribute = "problems" as const
     static itemName = "Problem" as const
     static metadata: {
         label?: string

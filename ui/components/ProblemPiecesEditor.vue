@@ -35,8 +35,7 @@ const tableHeaders: VDataTable["headers"] = [
 ]
 
 const tableItems = computed(() => {
-    const pieces = Array.from(props.puzzle.pieces.values())
-    return pieces.map((piece) => {
+    return props.puzzle.pieces.map((piece) => {
         return {
             id: piece.id,
             piece: piece,

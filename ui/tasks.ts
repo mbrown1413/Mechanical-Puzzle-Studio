@@ -28,7 +28,7 @@ export abstract class Task<Result extends Serializable> extends SerializableClas
      * Perform blocking/long-running processing, called in a worker.
      */
     abstract run(_callbacks: TaskCallbacks): Result
-    
+
     /**
      * Process results returned from `run()` in main thread.
      */
@@ -54,20 +54,20 @@ export class ProblemSolveTask extends Task<Solution[]> {
         // Throw error if misconfigured
         this.getSolver()
     }
-    
+
     getDescription(): string {
         const problem = this.getProblem()
         return `Solving ${problem.label}`
     }
-    
+
     getProblem(): Problem {
-        const problem = this.puzzle.problems.get(this.problemId)
+        const problem = this.puzzle.getProblem(this.problemId)
         if(!problem) {
             throw new Error(`Problem ID ${this.problemId} not found`)
         }
         return problem
     }
-    
+
     getSolver(): Solver {
         const problem = this.getProblem()
         const solvers = problem.getSolvers()
@@ -83,7 +83,7 @@ export class ProblemSolveTask extends Task<Solution[]> {
         }
         return new solverInfo.solver()
     }
-    
+
     setup() {
         const problem = this.getProblem()
         problem.solutions = null

@@ -16,7 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const piece = computed(() =>
-    props.pieceId === null ? null : props.puzzle.pieces.get(props.pieceId) || null
+    props.pieceId === null ? null : props.puzzle.getPiece(props.pieceId) || null
 )
 
 const pieces = computed(() =>
