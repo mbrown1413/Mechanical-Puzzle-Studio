@@ -131,13 +131,13 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
 </script>
 
 <template>
-    <div v-if="item" class="metadata-form">
+    <div v-show="item" class="metadata-form">
         <h4>{{ title }}</h4>
 
         <template v-for="field in fields">
 
             <VTextField
-                    v-if="field.type === 'string'"
+                    v-if="item && field.type === 'string'"
                     :label="field.label"
                     :required="field.required === true"
                     :model-value="typeUnsafeItem[field.property]"
@@ -145,13 +145,13 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
             />
 
             <ColorInput
-                    v-if="field.type === 'color'"
+                    v-if="item && field.type === 'color'"
                     :value="typeUnsafeItem[field.property] as string"
                     @input="handleTextInput(field, $event)"
             />
 
             <VSelect
-                    v-if="field.type === 'piece'"
+                    v-if="item && field.type === 'piece'"
                     :label="field.label"
                     :required="field.required !== false"
                     :items="pieceItems"
@@ -160,17 +160,23 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
                     @update:modelValue="handlePieceInput(field, $event as Piece)"
             />
 
+            <!--
+                Note: This must render when item is null, since if there are
+                many pieces, this would have to initialize many grid displays
+                at once when item is set. We just hide it instead if item isn't
+                set.
+            -->
             <ProblemPiecesEditor
-                    v-if="field.type === 'pieces' && item instanceof AssemblyProblem"
+                    v-if="field.type === 'pieces'"
+                    v-show="item"
                     :puzzle="puzzle"
-                    :problem="item"
+                    :problem="item as AssemblyProblem"
                     :label="field.label"
                     @action="emit('action', $event)"
-                    :disabledPieceIds="field.getDisabledPieceIds ? field.getDisabledPieceIds(item as AssemblyProblem) : []"
             />
 
             <VContainer
-                    v-if="field.type === 'bounds' && puzzle !== null && item instanceof Piece"
+                    v-if="item && field.type === 'bounds' && puzzle !== null && item instanceof Piece"
             >
                 <VRow>
                     <VCol

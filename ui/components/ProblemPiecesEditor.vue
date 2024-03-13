@@ -12,16 +12,11 @@ import {Puzzle, AssemblyProblem} from '~lib'
 import {Action, EditProblemMetadataAction} from "~/ui/actions.ts"
 import GridDisplay from "~/ui/components/GridDisplay.vue"
 
-const props = withDefaults(
-    defineProps<{
-        puzzle: Puzzle,
-        problem: AssemblyProblem,
-        label: string,
-        disabledPieceIds: string[],
-    }>(), {
-        disabledPieceIds: () => [],
-    }
-)
+const props = defineProps<{
+    puzzle: Puzzle,
+    problem: AssemblyProblem | null,
+    label: string,
+}>()
 
 const emit = defineEmits<{
     action: [action: Action]
@@ -40,13 +35,14 @@ const tableItems = computed(() => {
             id: piece.id,
             piece: piece,
             label: piece.label,
-            count: props.problem.usedPieceCounts.get(piece.id) || 0,
-            isGoal: piece.id === props.problem.goalPieceId,
+            count: props.problem?.usedPieceCounts.get(piece.id) || 0,
+            isGoal: piece.id === props.problem?.goalPieceId,
         }
     })
 })
 
 function updatePieceCount(pieceId: string, count: number) {
+    if(props.problem === null) { return }
     const newPieceCounts = new Map(props.problem.usedPieceCounts)
     newPieceCounts.set(pieceId, count)
     const action = new EditProblemMetadataAction(
@@ -58,6 +54,7 @@ function updatePieceCount(pieceId: string, count: number) {
 }
 
 function updateGoal(pieceId: string | null) {
+    if(props.problem === null) { return }
     const action = new EditProblemMetadataAction(
         props.problem.id, {
             goalPieceId: pieceId
