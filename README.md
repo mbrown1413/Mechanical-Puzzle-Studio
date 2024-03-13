@@ -11,8 +11,7 @@ considered solved, and more.
 runs completely in the browser, with no data sent off your computer.
 
 **Note: This software is in early development.** To track progress, see the
-[MVP Planning](https://github.com/mbrown1413/Mechanical-Puzzle-Studio/issues/1)
-issue.
+[Planning Project](https://github.com/users/mbrown1413/projects/1/).
 
 
 ## Puzzling Resources
