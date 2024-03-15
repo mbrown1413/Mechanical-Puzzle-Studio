@@ -15,11 +15,18 @@ export class Puzzle extends SerializableClass {
         this.problems = []
     }
 
-    generateId(
+    generatePieceId() {
+        return this.generateNewId("piece", "pieces")
+    }
+
+    generateProblemId() {
+        return this.generateNewId("problem", "problems")
+    }
+
+    private generateNewId(
         prefix: string,
         type: "pieces" | "problems"
     ): string {
-        //TODO: Make this O(1), not O(n)
         const idExistsFunc = type === "pieces" ? this.hasPiece.bind(this) : this.hasProblem.bind(this)
         for(let i=0; ; i++) {
             const id = prefix+"-"+i
@@ -35,14 +42,18 @@ export class Puzzle extends SerializableClass {
         return getNextColor(existingColors)
     }
 
-    addPiece(piece: Piece): Piece {
+    addPiece(piece: Piece, index?: number): Piece {
         if(!piece.hasId()) {
             throw new Error("Cannot add piece without ID")
         }
         if(this.hasPiece(piece.id)) {
             throw new Error(`Duplicate piece ID: ${piece.id}`)
         }
-        this.pieces.push(piece)
+        if(index === undefined) {
+            this.pieces.push(piece)
+        } else {
+            this.pieces.splice(index, 0, piece)
+        }
         return piece
     }
 
@@ -73,11 +84,15 @@ export class Puzzle extends SerializableClass {
         }
     }
 
-    addProblem(problem: Problem): Problem {
+    addProblem(problem: Problem, index?: number): Problem {
         if(this.hasProblem(problem.id)) {
             throw new Error(`Duplicate problem ID: ${problem.id}`)
         }
-        this.problems.push(problem)
+        if(index === undefined) {
+            this.problems.push(problem)
+        } else {
+            this.problems.splice(index, 0, problem)
+        }
         return problem
     }
 

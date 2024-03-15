@@ -40,6 +40,12 @@ const sideTabs = [
     {id: "solutions", text: "Solutions"},
 ]
 
+defineExpose({
+    currentTabId,
+    selectedPieceIds,
+    selectedProblemIds,
+})
+
 const solutionItems = computed(() => {
     if(selectedProblemIds.value.length !== 1) {
         return []

@@ -4,6 +4,32 @@ import {ProblemSolveTask} from "~/ui/tasks.ts"
 import {taskRunner} from "~/ui/globals.ts"
 
 
+function getDuplicateItemLabel(
+    labelToDuplicate: string,
+    existingLabels: string[],
+) {
+    let i: number, prefix: string
+
+    // Detect "<name> (copy)" or "<name> (copy <i>)" format and use that as a
+    // starting point.
+    const match = labelToDuplicate.match(/(.*) \(copy( \d+)?\)/)
+    if(match) {
+        prefix = match[1]
+        i = match[2] ? Number(match[2]) + 1 : 2
+    } else {
+        prefix = labelToDuplicate
+        i = 1
+    }
+
+    for(; ; i++) {
+        const newName = `${prefix} (copy${i === 1 ? "" : " "+i})`
+        if(!existingLabels.includes(newName)) {
+            return newName
+        }
+    }
+}
+
+
 ////////// Base Classes //////////
 
 /**
@@ -122,6 +148,31 @@ abstract class DeleteItemsAction extends Action {
 
 }
 
+abstract class DuplicateItemAction<T extends Piece | Problem> extends Action {
+    itemId: string
+
+    constructor(itemId: string) {
+        super()
+        this.itemId = itemId
+    }
+
+    perform(puzzle: Puzzle) {
+        const itemList = this.getItemList(puzzle)
+        const idx = itemList.findIndex(item => item.id === this.itemId)
+        const item = itemList[idx]
+        if(idx === undefined || item === undefined) { return }
+
+        const newItem = this.copyItem(puzzle, item)
+        this.addItem(puzzle, newItem, idx+1)
+    }
+
+    abstract getItemList(puzzle: Puzzle): T[]
+
+    abstract copyItem(puzzle: Puzzle, item: T): T
+
+    abstract addItem(puzzle: Puzzle, item: T, index: number): void
+}
+
 
 ////////// Puzzle Actions //////////
 
@@ -150,7 +201,7 @@ export class EditPuzzleMetadataAction extends Action {
 export class NewPieceAction extends Action {
     perform(puzzle: Puzzle) {
         const piece = new Piece(
-            puzzle.generateId("piece", "pieces"),
+            puzzle.generatePieceId(),
             puzzle.grid.getDefaultPieceBounds()
         )
         piece.color = puzzle.getNewPieceColor()
@@ -214,13 +265,40 @@ export class EditPieceMetadataAction extends EditItemMetadataAction<Piece> {
     }
 }
 
+export class DuplicatePieceAction extends DuplicateItemAction<Piece> {
+
+    toString() {
+        return "Duplicate Piece"
+    }
+
+    getItemList(puzzle: Puzzle) {
+        return puzzle.pieces
+    }
+
+    copyItem(puzzle: Puzzle, piece: Piece) {
+        const newPiece = piece.copy()
+        newPiece.id = puzzle.generatePieceId()
+        newPiece.label = getDuplicateItemLabel(
+            newPiece.label,
+            puzzle.pieces.map(p => p.label)
+        )
+        newPiece.color = puzzle.getNewPieceColor()
+        return newPiece
+    }
+
+    addItem(puzzle: Puzzle, piece: Piece, index: number) {
+        puzzle.addPiece(piece, index)
+    }
+
+}
+
 
 ////////// Problem Actions //////////
 
 export class NewProblemAction extends Action {
     perform(puzzle: Puzzle) {
         const problem = new AssemblyProblem(
-            puzzle.generateId("problem", "problems"),
+            puzzle.generateProblemId()
         )
         puzzle.addProblem(problem)
     }
@@ -271,4 +349,30 @@ export class ProblemSolveAction extends Action {
     perform(puzzle: Puzzle) {
         taskRunner.submitTask(new ProblemSolveTask(puzzle, this.problemId))
     }
+}
+
+export class DuplicateProblemAction extends DuplicateItemAction<Problem> {
+
+    toString() {
+        return "Duplicate Problem"
+    }
+
+    getItemList(puzzle: Puzzle) {
+        return puzzle.problems
+    }
+
+    copyItem(puzzle: Puzzle, problem: Problem) {
+        const newProblem = problem.copy()
+        newProblem.id = puzzle.generateProblemId()
+        newProblem.label = getDuplicateItemLabel(
+            newProblem.label,
+            puzzle.problems.map(p => p.label)
+        )
+        return newProblem
+    }
+
+    addItem(puzzle: Puzzle, problem: Problem, index: number) {
+        puzzle.addProblem(problem, index)
+    }
+
 }

@@ -1,4 +1,4 @@
-import {SerializableClass, registerClass} from "~/lib/serialize.ts"
+import {serialize, deserialize, SerializableClass, registerClass} from "~/lib/serialize.ts"
 import {BoolWithReason} from "~/lib/types.ts"
 import {Solver, AssemblySolver} from "~/lib/Solver.ts"
 import {Solution} from "~/lib/Solution.ts"
@@ -23,6 +23,10 @@ export abstract class Problem extends SerializableClass {
         this.label = id
         this.solverId = Object.keys(this.getSolvers())[0]
         this.solutions = null
+    }
+
+    copy(): Problem {
+        return deserialize(serialize(this))
     }
 
     /**

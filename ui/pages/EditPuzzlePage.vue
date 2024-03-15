@@ -6,7 +6,7 @@ import {PuzzleFile} from "~lib"
 import {taskRunner, title} from "~/ui/globals.ts"
 import {getStorageInstances, PuzzleNotFoundError} from "~/ui/storage.ts"
 import {ActionManager} from "~/ui/ActionManager.ts"
-import {Action} from "~/ui/actions.ts"
+import {Action, DuplicatePieceAction, DuplicateProblemAction} from "~/ui/actions.ts"
 import {downloadPuzzle} from "~/ui/utils/download.ts"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
@@ -32,6 +32,8 @@ type PuzzleErrorInfo = {
 }
 const puzzleError: Ref<PuzzleErrorInfo | null> = ref(null)
 const puzzleErrorModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
+
+const puzzleEditor: Ref<InstanceType<typeof PuzzleEditor> | null> = ref(null)
 const metadataModal: Ref<InstanceType<typeof PuzzleMetadataModal> | null> = ref(null)
 const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
 const saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null> = ref(null)
@@ -154,7 +156,7 @@ const menuItems: {[name: string]: MenuItem} = {
     },
     saveAs: {
         text: "Save As...",
-        icon: "mdi-content-save-all",
+        icon: "mdi-content-save-plus",
         perform() {
             saveModal.value?.open("saveas", storage.value, props.puzzleName)
         },
@@ -199,6 +201,42 @@ const menuItems: {[name: string]: MenuItem} = {
         perform: () => editManager.redo(),
         enabled: () => editManager.canRedo(),
     },
+    duplicate: {
+        text: () => {
+            if(puzzleEditor.value?.currentTabId === "pieces") {
+                return "Duplicate Piece"
+            } else if(puzzleEditor.value?.currentTabId === "problems") {
+                return "Duplicate Problem"
+            } else {
+                return "Duplicate"
+            }
+        },
+        icon: "mdi-content-duplicate",
+        perform: () => {
+            let action: Action | null = null
+            if(puzzleEditor.value?.currentTabId === "pieces") {
+                action = new DuplicatePieceAction(
+                    puzzleEditor.value.selectedPieceIds[0]
+                )
+            } else if(puzzleEditor.value?.currentTabId === "problems") {
+                action = new DuplicateProblemAction(
+                    puzzleEditor.value.selectedProblemIds[0]
+                )
+            }
+            if(action) {
+                editManager.performAction(action)
+            }
+        },
+        enabled: () => {
+            if(puzzleEditor.value?.currentTabId === "pieces") {
+                return puzzleEditor.value.selectedPieceIds.length == 1
+            } else if(puzzleEditor.value?.currentTabId === "problems") {
+                return puzzleEditor.value.selectedProblemIds.length == 1
+            } else {
+                return false
+            }
+        },
+    },
 }
 
 const menus: Menu[] = [
@@ -216,6 +254,7 @@ const menus: Menu[] = [
         items: [
             menuItems.undo,
             menuItems.redo,
+            menuItems.duplicate,
         ],
     },
 ]
@@ -223,6 +262,7 @@ const menus: Menu[] = [
 const tools: MenuItem[] = [
     menuItems.undo,
     menuItems.redo,
+    menuItems.duplicate,
 ]
 </script>
 
@@ -279,6 +319,7 @@ const tools: MenuItem[] = [
     </VAppBar>
     <PuzzleEditor
         v-if="puzzleFile"
+        ref="puzzleEditor"
         :puzzle="puzzleFile.puzzle"
         @action="performAction"
     />
