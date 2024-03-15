@@ -4,7 +4,7 @@
 -->
 
 <script setup lang="ts">
-import {computed, ref, Ref, onMounted} from "vue"
+import {ref, Ref, onMounted} from "vue"
 import Split from "split-grid"
 
 import {Puzzle} from "~lib"
@@ -17,9 +17,9 @@ import ItemMetadataEditor from "~/ui/components/ItemMetadataEditor.vue"
 import PieceList from "~/ui/components/PieceList.vue"
 import ProblemList from "~/ui/components/ProblemList.vue"
 import ProblemSolverForm from "~/ui/components/ProblemSolverForm.vue"
-import ListSelect from "~/ui/common/ListSelect.vue"
+import SolutionList from "~/ui/components/SolutionList.vue"
 
-const props = defineProps<{
+defineProps<{
     puzzle: Puzzle,
 }>()
 
@@ -29,9 +29,9 @@ const emit = defineEmits<{
 
 const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
 const selectedProblemIds: Ref<string[]> = ref(["problem-0"])
-const selectedSolutionIds: Ref<string[]> = ref([])
 
 const pieceEditor: Ref<InstanceType<typeof PieceEditor> | null> = ref(null)
+const solutionList: Ref<InstanceType<typeof SolutionList> | null> = ref(null)
 
 const currentTabId = ref("pieces")
 const sideTabs = [
@@ -44,32 +44,6 @@ defineExpose({
     currentTabId,
     selectedPieceIds,
     selectedProblemIds,
-})
-
-const solutionItems = computed(() => {
-    if(selectedProblemIds.value.length !== 1) {
-        return []
-    }
-    const problem = props.puzzle.getProblem(selectedProblemIds.value[0])
-    if(!problem || problem.solutions === null) {
-        return []
-    }
-    return problem.solutions.map((solution, i) => {
-        const id = `solution-${i}`
-        return {
-            id: id,
-            label: id,
-            solution,
-        }
-    })
-})
-
-const selectedSolutions = computed(() => {
-    return solutionItems.value.filter(
-        (item) => selectedSolutionIds.value.includes(item.id)
-    ).map(
-        (item) => item.solution
-    )
 })
 
 const columnSlider: Ref<HTMLDivElement | null> = ref(null)
@@ -151,13 +125,12 @@ function performAction(action: Action) {
                 :problemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
                 @action="performAction"
             />
-            <div v-show="currentTabId === 'solutions'" class="solution-list">
-                <h4>Solutions</h4>
-                <ListSelect
-                        :items="solutionItems"
-                        v-model:selectedIds="selectedSolutionIds"
-                />
-            </div>
+            <SolutionList
+                ref="solutionList"
+                v-show="currentTabId === 'solutions'"
+                :puzzle="puzzle"
+                :problemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
+            />
         </div>
 
         <div class="grid-cell main">
@@ -176,9 +149,9 @@ function performAction(action: Action) {
                 @action="performAction"
             />
             <SolutionDisplay
-                v-show="currentTabId === 'solutions'"
+                v-show="currentTabId === 'solutions' && solutionList?.selectedSolutions.length === 1"
                 :puzzle="puzzle"
-                :solution="selectedSolutions[0] || null"
+                :solution="solutionList?.selectedSolutions[0] || null"
             />
         </div>
     </VMain>
@@ -234,17 +207,5 @@ function performAction(action: Action) {
 
 .home-link {
     font-size: 200%;
-}
-
-.solution-list h4 {
-    margin: 1em 1em .5em 1em;
-}
-.solution-list {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-.solution-list .list-container {
-    flex-grow: 1;
 }
 </style>
