@@ -51,7 +51,12 @@ function taskInfoMatchesProblem(taskInfo: TaskInfo): boolean {
 }
 
 const taskInfo = computed(() => {
-    for(const taskInfo of [taskRunner.current, ...taskRunner.queue, ...taskRunner.finished]) {
+    const tasksToInspect = [
+        taskRunner.current,
+        ...taskRunner.queue,
+        ...[...taskRunner.finished].reverse()
+    ]
+    for(const taskInfo of tasksToInspect) {
         if(taskInfo && taskInfoMatchesProblem(taskInfo)) {
             return taskInfo
         }
