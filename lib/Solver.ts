@@ -1,5 +1,5 @@
 import {AssemblyProblem, Problem} from "~/lib/Problem.ts"
-import {Puzzle} from "~/lib/Puzzle.ts"
+import {Puzzle, Piece} from "~/lib/Puzzle.ts"
 import {PiecePlacement, getPlacements} from "~/lib/placements.ts"
 import {AssemblySolution, Solution} from "~/lib/Solution.ts"
 import {TaskCallbacks, voidTaskCallbacks} from "~/lib/types.ts"
@@ -61,6 +61,19 @@ export class AssemblySolver extends Solver {
         return ret
     }
 
+    voxelCountCheck(pieces: Piece[], goal: Piece): string | null {
+        const countVoxels = (p: Piece) => new Set(p.voxels).size
+        const pieceVoxelCount = pieces.map(countVoxels).reduce((a, b) => a + b, 0)
+        const goalVoxelCount = countVoxels(goal)
+
+        if(pieceVoxelCount !== goalVoxelCount) {
+            return "Number of voxels in pieces don't add up to the voxels in the goal piece.\n\n" +
+                `Voxels in goal: ${goalVoxelCount}\n` +
+                `Voxels in pieces: ${pieceVoxelCount}`
+        }
+        return null
+    }
+
     getPlacementRows(puzzle: Puzzle, problem: Problem, {logCallback}: TaskCallbacks) {
         if(!(problem instanceof AssemblyProblem)) {
             throw new Error("Assembly Solver can only solve Assembly Problems")
@@ -85,6 +98,11 @@ export class AssemblySolver extends Solver {
             for(let i=0; i<count; i++) {
                 pieces.push(piece)
             }
+        }
+
+        const voxelCountError = this.voxelCountCheck(pieces, goal)
+        if(voxelCountError) {
+            throw new Error(voxelCountError)
         }
 
         const placementResults = getPlacements(

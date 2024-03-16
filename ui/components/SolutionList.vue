@@ -85,10 +85,10 @@ defineExpose({
                 (zero solutions)
             </template>
 
-            <template v-else-if="taskInfo?.error">
+            <div v-else-if="taskInfo?.error" class="bg-red">
                 Solver failed<br>
-                {{ taskInfo.error }}
-            </template>
+                <pre style="white-space: pre-wrap;">{{ taskInfo.error }}</pre>
+            </div>
 
             <template v-else-if="taskInfo">
                 Task {{ taskInfo.status }}
