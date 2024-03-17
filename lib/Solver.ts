@@ -40,6 +40,7 @@ export class AssemblySolver extends Solver {
         // `placementsByPieceIdx[pieceIdx][i]` - The `i`th placement of piece at `pieceIdx`
         // `coverRowsByPieceIdx[pieceIdx][i]` - The `i`th cover row of piece at `pieceIdx`
         const {
+            pieces,
             placementsByPieceIdx,
             coverRowsByPieceIdx
         } = this.getPlacementRows(puzzle, problem, callbacks)
@@ -47,6 +48,16 @@ export class AssemblySolver extends Solver {
         callbacks.logCallback(
             `Number of placements options for each piece: ${placementsByPieceIdx.map(placements => placements.length).join(", ")}`
         )
+
+        for(const [i, coverRows] of coverRowsByPieceIdx.entries()) {
+            if(coverRows.length === 0) {
+                const pieceLabel = pieces[i].label
+                throw new Error(
+                    "No solutions because piece cannot be placed anywhere in goal.\n\n" +
+                    `Piece label: ${pieceLabel}`
+                )
+            }
+        }
 
         const solutions = this.solveCover(coverRowsByPieceIdx, callbacks)
 
@@ -98,6 +109,10 @@ export class AssemblySolver extends Solver {
             for(let i=0; i<count; i++) {
                 pieces.push(piece)
             }
+        }
+
+        if(pieces.length === 0) {
+            throw new Error("No pieces in problem")
         }
 
         const voxelCountError = this.voxelCountCheck(pieces, goal)

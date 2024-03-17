@@ -24,6 +24,22 @@ function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShort
 describe("AssemblySolver", () => {
     const puzzle = new Puzzle(new CubicGrid())
 
+    puzzle.addPiece(new Piece(
+        "empty1",
+        puzzle.grid.getDefaultPieceBounds(),
+        []
+    ))
+    puzzle.addPiece(new Piece(
+        "empty2",
+        puzzle.grid.getDefaultPieceBounds(),
+        []
+    ))
+    puzzle.addPiece(new Piece(
+        "large",
+        puzzle.grid.getDefaultPieceBounds(),
+        ["0,0,0", "1,0,0", "2,0,0", "3,0,0", "4,0,0"]
+    ))
+
     // Problem 0
     // 001
     // 0-1
@@ -154,6 +170,40 @@ describe("AssemblySolver", () => {
 
           Voxels in goal: 5
           Voxels in pieces: 2]
+        `)
+    })
+
+    test("no pieces can be placed in goal", () => {
+        const problem = new AssemblyProblem("problem")
+        problem.goalPieceId = "problem-0-goal-piece"
+        problem.usedPieceCounts.set("large", 1)
+        expect(() => {
+            solver.solve(puzzle, problem)
+        }).toThrowErrorMatchingInlineSnapshot(`
+          [Error: No solutions because piece cannot be placed anywhere in goal.
+
+          Piece label: large]
+        `)
+    })
+
+    test("no pieces", () => {
+        const problem = new AssemblyProblem("problem")
+        problem.goalPieceId = "empty1"
+        expect(() => {
+            solver.solve(puzzle, problem)
+        }).toThrowErrorMatchingInlineSnapshot(`[Error: No pieces in problem]`)
+    })
+
+    test("empty goal piece", () => {
+        const problem = new AssemblyProblem("problem")
+        problem.goalPieceId = "empty1"
+        problem.usedPieceCounts.set("empty2", 1)
+        expect(() => {
+            solver.solve(puzzle, problem)
+        }).toThrowErrorMatchingInlineSnapshot(`
+          [Error: No solutions because piece cannot be placed anywhere in goal.
+
+          Piece label: empty2]
         `)
     })
 })
