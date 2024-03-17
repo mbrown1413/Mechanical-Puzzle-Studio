@@ -50,7 +50,7 @@ export class ActionManager {
 
         const after = serialize(this.puzzleFile)
         if(!this.storage.readOnly) {
-            this.storage.save(this.puzzleFile)
+            this.storage.save(this.puzzleFile, JSON.stringify(after))
         }
 
         this.performedActions.push({

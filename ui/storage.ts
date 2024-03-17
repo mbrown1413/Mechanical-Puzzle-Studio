@@ -138,9 +138,14 @@ export abstract class PuzzleStorage {
         }
     }
 
-    /** Save a puzzle, using `PuzzleFile.name` as a key which can be used to
-     * retrieve it later. */
-    abstract save(puzzleFile: PuzzleFile): void
+    /**
+     * Save a puzzle, using `PuzzleFile.name` as a key which can be used to
+     * retrieve it later.
+     *
+     * If `serialized` is given, it is assumed to be the same as `puzzleFile`
+     * but already serialized.
+     */
+    abstract save(puzzleFile: PuzzleFile, serialized?: string): void
 
     abstract delete(puzzleName: string): void
 }
@@ -182,10 +187,13 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         return decompressIfNeeded(str)
     }
 
-    save(puzzleFile: PuzzleFile) {
+    save(puzzleFile: PuzzleFile, serialized?: string) {
+        if(!serialized) {
+            serialized = puzzleFile.serialize()
+        }
         localStorage.setItem(
             this._getKey(puzzleFile),
-            compressIfNeeded(puzzleFile.serialize())
+            compressIfNeeded(serialized)
         )
     }
 
@@ -247,7 +255,7 @@ class SampleStorage extends PuzzleStorage {
         return raw
     }
 
-    save(_puzzleFile: PuzzleFile) { }
+    save() { }
 
     delete(_puzzleName: string) { }
 }
