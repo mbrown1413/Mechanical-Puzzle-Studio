@@ -25,7 +25,7 @@ export abstract class Problem extends SerializableClass {
         this.solutions = null
     }
 
-    copy(): Problem {
+    copy(): this {
         return deserialize(serialize(this))
     }
 

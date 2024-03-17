@@ -132,4 +132,28 @@ describe("AssemblySolver", () => {
             "problem-1-piece-1": ["0,0,0", "1,0,0", "2,0,0", "1,1,0"],
         })
     })
+
+    test("voxel count sanity-check", () => {
+        let problem = problem0.copy()
+        problem.usedPieceCounts.set("problem-0-piece-0", 2)
+        expect(() => {
+            solver.solve(puzzle, problem)
+        }).toThrowErrorMatchingInlineSnapshot(`
+          [Error: Number of voxels in pieces don't add up to the voxels in the goal piece.
+
+          Voxels in goal: 5
+          Voxels in pieces: 8]
+        `)
+
+        problem = problem0.copy()
+        problem.usedPieceCounts.set("problem-0-piece-0", 0)
+        expect(() => {
+            solver.solve(puzzle, problem)
+        }).toThrowErrorMatchingInlineSnapshot(`
+          [Error: Number of voxels in pieces don't add up to the voxels in the goal piece.
+
+          Voxels in goal: 5
+          Voxels in pieces: 2]
+        `)
+    })
 })
