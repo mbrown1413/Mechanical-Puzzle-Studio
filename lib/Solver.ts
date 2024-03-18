@@ -59,7 +59,7 @@ export class AssemblySolver extends Solver {
             }
         }
 
-        const solutions = this.solveCover(coverRowsByPieceIdx, callbacks)
+        const solutions = this.solveCover(pieces, coverRowsByPieceIdx, callbacks)
 
         const ret = []
         for(const pickedRows of solutions) {
@@ -160,6 +160,7 @@ export class AssemblySolver extends Solver {
     }
 
     solveCover(
+        pieces: Piece[],
         coverRowsByPieceIdx: boolean[][][],
         {progressCallback}: TaskCallbacks,
     ): number[][] {
@@ -200,6 +201,22 @@ export class AssemblySolver extends Solver {
             return true
         }
 
+        // Any piece with the same ID as a piece before it in the pieces list
+        // is counted as a duplicate. The first piece with a given ID is not.
+        const isDuplicate: boolean[] = pieces.map((piece, i) =>
+            i !== 0 && pieces.findIndex(p => p.id == piece.id) < i
+        )
+        for(const [i, piece] of pieces.entries()) {
+            if(isDuplicate[i] && i == 0) {
+                throw new Error("Solver bug: First piece should not be a duplicate")
+            }
+            if(isDuplicate[i] && pieces[i-1].id !== piece.id) {
+                // We count on the order of the pieces list such that any
+                // identical pieces are grouped together.
+                throw new Error("Solver bug: Any duplicates must be preceeded by an identical piece.")
+            }
+        }
+
         // Progress tracks based on how many placements of the first piece we
         // have tried.
         let progress = 0
@@ -238,8 +255,13 @@ export class AssemblySolver extends Solver {
                 continue
             }
 
+            // Restrict duplicate pieces to placements at greater index than
+            // the last piece it's a duplicate of, eliminating duplicate
+            // solutions due to duplicate pieces switching placements.
+            const minRow = isDuplicate[depth] ? rowIndexes[depth-1] : 0
+
             const nextCoverRows = coverRowsByPieceIdx[depth]
-            for(let i=nextCoverRows.length-1; i>=0; i--) {
+            for(let i=nextCoverRows.length-1; i>=minRow; i--) {
                 if(canPick(rowsPicked, nextCoverRows[i])) {
                     depthStack.push(depth+1)
                     pickStack.push(i)

@@ -96,7 +96,7 @@ export function getPiecePlacements(
     allowedOrientations: Orientation[] | null = null
 ): PiecePlacement[] {
     const placements = []
-    
+
     const orientationPlacements = filterTranslationCongruentPlacements(
         grid,
         getPieceOrientations(grid, piece, allowedOrientations)
@@ -135,10 +135,16 @@ export function getPlacements(
 
     // Enumerate piece placements
     const placementsByPiece: PlacementsByPiece = {}
+    let symmetryBroken = false
     for(const piece of pieces) {
         let allowedOrientations: Orientation[] | null
-        if(symmetryInfo?.piece && piece.id === symmetryInfo.piece.id) {
+        if(
+            !symmetryBroken &&
+            symmetryInfo?.piece &&
+            piece.id === symmetryInfo.piece.id
+        ) {
             allowedOrientations = symmetryInfo.allowedOrientations
+            symmetryBroken = true
         } else {
             allowedOrientations = null
         }
@@ -162,15 +168,31 @@ export function getPlacements(
 function findSymmetryPiece(
     grid: Grid,
     goal: Piece,
-    pieces: Piece[],
+    pieces: PieceWithId[],
     orientations: Orientation[]
 ): SymmetryInfo | null {
     const goalGroups = getSymmetryGroups(grid, goal, orientations)
+
+    const pieceCounts: Map<string, number> = new Map()
+    for(const piece of pieces) {
+        const oldCount = pieceCounts.get(piece.id)
+        pieceCounts.set(
+            piece.id,
+            oldCount ? oldCount + 1 : 1
+        )
+    }
 
     let bestSymmetry: SymmetryInfo | null = null
 
     // Consider each piece to reduce symmetries and pick the best one.
     for(const piece of pieces) {
+
+        // Can't use a piece for symmetry if it has more than one copy
+        const pieceCount = pieceCounts.get(piece.id)
+        if(pieceCount === undefined || pieceCount > 1) {
+            continue
+        }
+
         const pieceGroups = getSymmetryGroups(grid, piece, orientations)
 
         // An orientation is allowed if we'll actually try placing the piece in
