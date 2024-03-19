@@ -7,6 +7,12 @@ export function isColorSimilar(color1: string, color2: string): boolean {
     return dist < 60
 }
 
+export function tweakColor(color: string): string {
+    const newColor = new Color(color)
+    newColor.lighten(0.15)
+    return newColor.toString({format: "hex"})
+}
+
 /**
  * Return a color as distinct as possible from the given colors.
  */

@@ -16,11 +16,15 @@ const props = withDefaults(
         puzzle: Puzzle,
         pieces: Piece[],
         displayOnly?: boolean,
+        noLayers?: boolean,
         boundsSizing: "voxels" | "pieceBounds",
         size?: "fill" | number,
+        highlightBy?: "voxel" | "piece",
     }>(), {
         displayOnly: false,
+        noLayers: false,
         size: "fill",
+        highlightBy: "voxel",
     }
 )
 
@@ -74,9 +78,11 @@ const {
     props.puzzle.grid,
     pieces,
     bounds,
+    props.displayOnly,
     layerN,
     viewpoint,
     highlightedVoxel,
+    props.highlightBy,
 )
 
 useGridMouseComposible(

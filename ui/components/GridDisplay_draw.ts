@@ -5,7 +5,7 @@ import {Vector3} from "three"
 import {OrbitControls} from "three/addons/controls/OrbitControls.js"
 import {ConvexGeometry} from "three/addons/geometries/ConvexGeometry.js"
 
-import {VoxelInfo, Voxel, Viewpoint, Grid, Piece, Bounds, isColorSimilar} from "~lib"
+import {VoxelInfo, Voxel, Viewpoint, Grid, Piece, Bounds, isColorSimilar, tweakColor} from "~lib"
 import {Object3DCache, ResourceTracker} from "~/ui/utils/threejs.ts"
 import {multiRenderer} from "~/ui/utils/MultiRenderer.ts"
 
@@ -14,9 +14,11 @@ export function useGridDrawComposible(
     grid: Grid,
     pieces: ComputedRef<Piece[]>,
     bounds: ComputedRef<Bounds>,
+    displayOnly: boolean,
     layerN: Ref<number>,
     viewpoint: Ref<Viewpoint>,
     highlightedVoxel: Ref<Voxel | null>,
+    highlightBy: "voxel" | "piece",
 ) {
     const scene = new THREE.Scene()
     const fov = 75
@@ -142,6 +144,7 @@ export function useGridDrawComposible(
         voxelInfo: VoxelInfo,
         inLayer: boolean,
         highlighted: boolean,
+        highlightBy: "voxel" | "piece",
     ): THREE.Object3D {
         const key = JSON.stringify([
             "solid",
@@ -149,15 +152,22 @@ export function useGridDrawComposible(
             piece?.color,
             inLayer,
             highlighted,
+            highlightBy,
         ])
         let obj = objectCache.get(key)
         if(obj !== null) {
             return obj
         }
 
+        let color = piece ? piece.color : "rgb(0,0,0)"
+        if(piece && highlighted && highlightBy === "piece") {
+            // Discolor whole highlighted piece
+            color = tweakColor(color)
+        }
+
         const renderOrder = getRenderOrder(inLayer, highlighted)
         const material = new THREE.MeshPhongMaterial({
-            color: piece ? piece.color : 0xffffff,
+            color: color,
             side: THREE.DoubleSide,
             transparent: !inLayer,
             opacity: inLayer ? 1 : 0.5,
@@ -302,26 +312,36 @@ export function useGridDrawComposible(
 
         for(const voxel of grid.getVoxels(bounds.value)) {
             const voxelInfo = grid.getVoxelInfo(voxel)
-            const inLayer = viewpoint.value.isInLayer(voxel, layerN.value)
+            const inLayer = displayOnly ? true : viewpoint.value.isInLayer(voxel, layerN.value)
             const pieceAtVoxel = getPieceAtVoxel(voxel)
 
-            const highlighted = voxel === highlightedVoxel.value
+            const highlightedFunc: () => boolean = {
+                "voxel": () => voxel === highlightedVoxel.value,
+                "piece": () => {
+                    return highlightedVoxel.value !== null &&
+                        pieceAtVoxel === getPieceAtVoxel(highlightedVoxel.value)
+                },
+            }[highlightBy]
+            const highlighted = highlightedFunc()
 
             const solid = getVoxelSolid(
                 pieceAtVoxel,
                 voxelInfo,
                 inLayer,
                 highlighted,
+                highlightBy,
             )
 
             if(pieceAtVoxel) {
                 scene.add(solid)
             }
 
-            const wireframe = getVoxelWireframe(pieceAtVoxel, voxelInfo, inLayer, highlighted)
-            scene.add(wireframe)
+            if(!displayOnly || pieceAtVoxel) {
+                const wireframe = getVoxelWireframe(pieceAtVoxel, voxelInfo, inLayer, highlighted)
+                scene.add(wireframe)
+            }
 
-            if(inLayer) {
+            if(displayOnly ? pieceAtVoxel : inLayer) {
                 // Populate hitTestObjects and save what voxel the object was
                 // drawn for so we can pull it out later after a raycast
                 // intersects it. Since Raycaster will find the leaf nodes of
