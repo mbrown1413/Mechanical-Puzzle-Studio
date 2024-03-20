@@ -1,4 +1,4 @@
-import {ref, Ref, ComputedRef, onMounted, onUnmounted, computed, watchEffect} from "vue"
+import {ref, Ref, ComputedRef, onMounted, onUnmounted, computed, watchEffect, watch} from "vue"
 
 import * as THREE from "three"
 import {Vector3} from "three"
@@ -40,6 +40,13 @@ export function useGridDrawComposible(
             buildScene()
             multiRenderer.requestRender()
         })
+
+        setCameraPosition()
+        setCameraTarget()
+
+        watch(() => [...bounds.value], () => {
+            setCameraTarget()
+        })
     })
 
     onUnmounted(() => {
@@ -70,7 +77,7 @@ export function useGridDrawComposible(
         camera.updateProjectionMatrix()
 
         // Calculate camera near/far to fit entire scene
-        const boundingBox = new THREE.Box3().setFromObject(scene)  // Calculated _after_ AxisHelper added
+        const boundingBox = new THREE.Box3().setFromObject(scene)
         const boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere())
         const sphereDistance = boundingSphere.distanceToPoint(camera.position)
         camera.near = Math.max(sphereDistance * .9, 0.1)
@@ -97,12 +104,11 @@ export function useGridDrawComposible(
         })
     }
 
-    function initializeCamera() {
-        const boundingBox = new THREE.Box3().setFromObject(scene)  // Calculated _before_ AxisHeper added
-        const boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere())
+    function setCameraPosition() {
+        const boundingBox = getGridBoundingBox(grid, bounds.value)
         const center = boundingBox.getCenter(new Vector3())
 
-        // Position camera according to the initial viewpoint.
+        const boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere())
         const fovRadians = fov * (Math.PI/180)
         const cameraPosition = viewpoint.value.forwardVector.clone().normalize()
         cameraPosition.multiplyScalar(
@@ -110,10 +116,12 @@ export function useGridDrawComposible(
         )
         cameraPosition.add(center)
         camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z)
+    }
 
-        // Center view on the center of the grid.
-        // Only do this once on initialization though, since the user can
-        // right-click drag to change the OrbitControls target location.
+    function setCameraTarget() {
+        const boundingBox = getGridBoundingBox(grid, bounds.value)
+        const center = boundingBox.getCenter(new Vector3())
+
         if(controls) {
             controls.target = center
             camera.lookAt(center)
@@ -300,7 +308,6 @@ export function useGridDrawComposible(
     }
 
     /* Call rebuild() when the objects in the scene need to be updated. */
-    let isInitialRebuild = true
     function buildScene() {
         objectCache.newScene()
         objectCache.resetStats()
@@ -353,13 +360,7 @@ export function useGridDrawComposible(
             }
         }
 
-        if(isInitialRebuild) {
-            initializeCamera()
-        }
-
-        // Add axes helper after bounding box is computed so it doesn't affect the
-        // center.
-        const axesHelper = objectCache.getOrSet("axisHelper", () => {
+        const axesHelper = objectCache.getOrSet("axesHelper", () => {
             const obj = new THREE.AxesHelper()
             obj.position.set(-1, -1, -1)
             return obj
@@ -368,7 +369,6 @@ export function useGridDrawComposible(
 
         resourceTracker.markUsed(scene)
         resourceTracker.releaseUnused()
-        isInitialRebuild = false
     }
 
     return {
@@ -376,4 +376,30 @@ export function useGridDrawComposible(
         camera,
         hitTestObjects,
     }
+}
+
+function getGridBoundingBox(grid: Grid, bounds: Bounds): THREE.Box3 {
+    const points = getAllGridVertices(grid, bounds)
+    const min = new Vector3(points[0].x, points[0].y, points[0].z)
+    const max = new Vector3(points[0].x, points[0].y, points[0].z)
+    for(const point of points) {
+        min.x = Math.min(min.x, point.x)
+        min.y = Math.min(min.y, point.y)
+        min.z = Math.min(min.z, point.z)
+        max.x = Math.max(max.x, point.x)
+        max.y = Math.max(max.y, point.y)
+        max.z = Math.max(max.z, point.z)
+    }
+    return new THREE.Box3(min, max)
+}
+
+function getAllGridVertices(grid: Grid, bounds: Bounds): Vector3[] {
+    const points = []
+    for(const voxel of grid.getVoxels(bounds)) {
+        const voxelInfo = grid.getVoxelInfo(voxel)
+        for(const polygon of Object.values(voxelInfo.sidePolygons)) {
+            points.push(...polygon)
+        }
+    }
+    return points
 }

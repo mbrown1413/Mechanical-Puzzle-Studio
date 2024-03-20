@@ -6,7 +6,7 @@
 <script setup lang="ts">
 import {ref, Ref, computed} from "vue"
 
-import {Puzzle, Piece, Voxel} from "~lib"
+import {Puzzle, Piece, Voxel, Bounds} from "~lib"
 
 import {useGridDrawComposible} from "./GridDisplay_draw.ts"
 import {useGridMouseComposible} from "./GridDisplay_mouse.ts"
@@ -57,17 +57,23 @@ const viewpointOptions = computed(() =>
 const pieces = computed(() => props.pieces)
 
 const bounds = computed(() => {
+    let bounds: Bounds
     if(props.boundsSizing === "voxels") {
         const allVoxels = []
         for(const piece of pieces.value) {
             allVoxels.push(...piece.voxels)
         }
-        return props.puzzle.grid.getVoxelBounds(...allVoxels)
+        bounds = props.puzzle.grid.getVoxelBounds(...allVoxels)
     } else {
-        return props.puzzle.grid.getBoundsMax(
+        bounds = props.puzzle.grid.getBoundsMax(
             ...pieces.value.map(piece => piece.bounds)
         )
     }
+
+    if(bounds.some(b => b === 0)) {
+        bounds = props.puzzle.grid.getDefaultPieceBounds()
+    }
+    return bounds
 })
 
 const {
