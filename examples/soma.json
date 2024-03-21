@@ -257,7 +257,7 @@
                             "solutions": null,
                             "goalPieceId": "piece-0",
                             "usedPieceCounts": {
-                                "type": "Map",
+                                "type": "Object",
                                 "data": {
                                     "piece-1": 1,
                                     "piece-2": 1,
@@ -279,7 +279,7 @@
                             "solutions": null,
                             "goalPieceId": "piece-8",
                             "usedPieceCounts": {
-                                "type": "Map",
+                                "type": "Object",
                                 "data": {
                                     "piece-1": 1,
                                     "piece-2": 1,

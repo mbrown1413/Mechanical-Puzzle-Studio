@@ -101,7 +101,7 @@ export class AssemblySolver extends Solver {
         }
 
         const pieces = []
-        for(const [pieceId, count] of problem.usedPieceCounts.entries()) {
+        for(const [pieceId, count] of Object.entries(problem.usedPieceCounts)) {
             const piece = puzzle.getPiece(pieceId)
             if(!piece) {
                 throw new Error(`Piece ID ${pieceId} not found`)

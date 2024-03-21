@@ -35,7 +35,7 @@ const tableItems = computed(() => {
             id: piece.id,
             piece: piece,
             label: piece.label,
-            count: props.problem?.usedPieceCounts.get(piece.id) || 0,
+            count: props.problem?.usedPieceCounts[piece.id] || 0,
             isGoal: piece.id === props.problem?.goalPieceId,
         }
     })
@@ -43,8 +43,8 @@ const tableItems = computed(() => {
 
 function updatePieceCount(pieceId: string, count: number) {
     if(props.problem === null) { return }
-    const newPieceCounts = new Map(props.problem.usedPieceCounts)
-    newPieceCounts.set(pieceId, count)
+    const newPieceCounts = Object.assign({}, props.problem.usedPieceCounts)
+    newPieceCounts[pieceId] = count
     const action = new EditProblemMetadataAction(
         props.problem.id, {
             usedPieceCounts: newPieceCounts

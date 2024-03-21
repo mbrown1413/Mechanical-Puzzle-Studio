@@ -63,8 +63,8 @@ describe("AssemblySolver", () => {
     ))
     const problem0 = new AssemblyProblem("problem-0")
     problem0.goalPieceId = "problem-0-goal-piece"
-    problem0.usedPieceCounts.set("problem-0-piece-0", 1)
-    problem0.usedPieceCounts.set("problem-0-piece-1", 1)
+    problem0.usedPieceCounts["problem-0-piece-0"] = 1
+    problem0.usedPieceCounts["problem-0-piece-1"] = 1
 
     // Problem 1
     // 000
@@ -91,8 +91,8 @@ describe("AssemblySolver", () => {
     ))
     const problem1 = new AssemblyProblem("problem-1")
     problem1.goalPieceId = "problem-1-goal-piece"
-    problem1.usedPieceCounts.set("problem-1-piece-0", 1)
-    problem1.usedPieceCounts.set("problem-1-piece-1", 1)
+    problem1.usedPieceCounts["problem-1-piece-0"] = 1
+    problem1.usedPieceCounts["problem-1-piece-1"] = 1
 
     // Problem 2
     // 01100
@@ -117,8 +117,8 @@ describe("AssemblySolver", () => {
     ))
     const problem2 = new AssemblyProblem("problem-2")
     problem2.goalPieceId = "problem-2-goal-piece"
-    problem2.usedPieceCounts.set("problem-2-piece-0", 2)
-    problem2.usedPieceCounts.set("problem-2-piece-1", 1)
+    problem2.usedPieceCounts["problem-2-piece-0"] = 2
+    problem2.usedPieceCounts["problem-2-piece-1"] = 1
 
     const solver = new AssemblySolver()
 
@@ -213,7 +213,7 @@ describe("AssemblySolver", () => {
 
     test("voxel count sanity-check", () => {
         let problem = problem0.copy()
-        problem.usedPieceCounts.set("problem-0-piece-0", 2)
+        problem.usedPieceCounts["problem-0-piece-0"] = 2
         expect(() => {
             solver.solve(puzzle, problem)
         }).toThrowErrorMatchingInlineSnapshot(`
@@ -224,7 +224,7 @@ describe("AssemblySolver", () => {
         `)
 
         problem = problem0.copy()
-        problem.usedPieceCounts.set("problem-0-piece-0", 0)
+        problem.usedPieceCounts["problem-0-piece-0"] = 0
         expect(() => {
             solver.solve(puzzle, problem)
         }).toThrowErrorMatchingInlineSnapshot(`
@@ -238,7 +238,7 @@ describe("AssemblySolver", () => {
     test("no pieces can be placed in goal", () => {
         const problem = new AssemblyProblem("problem")
         problem.goalPieceId = "problem-0-goal-piece"
-        problem.usedPieceCounts.set("large", 1)
+        problem.usedPieceCounts["large"] = 1
         expect(() => {
             solver.solve(puzzle, problem)
         }).toThrowErrorMatchingInlineSnapshot(`
@@ -259,7 +259,7 @@ describe("AssemblySolver", () => {
     test("empty goal piece", () => {
         const problem = new AssemblyProblem("problem")
         problem.goalPieceId = "empty1"
-        problem.usedPieceCounts.set("empty2", 1)
+        problem.usedPieceCounts["empty2"] = 1
         expect(() => {
             solver.solve(puzzle, problem)
         }).toThrowErrorMatchingInlineSnapshot(`

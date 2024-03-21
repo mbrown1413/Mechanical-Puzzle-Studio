@@ -321,14 +321,14 @@ export class EditProblemMetadataAction extends EditItemMetadataAction<Problem> {
     postEdit(problem: Problem) {
         if(problem instanceof AssemblyProblem) {
             // Remove used piece entries with "0" count
-            for(const [pieceId, count] of problem.usedPieceCounts.entries()) {
+            for(const [pieceId, count] of Object.entries(problem.usedPieceCounts)) {
                 if(count <= 0) {
-                    problem.usedPieceCounts.delete(pieceId)
+                    delete problem.usedPieceCounts[pieceId]
                 }
             }
             // Remove "goal" piece from used pieces
             if(problem.goalPieceId !== null) {
-                problem.usedPieceCounts.delete(problem.goalPieceId)
+                delete problem.usedPieceCounts[problem.goalPieceId]
             }
         }
     }
