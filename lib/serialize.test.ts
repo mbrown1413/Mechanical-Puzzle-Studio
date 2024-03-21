@@ -92,25 +92,6 @@ describe("serialization and deserialization of", () => {
         serializeMatches([[1], [2, [3]]], [[1], [2, [3]]], "Array")
     })
 
-    test("Map", () => {
-        serializeMatches(
-            new Map<string, number>([["one", 1]]),
-            {
-                type: "Map",
-                data: {"one": 1}
-            },
-            "Map"
-        )
-        serializeMatches(
-            new Map<string, number[]>([["one", [1, 2, 3]]]),
-            {
-                type: "Map",
-                data: {"one": [1, 2, 3]}
-            },
-            "Map"
-        )
-    })
-
     test("Objects", () => {
         serializeMatches(
             {a: 1, b: 2},
@@ -198,16 +179,11 @@ describe("error on serialization", () => {
           [Error: Serialization failed: Unsupported primitive type "undefined"
           Attribute path: root.foo]
         `)
-    })
-
-    test("non-string Map keys", () => {
         expect(() => {
-            serialize(
-                new Map<number, number>([[1, 1]]) as unknown as Serializable
-            )
+            serialize(new Map() as unknown as Serializable)
         }).toThrowErrorMatchingInlineSnapshot(`
-          [Error: Serialization failed: Only string keys are supported for Map
-          Attribute path: root.1]
+          [Error: Serialization failed: Reference to unregistered class "Map"
+          Attribute path: root]
         `)
     })
 
@@ -216,9 +192,9 @@ describe("error on serialization", () => {
             serialize(
                 [
                     "foo",
-                    new Map([[
-                        "three", ["foo", "bar", undefined as unknown as Serializable]
-                    ]])
+                    {
+                        three: ["foo", "bar", undefined as unknown as Serializable]
+                    }
                 ]
             )
         }).toThrowErrorMatchingInlineSnapshot(`

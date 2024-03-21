@@ -143,8 +143,7 @@ export type SerializedData = string | number | boolean | null |
 export type Serializable = number | string | boolean | null |
     SerializableObject |
     SerializableClass |
-    Serializable[] |
-    Map<string, Serializable>
+    Serializable[]
 
 /**
  * Subclass this and use `registerClass` to make a class serializable. If you
@@ -225,22 +224,6 @@ function _serializeNode(
                 (item: Serializable, i: number) =>
                 _serializeNode(item, path, String(i), seenObjectPaths)
             )
-        }
-
-        // Map
-        if(value instanceof Map) {
-            const entries: {[key: string | number]: SerializedData} = {}
-            for(const [k, v] of value.entries()) {
-                if(typeof k !== "string") {
-                    path.push(k)
-                    throw new SerializerError("Only string keys are supported for Map")
-                }
-                entries[k] = _serializeNode(v, path, k, seenObjectPaths)
-            }
-            return {
-                type: "Map",
-                data: entries,
-            }
         }
 
         // Object
@@ -385,16 +368,8 @@ function _deserializeNode(
             throw new SerializerError(`Expected data to be an object, not ${typeof objData}`)
         }
 
-        // Map
-        if(data.type === "Map") {
-            const map: Map<string, Serializable> = new Map()
-            for(const [key, value] of Object.entries(objData)) {
-                map.set(key, _deserializeNode(value, path, key, ignoreErrors))
-            }
-            obj = map
-
         // Object
-        } else if(data.type === "Object") {
+        if(data.type === "Object") {
             obj = {}
             for(const [key, value] of Object.entries(objData)) {
                 obj[key] = _deserializeNode(value, path, key, ignoreErrors)
