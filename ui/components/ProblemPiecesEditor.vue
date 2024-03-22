@@ -151,7 +151,7 @@ const selectionButtons = [
                     :pieces="[item.piece]"
                     displayOnly
                     boundsSizing="voxels"
-                    :size="200"
+                    :size="140"
             />
         </template>
 
