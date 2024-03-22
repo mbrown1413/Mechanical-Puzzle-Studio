@@ -1,7 +1,7 @@
-import {Ref, reactive, toRaw} from "vue"
+import {Ref, reactive} from "vue"
 import {diff, patch as doPatch, unpatch as doUnpatch, Delta} from "jsondiffpatch"
 
-import {PuzzleFile, serialize} from "~lib"
+import {PuzzleFile, serialize, deserialize} from "~lib"
 import {Action} from "~/ui/actions.ts"
 import {PuzzleStorage} from "~/ui/storage.ts"
 
@@ -44,42 +44,30 @@ export class ActionManager {
     }
 
     performAction(action: Action) {
-        const before = structuredClone(toRaw(this.puzzleFile))
+        const before = serialize(this.puzzleFile)
         action.perform(this.puzzleFile.puzzle, this.puzzleFile)
-        const after = structuredClone(toRaw(this.puzzleFile))
+        const after = serialize(this.puzzleFile)
 
-        const serialized = serialize(this.puzzleFile)
         if(!this.storage.readOnly) {
-            this.storage.save(this.puzzleFile, JSON.stringify(serialized))
+            this.storage.save(this.puzzleFile, JSON.stringify(after))
         }
-
-        // Remove solutions from diff calculation
-        // This should be purely an optimization and not affect any
-        // functionality. The solver runs outside of the action undo system, so
-        // we don't the diff algorithm wasting time searching through
-        // solutions.
-        function clearSolutions(puzzleFile: PuzzleFile) {
-            for(const problem of puzzleFile.puzzle.problems) {
-                problem.solutions = []
-            }
-        }
-        clearSolutions(before)
-        clearSolutions(after)
 
         const patch = diff(before, after)
-
         this.performedActions.push({action, patch})
         this.undoneActions.length = 0
     }
 
     private performPatch(patch: Delta, reverse: boolean) {
+        const serialized = serialize(this.puzzleFile)
         if(reverse) {
-            doUnpatch(this.puzzleFile, patch)
+            doUnpatch(serialized, patch)
         } else {
-            doPatch(this.puzzleFile, patch)
+            doPatch(serialized, patch)
         }
+        this.puzzleFile = deserialize(serialized)
+
         if(!this.storage.readOnly) {
-            this.storage.save(this.puzzleFile)
+            this.storage.save(this.puzzleFile, JSON.stringify(serialized))
         }
     }
 
