@@ -3,7 +3,7 @@
 -->
 
 <script setup lang="ts">
-import {computed} from "vue"
+import {computed, ref, Ref} from "vue"
 import {VDataTable} from "vuetify/components/VDataTable"
 import {VToolbar} from "vuetify/components/VToolbar"
 
@@ -21,6 +21,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     action: [action: Action]
 }>()
+
+const selectedPieceIds: Ref<string[]> = ref([])
 
 const tableHeaders: VDataTable["headers"] = [
     {title: "Piece Name", key: "label"},
@@ -62,19 +64,73 @@ function updateGoal(pieceId: string | null) {
     )
     emit("action", action)
 }
+
+function selectionCountAction(newCountFunc: (oldCount: number) => number) {
+    if(props.problem === null) { return }
+    const newPieceCounts = Object.assign({}, props.problem.usedPieceCounts)
+
+    let selected
+    if(selectedPieceIds.value.length === 0) {
+        selected = props.puzzle.pieces.map(p => p.id)
+    } else {
+        selected = selectedPieceIds.value
+    }
+
+    for(const pieceId of selected) {
+        const oldCount = newPieceCounts[pieceId] || 0
+        newPieceCounts[pieceId] = newCountFunc(oldCount)
+    }
+    const action = new EditProblemMetadataAction(
+        props.problem.id, {
+            usedPieceCounts: newPieceCounts
+        }
+    )
+    emit("action", action)
+}
+
+const selectionButtons = [
+    {
+        text: "-1",
+        color: "red",
+        action: () => selectionCountAction((oldCount) => oldCount - 1),
+    },
+    {
+        text: "0",
+        color: undefined,
+        action: () => selectionCountAction(() => 0),
+    },
+    {
+        text: "+1",
+        color: "green",
+        action: () => selectionCountAction((oldCount) => oldCount + 1),
+    },
+]
 </script>
 
 <template>
     <VDataTable
             :headers="tableHeaders"
             :items="tableItems"
+            v-model="selectedPieceIds"
             items-per-page="-1"
             no-data-text="No pieces in puzzle!"
             style="width: fit-content;"
+            show-select
     >
         <template v-slot:top>
-            <VToolbar flat density="compact" :title="label" />
+            <VToolbar flat density="compact" :title="label">
+                <VBtn
+                    v-for="button in selectionButtons"
+                    variant="tonal"
+                    :color="button.color"
+                    @click="button.action"
+                    class="ml-2"
+                >
+                    {{ button.text }}
+                </VBtn>
+            </VToolbar>
         </template>
+
         <template v-slot:bottom />
 
         <template v-slot:item.count="{item}">
