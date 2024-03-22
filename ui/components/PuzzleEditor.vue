@@ -113,14 +113,14 @@ function performAction(action: Action) {
 
         <div class="grid-cell side-bot">
             <ItemMetadataEditor
-                v-show="currentTabId === 'pieces'"
+                v-show="currentTabId === 'pieces' && selectedPieceIds.length"
                 :puzzle="puzzle"
                 itemType="piece"
                 :itemId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
                 @action="performAction"
             />
             <ProblemSolverForm
-                v-show="currentTabId === 'problems' && selectedProblemIds"
+                v-show="currentTabId === 'problems' && selectedProblemIds.length"
                 :puzzle="puzzle"
                 :problemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
                 @action="performAction"

@@ -131,7 +131,7 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
 </script>
 
 <template>
-    <div v-show="item" class="metadata-form">
+    <div class="metadata-form">
         <h4>{{ title }}</h4>
 
         <template v-for="field in fields">
