@@ -9,6 +9,13 @@
         "puzzle": {
             "type": "Puzzle",
             "data": {
+                "idCounters": {
+                    "type": "Object",
+                    "data": {
+                        "piece": 9,
+                        "problem": 2
+                    }
+                },
                 "grid": {
                     "type": "CubicGrid",
                     "data": {}

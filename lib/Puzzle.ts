@@ -8,32 +8,44 @@ export class Puzzle extends SerializableClass {
     pieces: PieceWithId[]
     problems: Problem[]
 
+    /**
+     * Next ID number of the given type.
+     *
+     * We have to track these for items we reference by ID between saves.
+     * Otherwise, we would have to enumerate all references in one way or
+     * another, either to delete dead references or scan references for the
+     * next unused ID.
+     */
+    private idCounters: {
+        piece: number,
+        problem: number,
+    }
+
     constructor(grid: Grid) {
         super()
         this.grid = grid
         this.pieces = []
         this.problems = []
+        this.idCounters = {
+            piece: 0,
+            problem: 0,
+        }
     }
 
     generatePieceId() {
-        return this.generateNewId("piece", "pieces")
+        return this.generateNewId("piece")
     }
 
     generateProblemId() {
-        return this.generateNewId("problem", "problems")
+        return this.generateNewId("problem")
     }
 
     private generateNewId(
-        prefix: string,
-        type: "pieces" | "problems"
+        type: "piece" | "problem"
     ): string {
-        const idExistsFunc = type === "pieces" ? this.hasPiece.bind(this) : this.hasProblem.bind(this)
-        for(let i=0; ; i++) {
-            const id = prefix+"-"+i
-            if(!idExistsFunc(id)) {
-                return id
-            }
-        }
+        const id = `${type}-${this.idCounters[type]}`
+        this.idCounters[type] += 1
+        return id
     }
 
     getNewPieceColor(): string {

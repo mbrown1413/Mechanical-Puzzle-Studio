@@ -104,7 +104,7 @@ export class AssemblySolver extends Solver {
         for(const [pieceId, count] of Object.entries(problem.usedPieceCounts)) {
             const piece = puzzle.getPiece(pieceId)
             if(!piece) {
-                throw new Error(`Piece ID ${pieceId} not found`)
+                continue  // Ignore references to deleted pieces
             }
             for(let i=0; i<count; i++) {
                 pieces.push(piece)
