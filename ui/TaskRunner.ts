@@ -7,28 +7,28 @@ import {Task} from "~/ui/tasks.ts"
 import TaskWorker from "./TaskRunner_worker.ts?worker"
 
 export type StartMessage = {
-    type: "start",
+    msgType: "start",
     task: Task<Serializable>,
 }
 
 type ProgressMessage = {
-    type: "progress",
+    msgType: "progress",
     percent: number,
 }
 
 type LogMessage = {
-    type: "log",
+    msgType: "log",
     message: string,
 }
 
 type FinishedMessage = {
-    type: "finished",
+    msgType: "finished",
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     result: any,
 }
 
 type ErrorMessage = {
-    type: "error",
+    msgType: "error",
     message: string,
 }
 
@@ -131,7 +131,7 @@ export class TaskRunner {
             this.current.task.setup()
             this.log("Starting task")
             this.sendMessage({
-                type: "start",
+                msgType: "start",
                 task: this.current.task,
             })
         } catch(e) {
@@ -200,7 +200,7 @@ export class TaskRunner {
     private handleMessage(event: MessageEvent) {
         const message = deserialize(event.data) as WorkerToRunnerMessage
         let _exhaustiveCheck: never
-        switch(message.type) {
+        switch(message.msgType) {
             case "progress": this.onProgressMessage(message); break
             case "log": this.onLogMessage(message); break
             case "finished": this.onFinishedMessage(message); break

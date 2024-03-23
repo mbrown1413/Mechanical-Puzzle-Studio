@@ -75,7 +75,11 @@ export class PuzzleFile extends SerializableClass {
      */
     static getMetadataSafe(data: string, name: string): PuzzleMetadata {
         try {
-            return this.deserialize(data).getMetadata()
+            const metadata = this.deserialize(data).getMetadata()
+            if(!metadata.name) {
+                metadata.name = name
+            }
+            return metadata
         } catch(e) {
             console.error("Puzzle failed to deserialize:\n", e)
             let objData

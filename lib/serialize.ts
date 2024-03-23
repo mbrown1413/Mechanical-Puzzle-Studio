@@ -93,14 +93,6 @@
  *     * Speed
  *     * Supporting duplicates of objects - Currently if the same object is
  *       used twice, serialization will error.
- *
- *
- * ## Future plans
- *   * Allow for classes to have custom `serialize()` / `deserialize()` methods
- *     (and move the current class serialization code to the base class).
- *   * User registration of classes / types that don't inherit from
- *     `SerializableClass` (manually passing in a serialize / deserialize func).
- *   * List of expected types passed to `deserialize()`, not just one.
  */
 
 class SerializerError extends Error {
@@ -133,7 +125,8 @@ class SerializerError extends Error {
 /* Resulting data structure after serialization */
 export type SerializedData = string | number | boolean | null |
     SerializedData[] |
-    {type: string, data: object}
+    {[property: string]: SerializedData} |  // Object
+    {type: string, [property: string]: SerializedData}  // Class
 
 /**
  * Any type which can be serialized. Add to this when built-in types are
@@ -145,21 +138,23 @@ export type Serializable = number | string | boolean | null |
     SerializableClass |
     Serializable[]
 
+type SerializableObject = {
+    [key: string]: Serializable | undefined
+}
+
 /**
  * Subclass this and use `registerClass` to make a class serializable. If you
  * use attributes which cannot be serialized, a type error should occur.
  */
 export abstract class SerializableClass {
     // eslint-disable-next-line @typescript-eslint/ban-types
-    [s: string]: Serializable | Function
+    [s: string]: Serializable | Function | undefined
 }
 
 
 ///////////////////////////////////
 ////////// Serialization //////////
 ///////////////////////////////////
-
-type SerializableObject = {[key: string]: Serializable}
 
 /* Return an object which can be passed to JSON.stringify to serialize. */
 export function serialize(value: Serializable): SerializedData {
@@ -184,16 +179,22 @@ function _serializeNode(
     seenObjectPaths: Map<Serializable, string>,
 ): SerializedData {
 
-    function getClassData(value: SerializableClass | SerializableObject) {
+    function getObjectData(value: SerializableClass | SerializableObject) {
         const data: {[k: string]: SerializedData} = {}
-        for(const [k, v] of Object.entries(value)) {
-            if(typeof v !== "function") {
+        let k, v
+        for([k, v] of Object.entries(value)) {
+            if(typeof v !== "function" && v !== undefined) {
+
+                // Escape "type" key by adding an underscore prefix
+                if(k.match(/^_*type$/)) {
+                    k = "_" + k
+                }
+
                 data[k] = _serializeNode(v, path, k, seenObjectPaths)
             }
         }
         return data
     }
-
 
     let errorFlag = false
     try {
@@ -226,23 +227,19 @@ function _serializeNode(
             )
         }
 
-        // Object
+        const data = getObjectData(value)
         const type = value.constructor.name
+
+        // Object
         if(value.constructor.name === "Object") {
-            const data = getClassData(value)
-            return {type: "Object", data}
+            return {...data}
         }
 
         // Registered class
         const classInfo = getRegisteredClass(type)
         if(classInfo !== null) {
             value = value as SerializableClass
-            const data = getClassData(value)
-            return {type, data}
-        }
-
-        if(type === "Object") {
-            throw new SerializerError("Non-class objects cannot be serialized")
+            return {type, ...data}
         }
 
         throw new SerializerError(`Reference to unregistered class "${type}"`)
@@ -330,6 +327,23 @@ function _deserializeNode(
     attribute: string,
     ignoreErrors: boolean
 ): Serializable {
+
+    function getObjectData(data: object) {
+        const obj: SerializableObject = {}
+        let key, value
+        for([key, value] of Object.entries(data)) {
+            if(key === "type") { continue }
+
+            // Unescape "type" key by removing underscore prefix
+            if(key.match(/^_+type$/)) {
+                key = key.slice(1)
+            }
+
+            obj[key] = _deserializeNode(value, path, key, ignoreErrors)
+        }
+        return obj
+    }
+
     let errorFlag = false
     try {
         path.push(attribute)
@@ -354,36 +368,24 @@ function _deserializeNode(
             throw new SerializerError(`Cannot deserialize type "${typeof data}"`)
         }
 
-        if(data.type === undefined) {
-            throw new SerializerError(`Malformed data: No type attribute on object`)
+        // Object or Registered Class
+        const obj = getObjectData(data)
+        const type = data.type || "Object"
+        if(data.constructor.name !== "Object") {
+            throw new SerializerError(`Cannot deserialize type "${data.constructor.name}"`)
         }
-
-        // Get data, either here inline or from refs
-        let obj: Serializable
-        if(!("data" in data)) {
-            throw new SerializerError("Required data attribute missing")
+        if(typeof type !== "string") {
+            throw new SerializerError(`Invalid type ${type}`)
         }
-        const objData = data.data
-        if(typeof objData !== "object") {
-            throw new SerializerError(`Expected data to be an object, not ${typeof objData}`)
-        }
-
-        // Object
-        if(data.type === "Object") {
-            obj = {}
-            for(const [key, value] of Object.entries(objData)) {
-                obj[key] = _deserializeNode(value, path, key, ignoreErrors)
-            }
 
         // Registered class
+        if(type === "Object") {
+            return obj
+
         } else {
-            const classInfo = getRegisteredClass(data.type)
+            const classInfo = getRegisteredClass(type)
             if(classInfo === null) {
                 throw new SerializerError(`Reference to unregistered class "${data.type}"`)
-            }
-            obj = {}
-            for(const [key, value] of Object.entries(objData)) {
-                obj[key] = _deserializeNode(value, path, key, ignoreErrors)
             }
             Object.setPrototypeOf(obj, classInfo.cls.prototype)
         }

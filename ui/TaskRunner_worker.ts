@@ -16,33 +16,33 @@ function sendMessage(message: WorkerToRunnerMessage) {
 
 const callbacks = {
     progressCallback(percent: number) {
-        sendMessage({type: "progress", percent})
+        sendMessage({msgType: "progress", percent})
     },
     logCallback(message: string) {
-        sendMessage({type: "log", message})
+        sendMessage({msgType: "log", message})
     },
 }
 
 function onStart(data: StartMessage) {
     const result = data.task.run(callbacks)
     sendMessage({
-        type: "finished",
+        msgType: "finished",
         result,
     })
 }
 
 self.onmessage = (event: MessageEvent) => {
     try {
-        const handlers: {[type: string]: (data: RunnerToWorkerMessage) => void} = {
-            start: onStart,
+        const handlers: {[msgType: string]: (data: RunnerToWorkerMessage) => void} = {
+            start: onStart
         }
         const message = deserialize(event.data) as RunnerToWorkerMessage
-        const handler = handlers[message.type]
+        const handler = handlers[message.msgType]
         handler(message)
     } catch(e) {
         console.error(e)
         sendMessage({
-            type: "error",
+            msgType: "error",
             message: String(e)
         })
     }

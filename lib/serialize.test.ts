@@ -28,6 +28,16 @@ class B extends SerializableClass {
 }
 registerClass(B)
 
+class ClassWithTypeProperty extends SerializableClass {
+    type: string
+
+    constructor(type: string) {
+        super()
+        this.type = type
+    }
+}
+registerClass(ClassWithTypeProperty)
+
 class Circular extends SerializableClass {
     name: string
     circle: SerializableClass | null
@@ -43,9 +53,9 @@ class NotSerializable extends SerializableClass {
 
     // @ts-expect-error: Not serializable classes should error when
     // typechecked.
-    foo: string | undefined
+    foo: string | Map<unknown, unknown>
 
-    constructor(foo: string | undefined) {
+    constructor(foo: string | Map<unknown, unknown>) {
         super()
         this.foo = foo
     }
@@ -94,24 +104,44 @@ describe("serialization and deserialization of", () => {
 
     test("Objects", () => {
         serializeMatches(
+            {},
+            {},
+            "Object"
+        )
+        serializeMatches(
             {a: 1, b: 2},
+            {a: 1, b: 2},
+            "Object"
+        )
+        serializeMatches(
             {
-                type: "Object",
-                data: {a: 1, b: 2},
+                a: 1,
+                b: {c: 2}
+            },
+            {
+                a: 1,
+                b: {
+                    c: 2,
+                },
             },
             "Object"
         )
         serializeMatches(
-            {a: 1, b: {
-                c: 2
-            }},
-            {
-                type: "Object",
-                data: {a: 1, b: {
-                    type: "Object",
-                    data: {c: 2}
-                }},
-            },
+            {a: 1, b: undefined},
+            {a: 1},
+            "Object"
+        )
+    })
+
+    test("Objects with type property", () => {
+        serializeMatches(
+            {type: "foo"},
+            {_type: "foo"},
+            "Object"
+        )
+        serializeMatches(
+            {type: "foo", _type: "bar"},
+            {_type: "foo", __type: "bar"},
             "Object"
         )
     })
@@ -120,9 +150,21 @@ describe("serialization and deserialization of", () => {
         serializeMatches(
             new A("a-1"),
             {
-                type: "A", data: {name: "a-1"}
+                type: "A",
+                name: "a-1"
             },
             "A"
+        )
+    })
+
+    test("SerializableClass instances with type property", () => {
+        serializeMatches(
+            new ClassWithTypeProperty("foo-type"),
+            {
+                type: "ClassWithTypeProperty",
+                _type: "foo-type"
+            },
+            "ClassWithTypeProperty"
         )
     })
 
@@ -131,14 +173,10 @@ describe("serialization and deserialization of", () => {
             new B("b-1", new A("a-1")),
             {
                 type: "B",
-                data: {
-                    name: "b-1",
-                    nested: {
-                        type: "A",
-                        data: {
-                            name: "a-1"
-                        }
-                    }
+                name: "b-1",
+                nested: {
+                    type: "A",
+                    name: "a-1"
                 }
             },
             "B"
@@ -174,9 +212,9 @@ describe("error on serialization", () => {
           Attribute path: root]
         `)
         expect(() => {
-            serialize(new NotSerializable(undefined))
+            serialize(new NotSerializable(new Map()))
         }).toThrowErrorMatchingInlineSnapshot(`
-          [Error: Serialization failed: Unsupported primitive type "undefined"
+          [Error: Serialization failed: Reference to unregistered class "Map"
           Attribute path: root.foo]
         `)
         expect(() => {
@@ -203,10 +241,10 @@ describe("error on serialization", () => {
         `)
         expect(() => {
             serialize(
-                new B("b-1", new A(undefined as unknown as string))
+                new B("b-1", new A(new Map() as unknown as string))
             )
         }).toThrowErrorMatchingInlineSnapshot(`
-          [Error: Serialization failed: Unsupported primitive type "undefined"
+          [Error: Serialization failed: Reference to unregistered class "Map"
           Attribute path: root.nested.name]
         `)
     })
@@ -272,31 +310,10 @@ describe("deserialization error", () => {
         expect(() => {
             deserialize({
                 type: "Unregistered",
-                data: {name: "u-1"}
+                name: "u-1"
             })
         }).toThrowErrorMatchingInlineSnapshot(`
           [Error: Deserialization failed: Reference to unregistered class "Unregistered"
-          Attribute path: root]
-        `)
-    })
-
-    test("malformed object", () => {
-        expect(() => {
-            deserialize({} as unknown as SerializedData)
-        }).toThrowErrorMatchingInlineSnapshot(`
-          [Error: Deserialization failed: Malformed data: No type attribute on object
-          Attribute path: root]
-        `)
-        expect(() => {
-            deserialize({name: "a-1"} as unknown as SerializedData)
-        }).toThrowErrorMatchingInlineSnapshot(`
-          [Error: Deserialization failed: Malformed data: No type attribute on object
-          Attribute path: root]
-        `)
-        expect(() => {
-            deserialize({type: "A"} as unknown as SerializedData)
-        }).toThrowErrorMatchingInlineSnapshot(`
-          [Error: Deserialization failed: Required data attribute missing
           Attribute path: root]
         `)
     })
@@ -308,17 +325,13 @@ describe("deserialization error", () => {
                     "hello",
                     {
                         type: "B",
-                        data: {
-                            name: "b-1",
-                            nested: {
-                                type: "A",
-                            }
-                        }
+                        name: "b-1",
+                        nested: new Map() as unknown as SerializedData
                     }
                 ]
             )
         }).toThrowErrorMatchingInlineSnapshot(`
-          [Error: Deserialization failed: Required data attribute missing
+          [Error: Deserialization failed: Cannot deserialize type "Map"
           Attribute path: root.1.nested]
         `)
     })
@@ -348,23 +361,12 @@ describe("deserialize safe mode", () => {
     test("error at root", () => {
         expect(
             deserializeIgnoreErrors(
-                {} as unknown as SerializedData
+                new Map() as unknown as SerializedData
             )
         ).toEqual(null)
         expect(
             deserializeIgnoreErrors(
-                {
-                    refs: {},
-                    root: {}
-                } as unknown as SerializedData
-            )
-        ).toEqual(null)
-        expect(
-            deserializeIgnoreErrors(
-                {
-                    refs: {},
-                    root: {type: "UnregisteredClass", data: {}}
-                } as unknown as SerializedData
+                new Map() as unknown as SerializedData
             )
         ).toEqual(null)
     })
@@ -376,14 +378,18 @@ describe("deserialize safe mode", () => {
         ).toEqual(["foo", null])
         expect(
             deserializeIgnoreErrors([
-                "bar", {
-                    type: "Object",
-                    data: {
-                        foo: "bar",
-                        baz: undefined
-                    }
+                "bar",
+                {
+                    foo: "bar",
+                    baz: {type: "Foo"},
                 }
             ])
-        ).toEqual(["bar", {foo: "bar", baz: null}])
+        ).toEqual([
+            "bar",
+            {
+                foo: "bar",
+                baz: null
+            }
+        ])
     })
 })
