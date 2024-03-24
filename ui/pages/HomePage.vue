@@ -49,12 +49,12 @@ const storageButtons = [
     {
         text: "Upload",
         icon: "mdi-file-upload",
-        action: (storage: PuzzleStorage) => saveModal.value?.open("upload", storage),
+        action: (storage: PuzzleStorage) => saveModal.value?.openUpload(storage),
     },
     {
         text: "New",
         icon: "mdi-plus-box",
-        action: (storage: PuzzleStorage) => saveModal.value?.open("new", storage),
+        action: (storage: PuzzleStorage) => saveModal.value?.openNew(storage),
     },
 ]
 
@@ -177,7 +177,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                         <template v-slot:activator="{props}">
                             <VBtn
                                 v-bind="props"
-                                @click="saveModal?.open('copy', storage, item.name)"
+                                @click="saveModal?.openCopy(storage, item.name)"
                             >
                                 <VIcon icon="mdi-content-copy" aria-label="Copy" aria-hidden="false" />
                             </VBtn>

@@ -19,45 +19,56 @@ const emit = defineEmits<{
 }>()
 
 defineExpose({
-    open(newMode: Mode, storage: PuzzleStorage, copyFrom: string | null = null) {
-        mode.value = newMode
-        if(storage.readOnly) {
-            fields.storage = Object.values(storages)[0]
-        } else {
-            fields.storage = storage
-        }
+    openNew(storage: PuzzleStorage) {
+        title.value = "New Puzzle"
+        createButtonText.value = "Create"
+        open("new", storage)
+    },
 
-        if(newMode === "new") {
-            title.value = "New Puzzle"
-            createButtonText.value = "Create"
+    openUpload(storage: PuzzleStorage) {
+        title.value = "Upload Puzzle"
+        fields.name = ""
+        createButtonText.value = "Upload"
+        open("upload", storage)
+    },
 
-        } else if(newMode === "upload") {
-            title.value = "Upload Puzzle"
-            fields.name = ""
-            createButtonText.value = "Upload"
+    openCopy(storage: PuzzleStorage, copyFrom: string) {
+        title.value = `Copy "${copyFrom}"`
+        fields.name = copyFrom + " (copy)"
+        copyFromStorage = storage
+        copyFromPuzzleName = copyFrom
+        createButtonText.value = "Copy"
+        open("copy", storage)
+    },
 
-        } else if(newMode === "copy" || newMode === "saveas") {
-            if(!copyFrom) {
-                throw new Error("Copy mode reqires copyFrom argument")
-            }
-            title.value = newMode === "copy" ? `Copy "${copyFrom}"` : "Save As"
-            fields.name = copyFrom + " (copy)"
-            copyFromStorage = storage
-            copyFromPuzzleName = copyFrom
-            createButtonText.value = newMode === "copy" ? "Copy" : "Save As"
-
-        }
-        modal.value?.open()
-        nextTick(() => {
-            form.value?.validate()
-        })
-    }
+    openSaveAs(storage: PuzzleStorage, puzzleFile: PuzzleFile) {
+        title.value = "Save As"
+        fields.name = puzzleFile.name + " (copy)"
+        saveAsPuzzleFileToSave = puzzleFile
+        createButtonText.value = "Save As"
+        open("saveas", storage)
+    },
 })
+
+function open(newMode: Mode, storage: PuzzleStorage) {
+    mode.value = newMode
+    if(storage.readOnly) {
+        fields.storage = Object.values(storages)[0]
+    } else {
+        fields.storage = storage
+    }
+
+    modal.value?.open()
+    nextTick(() => {
+        form.value?.validate()
+    })
+}
 
 const createButtonText = ref("Create")
 type Mode = "new" | "upload" | "copy" | "saveas"
 const mode: Ref<Mode> = ref("new")
 const title = ref("")
+let saveAsPuzzleFileToSave: PuzzleFile
 let copyFromStorage: PuzzleStorage
 let copyFromPuzzleName = ""
 
@@ -150,8 +161,11 @@ async function submit(event?: Event) {
         break
 
         case "copy":
-        case "saveas":
             puzzleFile = copyFromStorage.get(copyFromPuzzleName, true)
+        break
+
+        case "saveas":
+            puzzleFile = saveAsPuzzleFileToSave
         break
 
         default:

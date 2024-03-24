@@ -158,7 +158,9 @@ const menuItems: {[name: string]: MenuItem} = {
         text: "Save As...",
         icon: "mdi-content-save-plus",
         perform() {
-            saveModal.value?.open("saveas", storage.value, props.puzzleName)
+            if(puzzleFile.value) {
+                saveModal.value?.openSaveAs(storage.value, puzzleFile.value)
+            }
         },
     },
     rawData: {
