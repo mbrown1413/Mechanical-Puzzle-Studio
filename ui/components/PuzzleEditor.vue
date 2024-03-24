@@ -19,7 +19,7 @@ import ProblemList from "~/ui/components/ProblemList.vue"
 import ProblemSolverForm from "~/ui/components/ProblemSolverForm.vue"
 import SolutionList from "~/ui/components/SolutionList.vue"
 
-defineProps<{
+const props = defineProps<{
     puzzle: Puzzle,
 }>()
 
@@ -27,8 +27,12 @@ const emit = defineEmits<{
     action: [action: Action]
 }>()
 
-const selectedPieceIds: Ref<string[]> = ref(["piece-0"])
-const selectedProblemIds: Ref<string[]> = ref(["problem-0"])
+const selectedPieceIds: Ref<string[]> = ref(
+    props.puzzle.pieces.length ? [props.puzzle.pieces[0].id] : []
+)
+const selectedProblemIds: Ref<string[]> = ref(
+    props.puzzle.problems.length ? [props.puzzle.problems[0].id] : []
+)
 
 const pieceEditor: Ref<InstanceType<typeof PieceEditor> | null> = ref(null)
 const solutionList: Ref<InstanceType<typeof SolutionList> | null> = ref(null)
