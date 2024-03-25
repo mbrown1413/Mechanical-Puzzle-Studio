@@ -36,6 +36,16 @@ function voxelClicked(event: MouseEvent, voxel: Voxel) {
     if(piece.value.id === null) {
         throw new Error("Cannot edit piece with no ID")
     }
+
+    if(
+        toAdd.length === 1 &&
+        toRemove.length === 0 &&
+        piece.value.voxels.includes(toAdd[0])
+    ) {
+        // Voxel already exists in piece
+        return
+    }
+
     emit("action", new EditPieceAction(piece.value.id, toAdd, toRemove))
 }
 

@@ -247,6 +247,9 @@ export class EditPieceAction extends Action {
             (voxel) => !this.removeVoxels.includes(voxel)
         )
         piece.voxels.push(...this.addVoxels)
+
+        // Remove duplicates
+        piece.voxels = [...new Set(piece.voxels)]
     }
 }
 
