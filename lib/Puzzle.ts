@@ -1,5 +1,5 @@
 import {SerializableClass, deserialize, registerClass, serialize} from "~/lib/serialize.ts"
-import {Grid, Bounds, Voxel} from "~/lib/Grid.ts"
+import {Grid, Bounds, Voxel, Transform} from "~/lib/Grid.ts"
 import {Problem} from "~/lib/Problem.ts"
 import {getNextColor} from "~/lib/colors.ts"
 
@@ -163,6 +163,11 @@ export class Piece extends SerializableClass {
         return thisVoxels.size === otherVoxels.size && [...thisVoxels].every(
             v => otherVoxels.has(v)
         )
+    }
+
+    transform(transform: Transform): this {
+        this.voxels = transform.mapVoxels(this.voxels)
+        return this
     }
 }
 

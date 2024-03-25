@@ -5,7 +5,6 @@ import {Grid, Bounds, Voxel, Viewpoint} from "~/lib/Grid.ts"
 
 type Coordinate3d = {x: number, y: number, z: number}
 type CubicBounds = [number, number, number]
-type CubicTranslation = [number, number, number]
 type CubicDirection = "+X" | "-X" | "+Y" | "-Y" | "+Z" | "-Z"
 type CubicVoxelShape = "cube"
 
@@ -174,7 +173,7 @@ export class CubicGrid extends Grid {
         }
 
         return orientationMatrices.map((matrix) => {
-            const orientationFunc = (voxels: Voxel[]) => {
+            const mapVoxels = (voxels: Voxel[]) => {
                 const newCoordinates = voxels.map(
                     (v) => coordinateMultiply(this.voxelToCoordinate(v), matrix)
                 )
@@ -189,27 +188,30 @@ export class CubicGrid extends Grid {
                     })
                 })
             }
-            return { orientationFunc }
+            return { mapVoxels }
         })
     }
 
-    translate(voxel: Voxel, translation: CubicTranslation) {
-        const coordinate = this.voxelToCoordinate(voxel)
-        return this.coordinateToVoxel({
-            x: coordinate.x + translation[0],
-            y: coordinate.y + translation[1],
-            z: coordinate.z + translation[2],
-        })
-    }
-
-    getTranslation(from: Voxel, to: Voxel): CubicTranslation {
+    getTranslation(from: Voxel, to: Voxel) {
         const fromCoordinate = this.voxelToCoordinate(from)
         const toCoordinate = this.voxelToCoordinate(to)
-        return [
+        const offset = [
             toCoordinate.x - fromCoordinate.x,
             toCoordinate.y - fromCoordinate.y,
             toCoordinate.z - fromCoordinate.z,
         ]
+        const translateVoxel = (voxel: Voxel) => {
+            const coordinate = this.voxelToCoordinate(voxel)
+            return this.coordinateToVoxel({
+                x: coordinate.x + offset[0],
+                y: coordinate.y + offset[1],
+                z: coordinate.z + offset[2],
+            })
+        }
+        return {
+            mapVoxels: (voxels: Voxel[]) => voxels.map(translateVoxel),
+            offset
+        }
     }
 
     getViewpoints() {

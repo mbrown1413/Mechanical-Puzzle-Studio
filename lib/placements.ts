@@ -1,5 +1,5 @@
 import {Piece, PieceWithId} from "~/lib/Puzzle.ts"
-import {Grid, Voxel, Orientation} from "~/lib/Grid.ts"
+import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
 
 /**
  * Defines a piece's position and orientation on the puzzle's grid.
@@ -19,7 +19,7 @@ type PlacementsByPiece = {[pieceId: string]: PiecePlacement[]}
 
 type SymmetryInfo = {
     piece: Piece,
-    allowedOrientations: Orientation[],
+    allowedOrientations: Transform[],
     reduction: number,
 }
 
@@ -29,7 +29,7 @@ type SymmetryInfo = {
 export function getPieceOrientations(
     grid: Grid,
     piece: Piece,
-    allowedOrientations: Orientation[] | null = null
+    allowedOrientations: Transform[] | null = null
 ): PiecePlacement[] {
     if(allowedOrientations === null) {
         allowedOrientations = grid.getOrientations()
@@ -37,8 +37,7 @@ export function getPieceOrientations(
 
     const placements: PiecePlacement[] = []
     for(const orientation of allowedOrientations) {
-        const transformedPiece = piece.copy()
-        transformedPiece.voxels = orientation.orientationFunc(piece.voxels)
+        const transformedPiece = piece.copy().transform(orientation)
 
         placements.push({
             originalPieceId: piece.id,
@@ -62,25 +61,13 @@ export function getPieceTranslations(
     availableVoxels = [...new Set(availableVoxels)]
     for(const toVoxel of availableVoxels) {
         const translation = grid.getTranslation(piece.voxels[0], toVoxel)
-
-        const newVoxels = []
-        for(const oldVoxel of piece.voxels) {
-            const newVoxel = grid.translate(oldVoxel, translation)
-            if(!availableVoxels.includes(newVoxel)) {
-                break
-            }
-            newVoxels.push(newVoxel)
+        const newPiece = piece.copy().transform(translation)
+        if(newPiece.voxels.every(v => availableVoxels.includes(v))) {
+            translations.push({
+                originalPieceId: piece.id,
+                transformedPiece: newPiece,
+            })
         }
-        if(newVoxels.length !== piece.voxels.length) {
-            continue
-        }
-
-        const newPiece = piece.copy()
-        newPiece.voxels = newVoxels
-        translations.push({
-            originalPieceId: piece.id,
-            transformedPiece: newPiece,
-        })
     }
     return translations
 }
@@ -93,7 +80,7 @@ export function getPiecePlacements(
     grid: Grid,
     piece: Piece,
     availableVoxels: Voxel[],
-    allowedOrientations: Orientation[] | null = null
+    allowedOrientations: Transform[] | null = null
 ): PiecePlacement[] {
     const placements = []
 
@@ -137,7 +124,7 @@ export function getPlacements(
     const placementsByPiece: PlacementsByPiece = {}
     let symmetryBroken = false
     for(const piece of pieces) {
-        let allowedOrientations: Orientation[] | null
+        let allowedOrientations: Transform[] | null
         if(
             !symmetryBroken &&
             symmetryInfo?.piece &&
@@ -169,7 +156,7 @@ function findSymmetryPiece(
     grid: Grid,
     goal: Piece,
     pieces: PieceWithId[],
-    orientations: Orientation[]
+    orientations: Transform[]
 ): SymmetryInfo | null {
     const goalGroups = getSymmetryGroups(grid, goal, orientations)
 
@@ -264,13 +251,12 @@ function findSymmetryPiece(
  * the value represents which equivilence group that orientation of the given
  * piece is in.
  */
-function getSymmetryGroups(grid: Grid, piece: Piece, orientations: Orientation[]): number[] {
+function getSymmetryGroups(grid: Grid, piece: Piece, orientations: Transform[]): number[] {
     const groups: number[] = []
     const groupPieces: Map<number, Piece> = new Map()
     for(let i=0; i<orientations.length; i++) {
         const orientation = orientations[i]
-        const orientedPiece = piece.copy()
-        orientedPiece.voxels = orientation.orientationFunc(piece.voxels)
+        const orientedPiece = piece.copy().transform(orientation)
 
         // Does this oriented piece match any previous group?
         let matchingGroup: number | null = null
@@ -324,12 +310,9 @@ function isTranslationCongruent(grid: Grid, piece1: Piece, piece2: Piece): boole
         nonFixedPiece = piece1
     }
 
-    const tempPiece = nonFixedPiece.copy()
     for(const dest of fixedPiece.voxels) {
         const translation = grid.getTranslation(nonFixedPiece.voxels[0], dest)
-        tempPiece.voxels = nonFixedPiece.voxels.map(
-            (voxel) => grid.translate(voxel, translation)
-        )
+        const tempPiece = nonFixedPiece.copy().transform(translation)
 
         if(tempPiece.equals(fixedPiece)) {
             return true

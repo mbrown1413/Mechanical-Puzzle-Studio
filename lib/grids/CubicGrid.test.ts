@@ -126,7 +126,7 @@ describe("Cubic grid", () => {
         const orientations = grid.getOrientations()
         const actualOrientations = makePlacementSet(
             orientations.map(
-                (orientation) => orientation.orientationFunc(orientationTestData.originalPiece)
+                (orientation) => orientation.mapVoxels(orientationTestData.originalPiece)
             )
         )
         const expectedOrientations = makePlacementSet(
@@ -137,13 +137,23 @@ describe("Cubic grid", () => {
 
     test("translations", () => {
         let transform = grid.getTranslation("0,0,0", "1,2,3")
-        expect(transform).toEqual([1, 2, 3])
-        expect(grid.translate("0,0,0", transform)).toEqual("1,2,3")
-        expect(grid.translate("1,2,3", transform)).toEqual("2,4,6")
+        expect(transform.offset).toEqual([1, 2, 3])
+        expect(transform.mapVoxels([
+            "0,0,0",
+            "1,2,3",
+        ])).toEqual([
+            "1,2,3",
+            "2,4,6",
+        ])
 
         transform = grid.getTranslation("3,7,1", "1,2,3")
-        expect(transform).toEqual([-2, -5, 2])
-        expect(grid.translate("0,0,0", transform)).toEqual("-2,-5,2")
-        expect(grid.translate("10,10,10", transform)).toEqual("8,5,12")
+        expect(transform.offset).toEqual([-2, -5, 2])
+        expect(transform.mapVoxels([
+            "0,0,0",
+            "10,10,10",
+        ])).toEqual([
+            "-2,-5,2",
+            "8,5,12",
+        ])
     })
 })
