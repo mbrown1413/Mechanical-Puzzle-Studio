@@ -62,7 +62,12 @@ function decompressIfNeeded(strIn: string): string {
     }
 }
 
-const metadataCache: {[storageId: string]: PuzzleMetadata[]} = {}
+let metadataCache: {[storageId: string]: PuzzleMetadata[]} = {}
+
+export function clearStorageCache() {
+    metadataCache = {}
+    _storageInstances = undefined
+}
 
 export abstract class PuzzleStorage {
     /** Unique identifier used for this storage. */

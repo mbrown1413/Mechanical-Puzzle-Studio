@@ -7,6 +7,7 @@ import {mdi} from "vuetify/iconsets/mdi"
 import App from "~/ui/App.vue"
 import HomePage from "~/ui/pages/HomePage.vue"
 import EditPuzzlePage from "~/ui/pages/EditPuzzlePage.vue"
+import {clearStorageCache} from "~/ui/storage.ts"
 
 import "~/ui/style.scss"
 import "@mdi/font/css/materialdesignicons.css"
@@ -32,6 +33,8 @@ const router = createRouter({
     ),
     routes,
 })
+
+router.afterEach(clearStorageCache)
 
 const app = createApp(App)
 app.use(router)
