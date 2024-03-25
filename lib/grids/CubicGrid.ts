@@ -122,7 +122,7 @@ export class CubicGrid extends Grid {
         return [neighbor, oppositeDir]
     }
 
-    getOrientations() {
+    getRotations() {
         // Matrices to rotate 3D voxel around X, Y or Z axis (clockwise
         // when viewed from a positive coordinate looking down at the origin).
         const rotateX = new Matrix3(
@@ -153,14 +153,14 @@ export class CubicGrid extends Grid {
 
         // Rotate each face to point in the +X direction, then rotate on the X
         // axis 0-3 times. This covers all possible orientations.
-        const orientationMatrices = []
+        const rotationMatrices = []
         for(const faceXMatrix of Object.values(faceXMatrices)) {
             for(const nXRotations of [0, 1, 2, 3]) {
                 const matrix = faceXMatrix.clone()
                 for(let i=0; i<nXRotations; i++) {
                     matrix.multiply(rotateX)
                 }
-                orientationMatrices.push(matrix)
+                rotationMatrices.push(matrix)
             }
         }
 
@@ -172,7 +172,7 @@ export class CubicGrid extends Grid {
             }
         }
 
-        return orientationMatrices.map((matrix) => {
+        return rotationMatrices.map((matrix) => {
             const mapVoxels = (voxels: Voxel[]) => {
                 const newCoordinates = voxels.map(
                     (v) => coordinateMultiply(this.voxelToCoordinate(v), matrix)

@@ -218,7 +218,7 @@ export abstract class Grid extends SerializableClass {
     /**
      * List all possible ways a set of voxels can be rotated.
      */
-    abstract getOrientations(): Transform[]
+    abstract getRotations(): Transform[]
 
     /**
      * Return a translation which would move one voxel to another, or null if

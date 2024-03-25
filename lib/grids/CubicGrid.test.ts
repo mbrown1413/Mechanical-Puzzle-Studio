@@ -14,7 +14,7 @@ export function makePlacementSet(voxelLists: Voxel[][]): Set<string> {
     return set
 }
 
-export const orientationTestData = {
+export const rotationTestData = {
     originalPiece: ["0,0,0", "1,0,0", "1,1,0"],
     allOrientations: [
         // Original +X facing in +X
@@ -122,15 +122,15 @@ describe("Cubic grid", () => {
         expect(grid.getAdjacent("5,5,5", "-Z")).toEqual(["5,5,4", "+Z"])
     })
 
-    test("orientations", () => {
-        const orientations = grid.getOrientations()
+    test("rotations", () => {
+        const rotations = grid.getRotations()
         const actualOrientations = makePlacementSet(
-            orientations.map(
-                (orientation) => orientation.mapVoxels(orientationTestData.originalPiece)
+            rotations.map(
+                (orientation) => orientation.mapVoxels(rotationTestData.originalPiece)
             )
         )
         const expectedOrientations = makePlacementSet(
-            orientationTestData.allOrientations
+            rotationTestData.allOrientations
         )
         expect(actualOrientations).toEqual(expectedOrientations)
     })

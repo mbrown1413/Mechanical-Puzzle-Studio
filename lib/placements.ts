@@ -19,7 +19,7 @@ type PlacementsByPiece = {[pieceId: string]: PiecePlacement[]}
 
 type SymmetryInfo = {
     piece: Piece,
-    allowedOrientations: Transform[],
+    allowedRotations: Transform[],
     reduction: number,
 }
 
@@ -29,15 +29,15 @@ type SymmetryInfo = {
 export function getPieceOrientations(
     grid: Grid,
     piece: Piece,
-    allowedOrientations: Transform[] | null = null
+    allowedRotations: Transform[] | null = null
 ): PiecePlacement[] {
-    if(allowedOrientations === null) {
-        allowedOrientations = grid.getOrientations()
+    if(allowedRotations === null) {
+        allowedRotations = grid.getRotations()
     }
 
     const placements: PiecePlacement[] = []
-    for(const orientation of allowedOrientations) {
-        const transformedPiece = piece.copy().transform(orientation)
+    for(const rotation of allowedRotations) {
+        const transformedPiece = piece.copy().transform(rotation)
 
         placements.push({
             originalPieceId: piece.id,
@@ -80,13 +80,13 @@ export function getPiecePlacements(
     grid: Grid,
     piece: Piece,
     availableVoxels: Voxel[],
-    allowedOrientations: Transform[] | null = null
+    allowedRotations: Transform[] | null = null
 ): PiecePlacement[] {
     const placements = []
 
     const orientationPlacements = filterTranslationCongruentPlacements(
         grid,
-        getPieceOrientations(grid, piece, allowedOrientations)
+        getPieceOrientations(grid, piece, allowedRotations)
     )
     for(const pieceOrientation of orientationPlacements) {
         const pieceTranslations = getPieceTranslations(
@@ -113,34 +113,34 @@ export function getPlacements(
     placementsByPiece: PlacementsByPiece,
     symmetryInfo: SymmetryInfo | null,
 } {
-    const orientations = grid.getOrientations()
+    const rotations = grid.getRotations()
 
     let symmetryInfo = null
     if(removeSymmetries) {
-        symmetryInfo = findSymmetryPiece(grid, goal, pieces, orientations)
+        symmetryInfo = findSymmetryPiece(grid, goal, pieces, rotations)
     }
 
     // Enumerate piece placements
     const placementsByPiece: PlacementsByPiece = {}
     let symmetryBroken = false
     for(const piece of pieces) {
-        let allowedOrientations: Transform[] | null
+        let allowedRotations: Transform[] | null
         if(
             !symmetryBroken &&
             symmetryInfo?.piece &&
             piece.id === symmetryInfo.piece.id
         ) {
-            allowedOrientations = symmetryInfo.allowedOrientations
+            allowedRotations = symmetryInfo.allowedRotations
             symmetryBroken = true
         } else {
-            allowedOrientations = null
+            allowedRotations = null
         }
 
         placementsByPiece[piece.id] = getPiecePlacements(
             grid,
             piece,
             goal.voxels,
-            allowedOrientations
+            allowedRotations
         )
     }
 
@@ -156,9 +156,9 @@ function findSymmetryPiece(
     grid: Grid,
     goal: Piece,
     pieces: PieceWithId[],
-    orientations: Transform[]
+    rotations: Transform[]
 ): SymmetryInfo | null {
-    const goalGroups = getSymmetryGroups(grid, goal, orientations)
+    const goalGroups = getSymmetryGroups(grid, goal, rotations)
 
     const pieceCounts: Map<string, number> = new Map()
     for(const piece of pieces) {
@@ -180,17 +180,17 @@ function findSymmetryPiece(
             continue
         }
 
-        const pieceGroups = getSymmetryGroups(grid, piece, orientations)
+        const pieceGroups = getSymmetryGroups(grid, piece, rotations)
 
         // An orientation is allowed if we'll actually try placing the piece in
         // that orientation, while it's covered if any of the allowed
         // orientations are equivilent to it after accounting for symmetry.
-        const allowedOrientations = Array(orientations.length).fill(false)
-        const coveredOrientations = Array(orientations.length).fill(false)
+        const allowedOrientations = Array(rotations.length).fill(false)
+        const coveredOrientations = Array(rotations.length).fill(false)
 
         let nPieceSymmetriesReduced = 0
         let nGoalSymmetriesReduced = 0
-        for(let i=0; i<orientations.length; i++) {
+        for(let i=0; i<rotations.length; i++) {
             if(coveredOrientations[i]) {
                 // We've already covered this by symmetry, we don't need to
                 // allow it.
@@ -203,7 +203,7 @@ function findSymmetryPiece(
             // Cover orientations which are equivalent in this piece.
             // We can do this because if the piece itself is symmetrical we
             // don't have to try all of its orientations.
-            for(let j=i+1; j<orientations.length; j++) {
+            for(let j=i+1; j<rotations.length; j++) {
                 if(!coveredOrientations[j] && pieceGroups[j] === pieceGroups[i]) {
                     coveredOrientations[j] = true
                     nPieceSymmetriesReduced++
@@ -213,7 +213,7 @@ function findSymmetryPiece(
             // Cover orientations which are equivalent in goal piece.
             // We can do this because applying an orientation of the goal piece
             // is the same as applying it to an individual piece.
-            for(let j=i+1; j<orientations.length; j++) {
+            for(let j=i+1; j<rotations.length; j++) {
                 if(!coveredOrientations[j] && goalGroups[j] === goalGroups[i]) {
                     coveredOrientations[j] = true
                     nGoalSymmetriesReduced++
@@ -225,7 +225,7 @@ function findSymmetryPiece(
         // Calculate this as a ratio between the number of orientations we
         // have to consider with versus without accounting for goal
         // symmetry.
-        const withoutGoalSymmetry = orientations.length - nPieceSymmetriesReduced
+        const withoutGoalSymmetry = rotations.length - nPieceSymmetriesReduced
         const withGoalSymmetry = withoutGoalSymmetry - nGoalSymmetriesReduced
         const searchSpaceReduction = withoutGoalSymmetry / withGoalSymmetry
 
@@ -236,7 +236,7 @@ function findSymmetryPiece(
         if(bestSymmetry === null || searchSpaceReduction > bestSymmetry.reduction) {
             bestSymmetry = {
                 piece: piece,
-                allowedOrientations: orientations.filter((_, i) => allowedOrientations[i]),
+                allowedRotations: rotations.filter((_, i) => allowedOrientations[i]),
                 reduction: searchSpaceReduction,
             }
         }

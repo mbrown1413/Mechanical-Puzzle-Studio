@@ -3,7 +3,7 @@ import {test, expect, describe} from "vitest"
 import {Piece} from "~/lib/Puzzle.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 import {
-    orientationTestData,
+    rotationTestData,
     makePlacementSet,
 } from "~/lib/grids/CubicGrid.test.ts"
 import {
@@ -19,14 +19,14 @@ describe("getPieceOrientations()", () => {
         const piece = new Piece(
             "piece-0",
             [3, 3, 3],
-            orientationTestData.originalPiece
+            rotationTestData.originalPiece
         )
         const orientations = getPieceOrientations(grid, piece)
         const actualOrientations = makePlacementSet(
             orientations.map((placement) => placement.transformedPiece.voxels)
         )
         const expectedOrientations = makePlacementSet(
-            orientationTestData.orientationsMinusSymmetries
+            rotationTestData.orientationsMinusSymmetries
         )
         expect(actualOrientations).toEqual(expectedOrientations)
         expect(orientations[0].originalPieceId).toEqual(piece.id)
