@@ -9,7 +9,7 @@ import Split from "split-grid"
 
 import {Puzzle} from "~lib"
 
-import {Action, ProblemSolveAction} from "~/ui/actions.ts"
+import {Action} from "~/ui/actions.ts"
 import TabLayout from "~/ui/common/TabLayout.vue"
 import PieceEditor from "~/ui/components/PieceEditor.vue"
 import SolutionDisplay from "~/ui/components/SolutionDisplay.vue"
@@ -70,9 +70,10 @@ onMounted(() => {
 
 function performAction(action: Action) {
     emit("action", action)
-    if(action instanceof ProblemSolveAction) {
-        currentTabId.value = "solutions"
-    }
+}
+
+function setUiFocus(focus: "pieces" | "problems" | "solutions") {
+    currentTabId.value = focus
 }
 </script>
 
@@ -127,7 +128,7 @@ function performAction(action: Action) {
                 v-show="currentTabId === 'problems' && selectedProblemIds.length"
                 :puzzle="puzzle"
                 :problemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
-                @action="performAction"
+                @setUiFocus="setUiFocus"
             />
             <SolutionList
                 ref="solutionList"

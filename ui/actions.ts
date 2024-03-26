@@ -1,8 +1,5 @@
 import {Voxel, Puzzle, Piece, Problem, AssemblyProblem, PuzzleFile} from "~lib"
 
-import {ProblemSolveTask} from "~/ui/tasks.ts"
-import {taskRunner} from "~/ui/globals.ts"
-
 
 function getDuplicateItemLabel(
     labelToDuplicate: string,
@@ -334,23 +331,6 @@ export class EditProblemMetadataAction extends EditItemMetadataAction<Problem> {
                 delete problem.usedPieceCounts[problem.goalPieceId]
             }
         }
-    }
-}
-
-export class ProblemSolveAction extends Action {
-    problemId: string
-
-    constructor(problemId: string) {
-        super()
-        this.problemId = problemId
-    }
-
-    toString() {
-        return `Solve problem`
-    }
-
-    perform(puzzle: Puzzle) {
-        taskRunner.submitTask(new ProblemSolveTask(puzzle, this.problemId))
     }
 }
 

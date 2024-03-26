@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import {Puzzle} from "~lib"
 
-import {ProblemSolveAction} from "~/ui/actions.ts"
+import {ProblemSolveTask} from "~/ui/tasks.ts"
+import {taskRunner} from "~/ui/globals.ts"
+
 
 const props = defineProps<{
     puzzle: Puzzle,
@@ -9,14 +11,17 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-    action: [action: ProblemSolveAction]
+    setUiFocus: [focus: "solutions"]
 }>()
 
 function startSolve() {
     if(props.problemId === null) {
         return
     }
-    emit("action", new ProblemSolveAction(props.problemId))
+    taskRunner.submitTask(
+        new ProblemSolveTask(props.puzzle, props.problemId)
+    )
+    emit("setUiFocus", "solutions")
 }
 
 </script>
