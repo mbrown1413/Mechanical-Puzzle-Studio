@@ -1,6 +1,8 @@
 import {SerializableClass, registerClass, Serializable} from "~lib"
 import {Puzzle, Problem, Solver, Solution, TaskCallbacks} from "~lib"
 
+import {saveCurrentPuzzle} from "~/ui/ActionManager.ts"
+
 /**
  * Encapsulates all of the code and data to run a specific task.
  *
@@ -87,6 +89,7 @@ export class ProblemSolveTask extends Task<Solution[]> {
     setup() {
         const problem = this.getProblem()
         problem.solutions = null
+        saveCurrentPuzzle()
     }
 
     run(callbacks: TaskCallbacks): Solution[] {
@@ -99,6 +102,7 @@ export class ProblemSolveTask extends Task<Solution[]> {
     processResult(result: Solution[]) {
         const problem = this.getProblem()
         problem.solutions = result
+        saveCurrentPuzzle()
     }
 }
 registerClass(ProblemSolveTask)

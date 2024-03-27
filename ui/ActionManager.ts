@@ -1,13 +1,37 @@
 import {Ref, reactive} from "vue"
 import {diff, patch as doPatch, unpatch as doUnpatch, Delta} from "jsondiffpatch"
 
-import {PuzzleFile, serialize, deserialize} from "~lib"
+import {PuzzleFile, serialize, deserialize, SerializedData} from "~lib"
 import {Action} from "~/ui/actions.ts"
 import {PuzzleStorage} from "~/ui/storage.ts"
 
 type PerformedAction = {
     action: Action,
     patch: Delta,
+}
+
+let actionManager: ActionManager | null = null
+
+export function setActionManager(value: ActionManager) {
+    actionManager = value
+}
+
+export function clearActionManager() {
+    actionManager = null
+}
+
+/**
+ * Save the puzzle managed by the current global action manager.
+ * 
+ * Most edits to a puzzle should be done by emitting an action, however, there
+ * are some times when it makes more sense to edit the `PuzzleFile` directly.
+ * In those cases, this function can be called immediately after the edits to
+ * trigger a save.
+ */
+export function saveCurrentPuzzle() {
+    if(actionManager) {
+        actionManager.save()
+    }
 }
 
 /**
@@ -48,9 +72,7 @@ export class ActionManager {
         action.perform(this.puzzleFile.puzzle, this.puzzleFile)
         const after = serialize(this.puzzleFile)
 
-        if(!this.storage.readOnly) {
-            this.storage.save(this.puzzleFile, JSON.stringify(after))
-        }
+        this.save(after)
 
         const patch = diff(before, after)
         this.performedActions.push({action, patch})
@@ -66,6 +88,13 @@ export class ActionManager {
         }
         this.puzzleFile = deserialize(serialized)
 
+        this.save(serialized)
+    }
+
+    save(serialized?: SerializedData) {
+        if(serialized === undefined) {
+            serialized = serialize(this.puzzleFile)
+        }
         if(!this.storage.readOnly) {
             this.storage.save(this.puzzleFile, JSON.stringify(serialized))
         }

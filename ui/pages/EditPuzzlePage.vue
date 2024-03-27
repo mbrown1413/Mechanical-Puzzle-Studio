@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {computed, ref, Ref, watch, watchEffect, onErrorCaptured} from "vue"
+import {computed, ref, Ref, watch, watchEffect, onErrorCaptured, onUnmounted} from "vue"
 
 import {PuzzleFile} from "~lib"
 
 import {taskRunner, title} from "~/ui/globals.ts"
+import {setActionManager, clearActionManager} from "~/ui/ActionManager.ts"
 import {getStorageInstances, PuzzleNotFoundError} from "~/ui/storage.ts"
 import {ActionManager} from "~/ui/ActionManager.ts"
 import {Action, DuplicatePieceAction, DuplicateProblemAction} from "~/ui/actions.ts"
@@ -22,7 +23,12 @@ const props = defineProps<{
 
 const storage = computed(() => getStorageInstances()[props.storageId])
 const puzzleFile: Ref<PuzzleFile | null> = ref(null)
-const editManager = new ActionManager(storage, puzzleFile)
+const actionManager = new ActionManager(storage, puzzleFile)
+
+setActionManager(actionManager)
+onUnmounted(() => {
+    clearActionManager()
+})
 
 type PuzzleErrorInfo = {
     title: string,
@@ -88,7 +94,7 @@ function setPuzzleFile(ignoreErrors=false) {
 
 function performAction(action: Action) {
     try {
-        editManager.performAction(action)
+        actionManager.performAction(action)
     } catch(e) {
         const msg = `Error performing action: ${action.toString()}`
         errorShow.value = true
@@ -185,23 +191,23 @@ const menuItems: {[name: string]: MenuItem} = {
     },
     undo: {
         text: () => {
-            const action = editManager.getUndoAction()
+            const action = actionManager.getUndoAction()
             const actionString = action ? ` "${action.toString()}"` : ""
             return "Undo" + actionString
         },
         icon: "mdi-undo",
-        perform: () => editManager.undo(),
-        enabled: () => editManager.canUndo(),
+        perform: () => actionManager.undo(),
+        enabled: () => actionManager.canUndo(),
     },
     redo: {
         text: () => {
-            const action = editManager.getRedoAction()
+            const action = actionManager.getRedoAction()
             const actionString = action ? ` "${action.toString()}"` : ""
             return "Redo" + actionString
         },
         icon: "mdi-redo",
-        perform: () => editManager.redo(),
-        enabled: () => editManager.canRedo(),
+        perform: () => actionManager.redo(),
+        enabled: () => actionManager.canRedo(),
     },
     duplicate: {
         text: () => {
@@ -226,7 +232,7 @@ const menuItems: {[name: string]: MenuItem} = {
                 )
             }
             if(action) {
-                editManager.performAction(action)
+                actionManager.performAction(action)
             }
         },
         enabled: () => {
