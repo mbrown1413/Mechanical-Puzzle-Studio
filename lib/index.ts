@@ -1,6 +1,7 @@
 export * from "./colors.ts"
 export * from "./Grid.ts"
 export * from "./grids/index.ts"
+export * from "./Piece.ts"
 export * from "./Problem.ts"
 export * from "./Puzzle.ts"
 export * from "./PuzzleFile.ts"

@@ -1,5 +1,6 @@
 import {AssemblyProblem, Problem} from "~/lib/Problem.ts"
-import {Puzzle, Piece} from "~/lib/Puzzle.ts"
+import {Puzzle} from "~/lib/Puzzle.ts"
+import {Piece} from "~/lib/Piece.ts"
 import {PiecePlacement, getPlacements} from "~/lib/placements.ts"
 import {AssemblySolution, Solution} from "~/lib/Solution.ts"
 import {TaskCallbacks, voidTaskCallbacks} from "~/lib/types.ts"

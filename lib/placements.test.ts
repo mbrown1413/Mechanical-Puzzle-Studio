@@ -1,6 +1,6 @@
 import {test, expect, describe} from "vitest"
 
-import {Piece} from "~/lib/Puzzle.ts"
+import {Piece} from "~/lib/Piece.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 import {
     rotationTestData,

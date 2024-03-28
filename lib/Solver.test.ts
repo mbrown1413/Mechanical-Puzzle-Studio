@@ -1,6 +1,7 @@
 import {test, expect, describe} from "vitest"
 
-import {Piece, Puzzle} from "~/lib/Puzzle.ts"
+import {Puzzle} from "~/lib/Puzzle.ts"
+import {Piece} from "~/lib/Piece.ts"
 import {Voxel} from "~/lib/Grid.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 import {AssemblyProblem} from "~/lib/Problem"

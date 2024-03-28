@@ -1,4 +1,4 @@
-import {Piece, PieceWithId} from "~/lib/Puzzle.ts"
+import {Piece, PieceWithId} from "~/lib/Piece.ts"
 import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
 
 /**
