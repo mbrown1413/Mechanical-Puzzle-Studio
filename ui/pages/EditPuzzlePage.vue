@@ -15,6 +15,7 @@ import Modal from "~/ui/common/Modal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
 import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
 import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
+import {nextTick} from "vue"
 
 const props = defineProps<{
     storageId: string,
@@ -45,11 +46,13 @@ const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
 const saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null> = ref(null)
 
 watch(puzzleError, () => {
-    if(puzzleError.value === null) {
-        puzzleErrorModal.value?.close()
-    } else {
-        puzzleErrorModal.value?.open()
-    }
+    nextTick(() => {
+        if(puzzleError.value === null) {
+            puzzleErrorModal.value?.close()
+        } else {
+            puzzleErrorModal.value?.open()
+        }
+    })
 })
 
 watchEffect(() => {
@@ -61,6 +64,15 @@ setPuzzleFile()
 function setPuzzleFile(ignoreErrors=false) {
     puzzleError.value = null
     puzzleFile.value = null
+    if(storage.value === undefined) {
+        puzzleError.value = {
+            title: "Storage not found",
+            errorMessage: `The storage ID "${props.storageId}" does not exist in this browser.`,
+            userMessage: "Return home to select another puzzle.",
+            recoverable: false,
+        }
+        return
+    }
     try {
         puzzleFile.value = storage.value.get(props.puzzleName, ignoreErrors)
     } catch(e) {
