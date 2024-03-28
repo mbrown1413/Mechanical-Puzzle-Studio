@@ -79,6 +79,33 @@ export class Piece extends SerializableClass {
         return true
     }
 
+    addVoxel(...toAdd: Voxel[]) {
+        this.voxels = [...new Set(
+            [...this.voxels, ...toAdd]
+        )]
+    }
+
+    removeVoxel(...toRemove: Voxel[]) {
+        this.voxels = this.voxels.filter(
+            v => !toRemove.includes(v)
+        )
+
+        // Remove attributes of reoved voxels
+        for(const [attrName, attrValues] of Object.entries(this.voxelAttributes || {})) {
+            for(const voxel of Object.keys(attrValues)) {
+                if(toRemove.includes(voxel)) {
+                    delete attrValues[voxel]
+                }
+            }
+            if(Object.keys(attrValues).length === 0 && this.voxelAttributes) {
+                delete this.voxelAttributes[attrName]
+            }
+        }
+        if(this.voxelAttributes && Object.keys(this.voxelAttributes).length === 0) {
+            this.voxelAttributes = undefined
+        }
+    }
+
     transform(transform: Transform): this {
         const newVoxels = transform.mapVoxels(this.voxels)
 
@@ -106,6 +133,9 @@ export class Piece extends SerializableClass {
     }
 
     setVoxelAttribute(attribute: string, voxel: Voxel, value: AttributeValue) {
+        if(!this.voxels.includes(voxel)) {
+            return
+        }
         if(!this.voxelAttributes) {
             this.voxelAttributes = {}
         }

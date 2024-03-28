@@ -240,13 +240,8 @@ export class EditPieceAction extends Action {
             throw new Error(`Piece with ID ${this.pieceId} not found`)
         }
 
-        piece.voxels = piece.voxels.filter(
-            (voxel) => !this.removeVoxels.includes(voxel)
-        )
-        piece.voxels.push(...this.addVoxels)
-
-        // Remove duplicates
-        piece.voxels = [...new Set(piece.voxels)]
+        piece.addVoxel(...this.addVoxels)
+        piece.removeVoxel(...this.removeVoxels)
     }
 }
 

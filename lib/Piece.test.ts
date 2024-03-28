@@ -6,6 +6,54 @@ import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 const grid = new CubicGrid()
 
 describe("Piece", () => {
+    test("edit voxels", () => {
+        const piece = new Piece("piece-0", [])
+        expect(piece.voxels).toEqual([])
+
+        piece.addVoxel("0,0,0")
+        expect(piece.voxels).toEqual(["0,0,0"])
+
+        piece.addVoxel("0,0,0")
+        expect(piece.voxels).toEqual(["0,0,0"])
+
+        piece.addVoxel("1,0,0")
+        expect(piece.voxels).toEqual(["0,0,0", "1,0,0"])
+
+        piece.removeVoxel("0,0,0")
+        expect(piece.voxels).toEqual(["1,0,0"])
+    })
+
+    test("adding voxel attribute to voxel that doesn't exist", () => {
+        const piece = new Piece("piece-0", [])
+        piece.setVoxelAttribute("foo", "0,0,0", true)
+        expect(piece.voxelAttributes).toEqual(undefined)
+    })
+
+    test("voxel attributes removed when voxel removed", () => {
+        const piece = new Piece("piece-0", [])
+        piece.addVoxel("0,0,0")
+        piece.addVoxel("1,0,0")
+        piece.addVoxel("2,0,0")
+
+        piece.setVoxelAttribute("foo", "0,0,0", true)
+        expect(piece.voxelAttributes).toEqual({foo: {"0,0,0": true}})
+
+        piece.setVoxelAttribute("foo", "1,0,0", true)
+        expect(piece.voxelAttributes).toEqual({foo: {"0,0,0": true, "1,0,0": true}})
+
+        piece.setVoxelAttribute("bar", "2,0,0", true)
+        expect(piece.voxelAttributes).toEqual({foo: {"0,0,0": true, "1,0,0": true}, bar: {"2,0,0": true}})
+
+        piece.removeVoxel("0,0,0")
+        expect(piece.voxelAttributes).toEqual({foo: {"1,0,0": true}, bar: {"2,0,0": true}})
+
+        piece.removeVoxel("1,0,0")
+        expect(piece.voxelAttributes).toEqual({bar: {"2,0,0": true}})
+
+        piece.removeVoxel("2,0,0")
+        expect(piece.voxelAttributes).toEqual(undefined)
+    })
+
     test("copy", () => {
         const piece0 = new Piece("piece-0", [])
         const copy0 = piece0.copy()
