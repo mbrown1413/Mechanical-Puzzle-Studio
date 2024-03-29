@@ -270,3 +270,143 @@ describe("AssemblySolver", () => {
         `)
     })
 })
+
+describe("AssemblySolver optional voxels", () => {
+
+    test("voxel count sanity-check", () => {
+        const puzzle = new Puzzle(new CubicGrid())
+        const solver = new AssemblySolver()
+
+        const goal = puzzle.addPiece(new Piece(
+            "goal",
+            puzzle.grid.getDefaultPieceBounds(),
+            [
+                "0,1,0", "1,1,0",
+                "0,0,0", "1,0,0",
+            ]
+        ))
+        puzzle.addPiece(new Piece(
+            "piece-1",
+            puzzle.grid.getDefaultPieceBounds(),
+            ["0,1,0"]
+        ))
+        const problem = new AssemblyProblem("problem")
+        problem.goalPieceId = "goal"
+        goal.setVoxelAttribute("optional", "1,1,0", true)
+
+        problem.usedPieceCounts["piece-1"] = 2
+        expect(() => {
+            solver.solve(puzzle, problem)
+        }).toThrowErrorMatchingInlineSnapshot(`
+          [Error: Number of voxels in pieces don't add up to the voxels in the goal piece.
+
+          Voxels in goal: 3 to 4
+          Voxels in pieces: 2]
+        `)
+
+        problem.usedPieceCounts["piece-1"] = 3
+        solver.solve(puzzle, problem)
+
+        problem.usedPieceCounts["piece-1"] = 4
+        solver.solve(puzzle, problem)
+
+        problem.usedPieceCounts["piece-1"] = 5
+        expect(() => {
+            solver.solve(puzzle, problem)
+        }).toThrowErrorMatchingInlineSnapshot(`
+          [Error: Number of voxels in pieces don't add up to the voxels in the goal piece.
+
+          Voxels in goal: 3 to 4
+          Voxels in pieces: 5]
+        `)
+    })
+
+    test("Simple optional voxel problem", () => {
+        const puzzle = new Puzzle(new CubicGrid())
+        const solver = new AssemblySolver()
+
+        const goal = puzzle.addPiece(new Piece(
+            "goal",
+            puzzle.grid.getDefaultPieceBounds(),
+            [
+                "0,1,0", "1,1,0",
+                "0,0,0", "1,0,0",
+            ]
+        ))
+        goal.setVoxelAttribute("optional", "1,1,0", true)
+        puzzle.addPiece(new Piece(
+            "piece-1",
+            puzzle.grid.getDefaultPieceBounds(),
+            [
+                "0,1,0", "1,1,0",
+                "0,0,0",
+            ]
+        ))
+        const problem = new AssemblyProblem("problem")
+        problem.goalPieceId = "goal"
+        problem.usedPieceCounts["piece-1"] = 1
+        const solutions = solver.solve(puzzle, problem)
+        expect(solutions.length).toEqual(1)
+        assertSolutionEqual(solutions[0], {
+            "piece-1": [["0,0,0", "1,0,0", "0,1,0"]],
+        })
+    })
+
+    test("Complex optional voxel problem", () => {
+        const puzzle = new Puzzle(new CubicGrid())
+        const solver = new AssemblySolver()
+
+        const goal = puzzle.addPiece(new Piece(
+            "goal",
+            puzzle.grid.getDefaultPieceBounds(),
+            [
+                "0,3,0", "1,3,0", "2,3,0", "3,3,0",
+                "0,2,0", "1,2,0", "2,2,0", "3,2,0",
+                "0,1,0", "1,1,0", "2,1,0", "3,1,0",
+                "0,0,0", "1,0,0", "2,0,0", "3,0,0",
+            ]
+        ))
+        goal.setVoxelAttribute("optional", "1,1,0", true)
+        goal.setVoxelAttribute("optional", "2,1,0", true)
+        goal.setVoxelAttribute("optional", "1,2,0", true)
+        goal.setVoxelAttribute("optional", "2,2,0", true)
+
+        puzzle.addPiece(new Piece(
+            "piece-1",
+            puzzle.grid.getDefaultPieceBounds(),
+            [
+                "0,1,0", "1,1,0", "2,1,0",
+                "0,0,0", "1,0,0", "2,0,0",
+            ]
+        ))
+        puzzle.addPiece(new Piece(
+            "piece-2",
+            puzzle.grid.getDefaultPieceBounds(),
+            [
+                         "1,1,0",
+                "0,0,0", "1,0,0", "2,0,0", "3,0,0",
+            ]
+        ))
+        puzzle.addPiece(new Piece(
+            "piece-3",
+            puzzle.grid.getDefaultPieceBounds(),
+            [
+                "0,1,0",
+                "0,0,0", "1,0,0", "2,0,0",
+            ]
+        ))
+
+        const problem = new AssemblyProblem("problem")
+        problem.goalPieceId = "goal"
+        problem.usedPieceCounts["piece-1"] = 1
+        problem.usedPieceCounts["piece-2"] = 1
+        problem.usedPieceCounts["piece-3"] = 1
+        const solutions = solver.solve(puzzle, problem)
+        expect(solutions.length).toEqual(1)
+        assertSolutionEqual(solutions[0], {
+            "piece-1": [["3,3,0", "3,2,0", "3,1,0", "2,3,0", "2,2,0", "2,1,0"]],
+            "piece-2": [["1,1,0", "0,0,0", "1,0,0", "2,0,0", "3,0,0"]],
+            "piece-3": [["1,3,0", "0,3,0", "0,2,0", "0,1,0"]],
+        })
+    })
+})

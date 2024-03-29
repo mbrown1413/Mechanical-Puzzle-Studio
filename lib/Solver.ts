@@ -13,6 +13,33 @@ export abstract class Solver {
     ): Solution[]
 }
 
+/**
+ * We don't exactly set up a proper cover problem here. We do have a
+ * set of rows, each corresponding to a placement of one piece, but
+ * there are only columns for each voxel, and no columns for each
+ * piece. Instead, rows are pre-grouped based on the piece they belong
+ * to. We'll only choose one row for each piece.
+ *
+ * Another way to think about this is that we have a set of placements,
+ * one set for each piece, and we're going through the cartesian
+ * product of those sets. I'm calling this a "cover" problem, since
+ * internally each piece placement is converted into a row of booleans
+ * which should not overlap in a valid solution.
+ */
+type GroupedCoverProblem = {
+    pieces: Piece[],
+
+    // placementsByPieceIdx[pieceIdx][i] - The i-th placement of piece at `pieceIdx`
+    placementsByPieceIdx: PiecePlacement[][],
+
+    // coverRowsByPieceIdx[pieceIdx][i] - The i-th cover row of piece at `pieceIdx`
+    coverRowsByPieceIdx: boolean[][][],
+
+    // The first `nRequiredCols` columns must be covered. Columns after this
+    // are optional.
+    nRequiredCols: number,
+}
+
 export class AssemblySolver extends Solver {
     removeSymmetries: boolean
 
@@ -26,33 +53,15 @@ export class AssemblySolver extends Solver {
         problem: Problem,
         callbacks: TaskCallbacks = voidTaskCallbacks,
     ): AssemblySolution[] {
-        // We don't exactly set up a proper cover problem here. We do have a
-        // set of rows, each corresponding to a placement of one piece, but
-        // there are only columns for each voxel, and no columns for each
-        // piece. Instead, rows are pre-sorted based on the piece they belong
-        // to. We'll only choose one row for each piece.
-        //
-        // Another way to think about this is that we have a set of placements,
-        // one set for each piece, and we're going through the cartesian
-        // product of those sets. I'm calling this a "cover" problem, since
-        // internally each piece placement is converted into a row of booleans
-        // which should not overlap in a valid solution.
-
-        // `placementsByPieceIdx[pieceIdx][i]` - The `i`th placement of piece at `pieceIdx`
-        // `coverRowsByPieceIdx[pieceIdx][i]` - The `i`th cover row of piece at `pieceIdx`
-        const {
-            pieces,
-            placementsByPieceIdx,
-            coverRowsByPieceIdx
-        } = this.getPlacementRows(puzzle, problem, callbacks)
+        const coverProblem = this.getCoverProblem(puzzle, problem, callbacks)
 
         callbacks.logCallback(
-            `Number of placements options for each piece: ${placementsByPieceIdx.map(placements => placements.length).join(", ")}`
+            `Number of placements options for each piece: ${coverProblem.placementsByPieceIdx.map(placements => placements.length).join(", ")}`
         )
 
-        for(const [i, coverRows] of coverRowsByPieceIdx.entries()) {
+        for(const [i, coverRows] of coverProblem.coverRowsByPieceIdx.entries()) {
             if(coverRows.length === 0) {
-                const pieceLabel = pieces[i].label
+                const pieceLabel = coverProblem.pieces[i].label
                 throw new Error(
                     "No solutions because piece cannot be placed anywhere in goal.\n\n" +
                     `Piece label: ${pieceLabel}`
@@ -60,13 +69,13 @@ export class AssemblySolver extends Solver {
             }
         }
 
-        const solutions = this.solveCover(pieces, coverRowsByPieceIdx, callbacks)
+        const solutions = this.solveCover(coverProblem, callbacks)
 
         const ret = []
         for(const pickedRows of solutions) {
             ret.push(new AssemblySolution(
                 pickedRows.map(
-                    (placementIdx, pieceIdx) => placementsByPieceIdx[pieceIdx][placementIdx]
+                    (placementIdx, pieceIdx) => coverProblem.placementsByPieceIdx[pieceIdx][placementIdx]
                 )
             ))
         }
@@ -75,18 +84,27 @@ export class AssemblySolver extends Solver {
 
     voxelCountCheck(pieces: Piece[], goal: Piece): string | null {
         const countVoxels = (p: Piece) => new Set(p.voxels).size
-        const pieceVoxelCount = pieces.map(countVoxels).reduce((a, b) => a + b, 0)
-        const goalVoxelCount = countVoxels(goal)
+        const countOptionalVoxels = (p: Piece) => {
+            const optionalAttr = (p.voxelAttributes || {})["optional"] || {}
+            const variable = p.voxels.filter(v => optionalAttr[v] === true)
+            return new Set(variable).size
+        }
 
-        if(pieceVoxelCount !== goalVoxelCount) {
+        const pieceCount = pieces.map(countVoxels).reduce((a, b) => a + b, 0)
+        const goalMax = countVoxels(goal)
+        const goalOptional = countOptionalVoxels(goal)
+        const goalMin = goalMax - goalOptional
+
+        if(pieceCount < goalMin || pieceCount > goalMax) {
+            const goalCountMsg = goalOptional === 0 ? goalMax : `${goalMin} to ${goalMax}`
             return "Number of voxels in pieces don't add up to the voxels in the goal piece.\n\n" +
-                `Voxels in goal: ${goalVoxelCount}\n` +
-                `Voxels in pieces: ${pieceVoxelCount}`
+                `Voxels in goal: ${goalCountMsg}\n` +
+                `Voxels in pieces: ${pieceCount}`
         }
         return null
     }
 
-    getPlacementRows(puzzle: Puzzle, problem: Problem, {logCallback}: TaskCallbacks) {
+    getCoverProblem(puzzle: Puzzle, problem: Problem, {logCallback}: TaskCallbacks) {
         if(!(problem instanceof AssemblyProblem)) {
             throw new Error("Assembly Solver can only solve Assembly Problems")
         }
@@ -141,6 +159,22 @@ export class AssemblySolver extends Solver {
         }
 
         const goalVoxels = [...new Set(goal.voxels)]
+        const voxelIsOptional = (goal.voxelAttributes || {}).optional || {}
+
+        // Sort optional voxels last. These are our cover columns.
+        goalVoxels.sort((v1, v2) => {
+            const v1Optional = voxelIsOptional[v1]
+            const v2Optional = voxelIsOptional[v2]
+            if(v1Optional && v2Optional) {
+                return 0
+            } else if(v2Optional) {
+                return -1
+            } else if(v1Optional) {
+                return 1
+            } else {
+                return 0
+            }
+        })
 
         const placementsByPieceIdx: PiecePlacement[][] = []
         const coverRowsByPieceIdx: boolean[][][] = []
@@ -157,19 +191,24 @@ export class AssemblySolver extends Solver {
             placementsByPieceIdx.push(placements)
             coverRowsByPieceIdx.push(coverRows)
         }
-        return {pieces, placementsByPieceIdx, coverRowsByPieceIdx}
+
+        const nRequiredCols = goalVoxels.filter(v => !voxelIsOptional[v]).length
+        return {pieces, placementsByPieceIdx, coverRowsByPieceIdx, nRequiredCols}
     }
 
     solveCover(
-        pieces: Piece[],
-        coverRowsByPieceIdx: boolean[][][],
+        {
+            pieces,
+            coverRowsByPieceIdx,
+            nRequiredCols,
+        }: GroupedCoverProblem,
         {progressCallback}: TaskCallbacks,
     ): number[][] {
         const solutions: number[][] = []
         const nCols = coverRowsByPieceIdx[0][0].length
 
         /**
-         * Do the set of rows exactly cover the columns?
+         * Do the set of rows exactly cover the required columns?
          *
          * Note that we make the assumption that none of the rows have
          * conflicting columns already, so we can just count the columns which
@@ -178,13 +217,13 @@ export class AssemblySolver extends Solver {
         function coversExactly(rows: boolean[][]): boolean {
             let nPicked = 0
             for(const row of rows) {
-                for(const col of row) {
-                    if(col) {
+                for(let colNum=0; colNum<nRequiredCols; colNum++) {
+                    if(row[colNum]) {
                         nPicked++
                     }
                 }
             }
-            return nPicked === nCols
+            return nPicked === nRequiredCols
         }
 
         /**
@@ -253,6 +292,11 @@ export class AssemblySolver extends Solver {
 
             if(coversExactly(rowsPicked)) {
                 solutions.push([...rowIndexes])
+                continue
+            }
+
+            if(depth >= coverRowsByPieceIdx.length) {
+                // We've run out of pieces to place
                 continue
             }
 
