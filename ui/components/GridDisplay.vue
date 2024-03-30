@@ -20,11 +20,13 @@ const props = withDefaults(
         boundsSizing: "voxels" | "pieceBounds",
         size?: "fill" | number,
         highlightBy?: "voxel" | "piece",
+        showTools?: boolean,
     }>(), {
         displayOnly: false,
         noLayers: false,
         size: "fill",
         highlightBy: "voxel",
+        showTools: false,
     }
 )
 
@@ -103,7 +105,7 @@ useGridMouseComposible(
 <template>
     <div class="grid-display" :style="pieceDisplayStyle">
         <div class="draw-element" ref="drawElement"></div>
-        <div class="controls" v-if="!displayOnly">
+        <div class="overlay controls" v-if="!displayOnly">
             <VSelect
                     v-model="viewpoint"
                     :items="viewpointOptions"
@@ -123,6 +125,9 @@ useGridMouseComposible(
                     tick-size="4"
             />
         </div>
+        <div class="overlay tools" v-if="showTools">
+            <slot name="tools"></slot>
+        </div>
     </div>
 </template>
 
@@ -138,15 +143,26 @@ useGridMouseComposible(
     left: 0;
     right: 0;
 }
-.controls {
+
+.overlay {
     position: absolute;
-    top: 0;
-    left: 0;
     z-index: 1001;  /* Greater than the MultiRenderer <canvas> */
     background: rgba(255, 255, 255, 0.5);
+}
+
+.controls {
+    top: 0;
+    left: 0;
     border-bottom-right-radius: 10px;
 }
 .controls > * {
     margin: 0 auto;
+}
+
+.tools {
+    top: 0;
+    right: 0;
+    padding: 0.5em;
+    border-bottom-left-radius: 10px;
 }
 </style>

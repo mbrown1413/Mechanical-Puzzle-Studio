@@ -216,32 +216,61 @@ export class DeletePiecesAction extends DeleteItemsAction {
 
 export class EditPieceAction extends Action {
     pieceId: string
-    addVoxels: Voxel[]
-    removeVoxels: Voxel[]
+    voxelsToAdd: Voxel[]
+    voxelsToRemove: Voxel[]
+    optionalVoxels: boolean
 
     constructor(
         pieceId: string,
         addVoxels: Voxel[],
         removeVoxels: Voxel[],
+        optionalVoxels=false,
     ) {
         super()
         this.pieceId = pieceId
-        this.addVoxels = addVoxels
-        this.removeVoxels = removeVoxels
+        this.voxelsToAdd = addVoxels
+        this.voxelsToRemove = removeVoxels
+        this.optionalVoxels = optionalVoxels
     }
 
     toString() {
         return "Edit piece"
     }
 
-    perform(puzzle: Puzzle) {
+    getPiece(puzzle: Puzzle): Piece {
         const piece = puzzle.getPiece(this.pieceId)
         if(piece === null) {
             throw new Error(`Piece with ID ${this.pieceId} not found`)
         }
+        return piece
+    }
 
-        piece.addVoxel(...this.addVoxels)
-        piece.removeVoxel(...this.removeVoxels)
+    perform(puzzle: Puzzle) {
+        const piece = this.getPiece(puzzle)
+        this.performOnPiece(piece)
+    }
+
+    performOnPiece(piece: Piece) {
+        piece.addVoxel(...this.voxelsToAdd)
+        piece.removeVoxel(...this.voxelsToRemove)
+
+        for(const voxel of this.voxelsToAdd) {
+            piece.setVoxelAttribute(
+                "optional",
+                voxel,
+                this.optionalVoxels ? true : undefined
+            )
+        }
+    }
+
+    /** Would this action actually modify the piece? */
+    wouldModify(puzzle: Puzzle): boolean {
+        const piece = this.getPiece(puzzle)
+
+        const modifiedPiece = piece.copy()
+        this.performOnPiece(modifiedPiece)
+
+        return !piece.equals(modifiedPiece)
     }
 }
 

@@ -69,6 +69,8 @@ export function useGridDrawComposible(
         return piece === undefined ? null : piece
     }
 
+    const optionalVoxelTexture = makeOptionalVoxelTexture()
+
     /* Call this when things like camera and window size change. */
     function render(renderer: THREE.WebGLRenderer) {
         const width = element.value.offsetWidth
@@ -154,6 +156,7 @@ export function useGridDrawComposible(
         highlighted: boolean,
         highlightBy: "voxel" | "piece",
     ): THREE.Object3D {
+        const optionalVoxel = piece?.getVoxelAttribute("optional", voxelInfo.voxel)
         const key = JSON.stringify([
             "solid",
             voxelInfo.voxel,
@@ -161,6 +164,7 @@ export function useGridDrawComposible(
             inLayer,
             highlighted,
             highlightBy,
+            optionalVoxel,
         ])
         let obj = objectCache.get(key)
         if(obj !== null) {
@@ -174,17 +178,29 @@ export function useGridDrawComposible(
         }
 
         const renderOrder = getRenderOrder(inLayer, highlighted)
+
+        let texture: THREE.Texture | null = null
+        if(optionalVoxel) {
+            texture = optionalVoxelTexture
+        }
+
         const material = new THREE.MeshPhongMaterial({
             color: color,
             side: THREE.DoubleSide,
             transparent: !inLayer,
             opacity: inLayer ? 1 : 0.5,
             depthWrite: inLayer,
+            map: texture,
         })
 
         obj = new THREE.Object3D()
         for(const polygon of Object.values(voxelInfo.sidePolygons)) {
             const geometry = new ConvexGeometry(polygon)
+
+            // ConvexGeometry doesn't set UV values. This is a hack until we
+            // can do something better.
+            geometry.setAttribute("uv", geometry.getAttribute("position"))
+
             const mesh = new THREE.Mesh(geometry, material)
             mesh.renderOrder = renderOrder
             obj.add(mesh)
@@ -402,4 +418,19 @@ function getAllGridVertices(grid: Grid, bounds: Bounds): Vector3[] {
         }
     }
     return points
+}
+
+function makeOptionalVoxelTexture() {
+    const dark = [255, 255, 255, 0]
+    const light = [0, 0, 0, 0]
+    const buffer = new Uint8Array([
+        ...dark, ...light,
+        ...light, ...dark,
+    ])
+    const texture = new THREE.DataTexture(buffer, 2, 2, THREE.RGBAFormat)
+    texture.repeat.set(4, 4)
+    texture.wrapS = THREE.RepeatWrapping
+    texture.wrapT = THREE.RepeatWrapping
+    texture.needsUpdate = true
+    return texture
 }
