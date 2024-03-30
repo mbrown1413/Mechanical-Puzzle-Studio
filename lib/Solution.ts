@@ -1,5 +1,5 @@
 import {PiecePlacement} from "~/lib/placements.ts"
-import {SerializableClass, registerClass} from "~/lib/serialize.ts"
+import {SerializableClass, registerClass, clone} from "~/lib/serialize.ts"
 
 export abstract class Solution extends SerializableClass { }
 
@@ -9,7 +9,7 @@ export class AssemblySolution extends Solution {
     constructor(placements: PiecePlacement[]) {
         super()
         this.placements = placements.map((placement) =>
-            structuredClone(placement)
+            clone(placement)
         )
     }
 }

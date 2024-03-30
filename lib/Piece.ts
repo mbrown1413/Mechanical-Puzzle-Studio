@@ -1,4 +1,4 @@
-import {SerializableClass, deserialize, registerClass, serialize} from "~/lib/serialize.ts"
+import {SerializableClass, clone, registerClass} from "~/lib/serialize.ts"
 import {Bounds, Voxel, Transform} from "~/lib/Grid.ts"
 
 export type PieceWithId = Piece & {id: string}
@@ -34,7 +34,7 @@ export class Piece extends SerializableClass {
     }
 
     copy(): Piece {
-        const coppied = deserialize<Piece>(serialize(this), "Piece")
+        const coppied = clone(this)
         coppied.id = null
         return coppied
     }
