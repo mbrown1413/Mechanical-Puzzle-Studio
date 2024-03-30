@@ -90,19 +90,11 @@ export class Piece extends SerializableClass {
             v => !toRemove.includes(v)
         )
 
-        // Remove attributes of reoved voxels
-        for(const [attrName, attrValues] of Object.entries(this.voxelAttributes || {})) {
-            for(const voxel of Object.keys(attrValues)) {
-                if(toRemove.includes(voxel)) {
-                    delete attrValues[voxel]
-                }
+        // Remove attributes of removed voxels
+        for(const attrName of Object.keys(this.voxelAttributes || {})) {
+            for(const voxel of toRemove) {
+                this.unsetVoxelAttribute(attrName, voxel)
             }
-            if(Object.keys(attrValues).length === 0 && this.voxelAttributes) {
-                delete this.voxelAttributes[attrName]
-            }
-        }
-        if(this.voxelAttributes && Object.keys(this.voxelAttributes).length === 0) {
-            this.voxelAttributes = undefined
         }
     }
 
@@ -132,7 +124,21 @@ export class Piece extends SerializableClass {
         return this
     }
 
-    setVoxelAttribute(attribute: string, voxel: Voxel, value: AttributeValue) {
+    getVoxelAttribute(attribute: string, voxel: Voxel): AttributeValue | undefined {
+        if(this.voxelAttributes === undefined) { return undefined }
+        if(this.voxelAttributes[attribute] === undefined) { return undefined }
+        return this.voxelAttributes[attribute][voxel]
+    }
+
+    /**
+     * Set attribute for the given voxel, or unset if value is undefined.
+     */
+    setVoxelAttribute(attribute: string, voxel: Voxel, value: AttributeValue | undefined) {
+        if(value === undefined) {
+            this.unsetVoxelAttribute(attribute, voxel)
+            return
+        }
+
         if(!this.voxels.includes(voxel)) {
             return
         }
@@ -143,6 +149,19 @@ export class Piece extends SerializableClass {
             this.voxelAttributes[attribute] = {}
         }
         this.voxelAttributes[attribute][voxel] = value
+    }
+
+    unsetVoxelAttribute(attribute: string, voxel: Voxel) {
+        if(this.voxelAttributes === undefined) { return }
+        delete this.voxelAttributes[attribute][voxel]
+
+        if(Object.keys(this.voxelAttributes[attribute]).length === 0) {
+            delete this.voxelAttributes[attribute]
+
+            if(Object.keys(this.voxelAttributes).length === 0) {
+                this.voxelAttributes = undefined
+            }
+        }
     }
 }
 
