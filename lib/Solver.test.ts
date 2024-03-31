@@ -366,10 +366,20 @@ describe("AssemblySolver optional voxels", () => {
                 "0,0,0", "1,0,0", "2,0,0", "3,0,0",
             ]
         ))
-        goal.setVoxelAttribute("optional", "1,1,0", true)
-        goal.setVoxelAttribute("optional", "2,1,0", true)
-        goal.setVoxelAttribute("optional", "1,2,0", true)
-        goal.setVoxelAttribute("optional", "2,2,0", true)
+
+        const inner4Voxels = [
+            "1,2,0", "2,2,0",
+            "1,1,0", "2,1,0",
+        ]
+        const outer12Voxels = [
+            "0,3,0", "1,3,0", "2,3,0", "3,3,0",
+            "0,2,0",                   "3,2,0",
+            "0,1,0",                   "3,1,0",
+            "0,0,0", "1,0,0", "2,0,0", "3,0,0",
+        ]
+        for(const voxel of inner4Voxels) {
+            goal.setVoxelAttribute("optional", voxel, true)
+        }
 
         puzzle.addPiece(new Piece(
             "piece-1",
@@ -401,9 +411,27 @@ describe("AssemblySolver optional voxels", () => {
         problem.usedPieceCounts["piece-1"] = 1
         problem.usedPieceCounts["piece-2"] = 1
         problem.usedPieceCounts["piece-3"] = 1
-        const solutions = solver.solve(puzzle, problem)
+
+        let solutions = solver.solve(puzzle, problem)
         expect(solutions.length).toEqual(1)
         assertSolutionEqual(solutions[0], {
+            "piece-1": [["3,3,0", "3,2,0", "3,1,0", "2,3,0", "2,2,0", "2,1,0"]],
+            "piece-2": [["1,1,0", "0,0,0", "1,0,0", "2,0,0", "3,0,0"]],
+            "piece-3": [["1,3,0", "0,3,0", "0,2,0", "0,1,0"]],
+        })
+
+        for(const voxel of outer12Voxels) {
+            goal.setVoxelAttribute("optional", voxel, true)
+        }
+
+        solutions = solver.solve(puzzle, problem)
+        expect(solutions.length).toEqual(2)
+        assertSolutionEqual(solutions[0], {
+            "piece-1": [["0,3,0", "1,3,0", "2,3,0", "0,2,0", "1,2,0", "2,2,0"]],
+            "piece-2": [["1,1,0", "0,0,0", "1,0,0", "2,0,0", "3,0,0"]],
+            "piece-3": [["2,1,0", "3,1,0", "3,2,0", "3,3,0"]],
+        })
+        assertSolutionEqual(solutions[1], {
             "piece-1": [["3,3,0", "3,2,0", "3,1,0", "2,3,0", "2,2,0", "2,1,0"]],
             "piece-2": [["1,1,0", "0,0,0", "1,0,0", "2,0,0", "3,0,0"]],
             "piece-3": [["1,3,0", "0,3,0", "0,2,0", "0,1,0"]],

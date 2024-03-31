@@ -290,12 +290,12 @@ export class AssemblySolver extends Solver {
                 progressCallback(progress / progressMax)
             }
 
-            if(coversExactly(rowsPicked)) {
+            if(depth === pieces.length && coversExactly(rowsPicked)) {
                 solutions.push([...rowIndexes])
                 continue
             }
 
-            if(depth >= coverRowsByPieceIdx.length) {
+            if(depth >= pieces.length) {
                 // We've run out of pieces to place
                 continue
             }
