@@ -35,8 +35,7 @@ export function useGridMouseComposible(
     function highlightObjectAtPosition(x: number, y: number) {
         const intersectedObject = getObjectOnScreen(x, y)
         if(intersectedObject) {
-            const newValue = intersectedObject.userData.voxel
-            highlightedVoxel.value = newValue
+            highlightedVoxel.value = intersectedObject.userData.voxel
         } else {
             highlightedVoxel.value = null
         }

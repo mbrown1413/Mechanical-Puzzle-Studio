@@ -1,3 +1,4 @@
+import * as THREE from "three"
 import {Vector3} from "three"
 
 import {SerializableClass} from "~/lib/serialize.ts"
@@ -32,12 +33,11 @@ export type VoxelInfo = {
     voxel: Voxel,
     shape: VoxelShape,
     sides: Direction[],
+}
 
-    /**
-     * Drawing information for each side. Each side must have an entry
-     * specifying the polygon to draw as a list of points in a line-loop.
-     */
-    sidePolygons: {[key: Direction]: Vector3[]}
+export type SideInfo = {
+    solid: THREE.BufferGeometry,
+    wireframe: Vector3[],  // List of points in a line-loop
 }
 
 /**
@@ -186,6 +186,8 @@ export abstract class Grid extends SerializableClass {
      * Return all voxels in the grid inside the bounds.
      */
     abstract getVoxels(bounds: Bounds): Voxel[]
+
+    abstract getSideInfo(voxel: Voxel, direction: Direction): SideInfo
 
     /**
      * Get voxel next to the given voxel in the given direction.

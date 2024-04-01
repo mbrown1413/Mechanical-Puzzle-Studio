@@ -1,4 +1,4 @@
-import {Vector3, Matrix3} from "three"
+import {Vector3, Matrix3, Matrix4, PlaneGeometry} from "three"
 
 import {registerClass} from '~/lib/serialize.ts'
 import {Grid, Bounds, Voxel, Viewpoint} from "~/lib/Grid.ts"
@@ -12,7 +12,6 @@ type CubicVoxelInfo = {
     voxel: Voxel,
     shape: CubicVoxelShape,
     sides: Array<CubicDirection>,
-    sidePolygons: {[key in CubicDirection]: Vector3[]}
 }
 
 const CUBIC_DIRS: Array<CubicDirection> = [
@@ -35,6 +34,15 @@ const CUBIC_OPPOSITES: {[Property in CubicDirection]: CubicDirection} = {
     "-Z": "+Z",
 }
 
+const SIDE_POLYGONS: {[side in CubicDirection]: [number, number, number][]} = {
+    "+X": [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]],
+    "-X": [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]],
+    "+Y": [[0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]],
+    "-Y": [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]],
+    "+Z": [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]],
+    "-Z": [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]],
+}
+
 export class CubicGrid extends Grid {
     private voxelToCoordinate(voxel: Voxel): Coordinate3d {
         const coord = voxel.split(",").map(Number)
@@ -47,7 +55,7 @@ export class CubicGrid extends Grid {
             z: coord[2]
         }
     }
-    
+
     private coordinateToVoxel(coordinate: Coordinate3d): Voxel {
         return [coordinate.x, coordinate.y, coordinate.z].join(",")
     }
@@ -84,20 +92,52 @@ export class CubicGrid extends Grid {
     }
 
     getVoxelInfo(voxel: Voxel): CubicVoxelInfo {
-        const {x, y, z} = this.voxelToCoordinate(voxel)
-        const v = (x: number, y: number, z: number) => new Vector3(x, y, z)
         return {
             voxel: voxel,
             shape: "cube",  // The only shape of voxel in this grid
             sides: CUBIC_DIRS,
-            sidePolygons: {
-                "+X": [v(1+x,   y,   z), v(1+x, 1+y,   z), v(1+x, 1+y, 1+z), v(1+x,   y, 1+z)],
-                "-X": [v(  x,   y,   z), v(  x, 1+y,   z), v(  x, 1+y, 1+z), v(  x,   y, 1+z)],
-                "+Y": [v(  x, 1+y,   z), v(1+x, 1+y,   z), v(1+x, 1+y, 1+z), v(  x, 1+y, 1+z)],
-                "-Y": [v(  x,   y,   z), v(1+x,   y,   z), v(1+x,   y, 1+z), v(  x,   y, 1+z)],
-                "+Z": [v(  x,   y, 1+z), v(1+x,   y, 1+z), v(1+x, 1+y, 1+z), v(  x, 1+y, 1+z)],
-                "-Z": [v(  x,   y,   z), v(1+x,   y,   z), v(1+x, 1+y,   z), v(  x, 1+y,   z)],
-            }
+        }
+    }
+
+    getSideInfo(voxel: Voxel, direction: CubicDirection) {
+        const {x, y, z} = this.voxelToCoordinate(voxel)
+        const translation = new Vector3(x, y, z)
+        const wireframe = SIDE_POLYGONS[direction].map(
+            xyz => new Vector3(...xyz).add(translation)
+        )
+
+        // Construct transform for a plane for this side.
+        const transform = new Matrix4()
+
+        // Rotate along the plane normal purely so the UV texture coordinates
+        // line up between sides.
+        if(direction[0] === "+") {
+            transform.premultiply(new Matrix4().makeRotationZ(Math.PI/2))
+        }
+
+        // Translate plane from z axis going through the center to z axis going
+        // through the plane's corner.
+        transform.premultiply(new Matrix4().makeTranslation(0.5, 0.5, 0))
+
+        // Rotate to be on the X or Y plane if needed
+        switch(direction[1]) {
+            case "X": transform.premultiply(new Matrix4().makeRotationY(-Math.PI/2)); break
+            case "Y": transform.premultiply(new Matrix4().makeRotationX(Math.PI/2)); break
+        }
+
+        // Translate to + side of the cube if needed
+        transform.premultiply(new Matrix4().makeTranslation(
+            direction === "+X" ? 1 : 0,
+            direction === "+Y" ? 1 : 0,
+            direction === "+Z" ? 1 : 0
+        ))
+
+        // Translate to this voxel's location
+        transform.premultiply(new Matrix4().makeTranslation(x, y, z))
+
+        return {
+            solid: new PlaneGeometry().applyMatrix4(transform),
+            wireframe,
         }
     }
 

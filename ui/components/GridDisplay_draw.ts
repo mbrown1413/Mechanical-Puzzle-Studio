@@ -3,9 +3,8 @@ import {ref, Ref, ComputedRef, onMounted, onUnmounted, computed, watchEffect, wa
 import * as THREE from "three"
 import {Vector3} from "three"
 import {OrbitControls} from "three/addons/controls/OrbitControls.js"
-import {ConvexGeometry} from "three/addons/geometries/ConvexGeometry.js"
 
-import {VoxelInfo, Voxel, Viewpoint, Grid, Piece, Bounds, isColorSimilar, tweakColor} from "~lib"
+import {VoxelInfo, Voxel, Viewpoint, Grid, Piece, Bounds, isColorSimilar, tweakColor, SideInfo} from "~lib"
 import {Object3DCache, ResourceTracker} from "~/ui/utils/threejs.ts"
 import {multiRenderer} from "~/ui/utils/MultiRenderer.ts"
 
@@ -194,14 +193,9 @@ export function useGridDrawComposible(
         })
 
         obj = new THREE.Object3D()
-        for(const polygon of Object.values(voxelInfo.sidePolygons)) {
-            const geometry = new ConvexGeometry(polygon)
-
-            // ConvexGeometry doesn't set UV values. This is a hack until we
-            // can do something better.
-            geometry.setAttribute("uv", geometry.getAttribute("position"))
-
-            const mesh = new THREE.Mesh(geometry, material)
+        for(const side of voxelInfo.sides) {
+            const sideInfo = grid.getSideInfo(voxelInfo.voxel, side)
+            const mesh = new THREE.Mesh(sideInfo.solid, material)
             mesh.renderOrder = renderOrder
             obj.add(mesh)
         }
@@ -212,7 +206,7 @@ export function useGridDrawComposible(
 
     function getVoxelThinWireframe(
         piece: Piece | null,
-        voxelInfo: VoxelInfo,
+        sides: SideInfo[],
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
@@ -224,9 +218,10 @@ export function useGridDrawComposible(
         })
 
         const obj = new THREE.Object3D()
-        for(const polygon of Object.values(voxelInfo.sidePolygons)) {
+        for(const sideInfo of sides) {
             const geometry = new THREE.BufferGeometry()
-            geometry.setFromPoints(polygon)
+            geometry.setFromPoints(sideInfo.wireframe)
+
             const line = new THREE.LineLoop(geometry, material)
             line.renderOrder = renderOrder
             obj.add(line)
@@ -236,7 +231,7 @@ export function useGridDrawComposible(
 
     function getVoxelThickWireframe(
         piece: Piece | null,
-        voxelInfo: VoxelInfo,
+        sides: SideInfo[],
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
@@ -248,10 +243,10 @@ export function useGridDrawComposible(
         const divisions = 4
 
         const obj = new THREE.Object3D()
-        for(const polygon of Object.values(voxelInfo.sidePolygons)) {
-            for(let i=0; i<polygon.length; i++) {
-                const point1 = polygon[i]
-                const point2 = polygon[(i+1) % polygon.length]
+        for(const sideInfo of sides) {
+            for(let i=0; i<sideInfo.wireframe.length; i++) {
+                const point1 = sideInfo.wireframe[i]
+                const point2 = sideInfo.wireframe[(i+1) % sideInfo.wireframe.length]
                 const path = new THREE.LineCurve3(
                     new Vector3(...point1),
                     new Vector3(...point2)
@@ -299,13 +294,14 @@ export function useGridDrawComposible(
 
     function getVoxelWireframe(
         piece: Piece | null,
-        voxelInfo: VoxelInfo,
+        voxel: Voxel,
+        sides: SideInfo[],
         inLayer: boolean,
         highlighted: boolean,
     ): THREE.Object3D {
         const key = JSON.stringify([
             "wireframe",
-            voxelInfo.voxel,
+            voxel,
             piece?.color,
             inLayer,
             highlighted,
@@ -314,9 +310,9 @@ export function useGridDrawComposible(
             key,
             () => {
                 if(inLayer) {
-                    return getVoxelThickWireframe(piece, voxelInfo, inLayer, highlighted)
+                    return getVoxelThickWireframe(piece, sides, inLayer, highlighted)
                 } else {
-                    return getVoxelThinWireframe(piece, voxelInfo, inLayer, highlighted)
+                    return getVoxelThinWireframe(piece, sides, inLayer, highlighted)
                 }
             }
         )
@@ -360,7 +356,8 @@ export function useGridDrawComposible(
             }
 
             if(!displayOnly || pieceAtVoxel) {
-                const wireframe = getVoxelWireframe(pieceAtVoxel, voxelInfo, inLayer, highlighted)
+                const sides = voxelInfo.sides.map(side => grid.getSideInfo(voxel, side))
+                const wireframe = getVoxelWireframe(pieceAtVoxel, voxel, sides, inLayer, highlighted)
                 scene.add(wireframe)
             }
 
@@ -413,9 +410,10 @@ function getAllGridVertices(grid: Grid, bounds: Bounds): Vector3[] {
     const points = []
     for(const voxel of grid.getVoxels(bounds)) {
         const voxelInfo = grid.getVoxelInfo(voxel)
-        for(const polygon of Object.values(voxelInfo.sidePolygons)) {
-            points.push(...polygon)
-        }
+        for(const side of voxelInfo.sides) {
+            const sideInfo = grid.getSideInfo(voxel, side)
+            points.push(...sideInfo.wireframe)
+    }
     }
     return points
 }
