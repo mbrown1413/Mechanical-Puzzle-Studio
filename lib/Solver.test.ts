@@ -321,6 +321,35 @@ describe("AssemblySolver optional voxels", () => {
         `)
     })
 
+    test("No optional voxels in pieces", () => {
+        const puzzle = new Puzzle(new CubicGrid())
+        const solver = new AssemblySolver()
+
+        const goal = puzzle.addPiece(new Piece(
+            "goal",
+            puzzle.grid.getDefaultPieceBounds(),
+            [
+                "0,1,0", "1,1,0",
+                "0,0,0", "1,0,0",
+            ]
+        ))
+        goal.setVoxelAttribute("optional", "1,1,0", true)
+
+        const piece1 = puzzle.addPiece(new Piece(
+            "piece-1",
+            puzzle.grid.getDefaultPieceBounds(),
+            ["0,1,0"]
+        ))
+        piece1.setVoxelAttribute("optional", "0,1,0", true)
+
+        const problem = new AssemblyProblem("problem")
+        problem.goalPieceId = "goal"
+        problem.usedPieceCounts["piece-1"] = 3
+        expect(() => {
+            solver.solve(puzzle, problem)
+        }).toThrowErrorMatchingInlineSnapshot(`[Error: The piece "piece-1" has optional voxels, but currently only the goal piece may contain optional voxels.]`)
+    })
+
     test("Simple optional voxel problem", () => {
         const puzzle = new Puzzle(new CubicGrid())
         const solver = new AssemblySolver()

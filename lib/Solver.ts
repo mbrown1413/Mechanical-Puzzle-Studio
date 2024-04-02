@@ -134,6 +134,17 @@ export class AssemblySolver extends Solver {
             throw new Error("No pieces in problem")
         }
 
+        for(const piece of pieces) {
+            for(const voxel of piece.voxels) {
+                if(piece.getVoxelAttribute("optional", voxel) === true) {
+                    throw new Error(
+                        `The piece "${piece.label}" has optional voxels, but ` +
+                        "currently only the goal piece may contain optional voxels."
+                    )
+                }
+            }
+        }
+
         const voxelCountError = this.voxelCountCheck(pieces, goal)
         if(voxelCountError) {
             throw new Error(voxelCountError)
