@@ -62,9 +62,9 @@ export class CubicGrid extends Grid {
 
     getDimensions() {
         return [
-            {name: "X", defaultBound: 3},
-            {name: "Y", defaultBound: 3},
-            {name: "Z", defaultBound: 3},
+            {name: "X", defaultBound: 5},
+            {name: "Y", defaultBound: 5},
+            {name: "Z", defaultBound: 5},
         ]
     }
 

@@ -1,4 +1,4 @@
-import {Voxel, Puzzle, Piece, Problem, AssemblyProblem, PuzzleFile} from "~lib"
+import {Voxel, Puzzle, Piece, Problem, AssemblyProblem, PuzzleFile, Bounds} from "~lib"
 
 
 function getDuplicateItemLabel(
@@ -196,10 +196,17 @@ export class EditPuzzleMetadataAction extends Action {
 ////////// Piece Actions //////////
 
 export class NewPieceAction extends Action {
+    bounds?: Bounds
+
+    constructor() {
+        super()
+        this.bounds = undefined
+    }
+
     perform(puzzle: Puzzle) {
         const piece = new Piece(
             puzzle.generatePieceId(),
-            puzzle.grid.getDefaultPieceBounds()
+            this.bounds || puzzle.grid.getDefaultPieceBounds()
         )
         piece.color = puzzle.getNewPieceColor()
         puzzle.addPiece(piece)
