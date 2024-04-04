@@ -4,7 +4,7 @@ import {VDataTable} from "vuetify/components"
 
 import {title} from "~/ui/globals.ts"
 import {downloadFromStorage} from "~/ui/utils/download.ts"
-import {getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
+import {clearStorageCache, getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
@@ -36,6 +36,8 @@ function deletePuzzle(storage: PuzzleStorage, puzzleName: string) {
             (puzzle) => puzzle.name !== puzzleName
         )
     }
+
+    clearStorageCache()
 }
 
 const tableHeaders: VDataTable["headers"] = [
