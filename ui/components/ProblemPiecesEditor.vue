@@ -7,7 +7,7 @@ import {computed, ref, Ref} from "vue"
 import {VDataTable} from "vuetify/components/VDataTable"
 import {VToolbar} from "vuetify/components/VToolbar"
 
-import {Puzzle, AssemblyProblem} from '~lib'
+import {Puzzle, AssemblyProblem, PieceId} from '~lib'
 
 import {Action, EditProblemMetadataAction} from "~/ui/actions.ts"
 import GridDisplay from "~/ui/components/GridDisplay.vue"
@@ -43,7 +43,7 @@ const tableItems = computed(() => {
     })
 })
 
-function updatePieceCount(pieceId: string, count: number) {
+function updatePieceCount(pieceId: PieceId, count: number) {
     if(props.problem === null) { return }
     const newPieceCounts = Object.assign({}, props.problem.usedPieceCounts)
     newPieceCounts[pieceId] = count
@@ -55,7 +55,7 @@ function updatePieceCount(pieceId: string, count: number) {
     emit("action", action)
 }
 
-function updateGoal(pieceId: string | null) {
+function updateGoal(pieceId: PieceId | null) {
     if(props.problem === null) { return }
     const action = new EditProblemMetadataAction(
         props.problem.id, {

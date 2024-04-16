@@ -1,12 +1,14 @@
 import {SerializableClass, clone, registerClass} from "~/lib/serialize.ts"
 import {Bounds, Voxel, Transform} from "~/lib/Grid.ts"
 
-export type PieceWithId = Piece & {id: string}
+export type PieceId = string
+
+export type PieceWithId = Piece & {id: PieceId}
 
 type AttributeValue = boolean
 
 export class Piece extends SerializableClass {
-    id: string | null
+    id: PieceId | null
 
     bounds: Bounds
     voxels: Voxel[]
@@ -19,7 +21,7 @@ export class Piece extends SerializableClass {
         }
     }
 
-    constructor(id: string | null, bounds: Bounds, voxels: Voxel[]=[]) {
+    constructor(id: PieceId | null, bounds: Bounds, voxels: Voxel[]=[]) {
         super()
         this.id = id
         this.bounds = bounds

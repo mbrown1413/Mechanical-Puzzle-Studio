@@ -1,4 +1,4 @@
-import {SerializableClass, registerClass, Serializable} from "~lib"
+import {SerializableClass, registerClass, Serializable, ProblemId} from "~lib"
 import {Puzzle, Problem, Solver, Solution, TaskCallbacks} from "~lib"
 
 import {saveCurrentPuzzle} from "~/ui/ActionManager.ts"
@@ -46,9 +46,9 @@ export abstract class Task<Result extends Serializable> extends SerializableClas
 
 export class ProblemSolveTask extends Task<Solution[]> {
     puzzle: Puzzle
-    problemId: string
+    problemId: ProblemId
 
-    constructor(puzzle: Puzzle, problemId: string) {
+    constructor(puzzle: Puzzle, problemId: ProblemId) {
         super()
         this.puzzle = puzzle
         this.problemId = problemId

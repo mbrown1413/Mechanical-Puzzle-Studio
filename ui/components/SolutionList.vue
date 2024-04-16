@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, ref, Ref} from "vue"
 
-import {Puzzle} from "~lib"
+import {Puzzle, ProblemId} from "~lib"
 import ListSelect from "~/ui/common/ListSelect.vue"
 import {taskRunner} from "~/ui/globals.ts"
 import {TaskInfo} from "~/ui/TaskRunner.ts"
@@ -9,7 +9,7 @@ import {ProblemSolveTask} from "~/ui/tasks.ts"
 
 const props = defineProps<{
     puzzle: Puzzle,
-    problemId: string | null,
+    problemId: ProblemId | null,
 }>()
 
 const problem = computed(() =>

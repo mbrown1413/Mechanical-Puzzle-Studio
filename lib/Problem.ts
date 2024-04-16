@@ -2,6 +2,9 @@ import {serialize, deserialize, SerializableClass, registerClass} from "~/lib/se
 import {BoolWithReason} from "~/lib/types.ts"
 import {Solver, AssemblySolver} from "~/lib/Solver.ts"
 import {Solution} from "~/lib/Solution.ts"
+import {PieceId} from "~/lib/Piece.ts"
+
+export type ProblemId = string
 
 type SolverInfo = {
     solver: new(...args: unknown[]) => Solver,
@@ -12,12 +15,12 @@ type SolverInfo = {
  * Describes an objective of the puzzle.
  */
 export abstract class Problem extends SerializableClass {
-    id: string
+    id: ProblemId
     label: string
     solverId: string
     solutions: Solution[] | null
 
-    constructor(id: string) {
+    constructor(id: ProblemId) {
         super()
         this.id = id
         this.label = id
@@ -40,16 +43,13 @@ export abstract class Problem extends SerializableClass {
  * together into into the shape of a goal piece.
  */
 export class AssemblyProblem extends Problem {
-    declare id: string
-    label: string
-    goalPieceId: string | null
+    goalPieceId: PieceId | null
 
     /* Maps piece ID to how many of that piece are used in this problem. */
     usedPieceCounts: {[pieceId: string]: number}
 
-    constructor(id: string) {
+    constructor(id: ProblemId) {
         super(id)
-        this.label = id
         this.goalPieceId = null
         this.usedPieceCounts = {}
     }

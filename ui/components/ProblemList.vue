@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import {Puzzle} from "~lib"
+import {Puzzle, ProblemId} from "~lib"
 
 import {Action, NewProblemAction, DeleteProblemsAction} from "~/ui/actions.ts"
 import ListSelect from "~/ui/common/ListSelect.vue"
 
 defineProps<{
     puzzle: Puzzle,
-    selectedProblemIds: string[],
+    selectedProblemIds: ProblemId[],
     allowCreateDelete: boolean,
 }>()
 
 const emit = defineEmits<{
-    "update:selectedProblemIds": [problemIds: string[]],
+    "update:selectedProblemIds": [problemIds: ProblemId[]],
     action: [action: Action]
 }>()
 </script>

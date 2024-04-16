@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Puzzle} from "~lib"
+import {Puzzle, ProblemId} from "~lib"
 
 import {ProblemSolveTask} from "~/ui/tasks.ts"
 import {taskRunner} from "~/ui/globals.ts"
@@ -7,7 +7,7 @@ import {taskRunner} from "~/ui/globals.ts"
 
 const props = defineProps<{
     puzzle: Puzzle,
-    problemId: string | null,
+    problemId: ProblemId | null,
 }>()
 
 const emit = defineEmits<{

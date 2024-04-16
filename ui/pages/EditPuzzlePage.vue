@@ -5,7 +5,7 @@ import {PuzzleFile} from "~lib"
 
 import {taskRunner, title} from "~/ui/globals.ts"
 import {setActionManager, clearActionManager} from "~/ui/ActionManager.ts"
-import {getStorageInstances, PuzzleNotFoundError} from "~/ui/storage.ts"
+import {getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
 import {ActionManager} from "~/ui/ActionManager.ts"
 import {Action, DuplicatePieceAction, DuplicateProblemAction} from "~/ui/actions.ts"
 import {downloadPuzzle} from "~/ui/utils/download.ts"
@@ -18,7 +18,7 @@ import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
 import {nextTick} from "vue"
 
 const props = defineProps<{
-    storageId: string,
+    storageId: StorageId,
     puzzleName: string,
 }>()
 

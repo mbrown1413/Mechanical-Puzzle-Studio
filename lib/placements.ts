@@ -1,4 +1,4 @@
-import {Piece, PieceWithId} from "~/lib/Piece.ts"
+import {Piece, PieceWithId, PieceId} from "~/lib/Piece.ts"
 import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
 
 /**
@@ -7,7 +7,7 @@ import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
 export type PiecePlacement = {
 
     /** The piece as defined in the puzzle. */
-    originalPieceId: string | null
+    originalPieceId: PieceId | null
 
     /**
      * A copy of the piece after it is transformed and moved to a new location.
@@ -15,7 +15,7 @@ export type PiecePlacement = {
     transformedPiece: Piece
 }
 
-type PlacementsByPiece = {[pieceId: string]: PiecePlacement[]}
+type PlacementsByPiece = {[pieceId: PieceId]: PiecePlacement[]}
 
 type SymmetryInfo = {
     piece: Piece,
@@ -160,7 +160,7 @@ function findSymmetryPiece(
 ): SymmetryInfo | null {
     const goalGroups = getSymmetryGroups(grid, goal, rotations)
 
-    const pieceCounts: Map<string, number> = new Map()
+    const pieceCounts: Map<PieceId, number> = new Map()
     for(const piece of pieces) {
         const oldCount = pieceCounts.get(piece.id)
         pieceCounts.set(

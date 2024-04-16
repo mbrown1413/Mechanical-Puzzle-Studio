@@ -3,7 +3,12 @@ import {Grid} from "~/lib/Grid.ts"
 import {Problem} from "~/lib/Problem.ts"
 import {getNextColor} from "~/lib/colors.ts"
 
-import {Piece, PieceWithId} from "~/lib/Piece.ts"
+import {Piece, PieceId, PieceWithId} from "~/lib/Piece.ts"
+import {ProblemId} from "~/lib/Problem.ts"
+
+/** ID of an "item", where an item is one thing inside a puzzle collection
+ * attribute (e.g. a piece or a problem). */
+export type ItemId = PieceId | ProblemId
 
 export class Puzzle extends SerializableClass {
     grid: Grid
@@ -34,11 +39,11 @@ export class Puzzle extends SerializableClass {
         }
     }
 
-    generatePieceId() {
+    generatePieceId(): PieceId {
         return this.generateNewId("piece")
     }
 
-    generateProblemId() {
+    generateProblemId(): ProblemId {
         return this.generateNewId("problem")
     }
 
@@ -71,17 +76,17 @@ export class Puzzle extends SerializableClass {
         return piece
     }
 
-    getPiece(pieceOrId: Piece | string): PieceWithId | null {
+    getPiece(pieceOrId: Piece | PieceId): PieceWithId | null {
         const id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
         if(id === null) return null
         return this.pieces.find(piece => piece.id === id) || null
     }
 
-    hasPiece(pieceOrId: Piece | string): boolean {
+    hasPiece(pieceOrId: Piece | PieceId): boolean {
         return Boolean(this.getPiece(pieceOrId))
     }
 
-    removePiece(pieceOrId: Piece | string, throwErrors=true) {
+    removePiece(pieceOrId: Piece | PieceId, throwErrors=true) {
         const id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
         if(id === null) {
             if(throwErrors) {
@@ -110,16 +115,16 @@ export class Puzzle extends SerializableClass {
         return problem
     }
 
-    getProblem(problemOrId: Problem | string): Problem | null {
+    getProblem(problemOrId: Problem | ProblemId): Problem | null {
         const id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
         return this.problems.find(problem => problem.id === id) || null
     }
 
-    hasProblem(problemOrId: Problem | string): boolean {
+    hasProblem(problemOrId: Problem | ProblemId): boolean {
         return Boolean(this.getProblem(problemOrId))
     }
 
-    removeProblem(problemOrId: Problem | string, throwErrors=true) {
+    removeProblem(problemOrId: Problem | ProblemId, throwErrors=true) {
         const id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
         const idx = this.problems.findIndex(problem => problem.id === id)
         if(throwErrors && idx === -1) {

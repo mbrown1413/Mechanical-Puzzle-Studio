@@ -7,7 +7,7 @@
 import {ref, Ref, onMounted} from "vue"
 import Split from "split-grid"
 
-import {Puzzle} from "~lib"
+import {Puzzle, PieceId} from "~lib"
 
 import {Action, NewPieceAction} from "~/ui/actions.ts"
 import TabLayout from "~/ui/common/TabLayout.vue"
@@ -27,10 +27,10 @@ const emit = defineEmits<{
     action: [action: Action]
 }>()
 
-const selectedPieceIds: Ref<string[]> = ref(
+const selectedPieceIds: Ref<PieceId[]> = ref(
     props.puzzle.pieces.length ? [props.puzzle.pieces[0].id] : []
 )
-const selectedProblemIds: Ref<string[]> = ref(
+const selectedProblemIds: Ref<PieceId[]> = ref(
     props.puzzle.problems.length ? [props.puzzle.problems[0].id] : []
 )
 

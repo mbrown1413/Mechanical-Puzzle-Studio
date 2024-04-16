@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, ComputedRef} from "vue"
 
-import {Bounds, Piece, Puzzle, Problem, AssemblyProblem} from  "~lib"
+import {Bounds, Piece, Puzzle, Problem, AssemblyProblem, ItemId, PieceId} from  "~lib"
 
 import {Action, EditPieceMetadataAction, EditProblemMetadataAction} from "~/ui/actions.ts"
 import ProblemPiecesEditor from "~/ui/components/ProblemPiecesEditor.vue"
@@ -10,7 +10,7 @@ import ColorInput from "~/ui/common/ColorInput.vue"
 const props = defineProps<{
     puzzle: Puzzle,
     itemType: "piece" | "problem",
-    itemId: string | null,
+    itemId: ItemId | null,
 }>()
 
 const emit = defineEmits<{
@@ -25,12 +25,12 @@ type Field = {
 
     //TODO: Field-specific stuff that should be factored out when a proper form
     //system is written.
-    getDisabledPieceIds?: (problem: AssemblyProblem) => string[]
+    getDisabledPieceIds?: (problem: AssemblyProblem) => PieceId[]
 }
 
 let title: string
 let puzzleProperty: "pieces" | "problems"
-let actionClass: {new(itemId: string, metadata: any): Action}
+let actionClass: {new(itemId: ItemId, metadata: any): Action}
 let fields: Field[]
 switch(props.itemType) {
 
@@ -68,7 +68,7 @@ switch(props.itemType) {
                 property: "piecesId",
                 label: "Pieces Used",
                 type: "pieces",
-                getDisabledPieceIds: (item: AssemblyProblem) => item.goalPieceId ? [item.goalPieceId] : []
+                getDisabledPieceIds: (item: AssemblyProblem) => item.goalPieceId !== null ? [item.goalPieceId] : []
             }
         ]
         break;
@@ -155,7 +155,7 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
                     :label="field.label"
                     :required="field.required !== false"
                     :items="pieceItems"
-                    :modelValue="puzzle.getPiece(typeUnsafeItem[field.property] as string)"
+                    :modelValue="puzzle.getPiece(typeUnsafeItem[field.property])"
                     no-data-text="No pieces in puzzle!"
                     @update:modelValue="handlePieceInput(field, $event as Piece)"
             />

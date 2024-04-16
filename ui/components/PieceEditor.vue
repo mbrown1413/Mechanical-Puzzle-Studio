@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import {computed, ref, Ref} from "vue"
 
-import {Puzzle, Voxel} from  "~lib"
+import {Puzzle, PieceId, Voxel} from  "~lib"
 
 import {Action, EditPieceAction} from "~/ui/actions.ts"
 import GridDisplay from "~/ui/components/GridDisplay.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
-    pieceId: string | null,
+    pieceId: PieceId | null,
 }>()
 
 const emit = defineEmits<{

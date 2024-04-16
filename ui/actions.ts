@@ -1,4 +1,4 @@
-import {Voxel, Puzzle, Piece, Problem, AssemblyProblem, PuzzleFile, Bounds} from "~lib"
+import {Voxel, Puzzle, ItemId, Piece, Problem, AssemblyProblem, PuzzleFile, Bounds} from "~lib"
 
 
 function getDuplicateItemLabel(
@@ -51,13 +51,13 @@ export abstract class Action {
 }
 
 export abstract class EditItemMetadataAction<T extends object> extends Action {
-    itemId: string
+    itemId: ItemId
     metadata: object
 
     static itemName: string
 
     constructor(
-        itemId: string,
+        itemId: ItemId,
         metadata: object,
     ) {
         super()
@@ -70,7 +70,7 @@ export abstract class EditItemMetadataAction<T extends object> extends Action {
         return `Edit ${constructor.itemName.toLowerCase()}`
     }
 
-    getItem(puzzle: Puzzle, itemId: string): Piece | Problem | null {
+    getItem(puzzle: Puzzle, itemId: ItemId): Piece | Problem | null {
         const constructor = <typeof DeleteItemsAction> this.constructor
         if(constructor.itemName === "Piece") {
             return puzzle.getPiece(itemId)
@@ -95,9 +95,9 @@ export abstract class EditItemMetadataAction<T extends object> extends Action {
 
 abstract class DeleteItemsAction extends Action {
     static itemName: "Piece" | "Problem"
-    itemIds: string[]
+    itemIds: ItemId[]
 
-    constructor(itemIds: string[]) {
+    constructor(itemIds: ItemId[]) {
         super()
         this.itemIds = itemIds
     }
@@ -107,7 +107,7 @@ abstract class DeleteItemsAction extends Action {
         return `Delete ${constructor.itemName.toLowerCase()}`
     }
 
-    hasItem(puzzle: Puzzle, itemId: string) {
+    hasItem(puzzle: Puzzle, itemId: ItemId) {
         const constructor = <typeof DeleteItemsAction> this.constructor
         if(constructor.itemName === "Piece") {
             return puzzle.hasPiece(itemId)
@@ -116,7 +116,7 @@ abstract class DeleteItemsAction extends Action {
         }
     }
 
-    deleteItem(puzzle: Puzzle, itemId: string) {
+    deleteItem(puzzle: Puzzle, itemId: ItemId) {
         const constructor = <typeof DeleteItemsAction> this.constructor
         if(constructor.itemName === "Piece") {
             return puzzle.removePiece(itemId)
@@ -146,9 +146,9 @@ abstract class DeleteItemsAction extends Action {
 }
 
 abstract class DuplicateItemAction<T extends Piece | Problem> extends Action {
-    itemId: string
+    itemId: ItemId
 
-    constructor(itemId: string) {
+    constructor(itemId: ItemId) {
         super()
         this.itemId = itemId
     }
@@ -222,13 +222,13 @@ export class DeletePiecesAction extends DeleteItemsAction {
 }
 
 export class EditPieceAction extends Action {
-    pieceId: string
+    pieceId: ItemId
     voxelsToAdd: Voxel[]
     voxelsToRemove: Voxel[]
     optionalVoxels: boolean
 
     constructor(
-        pieceId: string,
+        pieceId: ItemId,
         addVoxels: Voxel[],
         removeVoxels: Voxel[],
         optionalVoxels=false,

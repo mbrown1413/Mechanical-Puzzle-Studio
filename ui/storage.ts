@@ -2,14 +2,16 @@ import {gzipSync, gunzipSync, strToU8, strFromU8} from "fflate"
 
 import {PuzzleFile, PuzzleMetadata} from "~lib"
 
+export type StorageId = string
+
 export class PuzzleNotFoundError extends Error {
     constructor(puzzleName: string) {
         super(`Puzzle not found: "${puzzleName}"`)
     }
 }
 
-let _storageInstances: {[id: string]: PuzzleStorage} | undefined = undefined
-export function getStorageInstances(): {[id: string]: PuzzleStorage} {
+let _storageInstances: {[id: StorageId]: PuzzleStorage} | undefined = undefined
+export function getStorageInstances(): {[id: StorageId]: PuzzleStorage} {
     if(!_storageInstances) {
         const storages = [
             new LocalPuzzleStorage(),
@@ -71,7 +73,7 @@ export function clearStorageCache() {
 
 export abstract class PuzzleStorage {
     /** Unique identifier used for this storage. */
-    abstract get id(): string
+    abstract get id(): StorageId
 
     /** Name to display to the user for this storage. */
     abstract get name(): string
