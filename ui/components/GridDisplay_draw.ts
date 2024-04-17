@@ -141,7 +141,7 @@ export function useGridDrawComposible(
     function getHighlightColor(piece: Piece | null) {
         const defaultColor = "#00ff00"
         const alternateColor = "#0000ff"
-        if(piece === null || !isColorSimilar(piece.color, defaultColor)) {
+        if(piece === null || piece.color === undefined || !isColorSimilar(piece.color, defaultColor)) {
             return defaultColor
         } else {
             return alternateColor
@@ -170,7 +170,7 @@ export function useGridDrawComposible(
             return obj
         }
 
-        let color = piece ? piece.color : "rgb(0,0,0)"
+        let color = piece && piece.color ? piece.color : "rgb(0,0,0)"
         if(piece && highlighted && highlightBy === "piece") {
             // Discolor whole highlighted piece
             color = tweakColor(color)

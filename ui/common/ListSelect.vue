@@ -10,7 +10,7 @@ const el: Ref<HTMLSelectElement | null> = ref(null)
 
 type Item = {
     id: number,
-    label: string,
+    label?: string,
     color?: string,
 }
 

@@ -72,7 +72,7 @@ function performAction(action: Action) {
     if(action instanceof NewPieceAction && selectedPieceIds.value.length === 1) {
         const id = selectedPieceIds.value[0]
         const piece = props.puzzle.getPiece(id)
-        if(piece) {
+        if(piece && piece.bounds !== undefined) {
             action.bounds = [...piece.bounds]
         }
     }

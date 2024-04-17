@@ -88,7 +88,7 @@ export class ProblemSolveTask extends Task<Solution[]> {
 
     setup() {
         const problem = this.getProblem()
-        problem.solutions = null
+        problem.solutions = undefined
         saveCurrentPuzzle()
     }
 

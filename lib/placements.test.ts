@@ -18,7 +18,6 @@ describe("getPieceOrientations()", () => {
     test("simple orientation", () => {
         const piece = new Piece(
             0,
-            [3, 3, 3],
             rotationTestData.originalPiece
         )
         const orientations = getPieceOrientations(grid, piece)
@@ -39,7 +38,6 @@ describe("getPieceTranslations()", () => {
     test("simple translation", () => {
         let piece = new Piece(
             0,
-            [3, 3, 3],
             ["0,0,0", "1,0,0"]
         )
         let placements = Array.from(getPieceTranslations(
@@ -60,7 +58,6 @@ describe("getPieceTranslations()", () => {
 
         piece = new Piece(
             0,
-            [3, 3, 3],
             ["0,0,0", "0,0,1"]
         )
         placements = Array.from(getPieceTranslations(
@@ -82,7 +79,6 @@ describe("getPiecePlacements()", () => {
     test("simple piece", () => {
         let piece = new Piece(
             0,
-            grid.getDefaultPieceBounds(),
             ["0,0,0", "0,0,1"]
         )
         let placements = Array.from(getPiecePlacements(
@@ -121,7 +117,6 @@ describe("getPiecePlacements()", () => {
 
         piece = new Piece(
             0,
-            [3, 3, 3],
             ["0,0,0", "0,1,0", "1,1,0"]
         )
         placements = Array.from(getPiecePlacements(

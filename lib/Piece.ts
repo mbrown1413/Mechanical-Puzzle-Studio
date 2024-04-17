@@ -10,28 +10,34 @@ export type PieceWithId = Piece & {id: PieceId}
 type AttributeValue = boolean
 
 export class Piece extends SerializableClass {
-    id: PieceId | null
+    id?: PieceId
     instance?: PieceInstanceId
-
-    bounds: Bounds
     voxels: Voxel[]
-    label: string
-    color: string
-
     voxelAttributes?: {
         [attribute: string]: {
             [voxel: Voxel]: AttributeValue
         }
     }
 
-    constructor(id: PieceId | null, bounds: Bounds, voxels: Voxel[]=[]) {
+    bounds?: Bounds
+    label?: string
+    color?: string
+
+    constructor()
+    constructor(voxels: Voxel[])
+    constructor(id: PieceId)
+    constructor(id: PieceId, voxels: Voxel[])
+    constructor(idOrVoxels: PieceId | Voxel[]=[], voxels: Voxel[]=[]) {
         super()
-        this.id = id
-        this.bounds = bounds
-        this.voxels = voxels
-        this.label = id === null ? "unlabeled-piece" : `Piece ${id}`
-        this.color = "#00ff00"
-        this.voxelAttributes = undefined
+        if(typeof idOrVoxels === "number") {
+            this.id = idOrVoxels
+            this.voxels = voxels
+        } else {
+            this.voxels = idOrVoxels
+            if(voxels.length > 0) {
+                throw new Error("Bad argument types for Piece constructor")
+            }
+        }
     }
 
     hasId(): this is PieceWithId {
@@ -43,7 +49,7 @@ export class Piece extends SerializableClass {
      * the piece. It includes the piece ID and the piece instance number.
      */
     get completeId(): PieceCompleteId | null {
-        if(this.id === null) {
+        if(typeof this.id !== "number") {
             return null
         }
         if(typeof this.instance === "number") {
@@ -55,7 +61,7 @@ export class Piece extends SerializableClass {
 
     copy(): Piece {
         const coppied = clone(this)
-        coppied.id = null
+        coppied.id = undefined
         coppied.instance = undefined
         return coppied
     }

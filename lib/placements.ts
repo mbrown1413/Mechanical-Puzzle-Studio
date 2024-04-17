@@ -7,7 +7,7 @@ import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
 export type PiecePlacement = {
 
     /** The piece as defined in the puzzle. */
-    originalPieceId: PieceId | null
+    originalPieceId?: PieceId
 
     /**
      * A copy of the piece after it is transformed and moved to a new location.

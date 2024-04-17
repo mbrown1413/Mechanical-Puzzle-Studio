@@ -19,7 +19,7 @@ const problem = computed(() =>
 const selectedSolutionIds: Ref<number[]> = ref([])
 
 const solutionItems = computed(() => {
-    if(!problem.value || problem.value.solutions === null) {
+    if(!problem.value || problem.value.solutions === undefined) {
         return []
     }
     return problem.value.solutions.map((solution, i) => {
@@ -32,7 +32,7 @@ const solutionItems = computed(() => {
 })
 
 const selectedSolutions = computed(() => {
-    if(!problem.value || problem.value.solutions === null) {
+    if(!problem.value || problem.value.solutions === undefined) {
         return []
     }
 

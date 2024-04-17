@@ -7,7 +7,7 @@ const grid = new CubicGrid()
 
 describe("Piece", () => {
     test("IDs", () => {
-        const piece = new Piece(0, [])
+        const piece = new Piece(0)
         expect(piece.id).toBe(0)
         expect(piece.completeId).toBe("0")
 
@@ -16,7 +16,7 @@ describe("Piece", () => {
     })
 
     test("edit voxels", () => {
-        const piece = new Piece(0, [])
+        const piece = new Piece()
         expect(piece.voxels).toEqual([])
 
         piece.addVoxel("0,0,0")
@@ -33,13 +33,13 @@ describe("Piece", () => {
     })
 
     test("adding voxel attribute to voxel that doesn't exist", () => {
-        const piece = new Piece(0, [])
+        const piece = new Piece()
         piece.setVoxelAttribute("foo", "0,0,0", true)
         expect(piece.voxelAttributes).toEqual(undefined)
     })
 
     test("voxel attributes removed when voxel removed", () => {
-        const piece = new Piece(0, [])
+        const piece = new Piece()
         piece.addVoxel("0,0,0")
         piece.addVoxel("1,0,0")
         piece.addVoxel("2,0,0")
@@ -64,20 +64,20 @@ describe("Piece", () => {
     })
 
     test("copy", () => {
-        const piece0 = new Piece(0, [])
+        const piece0 = new Piece()
         const copy0 = piece0.copy()
         expect(copy0).not.toBe(piece0)
-        expect(copy0).toEqual(Object.assign(piece0, {id: null}))
+        expect(copy0).toEqual(Object.assign(piece0, {id: undefined}))
 
-        const piece1 = new Piece(null, [])
+        const piece1 = new Piece()
         const copy1 = piece1.copy()
         expect(copy1).not.toBe(piece1)
         expect(copy1).toEqual(piece1)
     })
 
     test("equality", () => {
-        const piece1 = new Piece(null, grid.getDefaultPieceBounds())
-        const piece2 = new Piece(0, grid.getDefaultPieceBounds())
+        const piece1 = new Piece()
+        const piece2 = new Piece(0)
 
         piece1.voxels = ["0,0,0", "1,1,1"]
         piece2.voxels = ["1,1,1", "0,0,0"]
@@ -91,8 +91,8 @@ describe("Piece", () => {
     })
 
     test("equality with voxelAttribute", () => {
-        const piece1 = new Piece(null, grid.getDefaultPieceBounds())
-        const piece2 = new Piece(null, grid.getDefaultPieceBounds())
+        const piece1 = new Piece()
+        const piece2 = new Piece()
 
         piece1.voxels = ["0,0,0", "1,1,1"]
         piece2.voxels = ["0,0,0", "1,1,1"]
@@ -119,7 +119,7 @@ describe("Piece", () => {
     })
 
     test("transform", () => {
-        const piece = new Piece(null, grid.getDefaultPieceBounds())
+        const piece = new Piece()
         piece.voxels = ["0,0,0", "1,1,1"]
 
         const translate = grid.getTranslation("0,0,0", "1,0,0")
@@ -128,7 +128,7 @@ describe("Piece", () => {
     })
 
     test("transform with voxelAttributes", () => {
-        const piece = new Piece(null, grid.getDefaultPieceBounds())
+        const piece = new Piece()
         piece.voxels = ["0,0,0", "1,1,1"]
         piece.setVoxelAttribute("foo", "0,0,0", true)
 

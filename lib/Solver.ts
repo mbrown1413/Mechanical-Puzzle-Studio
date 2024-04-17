@@ -111,7 +111,10 @@ export class AssemblySolver extends Solver {
         if(problem.goalPieceId === null) {
             throw new Error("Goal piece is not set")
         }
-        const goal = puzzle.getPiece(problem.goalPieceId)
+        let goal = null
+        if(problem.goalPieceId !== undefined) {
+            goal = puzzle.getPiece(problem.goalPieceId)
+        }
         if(goal === null) {
             throw new Error("Goal piece is not set")
         }

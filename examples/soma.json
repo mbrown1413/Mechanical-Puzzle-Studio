@@ -3,8 +3,6 @@
     "name": "Soma Cube",
     "author": "Piet Hein",
     "description": "A popular assembly puzzle invented by Piet Hein in 1933.",
-    "createdUTCString": null,
-    "modifiedUTCString": null,
     "puzzle": {
         "type": "Puzzle",
         "idCounters": {
@@ -236,7 +234,6 @@
                 "id": 0,
                 "label": "Cube",
                 "solverId": "assembly",
-                "solutions": null,
                 "goalPieceId": 0,
                 "usedPieceCounts": {
                     "1": 1,
@@ -253,7 +250,6 @@
                 "id": 1,
                 "label": "Sofa",
                 "solverId": "assembly",
-                "solutions": null,
                 "goalPieceId": 8,
                 "usedPieceCounts": {
                     "1": 1,

@@ -5,10 +5,13 @@ import {
 
 
 function getDuplicateItemLabel(
-    labelToDuplicate: string,
-    existingLabels: string[],
+    labelToDuplicate: string | undefined,
+    existingLabels: (string| undefined)[],
 ) {
     let i: number, prefix: string
+    if(labelToDuplicate === undefined) {
+        labelToDuplicate = "Piece"
+    }
 
     // Detect "<name> (copy)" or "<name> (copy <i>)" format and use that as a
     // starting point.
@@ -74,7 +77,7 @@ export abstract class EditItemMetadataAction<T extends Item> extends Action {
     }
 
     getItem(puzzle: Puzzle, itemId: T["id"]): T | null {
-        if(itemId === null) { return null }
+        if(itemId === undefined) { return null }
         const constructor = <typeof DeleteItemsAction> this.constructor
         if(constructor.itemName === "Piece") {
             return puzzle.getPiece(itemId as PieceId) as T
@@ -210,9 +213,10 @@ export class NewPieceAction extends Action {
     perform(puzzle: Puzzle) {
         const piece = new Piece(
             puzzle.generatePieceId(),
-            this.bounds || puzzle.grid.getDefaultPieceBounds()
         )
+        piece.label = `Piece ${piece.id}`
         piece.color = puzzle.getNewPieceColor()
+        piece.bounds = this.bounds || puzzle.grid.getDefaultPieceBounds()
         puzzle.addPiece(piece)
     }
 
@@ -294,9 +298,12 @@ export class EditPieceMetadataAction extends EditItemMetadataAction<Piece> {
 
     postEdit(piece: Piece, puzzle: Puzzle) {
         // Remove voxels out of piece's bounds
-        piece.voxels = piece.voxels.filter((voxel) =>
-            puzzle.grid.isInBounds(voxel, piece.bounds)
-        )
+        const bounds = piece.bounds
+        if(bounds !== undefined) { 
+            piece.voxels = piece.voxels.filter((voxel) =>
+                puzzle.grid.isInBounds(voxel, bounds)
+            )
+        }
     }
 }
 
@@ -335,6 +342,7 @@ export class NewProblemAction extends Action {
         const problem = new AssemblyProblem(
             puzzle.generateProblemId()
         )
+        problem.label = `Problem ${problem.id}`
         puzzle.addProblem(problem)
     }
 
@@ -362,7 +370,7 @@ export class EditProblemMetadataAction extends EditItemMetadataAction<Problem> {
                 }
             }
             // Remove "goal" piece from used pieces
-            if(problem.goalPieceId !== null) {
+            if(problem.goalPieceId !== undefined) {
                 delete problem.usedPieceCounts[problem.goalPieceId]
             }
         }

@@ -18,14 +18,13 @@ export abstract class Problem extends SerializableClass {
     id: ProblemId
     label: string
     solverId: string
-    solutions: Solution[] | null
+    solutions?: Solution[]
 
     constructor(id: ProblemId) {
         super()
         this.id = id
-        this.label = id === null ? "unlabeled-problem" : `Problem ${id}`
+        this.label = `Problem ${id}`
         this.solverId = Object.keys(this.getSolvers())[0]
-        this.solutions = null
     }
 
     copy(): this {
@@ -43,7 +42,7 @@ export abstract class Problem extends SerializableClass {
  * together into into the shape of a goal piece.
  */
 export class AssemblyProblem extends Problem {
-    goalPieceId: PieceId | null
+    goalPieceId?: PieceId
 
     /* Maps piece ID to how many of that piece are used in this problem.
      *
@@ -54,7 +53,6 @@ export class AssemblyProblem extends Problem {
 
     constructor(id: ProblemId) {
         super(id)
-        this.goalPieceId = null
         this.usedPieceCounts = {}
     }
 

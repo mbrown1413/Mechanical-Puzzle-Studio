@@ -14,7 +14,7 @@ function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShort
     const actual: SolutionShorthand = {}
     for(const placement of solution.placements) {
         const pieceId = placement.originalPieceId
-        if(pieceId === null) {
+        if(pieceId === undefined) {
             throw new Error("Piece should have an ID")
         }
         if(!(pieceId in actual)) {
@@ -28,23 +28,14 @@ function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShort
 describe("AssemblySolver", () => {
     const puzzle = new Puzzle(new CubicGrid())
 
-    const empty1 = puzzle.addPiece(new Piece(
-        0,
-        puzzle.grid.getDefaultPieceBounds(),
-        []
-    )) as PieceWithId
+    const empty1 = puzzle.addPiece(new Piece(0)) as PieceWithId
     empty1.label = "empty1"
 
-    const empty2 = puzzle.addPiece(new Piece(
-        1,
-        puzzle.grid.getDefaultPieceBounds(),
-        []
-    )) as PieceWithId
+    const empty2 = puzzle.addPiece(new Piece(1)) as PieceWithId
     empty2.label = "empty2"
 
     const large = puzzle.addPiece(new Piece(
         2,
-        puzzle.grid.getDefaultPieceBounds(),
         ["0,0,0", "1,0,0", "2,0,0", "3,0,0", "4,0,0"]
     )) as PieceWithId
     large.label = "large"
@@ -54,17 +45,14 @@ describe("AssemblySolver", () => {
     // 0-1
     const problem0_goal = puzzle.addPiece(new Piece(
         3,
-        puzzle.grid.getDefaultPieceBounds(),
         ["0,0,0", "0,1,0", "1,1,0", "2,1,0", "2,0,0"]
     )) as PieceWithId
     const problem0_piece0 = puzzle.addPiece(new Piece(
         4,
-        puzzle.grid.getDefaultPieceBounds(),
         ["0,0,0", "1,0,0", "1,1,0"]
     )) as PieceWithId
     const problem0_piece1 = puzzle.addPiece(new Piece(
         5,
-        puzzle.grid.getDefaultPieceBounds(),
         ["0,0,0", "0,1,0"]
     )) as PieceWithId
     const problem0 = new AssemblyProblem(0)
@@ -78,7 +66,6 @@ describe("AssemblySolver", () => {
     // 111
     const problem1_goal = puzzle.addPiece(new Piece(
         6,
-        puzzle.grid.getDefaultPieceBounds(),
         [
             "0,2,0", "1,2,0", "2,2,0",
             "0,1,0", "1,1,0", "2,1,0",
@@ -87,12 +74,10 @@ describe("AssemblySolver", () => {
     )) as PieceWithId
     const problem1_piece0 = puzzle.addPiece(new Piece(
         7,
-        puzzle.grid.getDefaultPieceBounds(),
         ["0,0,0", "0,1,0", "1,1,0", "2,1,0", "2,0,0"]
     )) as PieceWithId
     const problem1_piece1 = puzzle.addPiece(new Piece(
         8,
-        puzzle.grid.getDefaultPieceBounds(),
         ["0,0,0", "1,0,0", "2,0,0", "1,1,0"]
     )) as PieceWithId
     const problem1 = new AssemblyProblem(1)
@@ -105,7 +90,6 @@ describe("AssemblySolver", () => {
     // 00110
     const problem2_goal = puzzle.addPiece(new Piece(
         9,
-        puzzle.grid.getDefaultPieceBounds(),
         [
             "0,1,0", "1,1,0", "2,1,0", "3,1,0", "4,1,0",
             "0,0,0", "1,0,0", "2,0,0", "3,0,0", "4,0,0",
@@ -113,12 +97,10 @@ describe("AssemblySolver", () => {
     ))
     const problem2_piece0 = puzzle.addPiece(new Piece(
         10,
-        puzzle.grid.getDefaultPieceBounds(),
         ["0,1,0", "0,0,0", "1,0,0"]
     )) as PieceWithId
     const problem2_piece1 = puzzle.addPiece(new Piece(
         11,
-        puzzle.grid.getDefaultPieceBounds(),
         ["0,1,0", "1,1,0", "1,0,0", "2,0,0"]
     )) as PieceWithId
     const problem2 = new AssemblyProblem(2)
@@ -133,12 +115,12 @@ describe("AssemblySolver", () => {
         const solutions = solver.solve(puzzle, problem0)
         expect(solutions.length).toEqual(2)
         assertSolutionEqual(solutions[0], {
-            "4": [["1,1,0", "2,1,0", "2,0,0"]],
-            "5": [["0,0,0", "0,1,0"]],
+            4: [["1,1,0", "2,1,0", "2,0,0"]],
+            5: [["0,0,0", "0,1,0"]],
         })
         assertSolutionEqual(solutions[1], {
-            "4": [["1,1,0", "0,1,0", "0,0,0"]],
-            "5": [["2,0,0", "2,1,0"]],
+            4: [["1,1,0", "0,1,0", "0,0,0"]],
+            5: [["2,0,0", "2,1,0"]],
         })
     })
 
@@ -147,8 +129,8 @@ describe("AssemblySolver", () => {
         const solutions = solver.solve(puzzle, problem0)
         expect(solutions.length).toEqual(1)
         assertSolutionEqual(solutions[0], {
-            "4": [["1,1,0", "2,1,0", "2,0,0"]],
-            "5": [["0,0,0", "0,1,0"]],
+            4: [["1,1,0", "2,1,0", "2,0,0"]],
+            5: [["0,0,0", "0,1,0"]],
         })
     })
 
@@ -157,20 +139,20 @@ describe("AssemblySolver", () => {
         const solutions = solver.solve(puzzle, problem1)
         expect(solutions.length).toEqual(4)
         assertSolutionEqual(solutions[0], {
-            "7": [["0,1,0", "0,2,0", "1,2,0", "2,2,0", "2,1,0"]],
-            "8": [["0,0,0", "1,0,0", "2,0,0", "1,1,0"]],
+            7: [["0,1,0", "0,2,0", "1,2,0", "2,2,0", "2,1,0"]],
+            8: [["0,0,0", "1,0,0", "2,0,0", "1,1,0"]],
         })
         assertSolutionEqual(solutions[1], {
-            "7": [["0,1,0", "0,0,0", "1,0,0", "2,0,0", "2,1,0"]],
-            "8": [["0,2,0", "1,2,0", "2,2,0", "1,1,0"]],
+            7: [["0,1,0", "0,0,0", "1,0,0", "2,0,0", "2,1,0"]],
+            8: [["0,2,0", "1,2,0", "2,2,0", "1,1,0"]],
         })
         assertSolutionEqual(solutions[2], {
-            "7": [["1,2,0", "2,2,0", "2,1,0", "2,0,0", "1,0,0"]],
-            "8": [["0,2,0", "0,1,0", "0,0,0", "1,1,0"]],
+            7: [["1,2,0", "2,2,0", "2,1,0", "2,0,0", "1,0,0"]],
+            8: [["0,2,0", "0,1,0", "0,0,0", "1,1,0"]],
         })
         assertSolutionEqual(solutions[3], {
-            "7": [["1,0,0", "0,0,0", "0,1,0", "0,2,0", "1,2,0"]],
-            "8": [["2,0,0", "2,1,0", "2,2,0", "1,1,0"]],
+            7: [["1,0,0", "0,0,0", "0,1,0", "0,2,0", "1,2,0"]],
+            8: [["2,0,0", "2,1,0", "2,2,0", "1,1,0"]],
         })
     })
 
@@ -179,8 +161,8 @@ describe("AssemblySolver", () => {
         const solutions = solver.solve(puzzle, problem1)
         expect(solutions.length).toEqual(1)
         assertSolutionEqual(solutions[0], {
-            "7": [["0,1,0", "0,2,0", "1,2,0", "2,2,0", "2,1,0"]],
-            "8": [["0,0,0", "1,0,0", "2,0,0", "1,1,0"]],
+            7: [["0,1,0", "0,2,0", "1,2,0", "2,2,0", "2,1,0"]],
+            8: [["0,0,0", "1,0,0", "2,0,0", "1,1,0"]],
         })
     })
 
@@ -189,18 +171,18 @@ describe("AssemblySolver", () => {
         const solutions = solver.solve(puzzle, problem2)
         expect(solutions.length).toEqual(2)
         assertSolutionEqual(solutions[0], {
-            "10": [
+            10: [
                 ["0,1,0", "0,0,0", "1,0,0"],
                 ["4,0,0", "4,1,0", "3,1,0"]
             ],
-            "11": [["1,1,0", "2,1,0", "2,0,0", "3,0,0"]],
+            11: [["1,1,0", "2,1,0", "2,0,0", "3,0,0"]],
         })
         assertSolutionEqual(solutions[1], {
-            "10": [
+            10: [
                 ["0,0,0", "0,1,0", "1,1,0"],
                 ["4,1,0", "4,0,0", "3,0,0"],
             ],
-            "11": [["1,0,0", "2,0,0", "2,1,0", "3,1,0"]],
+            11: [["1,0,0", "2,0,0", "2,1,0", "3,1,0"]],
         })
     })
 
@@ -209,11 +191,11 @@ describe("AssemblySolver", () => {
         const solutions = solver.solve(puzzle, problem2)
         expect(solutions.length).toEqual(1)
         assertSolutionEqual(solutions[0], {
-            "10": [
+            10: [
                 ["0,1,0", "0,0,0", "1,0,0"],
                 ["4,0,0", "4,1,0", "3,1,0"]
             ],
-            "11": [["1,1,0", "2,1,0", "2,0,0", "3,0,0"]],
+            11: [["1,1,0", "2,1,0", "2,0,0", "3,0,0"]],
         })
     })
 
@@ -284,7 +266,6 @@ describe("AssemblySolver optional voxels", () => {
 
         const goal = puzzle.addPiece(new Piece(
             100,
-            puzzle.grid.getDefaultPieceBounds(),
             [
                 "0,1,0", "1,1,0",
                 "0,0,0", "1,0,0",
@@ -292,7 +273,6 @@ describe("AssemblySolver optional voxels", () => {
         ))
         const piece1 = puzzle.addPiece(new Piece(
             101,
-            puzzle.grid.getDefaultPieceBounds(),
             ["0,1,0"]
         )) as PieceWithId
         const problem = new AssemblyProblem(0)
@@ -332,7 +312,6 @@ describe("AssemblySolver optional voxels", () => {
 
         const goal = puzzle.addPiece(new Piece(
             100,
-            puzzle.grid.getDefaultPieceBounds(),
             [
                 "0,1,0", "1,1,0",
                 "0,0,0", "1,0,0",
@@ -341,10 +320,10 @@ describe("AssemblySolver optional voxels", () => {
         goal.setVoxelAttribute("optional", "1,1,0", true)
 
         const piece1 = puzzle.addPiece(new Piece(
-            101,
-            puzzle.grid.getDefaultPieceBounds(),
+            1,
             ["0,1,0"]
         )) as PieceWithId
+        piece1.label = "Piece 1"
         piece1.setVoxelAttribute("optional", "0,1,0", true)
 
         const problem = new AssemblyProblem(0)
@@ -352,7 +331,7 @@ describe("AssemblySolver optional voxels", () => {
         problem.usedPieceCounts[piece1.id] = 3
         expect(() => {
             solver.solve(puzzle, problem)
-        }).toThrowErrorMatchingInlineSnapshot(`[Error: The piece "Piece 101" has optional voxels, but currently only the goal piece may contain optional voxels.]`)
+        }).toThrowErrorMatchingInlineSnapshot(`[Error: The piece "Piece 1" has optional voxels, but currently only the goal piece may contain optional voxels.]`)
     })
 
     test("Simple optional voxel problem", () => {
@@ -361,7 +340,6 @@ describe("AssemblySolver optional voxels", () => {
 
         const goal = puzzle.addPiece(new Piece(
             100,
-            puzzle.grid.getDefaultPieceBounds(),
             [
                 "0,1,0", "1,1,0",
                 "0,0,0", "1,0,0",
@@ -370,7 +348,6 @@ describe("AssemblySolver optional voxels", () => {
         goal.setVoxelAttribute("optional", "1,1,0", true)
         const piece1 = puzzle.addPiece(new Piece(
             101,
-            puzzle.grid.getDefaultPieceBounds(),
             [
                 "0,1,0", "1,1,0",
                 "0,0,0",
@@ -392,7 +369,6 @@ describe("AssemblySolver optional voxels", () => {
 
         const goal = puzzle.addPiece(new Piece(
             100,
-            puzzle.grid.getDefaultPieceBounds(),
             [
                 "0,3,0", "1,3,0", "2,3,0", "3,3,0",
                 "0,2,0", "1,2,0", "2,2,0", "3,2,0",
@@ -417,7 +393,6 @@ describe("AssemblySolver optional voxels", () => {
 
         const piece1 = puzzle.addPiece(new Piece(
             101,
-            puzzle.grid.getDefaultPieceBounds(),
             [
                 "0,1,0", "1,1,0", "2,1,0",
                 "0,0,0", "1,0,0", "2,0,0",
@@ -425,7 +400,6 @@ describe("AssemblySolver optional voxels", () => {
         )) as PieceWithId
         const piece2 = puzzle.addPiece(new Piece(
             102,
-            puzzle.grid.getDefaultPieceBounds(),
             [
                          "1,1,0",
                 "0,0,0", "1,0,0", "2,0,0", "3,0,0",
@@ -433,7 +407,6 @@ describe("AssemblySolver optional voxels", () => {
         )) as PieceWithId
         const piece3 = puzzle.addPiece(new Piece(
             103,
-            puzzle.grid.getDefaultPieceBounds(),
             [
                 "0,1,0",
                 "0,0,0", "1,0,0", "2,0,0",

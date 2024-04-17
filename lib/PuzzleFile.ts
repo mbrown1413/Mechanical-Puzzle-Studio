@@ -28,11 +28,12 @@ export class PuzzleFile extends SerializableClass {
      */
     name: string
 
-    author: string
-    description: string
-    createdUTCString: string
-    modifiedUTCString: string
     puzzle: Puzzle
+
+    author?: string
+    description?: string
+    createdUTCString?: string
+    modifiedUTCString?: string
 
     constructor(
         puzzle: Puzzle,
@@ -114,10 +115,10 @@ export class PuzzleFile extends SerializableClass {
         return {
             error: null,
             name: this.name,
-            author: this.author,
-            description: this.description,
-            createdUTCString: this.createdUTCString,
-            modifiedUTCString: this.modifiedUTCString,
+            author: this.author || null,
+            description: this.description || null,
+            createdUTCString: this.createdUTCString || null,
+            modifiedUTCString: this.modifiedUTCString || null,
         }
     }
 }

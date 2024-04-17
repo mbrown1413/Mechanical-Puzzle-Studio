@@ -10,19 +10,19 @@ describe("Puzzle", () => {
     test("pieces", () => {
         const puzzle = new Puzzle(grid)
 
-        const pieceWithId = new Piece(0, puzzle.grid.getDefaultPieceBounds())
+        const pieceWithId = new Piece(0)
         expect(puzzle.hasPiece(0)).toBeFalsy()
         expect(puzzle.hasPiece(pieceWithId)).toBeFalsy()
         puzzle.addPiece(pieceWithId)
         expect(puzzle.hasPiece(0)).toBeTruthy()
         expect(puzzle.hasPiece(pieceWithId)).toBeTruthy()
 
-        const pieceWithSameId = new Piece(0, puzzle.grid.getDefaultPieceBounds())
+        const pieceWithSameId = new Piece(0)
         expect(() => {
             puzzle.addPiece(pieceWithSameId)
         }).toThrow("Duplicate piece ID: 0")
 
-        const pieceWithoutId = new Piece(null, puzzle.grid.getDefaultPieceBounds())
+        const pieceWithoutId = new Piece()
         expect(() => {
             puzzle.addPiece(pieceWithoutId)
         }).toThrow("Cannot add piece without ID")

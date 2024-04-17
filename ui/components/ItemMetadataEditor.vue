@@ -68,7 +68,7 @@ switch(props.itemType) {
                 property: "piecesId",
                 label: "Pieces Used",
                 type: "pieces",
-                getDisabledPieceIds: (item: AssemblyProblem) => item.goalPieceId !== null ? [item.goalPieceId] : []
+                getDisabledPieceIds: (item: AssemblyProblem) => item.goalPieceId !== undefined ? [item.goalPieceId] : []
             }
         ]
         break;

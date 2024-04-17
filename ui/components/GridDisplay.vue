@@ -68,7 +68,11 @@ const bounds = computed(() => {
         bounds = props.puzzle.grid.getVoxelBounds(...allVoxels)
     } else {
         bounds = props.puzzle.grid.getBoundsMax(
-            ...pieces.value.map(piece => piece.bounds)
+            ...pieces.value.map(
+                (piece) => piece.bounds
+            ).filter(
+                (bounds): bounds is Bounds => Array.isArray(bounds)
+            )
         )
     }
 

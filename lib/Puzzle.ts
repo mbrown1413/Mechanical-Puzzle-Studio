@@ -57,7 +57,11 @@ export class Puzzle extends SerializableClass {
 
     getNewPieceColor(): string {
         const piecesList = Array.from(this.pieces.values())
-        const existingColors = piecesList.map((piece) => piece.color)
+        const existingColors = piecesList.map(
+            (piece) => piece.color
+        ).filter(
+            (color): color is string => typeof color === "string"
+        )
         return getNextColor(existingColors)
     }
 
@@ -78,7 +82,7 @@ export class Puzzle extends SerializableClass {
 
     getPiece(pieceOrId: Piece | PieceId): PieceWithId | null {
         const id = typeof pieceOrId === "number" ? pieceOrId : pieceOrId.id
-        if(id === null) return null
+        if(id === undefined) return null
         return this.pieces.find(piece => piece.id === id) || null
     }
 
@@ -88,7 +92,7 @@ export class Puzzle extends SerializableClass {
 
     removePiece(pieceOrId: Piece | PieceId, throwErrors=true) {
         const id = typeof pieceOrId === "number" ? pieceOrId : pieceOrId.id
-        if(id === null) {
+        if(id === undefined) {
             if(throwErrors) {
                 throw new Error("Cannot remove piece without ID")
             }
