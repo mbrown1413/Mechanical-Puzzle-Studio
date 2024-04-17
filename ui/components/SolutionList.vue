@@ -25,7 +25,7 @@ const solutionItems = computed(() => {
     return problem.value.solutions.map((solution, i) => {
         return {
             id: i,
-            label: `Solution ${i}`,
+            label: `Solution ${i+1}`,
             solution,
         }
     })
