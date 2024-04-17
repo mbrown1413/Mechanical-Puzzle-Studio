@@ -228,7 +228,10 @@ class SampleStorage extends PuzzleStorage {
 
     constructor() {
         super()
-        const modules = import.meta.glob("../examples/*.json", {eager: true})
+        const modules = import.meta.glob(
+            "../examples/*.json",
+            {eager: true, import: "default"}
+        )
         this.puzzleStrings = Object.fromEntries(
             Object.values(modules).map((object) => {
                 const serializedString = JSON.stringify(object)
