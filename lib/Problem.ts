@@ -4,7 +4,7 @@ import {Solver, AssemblySolver} from "~/lib/Solver.ts"
 import {Solution} from "~/lib/Solution.ts"
 import {PieceId} from "~/lib/Piece.ts"
 
-export type ProblemId = string
+export type ProblemId = number
 
 type SolverInfo = {
     solver: new(...args: unknown[]) => Solver,
@@ -23,7 +23,7 @@ export abstract class Problem extends SerializableClass {
     constructor(id: ProblemId) {
         super()
         this.id = id
-        this.label = id
+        this.label = id === null ? "unlabeled-problem" : `Problem ${id}`
         this.solverId = Object.keys(this.getSolvers())[0]
         this.solutions = null
     }
@@ -45,8 +45,12 @@ export abstract class Problem extends SerializableClass {
 export class AssemblyProblem extends Problem {
     goalPieceId: PieceId | null
 
-    /* Maps piece ID to how many of that piece are used in this problem. */
-    usedPieceCounts: {[pieceId: string]: number}
+    /* Maps piece ID to how many of that piece are used in this problem.
+     *
+     * Note that since JS objects store keys as strings, you should use the
+     * getters `usedPieces` and `getPieceCount()` if possible.
+     */
+    usedPieceCounts: {[pieceId: PieceId]: number}
 
     constructor(id: ProblemId) {
         super(id)
@@ -61,6 +65,14 @@ export class AssemblyProblem extends Problem {
                 isUsable: {bool: true as const},
             },
         }
+    }
+
+    get usedPieces(): PieceId[] {
+        return Object.keys(this.usedPieceCounts).map(Number)
+    }
+
+    getPieceCount(pieceId: PieceId): number {
+        return this.usedPieceCounts[pieceId] | 0
     }
 }
 

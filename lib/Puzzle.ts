@@ -6,8 +6,10 @@ import {getNextColor} from "~/lib/colors.ts"
 import {Piece, PieceId, PieceWithId} from "~/lib/Piece.ts"
 import {ProblemId} from "~/lib/Problem.ts"
 
-/** ID of an "item", where an item is one thing inside a puzzle collection
- * attribute (e.g. a piece or a problem). */
+
+/** An item is one thing inside a puzzle collection attribute (e.g. a piece or
+ * a problem). */
+export type Item = Piece | Problem
 export type ItemId = PieceId | ProblemId
 
 export class Puzzle extends SerializableClass {
@@ -49,10 +51,8 @@ export class Puzzle extends SerializableClass {
 
     private generateNewId(
         type: "piece" | "problem"
-    ): string {
-        const id = `${type}-${this.idCounters[type]}`
-        this.idCounters[type] += 1
-        return id
+    ): ItemId {
+        return this.idCounters[type]++
     }
 
     getNewPieceColor(): string {
@@ -77,7 +77,7 @@ export class Puzzle extends SerializableClass {
     }
 
     getPiece(pieceOrId: Piece | PieceId): PieceWithId | null {
-        const id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
+        const id = typeof pieceOrId === "number" ? pieceOrId : pieceOrId.id
         if(id === null) return null
         return this.pieces.find(piece => piece.id === id) || null
     }
@@ -87,7 +87,7 @@ export class Puzzle extends SerializableClass {
     }
 
     removePiece(pieceOrId: Piece | PieceId, throwErrors=true) {
-        const id = typeof pieceOrId === "string" ? pieceOrId : pieceOrId.id
+        const id = typeof pieceOrId === "number" ? pieceOrId : pieceOrId.id
         if(id === null) {
             if(throwErrors) {
                 throw new Error("Cannot remove piece without ID")
@@ -116,7 +116,7 @@ export class Puzzle extends SerializableClass {
     }
 
     getProblem(problemOrId: Problem | ProblemId): Problem | null {
-        const id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
+        const id = typeof problemOrId === "number" ? problemOrId : problemOrId.id
         return this.problems.find(problem => problem.id === id) || null
     }
 
@@ -125,7 +125,7 @@ export class Puzzle extends SerializableClass {
     }
 
     removeProblem(problemOrId: Problem | ProblemId, throwErrors=true) {
-        const id = typeof problemOrId === "string" ? problemOrId : problemOrId.id
+        const id = typeof problemOrId === "number" ? problemOrId : problemOrId.id
         const idx = this.problems.findIndex(problem => problem.id === id)
         if(throwErrors && idx === -1) {
             throw new Error(`Problem ID not found: ${id}`)

@@ -10,17 +10,17 @@ describe("Puzzle", () => {
     test("pieces", () => {
         const puzzle = new Puzzle(grid)
 
-        const pieceWithId = new Piece("piece-0", puzzle.grid.getDefaultPieceBounds())
-        expect(puzzle.hasPiece("piece-0")).toBeFalsy()
+        const pieceWithId = new Piece(0, puzzle.grid.getDefaultPieceBounds())
+        expect(puzzle.hasPiece(0)).toBeFalsy()
         expect(puzzle.hasPiece(pieceWithId)).toBeFalsy()
         puzzle.addPiece(pieceWithId)
-        expect(puzzle.hasPiece("piece-0")).toBeTruthy()
+        expect(puzzle.hasPiece(0)).toBeTruthy()
         expect(puzzle.hasPiece(pieceWithId)).toBeTruthy()
 
-        const pieceWithSameId = new Piece("piece-0", puzzle.grid.getDefaultPieceBounds())
+        const pieceWithSameId = new Piece(0, puzzle.grid.getDefaultPieceBounds())
         expect(() => {
             puzzle.addPiece(pieceWithSameId)
-        }).toThrow("Duplicate piece ID: piece-0")
+        }).toThrow("Duplicate piece ID: 0")
 
         const pieceWithoutId = new Piece(null, puzzle.grid.getDefaultPieceBounds())
         expect(() => {
@@ -39,11 +39,11 @@ describe("Puzzle", () => {
         puzzle.removePiece(pieceWithId, false)
         expect(() => {
             puzzle.removePiece(pieceWithId)
-        }).toThrow("Piece ID not found: piece-0")
+        }).toThrow("Piece ID not found: 0")
 
         puzzle.addPiece(pieceWithId)
-        expect(puzzle.hasPiece("piece-0")).toBeTruthy()
-        puzzle.removePiece("piece-0")
-        expect(puzzle.hasPiece("piece-0")).toBeFalsy()
+        expect(puzzle.hasPiece(0)).toBeTruthy()
+        puzzle.removePiece(0)
+        expect(puzzle.hasPiece(0)).toBeFalsy()
     })
 })

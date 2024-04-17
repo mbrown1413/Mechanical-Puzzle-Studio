@@ -22,7 +22,7 @@ const emit = defineEmits<{
     action: [action: Action]
 }>()
 
-const selectedPieceIds: Ref<string[]> = ref([])
+const selectedPieceIds: Ref<PieceId[]> = ref([])
 
 const tableHeaders: VDataTable["headers"] = [
     {title: "Piece Name", key: "label"},

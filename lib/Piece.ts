@@ -1,7 +1,9 @@
 import {SerializableClass, clone, registerClass} from "~/lib/serialize.ts"
 import {Bounds, Voxel, Transform} from "~/lib/Grid.ts"
 
-export type PieceId = string
+export type PieceId = number
+export type PieceInstanceId = number
+export type PieceCompleteId = `${PieceId}` | `${PieceId}-${PieceInstanceId}`
 
 export type PieceWithId = Piece & {id: PieceId}
 
@@ -9,6 +11,7 @@ type AttributeValue = boolean
 
 export class Piece extends SerializableClass {
     id: PieceId | null
+    instance?: PieceInstanceId
 
     bounds: Bounds
     voxels: Voxel[]
@@ -26,18 +29,34 @@ export class Piece extends SerializableClass {
         this.id = id
         this.bounds = bounds
         this.voxels = voxels
-        this.label = id || "unlabeled-piece"
+        this.label = id === null ? "unlabeled-piece" : `Piece ${id}`
         this.color = "#00ff00"
         this.voxelAttributes = undefined
     }
 
     hasId(): this is PieceWithId {
-        return typeof this.id === "string"
+        return typeof this.id === "number"
+    }
+
+    /**
+     * Complete ID is unique not only to this piece, but to this instance of
+     * the piece. It includes the piece ID and the piece instance number.
+     */
+    get completeId(): PieceCompleteId | null {
+        if(this.id === null) {
+            return null
+        }
+        if(typeof this.instance === "number") {
+            return `${this.id}-${this.instance}`
+        } else {
+            return `${this.id}`
+        }
     }
 
     copy(): Piece {
         const coppied = clone(this)
         coppied.id = null
+        coppied.instance = undefined
         return coppied
     }
 

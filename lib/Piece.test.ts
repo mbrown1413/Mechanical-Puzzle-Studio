@@ -6,8 +6,17 @@ import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 const grid = new CubicGrid()
 
 describe("Piece", () => {
+    test("IDs", () => {
+        const piece = new Piece(0, [])
+        expect(piece.id).toBe(0)
+        expect(piece.completeId).toBe("0")
+
+        piece.instance = 1
+        expect(piece.completeId).toBe("0-1")
+    })
+
     test("edit voxels", () => {
-        const piece = new Piece("piece-0", [])
+        const piece = new Piece(0, [])
         expect(piece.voxels).toEqual([])
 
         piece.addVoxel("0,0,0")
@@ -24,13 +33,13 @@ describe("Piece", () => {
     })
 
     test("adding voxel attribute to voxel that doesn't exist", () => {
-        const piece = new Piece("piece-0", [])
+        const piece = new Piece(0, [])
         piece.setVoxelAttribute("foo", "0,0,0", true)
         expect(piece.voxelAttributes).toEqual(undefined)
     })
 
     test("voxel attributes removed when voxel removed", () => {
-        const piece = new Piece("piece-0", [])
+        const piece = new Piece(0, [])
         piece.addVoxel("0,0,0")
         piece.addVoxel("1,0,0")
         piece.addVoxel("2,0,0")
@@ -55,7 +64,7 @@ describe("Piece", () => {
     })
 
     test("copy", () => {
-        const piece0 = new Piece("piece-0", [])
+        const piece0 = new Piece(0, [])
         const copy0 = piece0.copy()
         expect(copy0).not.toBe(piece0)
         expect(copy0).toEqual(Object.assign(piece0, {id: null}))
@@ -68,7 +77,7 @@ describe("Piece", () => {
 
     test("equality", () => {
         const piece1 = new Piece(null, grid.getDefaultPieceBounds())
-        const piece2 = new Piece("withId", grid.getDefaultPieceBounds())
+        const piece2 = new Piece(0, grid.getDefaultPieceBounds())
 
         piece1.voxels = ["0,0,0", "1,1,1"]
         piece2.voxels = ["1,1,1", "0,0,0"]

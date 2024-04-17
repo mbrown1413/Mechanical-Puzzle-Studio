@@ -1,4 +1,7 @@
-import {Voxel, Puzzle, ItemId, Piece, Problem, AssemblyProblem, PuzzleFile, Bounds} from "~lib"
+import {
+    Voxel, Puzzle, Item, ItemId, Piece, PieceId, Problem, AssemblyProblem,
+    PuzzleFile, Bounds
+} from "~lib"
 
 
 function getDuplicateItemLabel(
@@ -50,7 +53,7 @@ export abstract class Action {
     abstract toString(): string
 }
 
-export abstract class EditItemMetadataAction<T extends object> extends Action {
+export abstract class EditItemMetadataAction<T extends Item> extends Action {
     itemId: ItemId
     metadata: object
 
@@ -70,12 +73,13 @@ export abstract class EditItemMetadataAction<T extends object> extends Action {
         return `Edit ${constructor.itemName.toLowerCase()}`
     }
 
-    getItem(puzzle: Puzzle, itemId: ItemId): Piece | Problem | null {
+    getItem(puzzle: Puzzle, itemId: T["id"]): T | null {
+        if(itemId === null) { return null }
         const constructor = <typeof DeleteItemsAction> this.constructor
         if(constructor.itemName === "Piece") {
-            return puzzle.getPiece(itemId)
+            return puzzle.getPiece(itemId as PieceId) as T
         } else {
-            return puzzle.getProblem(itemId)
+            return puzzle.getProblem(itemId) as T
         }
     }
 
@@ -110,7 +114,7 @@ abstract class DeleteItemsAction extends Action {
     hasItem(puzzle: Puzzle, itemId: ItemId) {
         const constructor = <typeof DeleteItemsAction> this.constructor
         if(constructor.itemName === "Piece") {
-            return puzzle.hasPiece(itemId)
+            return puzzle.hasPiece(itemId as PieceId)
         } else {
             return puzzle.hasProblem(itemId)
         }
@@ -119,7 +123,7 @@ abstract class DeleteItemsAction extends Action {
     deleteItem(puzzle: Puzzle, itemId: ItemId) {
         const constructor = <typeof DeleteItemsAction> this.constructor
         if(constructor.itemName === "Piece") {
-            return puzzle.removePiece(itemId)
+            return puzzle.removePiece(itemId as PieceId)
         } else {
             return puzzle.removeProblem(itemId)
         }
@@ -222,13 +226,13 @@ export class DeletePiecesAction extends DeleteItemsAction {
 }
 
 export class EditPieceAction extends Action {
-    pieceId: ItemId
+    pieceId: PieceId
     voxelsToAdd: Voxel[]
     voxelsToRemove: Voxel[]
     optionalVoxels: boolean
 
     constructor(
-        pieceId: ItemId,
+        pieceId: PieceId,
         addVoxels: Voxel[],
         removeVoxels: Voxel[],
         optionalVoxels=false,
@@ -352,8 +356,8 @@ export class EditProblemMetadataAction extends EditItemMetadataAction<Problem> {
     postEdit(problem: Problem) {
         if(problem instanceof AssemblyProblem) {
             // Remove used piece entries with "0" count
-            for(const [pieceId, count] of Object.entries(problem.usedPieceCounts)) {
-                if(count <= 0) {
+            for(const pieceId of problem.usedPieces) {
+                if(problem.getPieceCount(pieceId) <= 0) {
                     delete problem.usedPieceCounts[pieceId]
                 }
             }

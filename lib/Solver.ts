@@ -120,12 +120,12 @@ export class AssemblySolver extends Solver {
         }
 
         const pieces = []
-        for(const [pieceId, count] of Object.entries(problem.usedPieceCounts)) {
+        for(const pieceId of problem.usedPieces) {
             const piece = puzzle.getPiece(pieceId)
             if(!piece) {
                 continue  // Ignore references to deleted pieces
             }
-            for(let i=0; i<count; i++) {
+            for(let i=0; i<problem.getPieceCount(pieceId); i++) {
                 pieces.push(piece)
             }
         }

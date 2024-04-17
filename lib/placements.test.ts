@@ -17,7 +17,7 @@ const grid = new CubicGrid()
 describe("getPieceOrientations()", () => {
     test("simple orientation", () => {
         const piece = new Piece(
-            "piece-0",
+            0,
             [3, 3, 3],
             rotationTestData.originalPiece
         )
@@ -38,7 +38,7 @@ describe("getPieceOrientations()", () => {
 describe("getPieceTranslations()", () => {
     test("simple translation", () => {
         let piece = new Piece(
-            "piece-0",
+            0,
             [3, 3, 3],
             ["0,0,0", "1,0,0"]
         )
@@ -59,7 +59,7 @@ describe("getPieceTranslations()", () => {
         expect(placements[7].transformedPiece.voxels).toEqual(["1,1,1", "2,1,1"])
 
         piece = new Piece(
-            "piece-0",
+            0,
             [3, 3, 3],
             ["0,0,0", "0,0,1"]
         )
@@ -81,7 +81,7 @@ describe("getPieceTranslations()", () => {
 describe("getPiecePlacements()", () => {
     test("simple piece", () => {
         let piece = new Piece(
-            "piece-0",
+            0,
             grid.getDefaultPieceBounds(),
             ["0,0,0", "0,0,1"]
         )
@@ -120,7 +120,7 @@ describe("getPiecePlacements()", () => {
         )
 
         piece = new Piece(
-            "piece-0",
+            0,
             [3, 3, 3],
             ["0,0,0", "0,1,0", "1,1,0"]
         )

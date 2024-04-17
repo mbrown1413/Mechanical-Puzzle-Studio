@@ -9,7 +9,7 @@ import {ref, Ref, watch} from "vue"
 const el: Ref<HTMLSelectElement | null> = ref(null)
 
 type Item = {
-    id: string,
+    id: number,
     label: string,
     color?: string,
 }
@@ -17,7 +17,7 @@ type Item = {
 const props = withDefaults(
     defineProps<{
         items: Item[],
-        selectedIds: string[],
+        selectedIds: number[],
         showButtons?: boolean,
     }>(), {
         showButtons: false,
@@ -25,7 +25,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-    "update:selectedIds": [ids: string[]],
+    "update:selectedIds": [ids: number[]],
     add: [],
     remove: [],
 }>()
@@ -39,7 +39,7 @@ let oldItems = [...props.items]
 watch(() => props.items, () => {
     const oldSet = new Set(oldItems.map(item => item.id))
     const newSet = new Set(props.items.map(item => item.id))
-    let newSelectedIds: string[]
+    let newSelectedIds: number[]
 
     if(newSet.size === oldSet.size + 1) {
         // Added item: Select item that was added
@@ -70,7 +70,7 @@ watch(() => props.items, () => {
 
 function onItemsSelect() {
     if(el.value === null) return
-    const selectedValues = Array.from(el.value.selectedOptions).map(option => option.value)
+    const selectedValues = Array.from(el.value.selectedOptions).map(option => Number(option.value))
     emit('update:selectedIds', selectedValues)
 }
 </script>

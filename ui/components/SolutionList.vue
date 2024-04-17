@@ -24,7 +24,7 @@ const solutionItems = computed(() => {
     }
     return problem.value.solutions.map((solution, i) => {
         return {
-            id: String(i),
+            id: i,
             label: `Solution ${i}`,
             solution,
         }
@@ -76,7 +76,7 @@ defineExpose({
         <ListSelect
             v-if="solutionItems.length"
             :items="solutionItems"
-            :selectedIds="selectedSolutionIds.map(String)"
+            :selectedIds="selectedSolutionIds"
             @update:selectedIds="selectedSolutionIds = $event.map(Number)"
         />
 

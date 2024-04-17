@@ -82,7 +82,7 @@ const item: ComputedRef<Piece | Problem | null> = computed(() => {
         return null
     }
     if(puzzleProperty === "pieces") {
-        return props.puzzle.getPiece(props.itemId)
+        return props.puzzle.getPiece(props.itemId as PieceId)
     } else {
         return props.puzzle.getProblem(props.itemId)
     }
