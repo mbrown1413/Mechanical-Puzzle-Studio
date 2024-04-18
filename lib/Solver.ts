@@ -1,7 +1,7 @@
 import {AssemblyProblem, Problem} from "~/lib/Problem.ts"
 import {Puzzle} from "~/lib/Puzzle.ts"
-import {Piece} from "~/lib/Piece.ts"
-import {PiecePlacement, getPlacements} from "~/lib/placements.ts"
+import {Piece, PieceWithId} from "~/lib/Piece.ts"
+import {getPlacements} from "~/lib/placements.ts"
 import {AssemblySolution, Solution} from "~/lib/Solution.ts"
 import {TaskCallbacks, voidTaskCallbacks} from "~/lib/types.ts"
 
@@ -30,7 +30,7 @@ type GroupedCoverProblem = {
     pieces: Piece[],
 
     // placementsByPieceIdx[pieceIdx][i] - The i-th placement of piece at `pieceIdx`
-    placementsByPieceIdx: PiecePlacement[][],
+    placementsByPieceIdx: Piece[][],
 
     // coverRowsByPieceIdx[pieceIdx][i] - The i-th cover row of piece at `pieceIdx`
     coverRowsByPieceIdx: boolean[][][],
@@ -128,8 +128,15 @@ export class AssemblySolver extends Solver {
             if(!piece) {
                 continue  // Ignore references to deleted pieces
             }
-            for(let i=0; i<problem.getPieceCount(pieceId); i++) {
-                pieces.push(piece)
+            const count = problem.getPieceCount(pieceId)
+            for(let i=0; i<count; i++) {
+                if(count > 1) {
+                    const copy = piece.copy() as PieceWithId
+                    copy.instance = i
+                    pieces.push(copy)
+                } else {
+                    pieces.push(piece)
+                }
             }
         }
 
@@ -190,15 +197,15 @@ export class AssemblySolver extends Solver {
             }
         })
 
-        const placementsByPieceIdx: PiecePlacement[][] = []
+        const placementsByPieceIdx: Piece[][] = []
         const coverRowsByPieceIdx: boolean[][][] = []
         for(const piece of pieces) {
-            const placements = placementResults.placementsByPiece[piece.id]
+            const placements = placementResults.placementsByPiece[piece.completeId]
             const coverRows: boolean[][] = []
             for(const placement of placements) {
                 coverRows.push(
                     goalVoxels.map((voxel) =>
-                        placement.transformedPiece.voxels.includes(voxel)
+                        placement.voxels.includes(voxel)
                     )
                 )
             }

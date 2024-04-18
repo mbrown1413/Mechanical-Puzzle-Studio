@@ -5,7 +5,7 @@ export type PieceId = number
 export type PieceInstanceId = number
 export type PieceCompleteId = `${PieceId}` | `${PieceId}-${PieceInstanceId}`
 
-export type PieceWithId = Piece & {id: PieceId}
+export type PieceWithId = Piece & {id: PieceId, completeId: PieceCompleteId}
 
 type AttributeValue = boolean
 
@@ -60,10 +60,7 @@ export class Piece extends SerializableClass {
     }
 
     copy(): Piece {
-        const coppied = clone(this)
-        coppied.id = undefined
-        coppied.instance = undefined
-        return coppied
+        return clone(this)
     }
 
     equals(other: Piece): boolean {

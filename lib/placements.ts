@@ -1,21 +1,7 @@
-import {Piece, PieceWithId, PieceId} from "~/lib/Piece.ts"
+import {Piece, PieceWithId, PieceId, PieceCompleteId} from "~/lib/Piece.ts"
 import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
 
-/**
- * Defines a piece's position and orientation on the puzzle's grid.
- */
-export type PiecePlacement = {
-
-    /** The piece as defined in the puzzle. */
-    originalPieceId?: PieceId
-
-    /**
-     * A copy of the piece after it is transformed and moved to a new location.
-     */
-    transformedPiece: Piece
-}
-
-type PlacementsByPiece = {[pieceId: PieceId]: PiecePlacement[]}
+type PlacementsByPiece = {[pieceId: PieceCompleteId]: Piece[]}
 
 type SymmetryInfo = {
     piece: Piece,
@@ -30,19 +16,16 @@ export function getPieceOrientations(
     grid: Grid,
     piece: Piece,
     allowedRotations: Transform[] | null = null
-): PiecePlacement[] {
+): Piece[] {
     if(allowedRotations === null) {
         allowedRotations = grid.getRotations()
     }
 
-    const placements: PiecePlacement[] = []
+    const placements: Piece[] = []
     for(const rotation of allowedRotations) {
         const transformedPiece = piece.copy().transform(rotation)
 
-        placements.push({
-            originalPieceId: piece.id,
-            transformedPiece: transformedPiece,
-        })
+        placements.push(transformedPiece)
     }
     return placements
 }
@@ -56,17 +39,14 @@ export function getPieceTranslations(
     grid: Grid,
     piece: Piece,
     availableVoxels: Voxel[],
-): PiecePlacement[] {
+): Piece[] {
     const translations = []
     availableVoxels = [...new Set(availableVoxels)]
     for(const toVoxel of availableVoxels) {
         const translation = grid.getTranslation(piece.voxels[0], toVoxel)
         const newPiece = piece.copy().transform(translation)
         if(newPiece.voxels.every(v => availableVoxels.includes(v))) {
-            translations.push({
-                originalPieceId: piece.id,
-                transformedPiece: newPiece,
-            })
+            translations.push(newPiece)
         }
     }
     return translations
@@ -81,7 +61,7 @@ export function getPiecePlacements(
     piece: Piece,
     availableVoxels: Voxel[],
     allowedRotations: Transform[] | null = null
-): PiecePlacement[] {
+): Piece[] {
     const placements = []
 
     const orientationPlacements = filterTranslationCongruentPlacements(
@@ -89,17 +69,11 @@ export function getPiecePlacements(
         getPieceOrientations(grid, piece, allowedRotations)
     )
     for(const pieceOrientation of orientationPlacements) {
-        const pieceTranslations = getPieceTranslations(
+        placements.push(...getPieceTranslations(
             grid,
-            pieceOrientation.transformedPiece,
+            pieceOrientation,
             availableVoxels
-        )
-        for(const pieceTranslation of pieceTranslations) {
-            placements.push({
-                originalPieceId: piece.id,
-                transformedPiece: pieceTranslation.transformedPiece,
-            })
-        }
+        ))
     }
     return placements
 }
@@ -136,7 +110,7 @@ export function getPlacements(
             allowedRotations = null
         }
 
-        placementsByPiece[piece.id] = getPiecePlacements(
+        placementsByPiece[piece.completeId] = getPiecePlacements(
             grid,
             piece,
             goal.voxels,
@@ -281,12 +255,12 @@ function getSymmetryGroups(grid: Grid, piece: Piece, orientations: Transform[]):
 /** Filter out placements which are congruent via translation. */
 function filterTranslationCongruentPlacements(
     grid: Grid,
-    placements: PiecePlacement[]
-): PiecePlacement[] {
-    const newPlacements: PiecePlacement[] = []
+    placements: Piece[]
+): Piece[] {
+    const newPlacements: Piece[] = []
     for(const placement of placements) {
         const existingCongruent = newPlacements.some(
-            p => isTranslationCongruent(grid, p.transformedPiece, placement.transformedPiece)
+            p => isTranslationCongruent(grid, p, placement)
         )
         if(!existingCongruent) {
             newPlacements.push(placement)

@@ -22,14 +22,14 @@ describe("getPieceOrientations()", () => {
         )
         const orientations = getPieceOrientations(grid, piece)
         const actualOrientations = makePlacementSet(
-            orientations.map((placement) => placement.transformedPiece.voxels)
+            orientations.map((placement) => placement.voxels)
         )
         const expectedOrientations = makePlacementSet(
             rotationTestData.orientationsMinusSymmetries
         )
         expect(actualOrientations).toEqual(expectedOrientations)
-        expect(orientations[0].originalPieceId).toEqual(piece.id)
-        expect(orientations[0].transformedPiece).not.toEqual(piece)
+        expect(orientations[0].id).toEqual(piece.id)
+        expect(orientations[0]).not.toEqual(piece)
     })
 
 })
@@ -47,14 +47,14 @@ describe("getPieceTranslations()", () => {
         ))
         expect(placements.length).toEqual(8)
 
-        expect(placements[0].transformedPiece.voxels).toEqual(["0,0,0", "1,0,0"])
-        expect(placements[1].transformedPiece.voxels).toEqual(["0,0,1", "1,0,1"])
-        expect(placements[2].transformedPiece.voxels).toEqual(["0,1,0", "1,1,0"])
-        expect(placements[3].transformedPiece.voxels).toEqual(["0,1,1", "1,1,1"])
-        expect(placements[4].transformedPiece.voxels).toEqual(["1,0,0", "2,0,0"])
-        expect(placements[5].transformedPiece.voxels).toEqual(["1,0,1", "2,0,1"])
-        expect(placements[6].transformedPiece.voxels).toEqual(["1,1,0", "2,1,0"])
-        expect(placements[7].transformedPiece.voxels).toEqual(["1,1,1", "2,1,1"])
+        expect(placements[0].voxels).toEqual(["0,0,0", "1,0,0"])
+        expect(placements[1].voxels).toEqual(["0,0,1", "1,0,1"])
+        expect(placements[2].voxels).toEqual(["0,1,0", "1,1,0"])
+        expect(placements[3].voxels).toEqual(["0,1,1", "1,1,1"])
+        expect(placements[4].voxels).toEqual(["1,0,0", "2,0,0"])
+        expect(placements[5].voxels).toEqual(["1,0,1", "2,0,1"])
+        expect(placements[6].voxels).toEqual(["1,1,0", "2,1,0"])
+        expect(placements[7].voxels).toEqual(["1,1,1", "2,1,1"])
 
         piece = new Piece(
             0,
@@ -66,12 +66,12 @@ describe("getPieceTranslations()", () => {
             grid.getVoxels([3, 2, 2])
         ))
         expect(placements.length).toEqual(6)
-        expect(placements[0].transformedPiece.voxels).toEqual(["0,0,0", "0,0,1"])
-        expect(placements[1].transformedPiece.voxels).toEqual(["0,1,0", "0,1,1"])
-        expect(placements[2].transformedPiece.voxels).toEqual(["1,0,0", "1,0,1"])
-        expect(placements[3].transformedPiece.voxels).toEqual(["1,1,0", "1,1,1"])
-        expect(placements[4].transformedPiece.voxels).toEqual(["2,0,0", "2,0,1"])
-        expect(placements[5].transformedPiece.voxels).toEqual(["2,1,0", "2,1,1"])
+        expect(placements[0].voxels).toEqual(["0,0,0", "0,0,1"])
+        expect(placements[1].voxels).toEqual(["0,1,0", "0,1,1"])
+        expect(placements[2].voxels).toEqual(["1,0,0", "1,0,1"])
+        expect(placements[3].voxels).toEqual(["1,1,0", "1,1,1"])
+        expect(placements[4].voxels).toEqual(["2,0,0", "2,0,1"])
+        expect(placements[5].voxels).toEqual(["2,1,0", "2,1,1"])
     })
 })
 
@@ -87,7 +87,7 @@ describe("getPiecePlacements()", () => {
             grid.getVoxels([3, 2, 2]),
         ))
         expect(
-            makePlacementSet(placements.map((p) => p.transformedPiece.voxels))
+            makePlacementSet(placements.map((p) => p.voxels))
         ).toEqual(
             makePlacementSet([
                 ["0,0,0", "1,0,0"],
@@ -126,7 +126,7 @@ describe("getPiecePlacements()", () => {
         ))
         expect(placements.length).toEqual(1)
         expect(
-            placements.map((p) => p.transformedPiece.voxels)
+            placements.map((p) => p.voxels)
         ).toEqual([
             ["0,0,0", "0,1,0", "1,1,0"],
         ])

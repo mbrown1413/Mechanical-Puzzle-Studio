@@ -16,7 +16,7 @@ const pieces = computed(() => {
     }
     const solution = props.solution as AssemblySolution
     const placements = Array.from(solution.placements)
-    return placements.map((placement) => placement.transformedPiece)
+    return placements.map((placement) => placement)
 })
 </script>
 
