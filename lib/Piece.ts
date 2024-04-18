@@ -142,7 +142,11 @@ export class Piece extends SerializableClass {
                 newAttrs[attrName][newVoxel] = value
             }
         }
-        this.voxelAttributes = newAttrs
+        if(Object.keys(newAttrs).length == 0) {
+            this.voxelAttributes = undefined
+        } else {
+            this.voxelAttributes = newAttrs
+        }
 
         this.voxels = newVoxels
         return this

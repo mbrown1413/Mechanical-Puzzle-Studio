@@ -29,7 +29,7 @@ describe("getPieceOrientations()", () => {
         )
         expect(actualOrientations).toEqual(expectedOrientations)
         expect(orientations[0].id).toEqual(piece.id)
-        expect(orientations[0]).not.toEqual(piece)
+        expect(orientations[0]).toEqual(piece)
     })
 
 })

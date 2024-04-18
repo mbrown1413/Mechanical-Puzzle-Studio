@@ -63,6 +63,25 @@ describe("Piece", () => {
         expect(piece.voxelAttributes).toEqual(undefined)
     })
 
+    test("unset voxel attribute", () => {
+        const piece = new Piece()
+        piece.addVoxel("0,0,0")
+        piece.setVoxelAttribute("foo", "0,0,0", true)
+        piece.setVoxelAttribute("bar", "0,0,0", false)
+        expect(piece.voxelAttributes).toEqual({
+            foo: {"0,0,0": true},
+            bar: {"0,0,0": false},
+        })
+
+        piece.unsetVoxelAttribute("foo", "0,0,0")
+        expect(piece.voxelAttributes).toEqual({
+            bar: {"0,0,0": false},
+        })
+
+        piece.unsetVoxelAttribute("bar", "0,0,0")
+        expect(piece.voxelAttributes).toEqual(undefined)
+    })
+
     test("copy", () => {
         const piece0 = new Piece()
         const copy0 = piece0.copy()
@@ -125,6 +144,7 @@ describe("Piece", () => {
         const translate = grid.getTranslation("0,0,0", "1,0,0")
         piece.transform(translate)
         expect(piece.voxels).toEqual(["1,0,0", "2,1,1"])
+        expect(piece.voxelAttributes).toEqual(undefined)
     })
 
     test("transform with voxelAttributes", () => {
