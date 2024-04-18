@@ -9,6 +9,16 @@ export type PieceWithId = Piece & {id: PieceId, completeId: PieceCompleteId}
 
 type AttributeValue = boolean
 
+/**
+ * Data as we store it when serialized. We'll read the types of Piece if
+ * needed, but alternatively we turn some long lists into strings for more
+ * efficient storage and better readability of the file format.
+ */
+type PieceStoredData = {
+    voxels: string[] | string
+    bounds?: number[] | string
+}
+
 export class Piece extends SerializableClass {
     id?: PieceId
     instance?: PieceInstanceId
@@ -37,6 +47,30 @@ export class Piece extends SerializableClass {
             if(voxels.length > 0) {
                 throw new Error("Bad argument types for Piece constructor")
             }
+        }
+    }
+
+    static postSerialize(piece: Piece) {
+        const stored = piece as unknown as PieceStoredData
+
+        stored.voxels = piece.voxels.join("; ")
+        if(piece.bounds) {
+            stored.bounds = piece.bounds.join(",")
+        }
+    }
+
+    static preDeserialize(stored: PieceStoredData) {
+        const pieceData: Piece = stored as unknown as Piece
+
+        if(typeof stored.voxels === "string") {
+            if(stored.voxels === "") {
+                pieceData.voxels = []
+            } else {
+                pieceData.voxels = stored.voxels.split("; ")
+            }
+        }
+        if(typeof stored.bounds === "string") {
+            pieceData.bounds = stored.bounds.split(",").map(Number)
         }
     }
 

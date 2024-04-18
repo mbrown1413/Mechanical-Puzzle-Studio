@@ -1,5 +1,6 @@
 import {test, expect, describe} from "vitest"
 
+import {serialize, deserialize} from "~/lib/serialize.ts"
 import {Piece} from "~/lib/Piece.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 
@@ -171,5 +172,22 @@ describe("Piece", () => {
                 "2,0,0": true
             }
         })
+    })
+
+    test("serialization", () => {
+        const piece = new Piece(["0,0,0", "1,1,1"])
+        piece.bounds = [1, 2, 3]
+
+        const serialized = serialize(piece)
+        expect(serialized).toMatchInlineSnapshot(`
+          {
+            "bounds": "1,2,3",
+            "type": "Piece",
+            "voxels": "0,0,0; 1,1,1",
+          }
+        `)
+
+        const deserialized = deserialize(serialized)
+        expect(deserialized).toEqual(piece)
     })
 })

@@ -158,6 +158,21 @@ type SerializableObject = {
 export abstract class SerializableClass {
     // eslint-disable-next-line @typescript-eslint/ban-types
     [s: string]: Serializable | Function | undefined
+
+    /**
+     * Called after serialization to give the class an opportunity to modify
+     * its serialized data.
+     *
+     * This may be used to discard unneeded attributes, make a more compact
+     * serialized representation, or otherwise cleanup the serialized form.
+     */
+    static postSerialize(_data: object) {}
+
+    /**
+     * Called before deserialization to give the class an opportunity to
+     * restore any changes done by `postSerialize()`.
+     */
+    static preDeserialize(_data: object) {}
 }
 
 
@@ -247,7 +262,7 @@ function _serializeNode(
         // Registered class
         const classInfo = getRegisteredClass(type)
         if(classInfo !== null) {
-            value = value as SerializableClass
+            classInfo.cls.postSerialize(data)
             return {type, ...data}
         }
 
@@ -396,6 +411,7 @@ function _deserializeNode(
             if(classInfo === null) {
                 throw new SerializerError(`Reference to unregistered class "${data.type}"`)
             }
+            classInfo.cls.preDeserialize(obj)
             Object.setPrototypeOf(obj, classInfo.cls.prototype)
         }
 
@@ -422,7 +438,7 @@ function _deserializeNode(
 
 type ClassInfo = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    cls: { new(...args: any[]): SerializableClass },
+    cls: typeof SerializableClass,
 }
 
 const registeredClasses: {[name: string]: ClassInfo} = {}
@@ -431,7 +447,7 @@ const registeredClasses: {[name: string]: ClassInfo} = {}
  * made containing a class instance of a given type. */
 export function registerClass(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    cls: { new(...args: any[]): SerializableClass },
+    cls: typeof SerializableClass,
 ): void {
     if(registeredClasses[cls.name] !== undefined) {
         throw new Error(`Class "${cls.name}" is already registered`)
