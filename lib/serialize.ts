@@ -437,8 +437,19 @@ function _deserializeNode(
 ////////////////////////////////////////
 
 type ClassInfo = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cls: typeof SerializableClass,
+}
+
+/**
+ * A bit of type trickery so typescript believes that `registerClass()` can be
+ * passed a class with any constructor arguments (as subclasses may do), not
+ * the empty constructor arguments of the base class.
+ */
+type _SerializableClass = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    new(...args: any[]): SerializableClass
+    postSerialize(_data: object): void
+    preDeserialize(_data: object): void
 }
 
 const registeredClasses: {[name: string]: ClassInfo} = {}
@@ -446,8 +457,7 @@ const registeredClasses: {[name: string]: ClassInfo} = {}
 /* Register a class, required before a `serialize` or `deserialize` call is
  * made containing a class instance of a given type. */
 export function registerClass(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    cls: typeof SerializableClass,
+    cls: _SerializableClass,
 ): void {
     if(registeredClasses[cls.name] !== undefined) {
         throw new Error(`Class "${cls.name}" is already registered`)
