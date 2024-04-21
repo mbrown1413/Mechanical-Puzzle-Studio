@@ -1,5 +1,5 @@
 import {SerializableClass, clone, registerClass} from "~/lib/serialize.ts"
-import {Bounds, Voxel, Transform} from "~/lib/Grid.ts"
+import {Grid, Bounds, Voxel, Transform} from "~/lib/Grid.ts"
 
 export type PieceId = number
 export type PieceInstanceId = number
@@ -156,8 +156,8 @@ export class Piece extends SerializableClass {
         }
     }
 
-    transform(transform: Transform): this {
-        const newVoxels = transform.mapVoxels(this.voxels)
+    transform(grid: Grid, transform: Transform): this {
+        const newVoxels = grid.doTransform(transform, this.voxels)
 
         // Transform attributes based map of old to new voxels
         const newAttrs: {

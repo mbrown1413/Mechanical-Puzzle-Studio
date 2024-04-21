@@ -87,7 +87,7 @@ export type Viewpoint = {
 }
 
 /**
- * A mapping function of one set of voxels to another.
+ * Represents a mapping of one set of voxels to another.
  *
  * Each voxel in the output should correspond to the voxel at the same position
  * in the input array.
@@ -96,17 +96,7 @@ export type Viewpoint = {
  * input array. For example, a rotation may then translate all voxels to be in
  * bounds of what the grid can represent.
  */
-export type Transform = {
-    mapVoxels: (oldVoxels: Voxel[]) => Voxel[]
-}
-
-/**
- * Represents a movement, without rotation, from one place in the grid to
- * another.
- */
-export type Translation = Transform & {
-    offset: number[]
-}
+export type Transform = string
 
 /**
  * Defines a set of voxels and the relation between them. This is the foundation
@@ -218,15 +208,24 @@ export abstract class Grid extends SerializableClass {
     }
 
     /**
+     * Perform a transformation, mapping an existing set of voxels to a new set
+     * of the same size. The position of returned voxels correspond one-to-one
+     * to voxels from the input.
+     * 
+     * Note that this just transforms the voxels. To transform a whole piece
+     * and account for things like voxel attributes, use `Piece.transform()`.
+     */
+    abstract doTransform(transform: Transform, voxels: Voxel[]): Voxel[]
+
+    /**
      * List all possible ways a set of voxels can be rotated.
      */
     abstract getRotations(): Transform[]
 
     /**
-     * Return a translation which would move one voxel to another, or null if
-     * no translation exists.
+     * Return a translation which would move one voxel to another.
      */
-    abstract getTranslation(from: Voxel, to: Voxel): Translation
+    abstract getTranslation(from: Voxel, to: Voxel): Transform
 
     abstract getViewpoints(): Viewpoint[]
 }

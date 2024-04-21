@@ -1,7 +1,7 @@
 import {Vector3, Matrix3, Matrix4, PlaneGeometry} from "three"
 
 import {registerClass} from '~/lib/serialize.ts'
-import {Grid, Bounds, Voxel, Viewpoint} from "~/lib/Grid.ts"
+import {Grid, Bounds, Voxel, Transform, Viewpoint} from "~/lib/Grid.ts"
 
 type Coordinate3d = {x: number, y: number, z: number}
 type CubicBounds = [number, number, number]
@@ -41,6 +41,13 @@ const SIDE_POLYGONS: {[side in CubicDirection]: [number, number, number][]} = {
     "-Y": [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]],
     "+Z": [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]],
     "-Z": [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]],
+}
+
+function isCubicDirection(d: string): d is CubicDirection {
+    return (
+        (d[0] === "+" || d[0] === "-") &&
+        (d[1] === "X" || d[1] === "Y" || d[1] === "Z")
+    )
 }
 
 export class CubicGrid extends Grid {
@@ -163,6 +170,53 @@ export class CubicGrid extends Grid {
     }
 
     getRotations() {
+        return [
+            "r:+X,0", "r:+X,1", "r:+X,2", "r:+X,3",
+            "r:-X,0", "r:-X,1", "r:-X,2", "r:-X,3",
+            "r:+Y,0", "r:+Y,1", "r:+Y,2", "r:+Y,3",
+            "r:-Y,0", "r:-Y,1", "r:-Y,2", "r:-Y,3",
+            "r:+Z,0", "r:+Z,1", "r:+Z,2", "r:+Z,3",
+            "r:-Z,0", "r:-Z,1", "r:-Z,2", "r:-Z,3",
+        ]
+    }
+
+    getTranslation(from: Voxel, to: Voxel) {
+        const fromCoordinate = this.voxelToCoordinate(from)
+        const toCoordinate = this.voxelToCoordinate(to)
+        const offset = [
+            toCoordinate.x - fromCoordinate.x,
+            toCoordinate.y - fromCoordinate.y,
+            toCoordinate.z - fromCoordinate.z,
+        ]
+        return `t:${offset[0]},${offset[1]},${offset[2]}`
+    }
+
+    doTransform(transform: Transform, voxels: Voxel[]): Voxel[] {
+
+        if(/^t:(-?\d+,?){3}$/.test(transform)) {
+            const offsets = transform.slice(2).split(",").map(Number)
+            return voxels.map((voxel: Voxel) => {
+                const coordinate = this.voxelToCoordinate(voxel)
+                return this.coordinateToVoxel({
+                    x: coordinate.x + offsets[0],
+                    y: coordinate.y + offsets[1],
+                    z: coordinate.z + offsets[2],
+                })
+            })
+        }
+
+        if(/^r:[+-][XYZ],[0123]$/.test(transform)) {
+            const xFacingSide = transform.slice(2, 4)
+            const xRotations = Number(transform[5])
+            if(isCubicDirection(xFacingSide)) {
+                return this.doRotation(xFacingSide, xRotations, voxels)
+            }
+        }
+
+        throw new Error(`Transform in unknown format: ${transform}`)
+    }
+
+    private doRotation(xFacingSide: CubicDirection, xRotations: number, voxels: Voxel[]) {
         // Matrices to rotate 3D voxel around X, Y or Z axis (clockwise
         // when viewed from a positive coordinate looking down at the origin).
         const rotateX = new Matrix3(
@@ -191,19 +245,6 @@ export class CubicGrid extends Grid {
             "-Z": rotateY,
         }
 
-        // Rotate each face to point in the +X direction, then rotate on the X
-        // axis 0-3 times. This covers all possible orientations.
-        const rotationMatrices = []
-        for(const faceXMatrix of Object.values(faceXMatrices)) {
-            for(const nXRotations of [0, 1, 2, 3]) {
-                const matrix = faceXMatrix.clone()
-                for(let i=0; i<nXRotations; i++) {
-                    matrix.multiply(rotateX)
-                }
-                rotationMatrices.push(matrix)
-            }
-        }
-
         function coordinateMultiply(coord: Coordinate3d, m: THREE.Matrix3): Coordinate3d {
             return {
                 x: coord.x*m.elements[0] + coord.y*m.elements[1] + coord.z*m.elements[2],
@@ -212,46 +253,25 @@ export class CubicGrid extends Grid {
             }
         }
 
-        return rotationMatrices.map((matrix) => {
-            const mapVoxels = (voxels: Voxel[]) => {
-                const newCoordinates = voxels.map(
-                    (v) => coordinateMultiply(this.voxelToCoordinate(v), matrix)
-                )
-                const minX = Math.min(...newCoordinates.map(c => c.x))
-                const minY = Math.min(...newCoordinates.map(c => c.y))
-                const minZ = Math.min(...newCoordinates.map(c => c.z))
-                return newCoordinates.map(c => {
-                    return this.coordinateToVoxel({
-                        x: c.x-minX,
-                        y: c.y-minY,
-                        z: c.z-minZ
-                    })
-                })
+        const coordinates = voxels.map((voxel) => {
+            let coordinate = this.voxelToCoordinate(voxel)
+            coordinate = coordinateMultiply(coordinate, faceXMatrices[xFacingSide])
+            for(let i=0; i<xRotations; i++) {
+                coordinate = coordinateMultiply(coordinate, rotateX)
             }
-            return { mapVoxels }
+            return coordinate
         })
-    }
 
-    getTranslation(from: Voxel, to: Voxel) {
-        const fromCoordinate = this.voxelToCoordinate(from)
-        const toCoordinate = this.voxelToCoordinate(to)
-        const offset = [
-            toCoordinate.x - fromCoordinate.x,
-            toCoordinate.y - fromCoordinate.y,
-            toCoordinate.z - fromCoordinate.z,
-        ]
-        const translateVoxel = (voxel: Voxel) => {
-            const coordinate = this.voxelToCoordinate(voxel)
-            return this.coordinateToVoxel({
-                x: coordinate.x + offset[0],
-                y: coordinate.y + offset[1],
-                z: coordinate.z + offset[2],
+        const minX = Math.min(...coordinates.map(c => c.x))
+        const minY = Math.min(...coordinates.map(c => c.y))
+        const minZ = Math.min(...coordinates.map(c => c.z))
+        return coordinates.map((coordinate) =>
+            this.coordinateToVoxel({
+                x: coordinate.x - minX,
+                y: coordinate.y - minY,
+                z: coordinate.z - minZ
             })
-        }
-        return {
-            mapVoxels: (voxels: Voxel[]) => voxels.map(translateVoxel),
-            offset
-        }
+        )
     }
 
     getViewpoints() {

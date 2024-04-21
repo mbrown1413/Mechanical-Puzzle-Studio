@@ -143,7 +143,7 @@ describe("Piece", () => {
         piece.voxels = ["0,0,0", "1,1,1"]
 
         const translate = grid.getTranslation("0,0,0", "1,0,0")
-        piece.transform(translate)
+        piece.transform(grid, translate)
         expect(piece.voxels).toEqual(["1,0,0", "2,1,1"])
         expect(piece.voxelAttributes).toEqual(undefined)
     })
@@ -154,7 +154,7 @@ describe("Piece", () => {
         piece.setVoxelAttribute("foo", "0,0,0", true)
 
         const translate = grid.getTranslation("0,0,0", "1,0,0")
-        piece.transform(translate)
+        piece.transform(grid, translate)
         expect(piece.voxels).toEqual(["1,0,0", "2,1,1"])
         expect(piece.voxelAttributes).toEqual({
             "foo": {
@@ -165,7 +165,7 @@ describe("Piece", () => {
         // Transform when voxel attribute on a voxel that's not a part of this
         // piece
         piece.setVoxelAttribute("foo", "9,9,9", true)
-        piece.transform(translate)
+        piece.transform(grid, translate)
         expect(piece.voxels).toEqual(["2,0,0", "3,1,1"])
         expect(piece.voxelAttributes).toEqual({
             "foo": {
