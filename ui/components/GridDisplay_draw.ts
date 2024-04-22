@@ -155,7 +155,9 @@ export function useGridDrawComposible(
         highlighted: boolean,
         highlightBy: "voxel" | "piece",
     ): THREE.Object3D {
-        const optionalVoxel = piece?.getVoxelAttribute("optional", voxelInfo.voxel)
+        const optionalVoxel = Boolean(
+            piece?.getVoxelAttribute("optional", voxelInfo.voxel)
+        )
         const key = JSON.stringify([
             "solid",
             voxelInfo.voxel,
@@ -190,6 +192,9 @@ export function useGridDrawComposible(
             opacity: inLayer ? 1 : 0.5,
             depthWrite: inLayer,
             map: texture,
+            // Prevent z-fighting between textured transparent and opaque voxels
+            polygonOffset: optionalVoxel,
+            polygonOffsetFactor: -4,
         })
 
         obj = new THREE.Object3D()
@@ -419,8 +424,8 @@ function getAllGridVertices(grid: Grid, bounds: Bounds): Vector3[] {
 }
 
 function makeOptionalVoxelTexture() {
-    const dark = [255, 255, 255, 0]
-    const light = [0, 0, 0, 0]
+    const dark = [255, 255, 255, 255]
+    const light = [0, 0, 0, 255]
     const buffer = new Uint8Array([
         ...dark, ...light,
         ...light, ...dark,
