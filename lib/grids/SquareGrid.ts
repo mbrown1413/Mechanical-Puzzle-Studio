@@ -41,6 +41,15 @@ export class SquareGrid extends CubicGrid {
             viewpoint => viewpoint.id === "xy"
         )
     }
+
+    getDisassemblyTransforms() {
+        return [
+            this.getTranslation("0,0,0", "1,0,0"),
+            this.getTranslation("0,0,0", "-1,0,0"),
+            this.getTranslation("0,0,0", "0,1,0"),
+            this.getTranslation("0,0,0", "0,-1,0"),
+        ]
+    }
 }
 
 registerClass(SquareGrid)

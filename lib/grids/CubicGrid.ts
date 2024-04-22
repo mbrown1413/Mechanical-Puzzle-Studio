@@ -1,7 +1,7 @@
 import {Vector3, Matrix3, Matrix4, PlaneGeometry} from "three"
 
 import {registerClass} from '~/lib/serialize.ts'
-import {Grid, Bounds, Voxel, Transform, Viewpoint} from "~/lib/Grid.ts"
+import {Grid, Bounds, Voxel, Viewpoint, Transform} from "~/lib/Grid.ts"
 
 type Coordinate3d = {x: number, y: number, z: number}
 type CubicBounds = [number, number, number]
@@ -300,6 +300,43 @@ export class CubicGrid extends Grid {
             isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).x == layerIndex,
         }
         return [xy, xz, yz]
+    }
+
+    getDisassemblyTransforms(): Transform[] {
+        return Object.values(CUBIC_DIR_DELTAS).map(delta =>
+            this.getTranslation("0,0,0", `${delta[0]},${delta[1]},${delta[2]}`)
+        )
+    }
+
+    isSeparate(group1: Voxel[], group2: Voxel[]): boolean {
+        type Box = {
+            x0: number, x1: number
+            y0: number, y1: number
+            z0: number, z1: number
+        }
+
+        function getBox(coordinates: Coordinate3d[]): Box {
+            return {
+                x0: Math.min(...coordinates.map(c => c.x)),
+                x1: Math.max(...coordinates.map(c => c.x)),
+                y0: Math.min(...coordinates.map(c => c.y)),
+                y1: Math.max(...coordinates.map(c => c.y)),
+                z0: Math.min(...coordinates.map(c => c.z)),
+                z1: Math.max(...coordinates.map(c => c.z)),
+            }
+        }
+
+        function boxesAreSeparate(box1: Box, box2: Box): boolean {
+            return (
+                box1.x0 > box2.x1 || box1.x1 < box2.x0 ||
+                box1.y0 > box2.y1 || box1.y1 < box2.y0 ||
+                box1.z0 > box2.z1 || box1.z1 < box2.z0
+            )
+        }
+
+        const box1 = getBox(group1.map(this.voxelToCoordinate))
+        const box2 = getBox(group2.map(this.voxelToCoordinate))
+        return boxesAreSeparate(box1, box2)
     }
 }
 

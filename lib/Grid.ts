@@ -228,4 +228,14 @@ export abstract class Grid extends SerializableClass {
     abstract getTranslation(from: Voxel, to: Voxel): Transform
 
     abstract getViewpoints(): Viewpoint[]
+
+    /**
+     * Get transforms which should be used as movements when disassembling.
+     */
+    abstract getDisassemblyTransforms(): Transform[]
+
+    /**
+     * Are the two groups of voxels trivially separable from each other?
+     */
+    abstract isSeparate(group1: Voxel[], group2: Voxel[]): boolean
 }
