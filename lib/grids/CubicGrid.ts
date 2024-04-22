@@ -51,7 +51,7 @@ function isCubicDirection(d: string): d is CubicDirection {
 }
 
 export class CubicGrid extends Grid {
-    private voxelToCoordinate(voxel: Voxel): Coordinate3d {
+    voxelToCoordinate(voxel: Voxel): Coordinate3d {
         const coord = voxel.split(",").map(Number)
         if(coord.length !== 3) {
             throw new Error(`Invalid cubic coordinate: ${voxel}`)
@@ -63,7 +63,7 @@ export class CubicGrid extends Grid {
         }
     }
 
-    private coordinateToVoxel(coordinate: Coordinate3d): Voxel {
+    coordinateToVoxel(coordinate: Coordinate3d): Voxel {
         return [coordinate.x, coordinate.y, coordinate.z].join(",")
     }
 
