@@ -2,10 +2,10 @@ import {Grid} from "~/lib/Grid.ts"
 import {Piece, PieceWithId, PieceCompleteId} from "~/lib/Piece.ts"
 import {Transform} from "~/lib/Grid.ts"
 
-type Movement = {
+export type Movement = {
     movedPieces: PieceCompleteId[]
     transform: Transform
-    placements: Piece[]
+    placements: PieceWithId[]
     repeat: number
     separates: boolean
 }
@@ -31,7 +31,7 @@ export function getMovements(grid: Grid, pieces: PieceWithId[]): Movement[] {
             // the same number of repeat transforms applied.
             const groupedIndexes = [pieceIdx]
 
-            for(let repeat=1; repeat < 5; repeat++) {
+            for(let repeat=1; ; repeat++) {
 
                 // Move all pieces currently grouped together
                 for(const i of groupedIndexes) {
@@ -53,7 +53,8 @@ export function getMovements(grid: Grid, pieces: PieceWithId[]): Movement[] {
                         // overlapping piece itself overlaps another, but
                         // instead we just limit ourselves to grouping on
                         // repeat=1. This makes the moves returned slightly
-                        // different but still ultimately the same.
+                        // different but still ultimately the same except some
+                        // things will take more moves.
                         continue transformLoop
                     }
                     groupedIndexes.push(...overlappingPieceIndexes)

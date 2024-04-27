@@ -93,7 +93,7 @@ export class Piece extends SerializableClass {
         }
     }
 
-    copy(): Piece {
+    copy<T extends Piece | PieceWithId>(this: T): T {
         return clone(this)
     }
 
