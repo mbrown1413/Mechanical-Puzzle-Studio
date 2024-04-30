@@ -80,18 +80,60 @@ export const rotationTestData = {
 describe("Cubic grid", () => {
     const grid = new CubicGrid()
 
-    test("bounds", () => {
-        expect(grid.isInBounds("0,0,0", [0, 0, 0])).toBeFalsy()
-        expect(grid.isInBounds("0,0,0", [1, 1, 1])).toBeTruthy()
-        expect(grid.isInBounds("0,0,-1", [1, 1, 1])).toBeFalsy()
-        expect(grid.isInBounds("0,0,1", [1, 1, 1])).toBeFalsy()
-        expect(grid.isInBounds("0,0,1", [1, 1, 2])).toBeTruthy()
-        expect(grid.isInBounds("0,0,2", [1, 1, 2])).toBeFalsy()
+    test("isInBounds()", () => {
+        expect(grid.isInBounds("0,0,0", {x: 0, y: 0, z: 0, xSize: 0, ySize: 0, zSize: 0})).toBeFalsy()
+        expect(grid.isInBounds("0,0,0", {                  xSize: 0, ySize: 0, zSize: 0})).toBeFalsy()
+
+        expect(grid.isInBounds("0,0,0", {xSize: 1, ySize: 1, zSize: 1})).toBeTruthy()
+        expect(grid.isInBounds("0,0,-1", {xSize: 1, ySize: 1, zSize: 1})).toBeFalsy()
+        expect(grid.isInBounds("0,0,1", {xSize: 1, ySize: 1, zSize: 1})).toBeFalsy()
+
+        expect(grid.isInBounds("0,0,1", {x: 0, y: 0, z: 0, xSize: 1, ySize: 1, zSize: 2})).toBeTruthy()
+        expect(grid.isInBounds("0,0,1", {                  xSize: 1, ySize: 1, zSize: 2})).toBeTruthy()
+        expect(grid.isInBounds("0,0,2", {x: 0, y: 0, z: 0, xSize: 1, ySize: 1, zSize: 2})).toBeFalsy()
+        expect(grid.isInBounds("0,0,2", {                  xSize: 1, ySize: 1, zSize: 2})).toBeFalsy()
+
+        expect(grid.isInBounds("0,0,0", {x: -2, y: -2, z: -2, xSize: 3, ySize: 3, zSize: 3})).toBeTruthy()
+        expect(grid.isInBounds("-1,-1,-1", {x: -2, y: -2, z: -2, xSize: 3, ySize: 3, zSize: 3})).toBeTruthy()
+        expect(grid.isInBounds("0,-2,-1", {x: -2, y: -2, z: -2, xSize: 3, ySize: 3, zSize: 3})).toBeTruthy()
+        expect(grid.isInBounds("1,-2,-1", {x: -2, y: -2, z: -2, xSize: 3, ySize: 3, zSize: 3})).toBeFalsy()
+    })
+
+    test("getVoxelBounds()", () => {
+        expect(grid.getVoxelBounds("0,0,0")).toEqual({x: 0, y: 0, z: 0, xSize: 1, ySize: 1, zSize: 1})
+        expect(grid.getVoxelBounds("1,1,1")).toEqual({x: 1, y: 1, z: 1, xSize: 1, ySize: 1, zSize: 1})
+        expect(grid.getVoxelBounds("1,1,1", "2,2,2")).toEqual({x: 1, y: 1, z: 1, xSize: 2, ySize: 2, zSize: 2})
+    })
+
+    test("getBoundsMax()", () => {
+        expect(grid.getBoundsMax(
+            {x: 0, y: 0, z: 0, xSize: 1, ySize: 1, zSize: 1},
+        )).toEqual(
+            {x: 0, y: 0, z: 0, xSize: 1, ySize: 1, zSize: 1},
+        )
+        expect(grid.getBoundsMax(
+            {x: 0, y: 0, z: 0, xSize: 1, ySize: 1, zSize: 1},
+            {x: 0, y: 0, z: 0, xSize: 2, ySize: 3, zSize: 4},
+        )).toEqual(
+            {x: 0, y: 0, z: 0, xSize: 2, ySize: 3, zSize: 4},
+        )
+        expect(grid.getBoundsMax(
+            {x: 0, y: 0, z: 0, xSize: 1, ySize: 1, zSize: 1},
+            {x: 2, y: 2, z: 2, xSize: 2, ySize: 2, zSize: 2},
+        )).toEqual(
+            {x: 0, y: 0, z: 0, xSize: 4, ySize: 4, zSize: 4},
+        )
+        expect(grid.getBoundsMax(
+            {x: 2, y: 2, z: 2, xSize: 2, ySize: 2, zSize: 2},
+            {x: 0, y: 0, z: 0, xSize: 1, ySize: 1, zSize: 1},
+        )).toEqual(
+            {x: 0, y: 0, z: 0, xSize: 4, ySize: 4, zSize: 4},
+        )
     })
 
     test("getVoxels()", () => {
         expect(
-            grid.getVoxels([2, 2, 2])
+            grid.getVoxels({x: 0, y: 0, z: 0, xSize: 2, ySize: 2, zSize: 2})
         ).toEqual([
             "0,0,0",
             "0,0,1",
@@ -103,11 +145,23 @@ describe("Cubic grid", () => {
             "1,1,1",
         ])
         expect(
-            grid.getVoxels([1, 1, 1])
+            grid.getVoxels({x: 0, y: 0, z: 0, xSize: 1, ySize: 1, zSize: 1})
         ).toEqual(["0,0,0"])
         expect(
-            grid.getVoxels([0, 0, 0])
+            grid.getVoxels({x: 0, y: 0, z: 0, xSize: 0, ySize: 0, zSize: 0})
         ).toEqual([])
+        expect(
+            grid.getVoxels({x: -1, y: -1, z: -1, xSize: 2, ySize: 2, zSize: 2})
+        ).toEqual([
+            "-1,-1,-1",
+            "-1,-1,0",
+            "-1,0,-1",
+            "-1,0,0",
+            "0,-1,-1",
+            "0,-1,0",
+            "0,0,-1",
+            "0,0,0",
+        ])
     })
 
     test("getAdjacent()", () => {

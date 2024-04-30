@@ -119,11 +119,11 @@ function handlePieceInput(field: Field, piece: Piece) {
     emit("action", action)
 }
 
-function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputElement) {
+function handleBoundsInput(field: Field, boundsProperty: string, el: HTMLInputElement) {
     if(props.itemId === null || item.value === null) return
     const metadata: any = {}
-    metadata[field.property] = [...typeUnsafeItem.value[field.property]]
-    metadata[field.property][dimensionIndex] = Number(el.value)
+    metadata[field.property] = Object.assign({}, typeUnsafeItem.value[field.property])
+    metadata[field.property][boundsProperty] = Number(el.value)
     const action = new actionClass(props.itemId, metadata)
     emit("action", action)
 
@@ -180,14 +180,14 @@ function handleBoundsInput(field: Field, dimensionIndex: number, el: HTMLInputEl
             >
                 <VRow>
                     <VCol
-                            v-for="(dimension, i) in puzzle.grid.getDimensions()"
+                            v-for="dimension in puzzle.grid.boundsEditInfo.dimensions"
                     >
                         <VTextField
                                 :label="dimension.name"
                                 type="number"
                                 min="1"
-                                :model-value="(typeUnsafeItem[field.property] as Bounds)[i]"
-                                @input="handleBoundsInput(field, i, $event.target as HTMLInputElement)"
+                                :model-value="(typeUnsafeItem[field.property] as Bounds)[dimension.boundsProperty]"
+                                @input="handleBoundsInput(field, dimension.boundsProperty, $event.target as HTMLInputElement)"
                         />
                     </VCol>
                 </VRow>

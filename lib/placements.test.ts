@@ -43,7 +43,7 @@ describe("getPieceTranslations()", () => {
         let placements = Array.from(getPieceTranslations(
             grid,
             piece,
-            grid.getVoxels([3, 2, 2])
+            grid.getVoxels({xSize: 3, ySize: 2, zSize: 2})
         ))
         expect(placements.length).toEqual(8)
 
@@ -63,7 +63,7 @@ describe("getPieceTranslations()", () => {
         placements = Array.from(getPieceTranslations(
             grid,
             piece,
-            grid.getVoxels([3, 2, 2])
+            grid.getVoxels({xSize: 3, ySize: 2, zSize: 2})
         ))
         expect(placements.length).toEqual(6)
         expect(placements[0].voxels).toEqual(["0,0,0", "0,0,1"])
@@ -84,7 +84,7 @@ describe("getPiecePlacements()", () => {
         let placements = Array.from(getPiecePlacements(
             grid,
             piece,
-            grid.getVoxels([3, 2, 2]),
+            grid.getVoxels({xSize: 3, ySize: 2, zSize: 2}),
         ))
         expect(
             makePlacementSet(placements.map((p) => p.voxels))

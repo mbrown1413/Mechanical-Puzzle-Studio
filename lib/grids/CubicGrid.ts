@@ -1,11 +1,21 @@
 import {Vector3, Matrix3, Matrix4, PlaneGeometry} from "three"
 
 import {registerClass} from '~/lib/serialize.ts'
-import {Grid, Bounds, Voxel, Viewpoint, Transform} from "~/lib/Grid.ts"
+import {Grid, Voxel, Viewpoint, Transform} from "~/lib/Grid.ts"
 
 type Coordinate3d = {x: number, y: number, z: number}
-type CubicBounds = [number, number, number]
+
+/**
+ * Bounding box given by origin coordinates and length in each axis. Origin
+ * coordinates are implied to be zero if they aren't given.
+ */
+export type CubicBounds = {
+    x?: number, y?: number, z?: number,
+    xSize: number, ySize: number, zSize: number,
+}
+
 type CubicDirection = "+X" | "-X" | "+Y" | "-Y" | "+Z" | "-Z"
+
 type CubicVoxelShape = "cube"
 
 type CubicVoxelInfo = {
@@ -67,35 +77,76 @@ export class CubicGrid extends Grid {
         return [coordinate.x, coordinate.y, coordinate.z].join(",")
     }
 
-    getDimensions() {
-        return [
-            {name: "X", defaultBound: 5},
-            {name: "Y", defaultBound: 5},
-            {name: "Z", defaultBound: 5},
-        ]
+    getDefaultPieceBounds(): CubicBounds {
+        return {xSize: 5, ySize: 5, zSize: 5}
+    }
+
+    get boundsEditInfo() {
+        return {
+            dimensions: [
+                {name: "X", boundsProperty: "xSize"},
+                {name: "Y", boundsProperty: "ySize"},
+                {name: "Z", boundsProperty: "zSize"},
+            ]
+        }
     }
 
     isInBounds(voxel: Voxel, bounds: CubicBounds): boolean {
         const {x, y, z} = this.voxelToCoordinate(voxel)
         return (
-            x >= 0 && x < bounds[0] &&
-            y >= 0 && y < bounds[1] &&
-            z >= 0 && z < bounds[2]
+            x >= (bounds.x || 0) && x < (bounds.x || 0) + bounds.xSize &&
+            y >= (bounds.y || 0) && y < (bounds.y || 0) + bounds.ySize &&
+            z >= (bounds.z || 0) && z < (bounds.z || 0) + bounds.zSize
         )
     }
 
-    getVoxelBounds(...voxels: Voxel[]): Bounds {
+    getVoxelBounds(...voxels: Voxel[]): CubicBounds {
         if(voxels.length === 0) {
             return this.getDefaultPieceBounds()
         }
-        const bounds = [0, 0, 0]
+        const min = this.voxelToCoordinate(voxels[0])
+        const max = this.voxelToCoordinate(voxels[0])
         for(const voxel of voxels) {
             const {x, y, z} = this.voxelToCoordinate(voxel)
-            bounds[0] = Math.max(bounds[0], x+1)
-            bounds[1] = Math.max(bounds[1], y+1)
-            bounds[2] = Math.max(bounds[2], z+1)
+            min.x = Math.min(min.x, x)
+            min.y = Math.min(min.y, y)
+            min.z = Math.min(min.z, z)
+            max.x = Math.max(max.x, x)
+            max.y = Math.max(max.y, y)
+            max.z = Math.max(max.z, z)
         }
-        return bounds
+        return {
+            x: min.x, y: min.y, z: min.z,
+            xSize: max.x - min.x + 1,
+            ySize: max.y - min.y + 1,
+            zSize: max.z - min.z + 1,
+        }
+    }
+
+    getBoundsMax(...bounds: CubicBounds[]): CubicBounds {
+        if(bounds.length === 0) {
+            return this.getDefaultPieceBounds()
+        }
+        const min = {
+            x: bounds[0].x || 0,
+            y: bounds[0].y || 0,
+            z: bounds[0].z || 0
+        }
+        const max = Object.assign({}, min)
+        for(const bound of bounds) {
+            min.x = Math.min(min.x || 0, bound.x || 0)
+            min.y = Math.min(min.y || 0, bound.y || 0)
+            min.z = Math.min(min.z || 0, bound.z || 0)
+            max.x = Math.max(max.x || 0, (bound.x || 0) + bound.xSize)
+            max.y = Math.max(max.y || 0, (bound.y || 0) + bound.ySize)
+            max.z = Math.max(max.z || 0, (bound.z || 0) + bound.zSize)
+        }
+        return {
+            ...min,
+            xSize: max.x - min.x,
+            ySize: max.y - min.y,
+            zSize: max.z - min.z,
+        }
     }
 
     getVoxelInfo(voxel: Voxel): CubicVoxelInfo {
@@ -148,11 +199,17 @@ export class CubicGrid extends Grid {
         }
     }
 
-    getVoxels(bounds: Bounds) {
+    getVoxels(bounds: CubicBounds) {
         const ret = []
-        for(let x=0; x<bounds[0]; x++) {
-            for(let y=0; y<bounds[1]; y++) {
-                for(let z=0; z<bounds[2]; z++) {
+        const xMin = bounds.x || 0
+        const yMin = bounds.y || 0
+        const zMin = bounds.z || 0
+        const xMax = xMin + bounds.xSize
+        const yMax = yMin + bounds.ySize
+        const zMax = zMin + bounds.zSize
+        for(let x=xMin; x < xMax; x++) {
+            for(let y=yMin; y < yMax; y++) {
+                for(let z=zMin; z < zMax; z++) {
                     ret.push(this.coordinateToVoxel({x, y, z}))
                 }
             }
@@ -280,7 +337,7 @@ export class CubicGrid extends Grid {
             name: "X-Y Plane",
             forwardVector: new Vector3(0, 0, -1),
             xVector: new Vector3(1, 0, 0),
-            getNLayers(bounds) { return bounds[2] },
+            getNLayers(bounds: CubicBounds) { return bounds.zSize },
             isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).z == layerIndex,
         }
         const xz: Viewpoint = {
@@ -288,7 +345,7 @@ export class CubicGrid extends Grid {
             name: "X-Z Plane",
             forwardVector: new Vector3(0, -1, 0),
             xVector: new Vector3(1, 0, 0),
-            getNLayers(bounds) { return bounds[1] },
+            getNLayers(bounds: CubicBounds) { return bounds.ySize },
             isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).y == layerIndex,
         }
         const yz: Viewpoint = {
@@ -296,7 +353,7 @@ export class CubicGrid extends Grid {
             name: "Y-Z Plane",
             forwardVector: new Vector3(-1, 0, 0),
             xVector: new Vector3(0, 0, -1),
-            getNLayers(bounds) { return bounds[0] },
+            getNLayers(bounds: CubicBounds) { return bounds.xSize },
             isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).x == layerIndex,
         }
         return [xy, xz, yz]

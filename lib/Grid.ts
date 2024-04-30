@@ -40,32 +40,22 @@ export type SideInfo = {
     wireframe: Vector3[],  // List of points in a line-loop
 }
 
-/**
- * An "axis" of the grid.
- *
- * Dimensions are mostly informational, used to display and edit bounds. The
- * number of dimensions in a puzzle must be the same as the number of elements
- * in the grid's bounds. While a grid's dimensions give information on what the
- * grid's bounds values look like, it doesn't necessarily have anything to do
- * with the voxel values themselves.
- */
-export type Dimension = {
-    name: string,
-    defaultBound?: number,
+export type PieceBoundsEditInfo = {
+    dimensions: {
+        name: string,
+        boundsProperty: string,
+    }[]
 }
 
 /**
  * Represents a smaller area within the full grid.
  */
-export type Bounds = number[]
+export type Bounds = {[key: string]: number}
 
 /**
  * A UI construct representing a useful perspective from which to view the
  * grid. Each viewpoint also breaks the grid into layers, generally orthogonal
  * to the camera, to easily view and edit pieces.
- *
- * Note that viewpoints do not necessarily correspond to a `Dimension` or
- * `Direction`.
  */
 export type Viewpoint = {
     id: string,
@@ -126,22 +116,15 @@ export type Transform = string
  */
 export abstract class Grid extends SerializableClass {
 
-    abstract getDimensions(): Dimension[]
-
     /**
      * Return a reasonable bounds size to use for a piece.
-     *
-     * The default implementation which uses information from `getDimensions()`
-     * should work fine in most cases.
      */
-    getDefaultPieceBounds(): Bounds {
-        return this.getDimensions().map((dimension) => {
-            if(!dimension.defaultBound) {
-                throw new Error("No default dimension size specified in grid")
-            }
-            return dimension.defaultBound
-        })
-    }
+    abstract getDefaultPieceBounds(): Bounds
+
+    /**
+     * Information about how to edit the bounds for a piece.
+     */
+    abstract get boundsEditInfo(): PieceBoundsEditInfo
 
     /**
      * Is the given voxel inside the bounds?
@@ -154,18 +137,9 @@ export abstract class Grid extends SerializableClass {
     abstract getVoxelBounds(...voxels: Voxel[]): Bounds
 
     /**
-     * Returns the smallest bounds which contains all of the bounds.
+     * Returns the smallest bounds which contains all of the given bounds.
      */
-    getBoundsMax(...bounds: Bounds[]): Bounds {
-        if(bounds.length === 0) {
-            return this.getDefaultPieceBounds()
-        }
-        return bounds.reduce(
-            (accumulator, currentValue) => accumulator.map(
-                (boundsPart, i) => Math.max(boundsPart, currentValue[i]),
-            )
-        )
-    }
+    abstract getBoundsMax(...bounds: Bounds[]): Bounds
 
     /**
      * Return info describing the voxel.

@@ -73,7 +73,7 @@ function performAction(action: Action) {
         const id = selectedPieceIds.value[0]
         const piece = props.puzzle.getPiece(id)
         if(piece && piece.bounds !== undefined) {
-            action.bounds = [...piece.bounds]
+            action.bounds = Object.assign({}, piece.bounds)
         }
     }
 

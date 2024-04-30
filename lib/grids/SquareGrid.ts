@@ -1,25 +1,12 @@
 import {registerClass} from '~/lib/serialize.ts'
-import {Voxel, Bounds} from "~/lib/Grid.ts"
-import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
+import {CubicBounds, CubicGrid} from "~/lib/grids/CubicGrid.ts"
 
 export class SquareGrid extends CubicGrid {
 
-    getDimensions() {
-        return CubicGrid.prototype.getDimensions.call(this).slice(0, 2)
-    }
-
-    isInBounds(voxel: Voxel, bounds: Bounds): boolean {
-        const {x, y} = this.voxelToCoordinate(voxel)
-        return (
-            x >= 0 && x < bounds[0] &&
-            y >= 0 && y < bounds[1]
-        )
-    }
-
-    getVoxels(bounds: Bounds) {
+    getVoxels(bounds: CubicBounds) {
         const ret = []
-        for(let x=0; x<bounds[0]; x++) {
-            for(let y=0; y<bounds[1]; y++) {
+        for(let x=0; x<bounds.xSize; x++) {
+            for(let y=0; y<bounds.ySize; y++) {
                 ret.push(this.coordinateToVoxel({x, y, z: 0}))
             }
         }

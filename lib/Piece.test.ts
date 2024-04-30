@@ -176,12 +176,12 @@ describe("Piece", () => {
 
     test("serialization", () => {
         const piece = new Piece(["0,0,0", "1,1,1"])
-        piece.bounds = [1, 2, 3]
+        piece.bounds = {a: 1, b: 2, c: 3}
 
         const serialized = serialize(piece)
         expect(serialized).toMatchInlineSnapshot(`
           {
-            "bounds": "1,2,3",
+            "bounds": "a:1 b:2 c:3",
             "type": "Piece",
             "voxels": "0,0,0; 1,1,1",
           }

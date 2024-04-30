@@ -7,18 +7,9 @@ import {makePlacementSet} from "./CubicGrid.test.ts"
 describe("Square grid", () => {
     const grid = new SquareGrid()
 
-    test("bounds", () => {
-        expect(grid.isInBounds("0,0,0", [0, 0, 0])).toBeFalsy()
-        expect(grid.isInBounds("0,0,0", [1, 1, 1])).toBeTruthy()
-        expect(grid.isInBounds("0,-1,0", [1, 1, 1])).toBeFalsy()
-        expect(grid.isInBounds("0,1,0", [1, 1, 1])).toBeFalsy()
-        expect(grid.isInBounds("0,1,0", [1, 2, 1])).toBeTruthy()
-        expect(grid.isInBounds("0,2,0", [1, 2, 1])).toBeFalsy()
-    })
-
     test("getVoxels()", () => {
         expect(
-            grid.getVoxels([2, 2, 2])
+            grid.getVoxels({xSize: 2, ySize: 2, zSize: 2})
         ).toEqual([
             "0,0,0",
             "0,1,0",
@@ -26,10 +17,10 @@ describe("Square grid", () => {
             "1,1,0",
         ])
         expect(
-            grid.getVoxels([1, 1, 1])
+            grid.getVoxels({xSize: 1, ySize: 1, zSize: 1})
         ).toEqual(["0,0,0"])
         expect(
-            grid.getVoxels([0, 0, 0])
+            grid.getVoxels({xSize: 0, ySize: 0, zSize: 0})
         ).toEqual([])
     })
 

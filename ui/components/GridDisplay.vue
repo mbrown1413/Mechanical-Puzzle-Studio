@@ -59,27 +59,25 @@ const viewpointOptions = computed(() =>
 const pieces = computed(() => props.pieces)
 
 const bounds = computed(() => {
-    let bounds: Bounds
     if(props.boundsSizing === "voxels") {
         const allVoxels = []
         for(const piece of pieces.value) {
             allVoxels.push(...piece.voxels)
         }
-        bounds = props.puzzle.grid.getVoxelBounds(...allVoxels)
+        if(allVoxels.length === 0) {
+            return props.puzzle.grid.getDefaultPieceBounds()
+        }
+        return props.puzzle.grid.getVoxelBounds(...allVoxels)
+
     } else {
-        bounds = props.puzzle.grid.getBoundsMax(
+        return props.puzzle.grid.getBoundsMax(
             ...pieces.value.map(
                 (piece) => piece.bounds
             ).filter(
-                (bounds): bounds is Bounds => Array.isArray(bounds)
+                (bounds): bounds is Bounds => typeof bounds !== "undefined"
             )
         )
     }
-
-    if(bounds.some(b => b === 0)) {
-        bounds = props.puzzle.grid.getDefaultPieceBounds()
-    }
-    return bounds
 })
 
 const {

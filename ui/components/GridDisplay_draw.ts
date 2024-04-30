@@ -43,7 +43,7 @@ export function useGridDrawComposible(
         setCameraPosition()
         setCameraTarget()
 
-        watch(() => [...bounds.value], () => {
+        watch(() => bounds.value, () => {
             setCameraTarget()
         })
     })

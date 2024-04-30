@@ -15,8 +15,8 @@ type AttributeValue = boolean
  * efficient storage and better readability of the file format.
  */
 type PieceStoredData = {
-    voxels: string[] | string
-    bounds?: number[] | string
+    voxels: Voxel[] | string
+    bounds?: Bounds | string
 }
 
 export class Piece extends SerializableClass {
@@ -55,7 +55,7 @@ export class Piece extends SerializableClass {
 
         stored.voxels = piece.voxels.join("; ")
         if(piece.bounds) {
-            stored.bounds = piece.bounds.join(",")
+            stored.bounds = serializeBounds(piece.bounds)
         }
     }
 
@@ -69,8 +69,8 @@ export class Piece extends SerializableClass {
                 pieceData.voxels = stored.voxels.split("; ")
             }
         }
-        if(typeof stored.bounds === "string") {
-            pieceData.bounds = stored.bounds.split(",").map(Number)
+        if(typeof stored.bounds !== "undefined") {
+            pieceData.bounds = deserializeBounds(stored.bounds)
         }
     }
 
@@ -226,5 +226,23 @@ export class Piece extends SerializableClass {
         }
     }
 }
-
 registerClass(Piece)
+
+
+function serializeBounds(bounds: Bounds): string {
+    return Object.entries(bounds).map(
+        ([key, value]) => `${key}:${value}`
+    ).join(" ")
+}
+
+function deserializeBounds(serializedBounds: string | Bounds) {
+    if(typeof serializedBounds !== "string") {
+        return serializedBounds
+    }
+    const bounds: Bounds = {}
+    for(const part of serializedBounds.split(" ")) {
+        const [key, value] = part.split(":", 2)
+        bounds[key] = Number(value)
+    }
+    return bounds
+}
