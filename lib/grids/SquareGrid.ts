@@ -1,5 +1,6 @@
 import {registerClass} from '~/lib/serialize.ts'
 import {CubicBounds, CubicGrid} from "~/lib/grids/CubicGrid.ts"
+import {Piece, PieceWithId} from '~/lib/Piece.ts'
 
 export class SquareGrid extends CubicGrid {
 
@@ -44,6 +45,60 @@ export class SquareGrid extends CubicGrid {
             this.getTranslation("0,0,0", "0,1,0"),
             this.getTranslation("0,0,0", "0,-1,0"),
         ]
+    }
+
+    /**
+     * Produce a set of pieces from a string representation.
+     * 
+     * Each character represents a voxel. A number 0-9 is an ID of the piece in
+     * that voxel. The following characters represent a voxel without a piece:
+     * ".", "-", " "
+     *
+     * For example:
+     *
+     *     grid.piecesFromString(`
+     *         000
+     *         1.0
+     *         111
+     *     `)
+     */
+    piecesFromString(layoutString: string): PieceWithId[] {
+        const pieces: {[id: number]: PieceWithId} = {}
+        for(const [y, line] of layoutString.split("\n").entries()) {
+            for(let x=0; x<line.length; x++) {
+                const char = line[x]
+                if(char === " " || char === "." || char === "-") {
+                    continue
+                }
+
+                const id = Number(line[x])
+                if(isNaN(id)) {
+                    throw new Error(`Unexpected non-number ID: ${line[x]}`)
+                }
+
+                const piece = pieces[id] || new Piece(id)
+                pieces[id] = piece
+                piece.addVoxel(`${x},-${y},0`)
+            }
+        }
+
+        // Translate all pieces so the bounds is 0,0
+        const bounds = this.getBoundsMax(
+            ...Object.values(pieces).map(
+                p => this.getVoxelBounds(...p.voxels)
+            )
+        )
+        const translation = this.getTranslation(
+            this.coordinateToVoxel(
+                {x: bounds.x || 0, y: bounds.y || 0, z: bounds.z || 0}
+            ), 
+            "0,0,0"
+        )
+        for(const piece of Object.values(pieces)) {
+            piece.transform(this, translation)
+        }
+
+        return Object.values(pieces)
     }
 }
 

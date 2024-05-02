@@ -1,6 +1,5 @@
 import {test, expect, describe} from "vitest"
 
-import {Piece, PieceWithId} from "~/lib/Piece.ts"
 import {SimpleDisassembler} from "./Disassembler.ts"
 import {SquareGrid} from "~/lib/grids/SquareGrid.ts"
 import {serialize} from "~/lib/serialize.ts"
@@ -9,20 +8,11 @@ describe("Disassembler", () => {
     const grid = new SquareGrid()
     test("Disassembles in one move", () => {
         const disassembler = new SimpleDisassembler(grid)
-        const pieces = [
-            new Piece(
-                0,
-                [
-                  "0,2,0", "1,2,0",
-                  "0,1,0",
-                  "0,0,0", "1,0,0",
-                ]
-            ) as PieceWithId,
-            new Piece(
-                1,
-                ["1,1,0"]
-            ) as PieceWithId,
-        ]
+        const pieces = grid.piecesFromString(`
+            00
+            01
+            00
+        `)
         const disassemblySet = disassembler.disassemble(pieces)
         expect(serialize(disassemblySet)).toMatchInlineSnapshot(`
           {
@@ -63,20 +53,11 @@ describe("Disassembler", () => {
 
     test("Disassembles in two moves", () => {
         const disassembler = new SimpleDisassembler(grid)
-        const pieces = [
-            new Piece(
-                0,
-                [
-                  "0,2,0", "1,2,0",
-                                    "2,1,0",
-                  "0,0,0", "1,0,0",
-                ]
-            ) as PieceWithId,
-            new Piece(
-                1,
-                ["1,1,0"]
-            ) as PieceWithId,
-        ]
+        const pieces = grid.piecesFromString(`
+            00
+             10
+            00
+        `)
         const disassemblySet = disassembler.disassemble(pieces)
         expect(serialize(disassemblySet)).toMatchInlineSnapshot(`
           {
@@ -119,20 +100,11 @@ describe("Disassembler", () => {
 
     test("Not disassemblable", () => {
         const disassembler = new SimpleDisassembler(grid)
-        const pieces = [
-            new Piece(
-                0,
-                [
-                  "0,2,0", "1,2,0", "2,2,0", "3,2,0",
-                  "0,1,0",                   "3,1,0",
-                  "0,0,0", "1,0,0", "2,0,0", "3,0,0",
-                ]
-            ) as PieceWithId,
-            new Piece(
-                1,
-                ["1,1,0"]
-            ) as PieceWithId,
-        ]
+        const pieces = grid.piecesFromString(`
+            0000
+            01 0
+            0000
+        `)
         const disassemblySet = disassembler.disassemble(pieces)
         expect(serialize(disassemblySet)).toMatchInlineSnapshot(`
           {
@@ -169,26 +141,9 @@ describe("Disassembler", () => {
 
     test("Disassemble 3 pieces", () => {
         const disassembler = new SimpleDisassembler(grid)
-        const pieces = [
-            new Piece(
-                0,
-                [
-                  "0,0,0",
-                ]
-            ) as PieceWithId,
-            new Piece(
-                1,
-                [
-                  "1,0,0",
-                ]
-            ) as PieceWithId,
-            new Piece(
-                2,
-                [
-                  "2,0,0",
-                ]
-            ) as PieceWithId,
-        ]
+        const pieces = grid.piecesFromString(`
+            012
+        `)
         const disassemblySet = disassembler.disassemble(pieces)
         expect(serialize(disassemblySet)).toMatchInlineSnapshot(`
           {
@@ -254,52 +209,14 @@ describe("Disassembler", () => {
 
     test("Complex disassembly 1", () => {
         const disassembler = new SimpleDisassembler(grid)
-        const pieces = [
-            new Piece(
-                0,
-                [
-                  "0,5,0", "1,5,0", "2,5,0", "3,5,0", "4,5,0",
-                  "0,4,0",                            "4,4,0",
-                  "0,3,0",
-                  "0,2,0",
-                  "0,1,0",
-                  "0,0,0", "1,0,0", "2,0,0", "3,0,0", "4,0,0",
-                ]
-            ) as PieceWithId,
-            new Piece(
-                1,
-                [
-
-
-                                                      "4,3,0",
-                                                      "4,2,0",
-                           "1,1,0", "2,1,0", "3,1,0", "4,1,0",
-
-                ]
-            ) as PieceWithId,
-            new Piece(
-                2,
-                [
-
-                           "1,4,0",          "3,4,0",
-                           "1,3,0",          "3,3,0",
-                           "1,2,0", "2,2,0", "3,2,0",
-
-
-                ]
-            ) as PieceWithId,
-            new Piece(
-                3,
-                [
-
-                                    "2,4,0",
-                                    "2,3,0",
-
-
-
-                ]
-            ) as PieceWithId,
-        ]
+        const pieces = grid.piecesFromString(`
+            00000
+            02320
+            02321
+            02221
+            01111
+            00000
+        `)
         const disassemblySet = disassembler.disassemble(pieces)
         expect(serialize(disassemblySet)).toMatchInlineSnapshot(`
           {
@@ -461,48 +378,13 @@ describe("Disassembler", () => {
 
     test("Complex disassembly 2", () => {
         const disassembler = new SimpleDisassembler(grid)
-        const pieces = [
-            new Piece(
-                0,
-                [
-                  "0,4,0", "1,4,0", "2,4,0", "3,4,0",
-                  "0,3,0",
-                  "0,2,0",
-                  "0,1,0",                   "3,1,0",
-                  "0,0,0", "1,0,0", "2,0,0", "3,0,0",
-                ]
-            ) as PieceWithId,
-            new Piece(
-                1,
-                [
-
-                           "1,3,0", "2,3,0", "3,3,0",
-                           "1,2,0",          "3,2,0",
-
-
-                ]
-            ) as PieceWithId,
-            new Piece(
-                2,
-                [
-
-
-                                    "2,2,0",
-
-
-                ]
-            ) as PieceWithId,
-            new Piece(
-                3,
-                [
-
-
-
-                           "1,1,0", "2,1,0",
-
-                ]
-            ) as PieceWithId,
-        ]
+        const pieces = grid.piecesFromString(`
+            0000
+            0111
+            0121
+            0330
+            0000
+        `)
         const disassemblySet = disassembler.disassemble(pieces)
         expect(serialize(disassemblySet)).toMatchInlineSnapshot(`
           {

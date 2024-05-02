@@ -1,7 +1,7 @@
 import {test, expect, describe} from "vitest"
 
+import {serialize} from "~/lib/serialize.ts"
 import {SquareGrid} from "./SquareGrid.ts"
-
 import {makePlacementSet} from "./CubicGrid.test.ts"
 
 describe("Square grid", () => {
@@ -46,6 +46,32 @@ describe("Square grid", () => {
             "0,0,0; 1,0,0; 1,1,0; 1,2,0",
             "0,2,0; 1,0,0; 1,1,0; 1,2,0",
           }
+        `)
+    })
+
+    test("piecesFromString()", () => {
+        const pieces = grid.piecesFromString(`
+            112
+            233
+        `)
+        expect(serialize(pieces)).toMatchInlineSnapshot(`
+          [
+            {
+              "id": 1,
+              "type": "Piece",
+              "voxels": "0,1,0; 1,1,0",
+            },
+            {
+              "id": 2,
+              "type": "Piece",
+              "voxels": "2,1,0; 0,0,0",
+            },
+            {
+              "id": 3,
+              "type": "Piece",
+              "voxels": "1,0,0; 2,0,0",
+            },
+          ]
         `)
     })
 })
