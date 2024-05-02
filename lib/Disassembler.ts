@@ -34,12 +34,15 @@ export class SimpleDisassembler extends Disassembler {
     disassemble(
         pieces: PieceWithId[],
     ): DisassemblySet {
+        if(this.nodes.length || this.nodeIndexesByHash.size) {
+            throw new Error("Disassemble instance cannot be reused")
+        }
 
         const startNode: DisassemblyNode = {
             depth: 0,
             children: [],
         }
-        this.nodes = [startNode]
+        this.nodes.push(startNode)
         this.nodeIndexesByHash.set(this.hashPlacements(pieces), 0)
 
         type QueueItem = {
@@ -60,17 +63,23 @@ export class SimpleDisassembler extends Disassembler {
             const current = queue.shift()
             if(!current) { break }
 
-            for(const movement of getMovements(this.grid, current.placements)) {
+            let movements = getMovements(this.grid, current.placements)
 
-                // If the previous movement moved the same piece, it already
-                // considered moving that piece any amount in any direction, so
-                // we don't have to here.
-                if(
-                    current.prevMovement &&
-                    movement.movedPieces[0] === current.prevMovement.movedPieces[0]
-                ) {
-                    continue
-                }
+            // If any move separates, only keep the first one. This works since
+            // separating never hinders other moves from happening afterwards.
+            // That is, separation will always increase the freedom of
+            // movement.
+            //
+            // This is an optimization, but it also prevents us from getting
+            // stuck in pathological loops where a piece is stationary off to
+            // one side of the rest of the assembly, while the assembly walks
+            // infinitely in one direction.
+            const separatingMove = movements.find(movement => movement.separates)
+            if(separatingMove) {
+                movements = [separatingMove]
+            }
+
+            for(const movement of movements) {
 
                 const childParts = this.getChildParts(movement)
 
@@ -83,7 +92,7 @@ export class SimpleDisassembler extends Disassembler {
                         isNew
                     ] = this.getOrCreateNode(childPart, current.node.depth + 1)
 
-                    if(childNode === null ||  childNode.depth > current.node.depth) {
+                    if(childNode !== null && childNode.depth > current.node.depth) {
                         childPointsToDeeperNode = true
                     }
 
@@ -97,15 +106,26 @@ export class SimpleDisassembler extends Disassembler {
                     }
                 }
 
-                if(childPointsToDeeperNode) {
-                    current.node.children.push({
-                        movedPieces: movement.movedPieces,
-                        transform: movement.transform,
-                        repeat: movement.repeat,
-                        parts: childIndexes,
-                    })
+                // If more than one movement goes to the same sets of children,
+                // there's no need to make a duplicate child pointer for it.
+                const childIndexesShorthand = childIndexes.toSorted().join(",")
+                if(current.node.children.find(
+                    child => child.parts?.toSorted().join(",") === childIndexesShorthand
+                )) {
+                    continue
                 }
 
+                const isLeaf = childIndexes[0] === -1 && childIndexes[1] === -1
+                if(!isLeaf && !childPointsToDeeperNode) {
+                    continue
+                }
+
+                current.node.children.push({
+                    movedPieces: movement.movedPieces,
+                    transform: movement.transform,
+                    repeat: movement.repeat,
+                    parts: childIndexes,
+                })
             }
         }
 

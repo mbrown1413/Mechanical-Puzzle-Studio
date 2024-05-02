@@ -4,6 +4,7 @@ import {Piece, PieceWithId} from "~/lib/Piece.ts"
 import {getPlacements} from "~/lib/placements.ts"
 import {AssemblySolution, Solution} from "~/lib/Solution.ts"
 import {TaskCallbacks, voidTaskCallbacks} from "~/lib/types.ts"
+import {SimpleDisassembler} from "~/lib/Disassembler.ts"
 
 export abstract class Solver {
     abstract solve(
@@ -30,7 +31,7 @@ type GroupedCoverProblem = {
     pieces: Piece[],
 
     // placementsByPieceIdx[pieceIdx][i] - The i-th placement of piece at `pieceIdx`
-    placementsByPieceIdx: Piece[][],
+    placementsByPieceIdx: PieceWithId[][],
 
     // coverRowsByPieceIdx[pieceIdx][i] - The i-th cover row of piece at `pieceIdx`
     coverRowsByPieceIdx: boolean[][][],
@@ -73,11 +74,14 @@ export class AssemblySolver extends Solver {
 
         const ret = []
         for(const pickedRows of solutions) {
-            ret.push(new AssemblySolution(
+            const solution = new AssemblySolution(
                 pickedRows.map(
                     (placementIdx, pieceIdx) => coverProblem.placementsByPieceIdx[pieceIdx][placementIdx]
                 )
-            ))
+            )
+            const disassembler = new SimpleDisassembler(puzzle.grid)
+            solution.disassemblies = disassembler.disassemble(solution.placements)
+            ret.push(solution)
         }
         return ret
     }
@@ -197,7 +201,7 @@ export class AssemblySolver extends Solver {
             }
         })
 
-        const placementsByPieceIdx: Piece[][] = []
+        const placementsByPieceIdx: PieceWithId[][] = []
         const coverRowsByPieceIdx: boolean[][][] = []
         for(const piece of pieces) {
             const placements = placementResults.placementsByPiece[piece.completeId]

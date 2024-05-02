@@ -1,6 +1,6 @@
 import {test, expect, describe} from "vitest"
 
-import {Piece} from "~/lib/Piece.ts"
+import {Piece, PieceWithId} from "~/lib/Piece.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 import {
     rotationTestData,
@@ -19,7 +19,7 @@ describe("getPieceOrientations()", () => {
         const piece = new Piece(
             0,
             rotationTestData.originalPiece
-        )
+        ) as PieceWithId
         const orientations = getPieceOrientations(grid, piece)
         const actualOrientations = makePlacementSet(
             orientations.map((placement) => placement.voxels)
@@ -39,7 +39,7 @@ describe("getPieceTranslations()", () => {
         let piece = new Piece(
             0,
             ["0,0,0", "1,0,0"]
-        )
+        ) as PieceWithId
         let placements = Array.from(getPieceTranslations(
             grid,
             piece,
@@ -59,7 +59,7 @@ describe("getPieceTranslations()", () => {
         piece = new Piece(
             0,
             ["0,0,0", "0,0,1"]
-        )
+        ) as PieceWithId
         placements = Array.from(getPieceTranslations(
             grid,
             piece,
@@ -80,7 +80,7 @@ describe("getPiecePlacements()", () => {
         let piece = new Piece(
             0,
             ["0,0,0", "0,0,1"]
-        )
+        ) as PieceWithId
         let placements = Array.from(getPiecePlacements(
             grid,
             piece,
@@ -118,7 +118,7 @@ describe("getPiecePlacements()", () => {
         piece = new Piece(
             0,
             ["0,0,0", "0,1,0", "1,1,0"]
-        )
+        ) as PieceWithId
         placements = Array.from(getPiecePlacements(
             grid,
             piece,

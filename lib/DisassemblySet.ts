@@ -116,7 +116,7 @@ export class DisassemblySet extends SerializableClass {
                 } else {
                     // If no nodes are left, all parts have reached leaf nodes and
                     // we have a complete solution.
-                    solutions.push(new Disassembly(start, newSteps))
+                    solutions.push(new Disassembly(grid, start, newSteps))
                 }
             }
         }
@@ -131,12 +131,36 @@ registerClass(DisassemblySet)
  * A single way to completely disassemble a set of pieces.
  */
 export class Disassembly {
+    grid: Grid
     start: PieceWithId[]
     steps: DisassemblyStep[]
 
-    constructor(start: PieceWithId[], steps: DisassemblyStep[]) {
+    constructor(grid: Grid, start: PieceWithId[], steps: DisassemblyStep[]) {
+        this.grid = grid
         this.start = start
         this.steps = steps
+    }
+
+    get nStates() {
+        return this.steps.length + 1
+    }
+
+    /**
+     * Get each intermediate placement of pieces between the start and
+     * disassembly.
+     */
+    getState(stateNumber: number): PieceWithId[] {
+        const state = this.start.map(piece => piece.copy())
+        for(const step of this.steps.slice(0, stateNumber)) {
+            for(const piece of state) {
+                if(step.movedPieces.includes(piece.completeId)) {
+                    for(let i=0; i<(step.repeat || 1); i++) {
+                        piece.transform(this.grid, step.transform)
+                    }
+                }
+            }
+        }
+        return state
     }
 }
 
@@ -145,6 +169,12 @@ export class Disassembly {
  */
 function *product<T>(...iterables: T[][]): Iterable<T[]> {
     const indexes = iterables.map(iterable => iterable.length - 1)
+
+    // If any parameters are empty, the whole product will be empty too.
+    if(indexes.some(index => index < 0)) {
+        return
+    }
+
     while(indexes[0] >= 0) {
         yield iterables.map(
             (iterable, i) => iterable[indexes[i]]

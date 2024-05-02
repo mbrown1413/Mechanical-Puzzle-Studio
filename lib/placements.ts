@@ -1,7 +1,7 @@
 import {Piece, PieceWithId, PieceId, PieceCompleteId} from "~/lib/Piece.ts"
 import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
 
-type PlacementsByPiece = {[pieceId: PieceCompleteId]: Piece[]}
+type PlacementsByPiece = {[pieceId: PieceCompleteId]: PieceWithId[]}
 
 type SymmetryInfo = {
     piece: Piece,
@@ -14,14 +14,14 @@ type SymmetryInfo = {
  */
 export function getPieceOrientations(
     grid: Grid,
-    piece: Piece,
+    piece: PieceWithId,
     allowedRotations: Transform[] | null = null
-): Piece[] {
+): PieceWithId[] {
     if(allowedRotations === null) {
         allowedRotations = grid.getRotations()
     }
 
-    const placements: Piece[] = []
+    const placements: PieceWithId[] = []
     for(const rotation of allowedRotations) {
         const transformedPiece = piece.copy().transform(grid, rotation)
 
@@ -37,9 +37,9 @@ export function getPieceOrientations(
  */
 export function getPieceTranslations(
     grid: Grid,
-    piece: Piece,
+    piece: PieceWithId,
     availableVoxels: Voxel[],
-): Piece[] {
+): PieceWithId[] {
     const translations = []
     availableVoxels = [...new Set(availableVoxels)]
     for(const toVoxel of availableVoxels) {
@@ -58,10 +58,10 @@ export function getPieceTranslations(
  */
 export function getPiecePlacements(
     grid: Grid,
-    piece: Piece,
+    piece: PieceWithId,
     availableVoxels: Voxel[],
     allowedRotations: Transform[] | null = null
-): Piece[] {
+): PieceWithId[] {
     const placements = []
 
     const orientationPlacements = filterTranslationCongruentPlacements(
@@ -255,9 +255,9 @@ function getSymmetryGroups(grid: Grid, piece: Piece, orientations: Transform[]):
 /** Filter out placements which are congruent via translation. */
 function filterTranslationCongruentPlacements(
     grid: Grid,
-    placements: Piece[]
-): Piece[] {
-    const newPlacements: Piece[] = []
+    placements: PieceWithId[]
+): PieceWithId[] {
+    const newPlacements: PieceWithId[] = []
     for(const placement of placements) {
         const existingCongruent = newPlacements.some(
             p => isTranslationCongruent(grid, p, placement)

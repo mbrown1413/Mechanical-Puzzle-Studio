@@ -5,8 +5,12 @@ export class SquareGrid extends CubicGrid {
 
     getVoxels(bounds: CubicBounds) {
         const ret = []
-        for(let x=0; x<bounds.xSize; x++) {
-            for(let y=0; y<bounds.ySize; y++) {
+        const xMin = bounds.x || 0
+        const yMin = bounds.y || 0
+        const xMax = xMin + bounds.xSize
+        const yMax = yMin + bounds.ySize
+        for(let x=xMin; x < xMax; x++) {
+            for(let y=yMin; y < yMax; y++) {
                 ret.push(this.coordinateToVoxel({x, y, z: 0}))
             }
         }
@@ -23,10 +27,14 @@ export class SquareGrid extends CubicGrid {
     }
 
     getViewpoints() {
-        const viewpoints = CubicGrid.prototype.getViewpoints.call(this)
-        return viewpoints.filter(
+        let viewpoints = CubicGrid.prototype.getViewpoints.call(this)
+        viewpoints = viewpoints.filter(
             viewpoint => viewpoint.id === "xy"
         )
+        for(const viewpoint of viewpoints) {
+            viewpoint.getNLayers = () => 1
+        }
+        return viewpoints
     }
 
     getDisassemblyTransforms() {
