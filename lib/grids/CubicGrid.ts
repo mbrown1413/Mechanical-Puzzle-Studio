@@ -16,11 +16,8 @@ export type CubicBounds = {
 
 type CubicDirection = "+X" | "-X" | "+Y" | "-Y" | "+Z" | "-Z"
 
-type CubicVoxelShape = "cube"
-
 type CubicVoxelInfo = {
     voxel: Voxel,
-    shape: CubicVoxelShape,
     sides: Array<CubicDirection>,
 }
 
@@ -152,7 +149,6 @@ export class CubicGrid extends Grid {
     getVoxelInfo(voxel: Voxel): CubicVoxelInfo {
         return {
             voxel: voxel,
-            shape: "cube",  // The only shape of voxel in this grid
             sides: CUBIC_DIRS,
         }
     }

@@ -14,12 +14,6 @@ import {SerializableClass} from "~/lib/serialize.ts"
 export type Voxel = string
 
 /**
- * A voxel's shape when made physically. A voxel may "fit into" another voxel
- * only if the shapes match.
- */
-export type VoxelShape = string
-
-/**
  * The connections from one voxel to another are tagged with a direction,
  * indicating where they are in relation to each other. Opposite sides of each
  * connection will be tagged with "opposite" directions.
@@ -31,7 +25,6 @@ export type Direction = string
 
 export type VoxelInfo = {
     voxel: Voxel,
-    shape: VoxelShape,
     sides: Direction[],
 }
 
