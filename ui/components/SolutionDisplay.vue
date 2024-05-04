@@ -39,7 +39,7 @@ const disassembly = computed(() =>
 
 <template>
     <GridDisplay
-            :puzzle="puzzle"
+            :grid="puzzle.grid"
             :pieces="pieces"
             displayOnly
             :boundsSizing="disassembly ? disassembly.getBounds() : 'voxels'"

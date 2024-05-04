@@ -6,14 +6,14 @@
 <script setup lang="ts">
 import {ref, Ref, computed} from "vue"
 
-import {Puzzle, Piece, Voxel, Bounds} from "~lib"
+import {Grid, Piece, Voxel, Bounds} from "~lib"
 
 import {useGridDrawComposible} from "./GridDisplay_draw.ts"
 import {useGridMouseComposible} from "./GridDisplay_mouse.ts"
 
 const props = withDefaults(
     defineProps<{
-        puzzle: Puzzle,
+        grid: Grid,
         pieces: Piece[],
         displayOnly?: boolean,
         noLayers?: boolean,
@@ -42,7 +42,7 @@ const pieceDisplayStyle = computed(() => {
 })
 
 const drawElement = ref()
-const viewpoints = props.puzzle.grid.getViewpoints()
+const viewpoints = props.grid.getViewpoints()
 const viewpoint = ref(viewpoints[0])
 const layerN = ref(0)
 const highlightedVoxel: Ref<Voxel | null> = ref(null)
@@ -65,12 +65,12 @@ const bounds = computed(() => {
             allVoxels.push(...piece.voxels)
         }
         if(allVoxels.length === 0) {
-            return props.puzzle.grid.getDefaultPieceBounds()
+            return props.grid.getDefaultPieceBounds()
         }
-        return props.puzzle.grid.getVoxelBounds(...allVoxels)
+        return props.grid.getVoxelBounds(...allVoxels)
 
     } else if(props.boundsSizing === "pieceBounds") {
-        return props.puzzle.grid.getBoundsMax(
+        return props.grid.getBoundsMax(
             ...pieces.value.map(
                 (piece) => piece.bounds
             ).filter(
@@ -88,7 +88,7 @@ const {
     hitTestObjects,
 } = useGridDrawComposible(
     drawElement,
-    props.puzzle.grid,
+    props.grid,
     pieces,
     bounds,
     props.displayOnly,

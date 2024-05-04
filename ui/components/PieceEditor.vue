@@ -54,7 +54,7 @@ function voxelClicked(event: MouseEvent, voxel: Voxel) {
 
 <template>
     <GridDisplay
-            :puzzle="puzzle"
+            :grid="puzzle.grid"
             :pieces="pieces"
             @voxelClicked="voxelClicked"
             boundsSizing="pieceBounds"

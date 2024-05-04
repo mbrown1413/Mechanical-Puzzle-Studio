@@ -147,7 +147,7 @@ const selectionButtons = [
 
         <template v-slot:item.display="{item}">
             <GridDisplay
-                    :puzzle="puzzle"
+                    :grid="puzzle.grid"
                     :pieces="[item.piece]"
                     displayOnly
                     boundsSizing="voxels"
