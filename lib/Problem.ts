@@ -7,8 +7,10 @@ import {PieceId} from "~/lib/Piece.ts"
 export type ProblemId = number
 
 type SolverInfo = {
-    solver: new(...args: unknown[]) => Solver,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    solver: { new(...args: any[]): Solver },
     isUsable: BoolWithReason,
+    args: unknown[],
 }
 
 /**
@@ -43,6 +45,7 @@ export abstract class Problem extends SerializableClass {
  */
 export class AssemblyProblem extends Problem {
     goalPieceId?: PieceId
+    disassemble: boolean
 
     /* Maps piece ID to how many of that piece are used in this problem.
      *
@@ -54,6 +57,7 @@ export class AssemblyProblem extends Problem {
     constructor(id: ProblemId) {
         super(id)
         this.usedPieceCounts = {}
+        this.disassemble = false
     }
 
     getSolvers() {
@@ -61,6 +65,7 @@ export class AssemblyProblem extends Problem {
             assembly: {
                 solver: AssemblySolver,
                 isUsable: {bool: true as const},
+                args: [this.disassemble],
             },
         }
     }

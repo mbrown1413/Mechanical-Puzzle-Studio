@@ -43,10 +43,12 @@ type GroupedCoverProblem = {
 
 export class AssemblySolver extends Solver {
     removeSymmetries: boolean
+    disassemble: boolean
 
-    constructor() {
+    constructor(disassemble: boolean) {
         super()
         this.removeSymmetries = true
+        this.disassemble = disassemble
     }
 
     solve(
@@ -79,8 +81,12 @@ export class AssemblySolver extends Solver {
                     (placementIdx, pieceIdx) => coverProblem.placementsByPieceIdx[pieceIdx][placementIdx]
                 )
             )
-            const disassembler = new SimpleDisassembler(puzzle.grid)
-            solution.disassemblies = disassembler.disassemble(solution.placements)
+
+            if(this.disassemble) {
+                const disassembler = new SimpleDisassembler(puzzle.grid)
+                solution.disassemblies = disassembler.disassemble(solution.placements)
+            }
+
             ret.push(solution)
         }
         return ret

@@ -83,7 +83,7 @@ export class ProblemSolveTask extends Task<Solution[]> {
         if(!solverInfo.isUsable.bool) {
             throw new Error("Solver not usable: " + solverInfo.isUsable.reason)
         }
-        return new solverInfo.solver()
+        return new solverInfo.solver(...solverInfo.args)
     }
 
     setup() {
