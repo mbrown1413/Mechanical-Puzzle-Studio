@@ -4,6 +4,15 @@ import {Piece, PieceWithId} from '~/lib/Piece.ts'
 
 export class SquareGrid extends CubicGrid {
 
+    get boundsEditInfo() {
+        return {
+            dimensions: [
+                {name: "X", boundsProperty: "xSize"},
+                {name: "Y", boundsProperty: "ySize"},
+            ]
+        }
+    }
+
     getVoxels(bounds: CubicBounds) {
         const ret = []
         const xMin = bounds.x || 0
