@@ -1,6 +1,6 @@
 import {SerializableClass, registerClass} from "~/lib/serialize.ts"
-import {PieceWithId, PieceCompleteId} from "~/lib/Piece.ts"
-import {Grid, Transform} from "~/lib//Grid.ts"
+import {Piece, PieceWithId, PieceCompleteId} from "~/lib/Piece.ts"
+import {Grid, Transform, Bounds} from "~/lib//Grid.ts"
 
 type DisassemblyStep = {
     movedPieces: PieceCompleteId[]
@@ -161,6 +161,21 @@ export class Disassembly {
             }
         }
         return state
+    }
+
+    *getAllStates(): Iterable<PieceWithId[]> {
+        for(let i=0; i<this.nStates; i++) {
+            yield this.getState(i)
+        }
+    }
+
+    getBounds(): Bounds {
+        const allPieces: Piece[] = []
+        for(const state of this.getAllStates()) {
+            allPieces.push(...state)
+        }
+        const allPieceBounds = allPieces.map(piece => this.grid.getVoxelBounds(...piece.voxels))
+        return this.grid.getBoundsMax(...allPieceBounds)
     }
 }
 

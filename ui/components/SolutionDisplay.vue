@@ -42,7 +42,7 @@ const disassembly = computed(() =>
             :puzzle="puzzle"
             :pieces="pieces"
             displayOnly
-            boundsSizing="voxels"
+            :boundsSizing="disassembly ? disassembly.getBounds() : 'voxels'"
             highlightBy="piece"
             :showTools="disassemblySet !== undefined"
     >
