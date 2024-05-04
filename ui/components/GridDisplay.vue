@@ -122,9 +122,9 @@ useGridMouseComposible(
                     step="1"
                     showTicks="always"
                     direction="vertical"
-                    track-size="8"
-                    thumb-size="25"
-                    tick-size="4"
+                    trackSize="8"
+                    thumbSize="25"
+                    tickSize="4"
             />
         </div>
         <div class="overlay tools" v-if="showTools">

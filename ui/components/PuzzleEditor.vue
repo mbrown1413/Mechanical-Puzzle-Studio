@@ -7,7 +7,7 @@
 import {ref, Ref, onMounted} from "vue"
 import Split from "split-grid"
 
-import {Puzzle, PieceId, ProblemId} from "~lib"
+import {Puzzle, PieceId, ProblemId, AssemblySolution} from "~lib"
 
 import {Action, NewPieceAction} from "~/ui/actions.ts"
 import TabLayout from "~/ui/common/TabLayout.vue"
@@ -136,6 +136,7 @@ function setUiFocus(focus: "pieces" | "problems" | "solutions") {
                 v-show="currentTabId === 'problems' && selectedProblemIds.length"
                 :puzzle="puzzle"
                 :problemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
+                @action="performAction"
                 @setUiFocus="setUiFocus"
             />
             <SolutionList
@@ -164,7 +165,7 @@ function setUiFocus(focus: "pieces" | "problems" | "solutions") {
             <SolutionDisplay
                 v-show="currentTabId === 'solutions' && solutionList?.selectedSolutions.length === 1"
                 :puzzle="puzzle"
-                :solution="solutionList?.selectedSolutions[0] || null"
+                :solution="solutionList?.selectedSolutions[0] as AssemblySolution || null"
             />
         </div>
     </VMain>
