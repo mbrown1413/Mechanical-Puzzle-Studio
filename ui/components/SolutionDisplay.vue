@@ -17,23 +17,20 @@ const pieces = computed(() => {
     if(props.solution === null) {
         return []
     }
-    if(disassembly.value) {
-        return disassembly.value.getState(disassemblyStep.value)
+    if(props.solution && disassembly.value) {
+        return disassembly.value.getState(
+            props.puzzle.grid,
+            props.solution.placements,
+            disassemblyStep.value
+        )
     } else {
         return props.solution.placements
     }
 })
 
-const disassemblySet = computed(() => props.solution?.disassemblies)
-const disassemblyList = computed(() => {
-    if(!disassemblySet.value || !props.solution) { return null }
-    return disassemblySet.value.getDisassemblies(
-        props.puzzle.grid,
-        props.solution.placements
-    )
-})
+const disassemblies = computed(() => props.solution?.disassemblies)
 const disassembly = computed(() => 
-    disassemblyList.value ? disassemblyList.value[disassemblyNumber.value] : null
+    disassemblies.value ? disassemblies.value[disassemblyNumber.value] : null
 )
 </script>
 
@@ -42,16 +39,16 @@ const disassembly = computed(() =>
             :grid="puzzle.grid"
             :pieces="pieces"
             displayOnly
-            :boundsSizing="disassembly ? disassembly.getBounds() : 'voxels'"
+            :boundsSizing="solution && disassembly ? disassembly.getBounds(puzzle.grid, solution.placements) : 'voxels'"
             highlightBy="piece"
-            :showTools="disassemblySet !== undefined"
+            :showTools="disassemblies !== undefined"
     >
 
-        <template v-slot:tools v-if="disassemblyList">
+        <template v-slot:tools v-if="disassemblies">
             <VSlider
                 v-model="disassemblyNumber"
                 min="0"
-                :max="disassemblyList.length - 1"
+                :max="disassemblies.length - 1"
                 step="1"
                 showTicks="always"
                 trackSize="8"

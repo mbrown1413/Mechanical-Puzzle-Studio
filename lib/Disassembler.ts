@@ -1,55 +1,78 @@
 import {PieceWithId} from "~/lib/Piece.ts"
 import {TaskCallbacks} from "~/lib/types.ts"
-import {DisassemblySet, DisassemblyNode} from "~/lib/DisassemblySet.ts"
 import {Grid, Voxel} from "~/lib/Grid.ts"
 import {getMovements, Movement} from "~/lib/movement.ts"
+import {Disassembly, DisassemblyStep} from "~/lib/Disassembly.ts"
+import {clone} from "~/lib/serialize.ts"
+
+/**
+ * The movement defined in the DisassemblyStep properties define how to
+ * move the pieces to get from parent to child. This structure is stored in
+ * the parent and provides indexes into `nodes` of the children.
+ */
+type Child = DisassemblyStep & {
+    /**
+     * The node indexes for the resulting sub-assemblies.
+     *
+     * There may be one or two parts in this array: one in the normal case and
+     * two if the movement creates two sub-assemblies that are separate. A
+     * value of -1 for a part means that the part doesn't need to be
+     * disassembled any further, usually when it only consists of a single
+     * piece.
+     */
+    parts: number[]
+}
+
+type Node = {
+    depth: number
+    children: Child[]
+}
 
 type PlacementHash = string
 
+type QueueItem = {
+    node: Node,
+    placements: PieceWithId[]
+    prevMovement?: Movement,
+}
+
 export abstract class Disassembler {
     grid: Grid
+    start: PieceWithId[]
 
-    constructor(grid: Grid) {
+    constructor(grid: Grid, start: PieceWithId[]) {
         this.grid = grid
+        this.start = start
     }
 
     abstract disassemble(
-        pieces: PieceWithId[],
         callbacks: TaskCallbacks
-    ): DisassemblySet
+    ): Disassembly[]
 }
 
 export class SimpleDisassembler extends Disassembler {
     origin: Voxel
-    nodes: DisassemblyNode[]
+    nodes: Node[]
     nodeIndexesByHash: Map<PlacementHash, number>
 
-    constructor(grid: Grid) {
-        super(grid)
+    constructor(grid: Grid, start: PieceWithId[]) {
+        super(grid, start)
         this.origin = grid.getVoxels(grid.getDefaultPieceBounds())[0]
         this.nodes = []
         this.nodeIndexesByHash = new Map()
     }
 
-    disassemble(
-        pieces: PieceWithId[],
-    ): DisassemblySet {
+    disassemble(): Disassembly[] {
         if(this.nodes.length || this.nodeIndexesByHash.size) {
             throw new Error("Disassemble instance cannot be reused")
         }
 
-        const startNode: DisassemblyNode = {
+        const startNode: Node = {
             depth: 0,
             children: [],
         }
         this.nodes.push(startNode)
-        this.nodeIndexesByHash.set(this.hashPlacements(pieces), 0)
-
-        type QueueItem = {
-            node: DisassemblyNode,
-            placements: PieceWithId[]
-            prevMovement?: Movement,
-        }
+        this.nodeIndexesByHash.set(this.hashPlacements(this.start), 0)
 
         // Breadth-first search where each node is a sub-assembly of the whole.
         // Each node can have multiple children, but a single child can
@@ -57,7 +80,7 @@ export class SimpleDisassembler extends Disassembler {
         // parts.
         const queue: QueueItem[] = [{
             node: startNode,
-            placements: pieces
+            placements: this.start
         }]
         while(queue.length > 0) {
             const current = queue.shift()
@@ -129,15 +152,14 @@ export class SimpleDisassembler extends Disassembler {
             }
         }
 
-        const disassemblies = new DisassemblySet(this.nodes)
-        disassemblies.simplify()
+        const disassemblies = this.getDisassemblies()
         return disassemblies
     }
 
     private getOrCreateNode(
         placements: PieceWithId[],
         depth: number
-    ): [node: DisassemblyNode | null, nodeIndex: number, isNew: boolean] {
+    ): [node: Node | null, nodeIndex: number, isNew: boolean] {
         if(placements.length <= 1) {
             // This is a leaf (completely separated piece on its own) so we
             // don't create an explicit node for it.
@@ -153,7 +175,7 @@ export class SimpleDisassembler extends Disassembler {
         }
 
         // Create a new node
-        const newNode: DisassemblyNode = {
+        const newNode: Node = {
             depth,
             children: []
         }
@@ -197,5 +219,85 @@ export class SimpleDisassembler extends Disassembler {
             placements.map(p => p.completeId),
             placements.map(p => this.grid.doTransform(translation, p.voxels))
         ])
+    }
+
+    private getDisassemblies(): Disassembly[] {
+        const solutions: Disassembly[] = []
+
+        // Recursive breadth-first search. Each iteration we consider a set of
+        // nodes, one for each part our starting assembly has split into. We
+        // recursively call iterate for every possible set of child nodes.
+        const iterate = (
+            placements: PieceWithId[],
+            nodes: Node[],
+            steps: DisassemblyStep[],
+        ) => {
+            const childrenChoices = product(...nodes.map(node => node.children))
+            for(const children of childrenChoices) {
+
+                const newPlacements = placements.map(p => p.copy())
+                const newNodes = []
+                for(const child of children) {
+
+                    // Make movements indicated in the children we chose
+                    for(const piece of newPlacements) {
+                        if(child.movedPieces.includes(piece.completeId)) {
+                            for(let i=0; i<(child.repeat || 1); i++) {
+                                piece.transform(this.grid, child.transform)
+                            }
+                        }
+                    }
+
+                    // Add child nodes, ignoring leaf nodes of -1
+                    for(const nodeIdx of child.parts || []) {
+                        if(nodeIdx === -1) { continue }
+                        newNodes.push(this.nodes[nodeIdx])
+                    }
+                }
+
+                const newSteps = [...steps]
+                newSteps.push(...children)
+
+                if(newNodes.length > 0) {
+                    iterate(newPlacements, newNodes, newSteps)
+                } else {
+                    // If no nodes are left, all parts have reached leaf nodes and
+                    // we have a complete solution.
+                    solutions.push(new Disassembly(clone(newSteps)))
+                }
+            }
+        }
+
+        iterate(this.start, [this.nodes[0]], [])
+        return solutions
+    }
+}
+
+/**
+ * Cartesian product of the given iterables.
+ */
+function *product<T>(...iterables: T[][]): Iterable<T[]> {
+    const indexes = iterables.map(iterable => iterable.length - 1)
+
+    // If any parameters are empty, the whole product will be empty too.
+    if(indexes.some(index => index < 0)) {
+        return
+    }
+
+    while(indexes[0] >= 0) {
+        yield iterables.map(
+            (iterable, i) => iterable[indexes[i]]
+        )
+
+        // Decrement last of indexes. If it reaches -1, roll over to the next
+        // to last, and so on.
+        for(let i=iterables.length-1; i>=0; i--) {
+            if(--indexes[i] < 0) {
+                if(i === 0) { return }
+                indexes[i] = iterables[i].length - 1
+            } else {
+                break
+            }
+        }
     }
 }

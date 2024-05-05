@@ -83,8 +83,8 @@ export class AssemblySolver extends Solver {
             )
 
             if(this.disassemble) {
-                const disassembler = new SimpleDisassembler(puzzle.grid)
-                solution.disassemblies = disassembler.disassemble(solution.placements)
+                const disassembler = new SimpleDisassembler(puzzle.grid, solution.placements)
+                solution.disassemblies = disassembler.disassemble()
             }
 
             ret.push(solution)
