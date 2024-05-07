@@ -46,6 +46,7 @@ const disassembly = computed(() =>
 
         <template v-slot:tools v-if="disassemblies">
             <VSlider
+                v-if="disassemblies.length > 1"
                 v-model="disassemblyNumber"
                 min="0"
                 :max="disassemblies.length - 1"
@@ -70,6 +71,9 @@ const disassembly = computed(() =>
                 style="width: 500px;"
                 :label="`Step: ${disassemblyStep}`"
             />
+            <template v-if="disassemblies.length === 0">
+                No disassembly found
+            </template>
         </template>
 
     </GridDisplay>

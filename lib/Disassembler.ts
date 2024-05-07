@@ -26,14 +26,15 @@ type Child = DisassemblyStep & {
 type Node = {
     depth: number
     children: Child[]
+    solved?: boolean
 }
 
 type PlacementHash = string
 
 type QueueItem = {
     node: Node,
+    path: number[]
     placements: PieceWithId[]
-    prevMovement?: Movement,
 }
 
 export abstract class Disassembler {
@@ -55,11 +56,16 @@ export class SimpleDisassembler extends Disassembler {
     nodes: Node[]
     nodeIndexesByHash: Map<PlacementHash, number>
 
+    // Whether to explore all possible states or stop at the first solution
+    // found.
+    findAll: boolean
+
     constructor(grid: Grid, start: PieceWithId[]) {
         super(grid, start)
         this.origin = grid.getVoxels(grid.getDefaultPieceBounds())[0]
         this.nodes = []
         this.nodeIndexesByHash = new Map()
+        this.findAll = false
     }
 
     disassemble(): Disassembly[] {
@@ -80,6 +86,7 @@ export class SimpleDisassembler extends Disassembler {
         // parts.
         const queue: QueueItem[] = [{
             node: startNode,
+            path: [0],
             placements: this.start
         }]
         while(queue.length > 0) {
@@ -123,8 +130,8 @@ export class SimpleDisassembler extends Disassembler {
                     if(isNew) {
                         queue.push({
                             node: this.nodes[childIndex],
+                            path: [...current.path, childIndex],
                             placements: childPart,
-                            prevMovement: movement,
                         })
                     }
                 }
@@ -149,11 +156,32 @@ export class SimpleDisassembler extends Disassembler {
                     repeat: movement.repeat,
                     parts: childIndexes,
                 })
+
+                if(isLeaf) {
+
+                    // Walk up our ancestors and mark any solved which have a
+                    // child with all its parts solved.
+                    for(const nodeIndex of current.path.toReversed()) {
+                        const node = this.nodes[nodeIndex]
+                        const solvedChild = node.children.find(
+                            child => child.parts.every(part => part === -1 || this.nodes[part].solved)
+                        )
+                        if(solvedChild) {
+                            node.solved = true
+                        } else {
+                            break
+                        }
+                    }
+
+                    if(!this.findAll && startNode.solved) {
+                        const disassemblies = this.getAllAssembliesFromTree()
+                        return [disassemblies[0]]
+                    }
+                }
             }
         }
 
-        const disassemblies = this.getDisassemblies()
-        return disassemblies
+        return this.getAllAssembliesFromTree()
     }
 
     private getOrCreateNode(
@@ -221,7 +249,10 @@ export class SimpleDisassembler extends Disassembler {
         ])
     }
 
-    private getDisassemblies(): Disassembly[] {
+    /**
+     * Read internal tree structure for all solutions.
+     */
+    private getAllAssembliesFromTree(): Disassembly[] {
         const solutions: Disassembly[] = []
 
         // Recursive breadth-first search. Each iteration we consider a set of
@@ -232,7 +263,17 @@ export class SimpleDisassembler extends Disassembler {
             nodes: Node[],
             steps: DisassemblyStep[],
         ) => {
-            const childrenChoices = product(...nodes.map(node => node.children))
+            const childIsSolved = (child: Child) => child.parts.every(
+                partIdx => partIdx === -1 || this.nodes[partIdx].solved
+            )
+
+            // Every permutation of children whose parts are all marked solved.
+            const childrenChoices = product(
+                ...nodes.map(
+                    node => node.children.filter(childIsSolved)
+                )
+            )
+
             for(const children of childrenChoices) {
 
                 const newPlacements = placements.map(p => p.copy())

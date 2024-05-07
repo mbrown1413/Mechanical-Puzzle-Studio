@@ -31,6 +31,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 0,
+              "solved": true,
             },
           ]
         `)
@@ -78,6 +79,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 0,
+              "solved": true,
             },
           ]
         `)
@@ -161,6 +163,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 0,
+              "solved": true,
             },
             {
               "children": [
@@ -177,6 +180,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 1,
+              "solved": true,
             },
           ]
         `)
@@ -216,6 +220,7 @@ describe("Disassembler", () => {
             00000
         `)
         const disassembler = new SimpleDisassembler(grid, pieces)
+        disassembler.findAll = true
         const disassemblies = disassembler.disassemble()
         expect(serialize(disassembler.nodes)).toMatchInlineSnapshot(`
           [
@@ -234,6 +239,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 0,
+              "solved": true,
             },
             {
               "children": [
@@ -259,6 +265,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 1,
+              "solved": true,
             },
             {
               "children": [
@@ -275,6 +282,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 2,
+              "solved": true,
             },
             {
               "children": [
@@ -306,6 +314,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 3,
+              "solved": true,
             },
             {
               "children": [
@@ -378,6 +387,7 @@ describe("Disassembler", () => {
             0000
         `)
         const disassembler = new SimpleDisassembler(grid, pieces)
+        disassembler.findAll = true
         const disassemblies = disassembler.disassemble()
         expect(serialize(disassembler.nodes)).toMatchInlineSnapshot(`
           [
@@ -397,6 +407,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 0,
+              "solved": true,
             },
             {
               "children": [
@@ -422,6 +433,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 1,
+              "solved": true,
             },
             {
               "children": [
@@ -438,6 +450,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 1,
+              "solved": true,
             },
             {
               "children": [
@@ -454,6 +467,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 2,
+              "solved": true,
             },
             {
               "children": [
@@ -470,6 +484,7 @@ describe("Disassembler", () => {
                 },
               ],
               "depth": 2,
+              "solved": true,
             },
           ]
         `)

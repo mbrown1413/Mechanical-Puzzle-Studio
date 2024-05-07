@@ -1,4 +1,6 @@
 export * from "./colors.ts"
+export * from "./Disassembler.ts"
+export * from "./Disassembly.ts"
 export * from "./Grid.ts"
 export * from "./grids/index.ts"
 export * from "./Piece.ts"

@@ -52,10 +52,8 @@ function toggleDisassemble() {
             @click="toggleDisassemble"
         />
 
-        <VBtn
-                enabled="problemId !== null"
-                @click="startSolve"
-        >
+
+        <VBtn @click="startSolve">
             Find Solutions
         </VBtn>
     </div>
