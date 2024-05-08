@@ -2,6 +2,10 @@ import {SerializableClass, registerClass} from "~/lib/serialize.ts"
 import {Piece, PieceWithId, PieceCompleteId} from "~/lib/Piece.ts"
 import {Grid, Transform, Bounds} from "~/lib//Grid.ts"
 
+type StoredDisassemblyData = {
+    steps: (DisassemblyStep | string)[]
+}
+
 export type DisassemblyStep = {
     movedPieces: PieceCompleteId[]
     transform: Transform
@@ -18,6 +22,31 @@ export class Disassembly extends SerializableClass {
         super()
         this.steps = steps
         this.simplify()
+    }
+
+    static postSerialize(disassembly: Disassembly) {
+        const stored = disassembly as unknown as StoredDisassemblyData
+
+        stored.steps = disassembly.steps.map(s => {
+            const repeatStr = s.repeat > 1 ? ` repeat=${s.repeat}` : ""
+            return `pieces=${s.movedPieces.join(",")} transform=${s.transform}${repeatStr}`
+        })
+    }
+
+    static preDeserialize(stored: StoredDisassemblyData) {
+        const disassemblyData = stored as unknown as Disassembly
+
+        for(let i=0; i<stored.steps.length; i++) {
+            const step = stored.steps[i]
+            if(typeof step !== "string") { continue }
+
+            const parts = step.split(" ", 3)
+            disassemblyData.steps[i] = {
+                movedPieces: parts[0].slice(7).split(",") as PieceCompleteId[],
+                transform: parts[1].slice(10),
+                repeat: parts.length === 2 ? 1 : Number(parts[2].slice(7)),
+            }
+        }
     }
 
     simplify() {
