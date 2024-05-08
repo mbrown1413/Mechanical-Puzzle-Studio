@@ -59,19 +59,19 @@ function isCubicDirection(d: string): d is CubicDirection {
 
 export class CubicGrid extends Grid {
     voxelToCoordinate(voxel: Voxel): Coordinate3d {
-        const coord = voxel.split(",").map(Number)
+        const coord = voxel.split(",", 3)
         if(coord.length !== 3) {
             throw new Error(`Invalid cubic coordinate: ${voxel}`)
         }
         return {
-            x: coord[0],
-            y: coord[1],
-            z: coord[2]
+            x: Number(coord[0]),
+            y: Number(coord[1]),
+            z: Number(coord[2])
         }
     }
 
     coordinateToVoxel(coordinate: Coordinate3d): Voxel {
-        return [coordinate.x, coordinate.y, coordinate.z].join(",")
+        return `${coordinate.x},${coordinate.y},${coordinate.z}`
     }
 
     getDefaultPieceBounds(): CubicBounds {
