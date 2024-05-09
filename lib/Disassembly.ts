@@ -2,14 +2,15 @@ import {SerializableClass, registerClass} from "~/lib/serialize.ts"
 import {Piece, PieceWithId, PieceCompleteId} from "~/lib/Piece.ts"
 import {Grid, Transform, Bounds} from "~/lib//Grid.ts"
 
-type StoredDisassemblyData = {
-    steps: (DisassemblyStep | string)[]
-}
-
 export type DisassemblyStep = {
     movedPieces: PieceCompleteId[]
     transform: Transform
     repeat: number  // Number of times `transform` is repeated
+    separates: boolean
+}
+
+type StoredDisassemblyData = {
+    steps: (DisassemblyStep | string)[]
 }
 
 /**
@@ -21,7 +22,6 @@ export class Disassembly extends SerializableClass {
     constructor(steps: DisassemblyStep[]) {
         super()
         this.steps = steps
-        this.simplify()
     }
 
     static postSerialize(disassembly: Disassembly) {
@@ -29,7 +29,8 @@ export class Disassembly extends SerializableClass {
 
         stored.steps = disassembly.steps.map(s => {
             const repeatStr = s.repeat > 1 ? ` repeat=${s.repeat}` : ""
-            return `pieces=${s.movedPieces.join(",")} transform=${s.transform}${repeatStr}`
+            const separatesStr = s.separates ? " separates" : ""
+            return `pieces=${s.movedPieces.join(",")} transform=${s.transform}${repeatStr}${separatesStr}`
         })
     }
 
@@ -37,27 +38,23 @@ export class Disassembly extends SerializableClass {
         const disassemblyData = stored as unknown as Disassembly
 
         for(let i=0; i<stored.steps.length; i++) {
-            const step = stored.steps[i]
-            if(typeof step !== "string") { continue }
+            const storedStep = stored.steps[i]
+            if(typeof storedStep !== "string") { continue }
 
-            const parts = step.split(" ", 3)
+            const parts = storedStep.split(" ")
+            const dict: {[key: string]: string} = {}
+            for(const part of parts) {
+                const [key, value] = part.split("=", 2)
+                dict[key] = value
+            }
+
             disassemblyData.steps[i] = {
-                movedPieces: parts[0].slice(7).split(",") as PieceCompleteId[],
-                transform: parts[1].slice(10),
-                repeat: parts.length === 2 ? 1 : Number(parts[2].slice(7)),
+                movedPieces: dict.pieces.split(",") as PieceCompleteId[],
+                transform: dict.transform,
+                repeat: dict.repeat === undefined ? 1 : Number(dict.repeat),
+                separates: "separates" in dict && dict.separates !== "false",
             }
         }
-    }
-
-    simplify() {
-        // Remove extraneous data from steps
-        this.steps = this.steps.map(step => {
-            return {
-                movedPieces: step.movedPieces,
-                transform: step.transform,
-                repeat: step.repeat,
-            }
-        })
     }
 
     get nStates() {

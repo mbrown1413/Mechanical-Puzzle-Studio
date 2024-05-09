@@ -6,6 +6,7 @@ import {serialize} from "~/lib/serialize.ts"
 
 describe("Disassembler", () => {
     const grid = new SquareGrid()
+
     test("Disassembles in one move", () => {
         const pieces = grid.piecesFromString(`
             00
@@ -46,6 +47,7 @@ describe("Disassembler", () => {
                   "0",
                 ],
                 "repeat": 1,
+                "separates": true,
                 "transform": "t:-1,0,0",
               },
             ],
@@ -94,6 +96,7 @@ describe("Disassembler", () => {
                   "0",
                 ],
                 "repeat": 2,
+                "separates": true,
                 "transform": "t:1,0,0",
               },
             ],
@@ -195,6 +198,7 @@ describe("Disassembler", () => {
                   "0",
                 ],
                 "repeat": 1,
+                "separates": true,
                 "transform": "t:-1,0,0",
               },
               {
@@ -202,6 +206,7 @@ describe("Disassembler", () => {
                   "1",
                 ],
                 "repeat": 1,
+                "separates": true,
                 "transform": "t:-1,0,0",
               },
             ],
@@ -349,6 +354,7 @@ describe("Disassembler", () => {
                   "1",
                 ],
                 "repeat": 4,
+                "separates": true,
                 "transform": "t:1,0,0",
               },
               {
@@ -356,6 +362,7 @@ describe("Disassembler", () => {
                   "0",
                 ],
                 "repeat": 1,
+                "separates": false,
                 "transform": "t:0,1,0",
               },
               {
@@ -363,6 +370,7 @@ describe("Disassembler", () => {
                   "0",
                 ],
                 "repeat": 4,
+                "separates": true,
                 "transform": "t:-1,0,0",
               },
               {
@@ -370,6 +378,7 @@ describe("Disassembler", () => {
                   "2",
                 ],
                 "repeat": 2,
+                "separates": true,
                 "transform": "t:0,-1,0",
               },
             ],
@@ -500,6 +509,7 @@ describe("Disassembler", () => {
                   "3",
                 ],
                 "repeat": 3,
+                "separates": true,
                 "transform": "t:-1,0,0",
               },
               {
@@ -507,6 +517,7 @@ describe("Disassembler", () => {
                   "0",
                 ],
                 "repeat": 2,
+                "separates": false,
                 "transform": "t:0,-1,0",
               },
               {
@@ -514,6 +525,7 @@ describe("Disassembler", () => {
                   "1",
                 ],
                 "repeat": 1,
+                "separates": true,
                 "transform": "t:0,1,0",
               },
               {
@@ -521,6 +533,7 @@ describe("Disassembler", () => {
                   "0",
                 ],
                 "repeat": 3,
+                "separates": true,
                 "transform": "t:-1,0,0",
               },
             ],
@@ -531,6 +544,7 @@ describe("Disassembler", () => {
                   "3",
                 ],
                 "repeat": 3,
+                "separates": true,
                 "transform": "t:-1,0,0",
               },
               {
@@ -538,6 +552,7 @@ describe("Disassembler", () => {
                   "0",
                 ],
                 "repeat": 1,
+                "separates": false,
                 "transform": "t:0,-1,0",
               },
               {
@@ -545,6 +560,7 @@ describe("Disassembler", () => {
                   "1",
                 ],
                 "repeat": 1,
+                "separates": true,
                 "transform": "t:0,1,0",
               },
               {
@@ -552,6 +568,7 @@ describe("Disassembler", () => {
                   "0",
                 ],
                 "repeat": 3,
+                "separates": true,
                 "transform": "t:-1,0,0",
               },
             ],

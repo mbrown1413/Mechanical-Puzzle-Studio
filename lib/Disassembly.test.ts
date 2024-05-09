@@ -9,11 +9,25 @@ describe("Disassembly", () => {
             movedPieces: ["0-0", "0-1", "2"],
             transform: "t:0,0,1",
             repeat: 3,
+            separates: true
         },
         {
             movedPieces: ["3"],
             transform: "t:-1,0,0",
             repeat: 1,
+            separates: true
+        },
+        {
+            movedPieces: ["0-0", "0-1", "2"],
+            transform: "t:0,0,1",
+            repeat: 3,
+            separates: false
+        },
+        {
+            movedPieces: ["3"],
+            transform: "t:-1,0,0",
+            repeat: 1,
+            separates: false
         },
     ])
 
@@ -21,6 +35,8 @@ describe("Disassembly", () => {
         expect(serialize(disassembly)).toMatchInlineSnapshot(`
           {
             "steps": [
+              "pieces=0-0,0-1,2 transform=t:0,0,1 repeat=3 separates",
+              "pieces=3 transform=t:-1,0,0 separates",
               "pieces=0-0,0-1,2 transform=t:0,0,1 repeat=3",
               "pieces=3 transform=t:-1,0,0",
             ],
@@ -38,11 +54,25 @@ describe("Disassembly", () => {
                     "movedPieces": ["0-0", "0-1", "2"],
                     "repeat": 3,
                     "transform": "t:0,0,1",
+                    "separates": true
                 },
                 {
                     "movedPieces": ["3"],
                     "repeat": 1,
                     "transform": "t:-1,0,0",
+                    "separates": true
+                },
+                {
+                    "movedPieces": ["0-0", "0-1", "2"],
+                    "repeat": 3,
+                    "transform": "t:0,0,1",
+                    "separates": false
+                },
+                {
+                    "movedPieces": ["3"],
+                    "repeat": 1,
+                    "transform": "t:-1,0,0",
+                    "separates": false
                 },
             ],
         }

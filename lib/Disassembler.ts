@@ -1,6 +1,6 @@
-import {PieceWithId} from "~/lib/Piece.ts"
+import {PieceWithId, PieceCompleteId} from "~/lib/Piece.ts"
 import {TaskCallbacks} from "~/lib/types.ts"
-import {Grid, Voxel} from "~/lib/Grid.ts"
+import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
 import {getMovements, Movement} from "~/lib/movement.ts"
 import {Disassembly, DisassemblyStep} from "~/lib/Disassembly.ts"
 import {clone} from "~/lib/serialize.ts"
@@ -10,7 +10,11 @@ import {clone} from "~/lib/serialize.ts"
  * move the pieces to get from parent to child. This structure is stored in
  * the parent and provides indexes into `nodes` of the children.
  */
-type Child = DisassemblyStep & {
+type Child = {
+    movedPieces: PieceCompleteId[]
+    transform: Transform
+    repeat: number  // Number of times `transform` is repeated
+
     /**
      * The node indexes for the resulting sub-assemblies.
      *
@@ -297,7 +301,14 @@ export class SimpleDisassembler extends Disassembler {
                 }
 
                 const newSteps = [...steps]
-                newSteps.push(...children)
+                newSteps.push(...children.map(child => {
+                    return {
+                        movedPieces: child.movedPieces,
+                        transform: child.transform,
+                        repeat: child.repeat,
+                        separates: child.parts.length > 1,
+                    }
+                }))
 
                 if(newNodes.length > 0) {
                     iterate(newPlacements, newNodes, newSteps)
