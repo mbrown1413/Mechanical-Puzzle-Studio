@@ -37,20 +37,14 @@ describe("Disassembler", () => {
           ]
         `)
 
-        expect(
-          disassemblies.map(d => d.steps)
-        ).toMatchInlineSnapshot(`
+        expect(serialize(disassemblies)).toMatchInlineSnapshot(`
           [
-            [
-              {
-                "movedPieces": [
-                  "0",
-                ],
-                "repeat": 1,
-                "separates": true,
-                "transform": "t:-1,0,0",
-              },
-            ],
+            {
+              "steps": [
+                "pieces=0 transform=t:-1,0,0 separates",
+              ],
+              "type": "Disassembly",
+            },
           ]
         `)
     })
@@ -86,20 +80,14 @@ describe("Disassembler", () => {
           ]
         `)
 
-        expect(
-          disassemblies.map(d => d.steps)
-        ).toMatchInlineSnapshot(`
+        expect(serialize(disassemblies)).toMatchInlineSnapshot(`
           [
-            [
-              {
-                "movedPieces": [
-                  "0",
-                ],
-                "repeat": 2,
-                "separates": true,
-                "transform": "t:1,0,0",
-              },
-            ],
+            {
+              "steps": [
+                "pieces=0 transform=t:1,0,0 repeat=2 separates",
+              ],
+              "type": "Disassembly",
+            },
           ]
         `)
     })
@@ -137,9 +125,7 @@ describe("Disassembler", () => {
           ]
         `)
 
-        expect(
-          disassemblies.map(d => d.steps)
-        ).toMatchInlineSnapshot(`[]`)
+        expect(disassemblies).toEqual([])
     })
 
 
@@ -188,28 +174,15 @@ describe("Disassembler", () => {
           ]
         `)
 
-        expect(
-          disassemblies.map(d => d.steps)
-        ).toMatchInlineSnapshot(`
+        expect(serialize(disassemblies)).toMatchInlineSnapshot(`
           [
-            [
-              {
-                "movedPieces": [
-                  "0",
-                ],
-                "repeat": 1,
-                "separates": true,
-                "transform": "t:-1,0,0",
-              },
-              {
-                "movedPieces": [
-                  "1",
-                ],
-                "repeat": 1,
-                "separates": true,
-                "transform": "t:-1,0,0",
-              },
-            ],
+            {
+              "steps": [
+                "pieces=0 transform=t:-1,0,0 separates",
+                "pieces=1 transform=t:-1,0,0 separates",
+              ],
+              "type": "Disassembly",
+            },
           ]
         `)
     })
@@ -344,44 +317,17 @@ describe("Disassembler", () => {
           ]
         `)
 
-        expect(
-          disassemblies.map(d => d.steps)
-        ).toMatchInlineSnapshot(`
+        expect(serialize(disassemblies)).toMatchInlineSnapshot(`
           [
-            [
-              {
-                "movedPieces": [
-                  "1",
-                ],
-                "repeat": 4,
-                "separates": true,
-                "transform": "t:1,0,0",
-              },
-              {
-                "movedPieces": [
-                  "0",
-                ],
-                "repeat": 1,
-                "separates": false,
-                "transform": "t:0,1,0",
-              },
-              {
-                "movedPieces": [
-                  "0",
-                ],
-                "repeat": 4,
-                "separates": true,
-                "transform": "t:-1,0,0",
-              },
-              {
-                "movedPieces": [
-                  "2",
-                ],
-                "repeat": 2,
-                "separates": true,
-                "transform": "t:0,-1,0",
-              },
-            ],
+            {
+              "steps": [
+                "pieces=1 transform=t:1,0,0 repeat=4 separates",
+                "pieces=0 transform=t:0,1,0",
+                "pieces=0 transform=t:-1,0,0 repeat=4 separates",
+                "pieces=2 transform=t:0,-1,0 repeat=2 separates",
+              ],
+              "type": "Disassembly",
+            },
           ]
         `)
     })
@@ -498,80 +444,26 @@ describe("Disassembler", () => {
           ]
         `)
 
-        expect(
-          disassemblies.map(d => d.steps)
-        ).toMatchInlineSnapshot(`
+        expect(serialize(disassemblies)).toMatchInlineSnapshot(`
           [
-            [
-              {
-                "movedPieces": [
-                  "0",
-                  "3",
-                ],
-                "repeat": 3,
-                "separates": true,
-                "transform": "t:-1,0,0",
-              },
-              {
-                "movedPieces": [
-                  "0",
-                ],
-                "repeat": 2,
-                "separates": false,
-                "transform": "t:0,-1,0",
-              },
-              {
-                "movedPieces": [
-                  "1",
-                ],
-                "repeat": 1,
-                "separates": true,
-                "transform": "t:0,1,0",
-              },
-              {
-                "movedPieces": [
-                  "0",
-                ],
-                "repeat": 3,
-                "separates": true,
-                "transform": "t:-1,0,0",
-              },
-            ],
-            [
-              {
-                "movedPieces": [
-                  "0",
-                  "3",
-                ],
-                "repeat": 3,
-                "separates": true,
-                "transform": "t:-1,0,0",
-              },
-              {
-                "movedPieces": [
-                  "0",
-                ],
-                "repeat": 1,
-                "separates": false,
-                "transform": "t:0,-1,0",
-              },
-              {
-                "movedPieces": [
-                  "1",
-                ],
-                "repeat": 1,
-                "separates": true,
-                "transform": "t:0,1,0",
-              },
-              {
-                "movedPieces": [
-                  "0",
-                ],
-                "repeat": 3,
-                "separates": true,
-                "transform": "t:-1,0,0",
-              },
-            ],
+            {
+              "steps": [
+                "pieces=0,3 transform=t:-1,0,0 repeat=3 separates",
+                "pieces=0 transform=t:0,-1,0 repeat=2",
+                "pieces=1 transform=t:0,1,0 separates",
+                "pieces=0 transform=t:-1,0,0 repeat=3 separates",
+              ],
+              "type": "Disassembly",
+            },
+            {
+              "steps": [
+                "pieces=0,3 transform=t:-1,0,0 repeat=3 separates",
+                "pieces=0 transform=t:0,-1,0",
+                "pieces=1 transform=t:0,1,0 separates",
+                "pieces=0 transform=t:-1,0,0 repeat=3 separates",
+              ],
+              "type": "Disassembly",
+            },
           ]
         `)
     })
