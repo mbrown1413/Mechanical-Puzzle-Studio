@@ -1,6 +1,7 @@
 import {SerializableClass, registerClass} from "~/lib/serialize.ts"
 import {Piece, PieceWithId, PieceCompleteId} from "~/lib/Piece.ts"
-import {Grid, Transform, Bounds} from "~/lib//Grid.ts"
+import {Grid, Transform, Bounds} from "~/lib/Grid.ts"
+import {clone} from "~/lib/serialize.ts"
 
 export type DisassemblyStep = {
     movedPieces: PieceCompleteId[]
@@ -22,6 +23,10 @@ export class Disassembly extends SerializableClass {
     constructor(steps: DisassemblyStep[]) {
         super()
         this.steps = steps
+    }
+
+    copy() {
+        return clone(this)
     }
 
     static postSerialize(disassembly: Disassembly) {
@@ -92,6 +97,50 @@ export class Disassembly extends SerializableClass {
         }
         const allPieceBounds = allPieces.map(piece => grid.getVoxelBounds(...piece.voxels))
         return grid.getBoundsMax(...allPieceBounds)
+    }
+
+    /**
+     * Reorder steps so each time a move separates the assembly into two
+     * subassemblies, all of the moves from the first subassembly are done
+     * before the second. In order words, this orders the moves to be
+     * depth-first, instead of whatever came out of the assembler (likely
+     * breadth-first).
+     */
+    reorder() {
+
+        const recurse = (steps: DisassemblyStep[]): DisassemblyStep[] => {
+            const separatingIndex = steps.findIndex(step => step.separates)
+            if(separatingIndex === -1) {
+                return steps
+            }
+
+            // Separate steps into 3 groups:
+            //   1. up to and including the first separation
+            //   2. group 1: after the first separation, with pieces moved in the separating step
+            //   3. group 2: after the first separation, with pieces not moved in the separating step
+            const group1Pieces = steps[separatingIndex].movedPieces
+            const group1 = []
+            const group2 = []
+            for(let i=separatingIndex+1; i<steps.length; i++) {
+                const step = steps[i]
+                const inGroup1 = group1Pieces.some(
+                    idInGroup1 => step.movedPieces.includes(idInGroup1)
+                )
+                if(inGroup1) {
+                    group1.push(step)
+                } else {
+                    group2.push(step)
+                }
+            }
+
+            return [
+                ...steps.slice(0, separatingIndex+1),
+                ...recurse(group1),
+                ...recurse(group2),
+            ]
+        }
+
+        this.steps = recurse(this.steps)
     }
 }
 registerClass(Disassembly)

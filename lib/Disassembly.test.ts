@@ -78,4 +78,64 @@ describe("Disassembly", () => {
         }
         expect(deserialize(serialized)).toEqual(disassembly)
     })
+
+    test("reorder", () => {
+
+        const disassembly = deserialize(JSON.parse(`
+          {
+            "steps": [
+              "pieces=0,5 transform=t:1,0,0",
+              "pieces=0,1,2 transform=t:1,0,0 separates",
+              "pieces=0 transform=t:1,0,0",
+              "pieces=1 transform=t:1,0,0",
+              "pieces=2 transform=t:1,0,0",
+              "pieces=3 transform=t:1,0,0",
+              "pieces=4 transform=t:1,0,0",
+              "pieces=0 transform=t:1,0,0 separates",
+              "pieces=1 transform=t:1,0,0",
+              "pieces=2 transform=t:1,0,0",
+              "pieces=3 transform=t:1,0,0",
+              "pieces=4 transform=t:1,0,0",
+              "pieces=4,5 transform=t:1,0,0 separates",
+              "pieces=1 transform=t:1,0,0",
+              "pieces=2 transform=t:1,0,0",
+              "pieces=3 transform=t:1,0,0",
+              "pieces=4 transform=t:1,0,0",
+              "pieces=5 transform=t:1,0,0",
+              "pieces=1 transform=t:1,0,0 separates",
+              "pieces=4 transform=t:1,0,0 separates"
+            ],
+            "type": "Disassembly"
+          }
+        `)) as Disassembly
+        disassembly.reorder()
+        expect(serialize(disassembly)).toMatchInlineSnapshot(`
+          {
+            "steps": [
+              "pieces=0,5 transform=t:1,0,0",
+              "pieces=0,1,2 transform=t:1,0,0 separates",
+              "pieces=0 transform=t:1,0,0",
+              "pieces=1 transform=t:1,0,0",
+              "pieces=2 transform=t:1,0,0",
+              "pieces=0 transform=t:1,0,0 separates",
+              "pieces=1 transform=t:1,0,0",
+              "pieces=2 transform=t:1,0,0",
+              "pieces=1 transform=t:1,0,0",
+              "pieces=2 transform=t:1,0,0",
+              "pieces=1 transform=t:1,0,0 separates",
+              "pieces=3 transform=t:1,0,0",
+              "pieces=4 transform=t:1,0,0",
+              "pieces=3 transform=t:1,0,0",
+              "pieces=4 transform=t:1,0,0",
+              "pieces=4,5 transform=t:1,0,0 separates",
+              "pieces=4 transform=t:1,0,0",
+              "pieces=5 transform=t:1,0,0",
+              "pieces=4 transform=t:1,0,0 separates",
+              "pieces=3 transform=t:1,0,0",
+            ],
+            "type": "Disassembly",
+          }
+        `)
+
+    })
 })
