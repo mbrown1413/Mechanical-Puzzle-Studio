@@ -30,7 +30,7 @@ const pieces = computed(() => {
 
 const disassemblies = computed(() => props.solution?.disassemblies)
 const disassembly = computed(() => {
-    if(!disassemblies.value) { return null }
+    if(!disassemblies.value || disassemblies.value.length === 0 || !props.solution) { return null }
     const disassembly = disassemblies.value[disassemblyNumber.value].copy()
     disassembly.reorder()
     return disassembly
