@@ -1,9 +1,12 @@
 import {test, expect, describe} from "vitest"
 
 import {serialize, deserialize} from "~/lib/serialize.ts"
+import {SquareGrid} from "~/lib/grids/SquareGrid.ts"
 import {Disassembly} from "./Disassembly.ts"
 
 describe("Disassembly", () => {
+    const grid = new SquareGrid()
+
     const disassembly = new Disassembly([
         {
             movedPieces: ["0-0", "0-1", "2"],
@@ -48,31 +51,31 @@ describe("Disassembly", () => {
 
     test("deserialization from non-compact form", () => {
         const serialized = {
-            "type": "Disassembly",
-            "steps": [
+            type: "Disassembly",
+            steps: [
                 {
-                    "movedPieces": ["0-0", "0-1", "2"],
-                    "repeat": 3,
-                    "transform": "t:0,0,1",
-                    "separates": true
+                    movedPieces: ["0-0", "0-1", "2"],
+                    repeat: 3,
+                    transform: "t:0,0,1",
+                    separates: true
                 },
                 {
-                    "movedPieces": ["3"],
-                    "repeat": 1,
-                    "transform": "t:-1,0,0",
-                    "separates": true
+                    movedPieces: ["3"],
+                    repeat: 1,
+                    transform: "t:-1,0,0",
+                    separates: true
                 },
                 {
-                    "movedPieces": ["0-0", "0-1", "2"],
-                    "repeat": 3,
-                    "transform": "t:0,0,1",
-                    "separates": false
+                    movedPieces: ["0-0", "0-1", "2"],
+                    repeat: 3,
+                    transform: "t:0,0,1",
+                    separates: false
                 },
                 {
-                    "movedPieces": ["3"],
-                    "repeat": 1,
-                    "transform": "t:-1,0,0",
-                    "separates": false
+                    movedPieces: ["3"],
+                    repeat: 1,
+                    transform: "t:-1,0,0",
+                    separates: false
                 },
             ],
         }
@@ -80,7 +83,6 @@ describe("Disassembly", () => {
     })
 
     test("reorder", () => {
-
         const disassembly = deserialize(JSON.parse(`
           {
             "steps": [
@@ -136,6 +138,145 @@ describe("Disassembly", () => {
             "type": "Disassembly",
           }
         `)
+    })
 
+    test("spaceSeparatedParts with one separation", () => {
+        const pieces = grid.piecesFromString(`
+            0000
+            0111
+            0000
+        `)
+        const disassembly = deserialize(JSON.parse(`
+        {
+            "steps": [
+                "pieces=1 transform=t:1,0,0 repeat=3 separates"
+            ],
+            "type": "Disassembly"
+        }
+        `)) as Disassembly
+        disassembly.spaceSepratedParts(grid, pieces)
+        expect(serialize(disassembly)).toMatchInlineSnapshot(`
+          {
+            "steps": [
+              "pieces=1 transform=t:1,0,0 repeat=4 separates",
+            ],
+            "type": "Disassembly",
+          }
+        `)
+    })
+
+    test("spaceSeparatedParts with two separations", () => {
+        const pieces = grid.piecesFromString(`
+            0000
+            0111
+            0221
+            0111
+            0000
+        `)
+        const disassembly = deserialize(JSON.parse(`
+        {
+            "steps": [
+                "pieces=0 transform=t:-1,0,0 repeat=3 separates",
+                "pieces=2 transform=t:-1,0,0 repeat=2 separates"
+            ],
+            "type": "Disassembly"
+        }
+        `)) as Disassembly
+        disassembly.spaceSepratedParts(grid, pieces)
+        expect(serialize(disassembly)).toMatchInlineSnapshot(`
+          {
+            "steps": [
+              "pieces=0 transform=t:-1,0,0 repeat=7 separates",
+              "pieces=2 transform=t:-1,0,0 repeat=3 separates",
+            ],
+            "type": "Disassembly",
+          }
+        `)
+    })
+
+    test("spaceSeparatedParts with an intersection in the orthogonal direction thep parts separated", () => {
+        const pieces = grid.piecesFromString(`
+            0000
+            0333
+            0343
+            0343
+            0121
+            0121
+            0111
+            0000
+        `)
+        const disassembly = deserialize(JSON.parse(`
+        {
+            "steps": [
+            "pieces=1,2 transform=t:1,0,0 repeat=3 separates",
+            "pieces=3,4 transform=t:1,0,0 repeat=3 separates",
+            "pieces=2 transform=t:0,1,0 repeat=2 separates",
+            "pieces=4 transform=t:0,-1,0 repeat=2 separates"
+            ],
+            "type": "Disassembly"
+        }
+        `)) as Disassembly
+        disassembly.spaceSepratedParts(grid, pieces)
+        expect(serialize(disassembly)).toMatchInlineSnapshot(`
+          {
+            "steps": [
+              "pieces=1,2 transform=t:1,0,0 repeat=8 separates",
+              "pieces=3,4 transform=t:1,0,0 repeat=4 separates",
+              "pieces=2 transform=t:0,1,0 repeat=3 separates",
+              "pieces=4 transform=t:0,-1,0 repeat=3 separates",
+            ],
+            "type": "Disassembly",
+          }
+        `)
+    })
+
+    test("spaceSeparatedParts with an intersection that happens during a separation but not after the separation", () => {
+        const pieces = grid.piecesFromString(`
+            012
+        `)
+        const disassembly = deserialize(JSON.parse(`
+        {
+          "steps": [
+            "pieces=2 transform=t:1,0,0 separates",
+            "pieces=1 transform=t:1,0,0 repeat=4 separates"
+          ],
+          "type": "Disassembly"
+        }
+        `)) as Disassembly
+        disassembly.spaceSepratedParts(grid, pieces)
+        expect(serialize(disassembly)).toMatchInlineSnapshot(`
+          {
+            "steps": [
+              "pieces=2 transform=t:1,0,0 repeat=5 separates",
+              "pieces=1 transform=t:1,0,0 repeat=4 separates",
+            ],
+            "type": "Disassembly",
+          }
+        `)
+    })
+
+    test("spaceSeparatedParts with malformed disassembly", () => {
+        const pieces = grid.piecesFromString(`
+            0000
+            01 0
+            0000
+        `)
+        const disassembly = deserialize(JSON.parse(`
+        {
+          "steps": [
+            "pieces=1 transform=t:1,0,0 separates"
+          ],
+          "type": "Disassembly"
+        }
+        `)) as Disassembly
+        disassembly.spaceSepratedParts(grid, pieces)
+        expect(serialize(disassembly)).toMatchInlineSnapshot(`
+          {
+            "steps": [
+              "pieces=1 transform=t:1,0,0 repeat=4 separates",
+            ],
+            "type": "Disassembly",
+          }
+        `)
     })
 })
