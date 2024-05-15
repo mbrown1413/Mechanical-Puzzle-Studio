@@ -99,16 +99,25 @@ export class SimpleDisassembler extends Disassembler {
 
             let movements = getMovements(this.grid, current.placements)
 
-            // If any move separates, only keep the first one. This works since
+            // If any move separates, only keep one. This works since
             // separating never hinders other moves from happening afterwards.
             // That is, separation will always increase the freedom of
-            // movement.
+            // movement. We prefer removing single pieces at a time to keep
+            // disassemblies simple when possible.
             //
             // This is an optimization, but it also prevents us from getting
             // stuck in pathological loops where a piece is stationary off to
             // one side of the rest of the assembly, while the assembly walks
             // infinitely in one direction.
-            const separatingMove = movements.find(movement => movement.separates)
+            let separatingMove = null
+            for(const movement of movements) {
+                if(!movement.separates) { continue }
+                if(movement.movedPieces.length === 1) {
+                    separatingMove = movement
+                    break
+                }
+                separatingMove = movement
+            }
             if(separatingMove) {
                 movements = [separatingMove]
             }

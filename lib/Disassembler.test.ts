@@ -350,8 +350,8 @@ describe("Disassembler", () => {
               "children": [
                 {
                   "movedPieces": [
-                    "0",
                     "3",
+                    "0",
                   ],
                   "parts": [
                     1,
@@ -448,7 +448,7 @@ describe("Disassembler", () => {
           [
             {
               "steps": [
-                "pieces=0,3 transform=t:-1,0,0 repeat=3 separates",
+                "pieces=3,0 transform=t:-1,0,0 repeat=3 separates",
                 "pieces=0 transform=t:0,-1,0 repeat=2",
                 "pieces=1 transform=t:0,1,0 separates",
                 "pieces=0 transform=t:-1,0,0 repeat=3 separates",
@@ -457,7 +457,7 @@ describe("Disassembler", () => {
             },
             {
               "steps": [
-                "pieces=0,3 transform=t:-1,0,0 repeat=3 separates",
+                "pieces=3,0 transform=t:-1,0,0 repeat=3 separates",
                 "pieces=0 transform=t:0,-1,0",
                 "pieces=1 transform=t:0,1,0 separates",
                 "pieces=0 transform=t:-1,0,0 repeat=3 separates",
