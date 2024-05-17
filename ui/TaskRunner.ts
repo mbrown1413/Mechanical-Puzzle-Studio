@@ -14,6 +14,7 @@ export type StartMessage = {
 type ProgressMessage = {
     msgType: "progress",
     percent: number,
+    progressMessage?: string | null,
 }
 
 type LogMessage = {
@@ -39,6 +40,7 @@ export type TaskInfo = {
     task: Task<Serializable>,
     status: "queued" | "running" | "finished" | "canceled"
     progressPercent: number | null,  // Null before progress is set by task
+    progressMessage: string | null,
     messages: string[],
     error: string | null,
 }
@@ -76,6 +78,7 @@ export class TaskRunner {
             task,
             status: "queued",
             progressPercent: null,
+            progressMessage: null,
             messages: [],
             error: null,
         })
@@ -214,6 +217,9 @@ export class TaskRunner {
     private onProgressMessage(data: ProgressMessage) {
         if(this.current) {
             this.current.progressPercent = data.percent
+            if(data.progressMessage !== undefined) {
+                this.current.progressMessage = data.progressMessage
+            }
         }
     }
 

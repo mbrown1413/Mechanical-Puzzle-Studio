@@ -14,7 +14,7 @@ function getProgressString(info: TaskInfo): string {
     }
     return {
         "queued": "Queued",
-        "running": "Running: " + getPercentString(info),
+        "running": (info.progressMessage || "Running") + ": " + getPercentString(info),
         "finished": "Finished",
         "canceled": "Canceled",
     }[info.status]
@@ -55,6 +55,10 @@ function getColor(info: TaskInfo): string | undefined {
                     class="progress"
                 />
                 {{ taskRunner.current.task.getDescription() }}
+                <template v-if="taskRunner.current.progressMessage">
+                    <br>
+                    {{ taskRunner.current.progressMessage }}
+                </template>
             </template>
 
             <VMenu

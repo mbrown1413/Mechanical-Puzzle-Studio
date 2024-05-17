@@ -72,24 +72,29 @@ export class AssemblySolver extends Solver {
             }
         }
 
-        const solutions = this.solveCover(coverProblem, callbacks)
+        callbacks.progressCallback(0, "Assembling")
+        const coverSolutions = this.solveCover(coverProblem, callbacks)
 
-        const ret = []
-        for(const pickedRows of solutions) {
+        const solutions = []
+        for(const pickedRows of coverSolutions) {
             const solution = new AssemblySolution(
                 pickedRows.map(
                     (placementIdx, pieceIdx) => coverProblem.placementsByPieceIdx[pieceIdx][placementIdx]
                 )
             )
+            solutions.push(solution)
+        }
 
-            if(this.disassemble) {
+        if(this.disassemble) {
+            callbacks.progressCallback(0, "Disassembling")
+            for(const [i, solution] of solutions.entries()) {
                 const disassembler = new SimpleDisassembler(puzzle.grid, solution.placements)
                 solution.disassemblies = disassembler.disassemble()
+                callbacks.progressCallback(i / coverSolutions.length)
             }
-
-            ret.push(solution)
         }
-        return ret
+
+        return solutions
     }
 
     voxelCountCheck(pieces: Piece[], goal: Piece): string | null {

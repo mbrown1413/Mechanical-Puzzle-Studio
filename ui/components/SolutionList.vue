@@ -93,6 +93,8 @@ defineExpose({
             <template v-else-if="taskInfo">
                 Task {{ taskInfo.status }}
                 <template v-if="taskInfo.status === 'running'">
+                    <br>
+                    {{ taskInfo.progressMessage }}
                     <VProgressCircular
                         :indeterminate="taskInfo.progressPercent === null"
                         :model-value="(taskInfo.progressPercent || 0) * 100"
