@@ -7,7 +7,7 @@ import {ref, Ref, computed, reactive, watch, nextTick} from "vue"
 import {useRouter} from "vue-router"
 import {VTextField, VFileInput, VForm} from "vuetify/components"
 
-import {Puzzle, PuzzleFile, CubicGrid} from "~lib"
+import {Puzzle, PuzzleFile, CubicGrid, readPuzzleFile} from "~lib"
 
 import {getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
 import Modal from "~/ui/common/Modal.vue"
@@ -88,6 +88,9 @@ const fields: {
 })
 const uploadedPuzzle: Ref<PuzzleFile | null> = ref(null)
 
+const unsupportedWarningModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
+const unsupportedFeatures: Ref<string[]> = ref([])
+
 watch(uploadedPuzzle, (newPuzzle, oldPuzzle) => {
     if(mode.value === "upload") {
         // Automatically set puzzle name from uploaded file, but only if user
@@ -130,10 +133,11 @@ const fileUploadRules: VFileInput["rules"] = [
             return "Select a puzzle to upload"
         }
         try {
-            uploadedPuzzle.value = await readPuzzleFile(files[0])
+            const readResult = await readPuzzleFile(files[0])
+            uploadedPuzzle.value = readResult.puzzleFile
         } catch(e) {
             console.error(e)
-            return String(e)
+            return String(e).split("\n")[0]
         }
         return true
     }
@@ -157,7 +161,12 @@ async function submit(event?: Event) {
         break
 
         case "upload":
-            puzzleFile = await readPuzzleFile(fields.files[0])
+            const readResult = await readPuzzleFile(fields.files[0])
+            puzzleFile = readResult.puzzleFile
+            if(readResult.unsupportedFeatures?.length) {
+                unsupportedFeatures.value = readResult.unsupportedFeatures
+                await unsupportedWarningModal.value?.openAsync()
+            }
         break
 
         case "copy":
@@ -182,23 +191,6 @@ async function submit(event?: Event) {
     })
     modal.value?.close()
     emit("save", puzzleFile)
-}
-
-function readPuzzleFile(file: File): Promise<PuzzleFile> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => {
-            const contents = reader.result as string
-            try {
-                const puzzleFile = PuzzleFile.deserialize(contents)
-                resolve(puzzleFile)
-            } catch(e) {
-                reject(e)
-            }
-        }
-        reader.onerror = reject
-        reader.readAsText(file)
-    })
 }
 </script>
 
@@ -240,5 +232,22 @@ function readPuzzleFile(file: File): Promise<PuzzleFile> {
             />
             <input type="submit" style="display: none;" />
         </VForm>
+    </Modal>
+
+    <Modal
+        ref="unsupportedWarningModal"
+        title="Warning"
+        icon="mdi-alert-outline"
+        okText="Continue"
+        :cancelShow="false"
+        @ok="unsupportedWarningModal?.close()"
+    >
+        The uploaded BurrTools file uses the following features which we do not
+        yet support importing:
+        <ul style="margin-left: 2em;">
+            <li v-for="feature in unsupportedFeatures">
+                {{ feature }}
+            </li>
+        </ul>
     </Modal>
 </template>

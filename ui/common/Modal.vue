@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import {ref} from "vue"
-import {VDialog} from "vuetify/components"
+import {WatchStopHandle, ref, watch} from "vue"
+import {VCard, VDialog} from "vuetify/components"
 
 withDefaults(
     defineProps<{
         title: string,
         persistent?: boolean,
+        icon?: string
 
         okText?: string,
         okColor?: string,
@@ -38,7 +39,21 @@ const modalOpen = ref(false)
 
 defineExpose({
     open() { modalOpen.value = true },
-    close() { modalOpen.value = false }
+    close() { modalOpen.value = false },
+
+    /** Opens modal and returns promise which resolves when dialog is closed. */
+    openAsync() {
+        this.open()
+        return new Promise<void>(resolve => {
+            let stopHandle: WatchStopHandle
+            stopHandle = watch(modalOpen, newValue => {
+                if(!newValue) {
+                    resolve()
+                    stopHandle()
+                }
+            })
+        })
+    }
 })
 </script>
 
@@ -50,6 +65,7 @@ defineExpose({
     >
         <VCard>
             <VCardTitle>
+                <VIcon v-if="icon" :icon="icon" />
                 <span class="text-h5">{{ title }}</span>
             </VCardTitle>
 

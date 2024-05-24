@@ -1,5 +1,5 @@
 import {Puzzle} from "~/lib/Puzzle.ts"
-import {SerializableClass, deserialize, deserializeIgnoreErrors, registerClass, serialize} from "~/lib/serialize.ts"
+import {SerializableClass, deserialize, deserializeIgnoreErrors, registerClass, serialize, SerializedData} from "~/lib/serialize.ts"
 
 function stripIfStartsWith(input: string, toStrip: string) {
     return input.startsWith(toStrip) ?
@@ -38,20 +38,14 @@ export class PuzzleFile extends SerializableClass {
     constructor(
         puzzle: Puzzle,
         name: string,
-        author: string="",
-        description: string="",
     ) {
         super()
         this.name = name
-        this.author = author
-        this.description = description
         this.createdUTCString = new Date().toUTCString()
-        this.modifiedUTCString = this.createdUTCString
         this.puzzle = puzzle
     }
 
     serialize(formatted=false) {
-        this.modifiedUTCString = new Date().toUTCString()
         return JSON.stringify(
             serialize(this),
             null,
@@ -59,8 +53,8 @@ export class PuzzleFile extends SerializableClass {
         )
     }
 
-    static deserialize(data: string): PuzzleFile {
-        return deserialize<PuzzleFile>(JSON.parse(data), "PuzzleFile")
+    static deserialize(data: object): PuzzleFile {
+        return deserialize<PuzzleFile>(data as SerializedData, "PuzzleFile")
     }
 
     /** Tries to retrieve as much data as possible when deserializing, setting
@@ -76,7 +70,7 @@ export class PuzzleFile extends SerializableClass {
      */
     static getMetadataSafe(data: string, name: string): PuzzleMetadata {
         try {
-            const metadata = this.deserialize(data).getMetadata()
+            const metadata = this.deserialize(JSON.parse(data)).getMetadata()
             if(!metadata.name) {
                 metadata.name = name
             }

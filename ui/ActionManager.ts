@@ -92,6 +92,7 @@ export class ActionManager {
     }
 
     save(serialized?: SerializedData) {
+        this.puzzleFile.modifiedUTCString = new Date().toUTCString()
         if(serialized === undefined) {
             serialized = serialize(this.puzzleFile)
         }

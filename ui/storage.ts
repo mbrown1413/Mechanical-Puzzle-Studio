@@ -122,7 +122,7 @@ export abstract class PuzzleStorage {
         if(ignoreErrors) {
             return PuzzleFile.deserializeIgnoreErrors(str)
         } else {
-            return PuzzleFile.deserialize(str)
+            return PuzzleFile.deserialize(JSON.parse(str))
         }
     }
 
@@ -235,7 +235,7 @@ class SampleStorage extends PuzzleStorage {
         this.puzzleStrings = Object.fromEntries(
             Object.values(modules).map((object) => {
                 const serializedString = JSON.stringify(object)
-                const puzzleFile = PuzzleFile.deserialize(serializedString)
+                const puzzleFile = PuzzleFile.deserialize(JSON.parse(serializedString))
                 return [puzzleFile.name, serializedString]
             })
         )
@@ -253,7 +253,7 @@ class SampleStorage extends PuzzleStorage {
 
     listWithoutCaching(): PuzzleMetadata[] {
         return Object.values(this.puzzleStrings).map(
-            (serialized) => PuzzleFile.deserialize(serialized).getMetadata()
+            (serialized) => PuzzleFile.deserialize(JSON.parse(serialized)).getMetadata()
         )
     }
 
