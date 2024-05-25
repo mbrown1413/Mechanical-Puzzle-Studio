@@ -165,6 +165,13 @@ type MenuItem = {
 
 /** Flat list of all available menu items. */
 const menuItems: {[name: string]: MenuItem} = {
+    newPuzzle: {
+        text: "New",
+        icon: "mdi-file-plus",
+        perform() {
+            saveModal.value?.openNew(storage.value)
+        },
+    },
     metadata: {
         text: "Metadata",
         icon: "mdi-file-code",
@@ -263,6 +270,7 @@ const menus: Menu[] = [
     {
         text: "Puzzle",
         items: [
+            menuItems.newPuzzle,
             menuItems.metadata,
             menuItems.rawData,
             menuItems.download,
