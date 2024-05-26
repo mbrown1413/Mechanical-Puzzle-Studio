@@ -6,10 +6,16 @@ const props = withDefaults(
     defineProps<{
         uiButton: UiButtonDefinition,
         disabled?: boolean,
+        variant?: "icon" | "text",
     }>(), {
         disabled: false,
+        variant: "icon",
     }
 )
+
+defineEmits<{
+    click: [],
+}>()
 
 const disabled = computed(() => {
     if(props.disabled || props.uiButton.enabled === undefined) {
@@ -18,11 +24,15 @@ const disabled = computed(() => {
         return !props.uiButton.enabled()
     }
 })
+
+const text = computed(() =>
+    typeof props.uiButton.text === 'string' ? props.uiButton.text : props.uiButton.text()
+)
 </script>
 
 <template>
     <VTooltip
-        :text="typeof uiButton.text === 'string' ? uiButton.text : uiButton.text()"
+        :text="text"
         :modelValue="uiButton.alwaysShowTooltip ? true : undefined"
         contentClass="tooltip-arrow-up"
         location="bottom"
@@ -33,9 +43,15 @@ const disabled = computed(() => {
                 <VBtn
                     rounded
                     :disabled="disabled"
-                    @click="uiButton.perform()"
+                    @click="$emit('click'); uiButton.perform()"
                 >
-                    <VIcon v-if="uiButton.icon" :icon="uiButton.icon" :aria-label="uiButton.text" aria-hidden="false" />
+                    <VIcon
+                        v-if="variant === 'icon' && uiButton.icon"
+                        :icon="uiButton.icon"
+                        :aria-label="text"
+                        aria-hidden="false"
+                    />
+                    <template v-else>{{ text }}</template>
                 </VBtn>
             </span>
         </template>

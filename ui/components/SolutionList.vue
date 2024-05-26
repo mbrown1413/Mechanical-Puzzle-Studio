@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import {computed, ref, Ref, watch} from "vue"
+import {computed, ref, Ref, watch, inject} from "vue"
 
 import {Puzzle, ProblemId} from "~lib"
-import ListSelect from "~/ui/common/ListSelect.vue"
 import {taskRunner} from "~/ui/globals.ts"
 import {TaskInfo} from "~/ui/TaskRunner.ts"
 import {ProblemSolveTask} from "~/ui/tasks.ts"
+import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
+import ListSelect from "~/ui/common/ListSelect.vue"
+import UiButton from "~/ui/components/UiButton.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
@@ -80,11 +82,17 @@ const taskInfo = computed(() => {
 defineExpose({
     selectedSolutions
 })
+
+const allUiButtons = inject("uiButtons") as Record<string, UiButtonDefinition>
+const solveButton = allUiButtons.startSolve
 </script>
 
 <template>
     <div class="solution-list">
-        <h4>Solutions</h4>
+        <div class="header-row">
+            <h4>Solutions</h4>
+            <UiButton :uiButton="solveButton" variant="text" />
+        </div>
 
         <ListSelect
             v-if="solutionItems.length"
@@ -121,16 +129,25 @@ defineExpose({
                 </template>
             </template>
 
+            <template v-else-if="!problem">
+                No problem selected
+            </template>
+
             <template v-else>
-                Run the solver on the Problems tab
+                Solver has not been run
             </template>
         </div>
     </div>
 </template>
 
-<style>
+<style scoped>
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 1em 1em 0.5em 0;
+}
 .solution-list h4 {
-    margin: 1em 1em .5em 1em;
+    margin: 0 0 0 1em;
 }
 .solution-list {
     display: flex;

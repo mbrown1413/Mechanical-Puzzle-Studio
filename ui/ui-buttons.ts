@@ -7,6 +7,8 @@ import {ActionManager} from "~/ui/ActionManager.ts"
 import {NewPieceAction, DeletePiecesAction, DuplicatePieceAction, NewProblemAction, DeleteProblemsAction, DuplicateProblemAction} from "~/ui/actions.ts"
 import {downloadPuzzle} from "~/ui/utils/download.ts"
 import {PuzzleStorage} from "~/ui/storage.ts"
+import {taskRunner} from "~/ui/globals.ts"
+import {ProblemSolveTask} from "~/ui/tasks.ts"
 import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
 import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
@@ -164,6 +166,20 @@ export function useUiButtonComposible(
                 if(puzzleEditor.value?.selectedProblemIds.length) {
                     performAction(
                         new DuplicateProblemAction(puzzleEditor.value.selectedProblemIds[0])
+                    )
+                }
+            },
+            enabled: () => (puzzleEditor.value?.selectedProblemIds.length || 0) > 0,
+        },
+
+        startSolve: {
+            text: "Solve",
+            icon: "",
+            perform: () => {
+                if(!puzzleFile.value) { return }
+                for(const problemId of puzzleEditor.value?.selectedProblemIds || []) {
+                    taskRunner.submitTask(
+                        new ProblemSolveTask(puzzleFile.value.puzzle, problemId)
                     )
                 }
             },

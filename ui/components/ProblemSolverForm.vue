@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import {computed, inject} from "vue"
+
 import {Puzzle, ProblemId} from "~lib"
 
-import {ProblemSolveTask} from "~/ui/tasks.ts"
-import {taskRunner} from "~/ui/globals.ts"
+import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 import {Action, EditProblemMetadataAction} from "~/ui/actions.ts"
-
-import {computed} from "vue"
+import UiButton from "~/ui/components/UiButton.vue"
 
 
 const props = defineProps<{
@@ -22,16 +22,6 @@ const problem = computed(() =>
     props.puzzle.problems.find(p => p.id === props.problemId) || null
 )
 
-function startSolve() {
-    if(props.problemId === null) {
-        return
-    }
-    taskRunner.submitTask(
-        new ProblemSolveTask(props.puzzle, props.problemId)
-    )
-    emit("setUiFocus", "solutions")
-}
-
 function toggleDisassemble() {
     if(!problem.value) { return }
     emit("action", new EditProblemMetadataAction(
@@ -40,29 +30,32 @@ function toggleDisassemble() {
     ))
 }
 
+const allUiButtons = inject("uiButtons") as Record<string, UiButtonDefinition>
+const solveButton = allUiButtons.startSolve
 </script>
 
 <template>
     <div class="solver-form">
-        <h4>Solver</h4>
+        <div style="display: flex; justify-content: space-between;">
+            <h4>Solver</h4>
+            <UiButton
+                :uiButton="solveButton"
+                variant="text"
+                @click="emit('setUiFocus', 'solutions')"
+            />
+        </div>
 
         <VCheckbox
             label="Perform Disassembly"
             :model-value="problem?.disassemble"
             @click="toggleDisassemble"
         />
-
-
-        <VBtn @click="startSolve">
-            Find Solutions
-        </VBtn>
     </div>
 </template>
 
 <style>
 .solver-form {
     margin: 1em;
-    width: fit-content;
 }
 .solver-form h4 {
     margin-bottom: 0.5em;
