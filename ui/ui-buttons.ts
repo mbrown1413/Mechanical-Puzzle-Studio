@@ -17,6 +17,7 @@ export type UiButtonDefinition = {
     icon?: string,
     perform: () => void,
     enabled?: () => boolean,
+    alwaysShowTooltip?: boolean,
 }
 
 export function useUiButtonComposible(

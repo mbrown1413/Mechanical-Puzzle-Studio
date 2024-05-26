@@ -23,6 +23,8 @@ const disabled = computed(() => {
 <template>
     <VTooltip
         :text="typeof uiButton.text === 'string' ? uiButton.text : uiButton.text()"
+        :modelValue="uiButton.alwaysShowTooltip ? true : undefined"
+        contentClass="tooltip-arrow-up"
         location="bottom"
     >
         <template v-slot:activator="{props}">

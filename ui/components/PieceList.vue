@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {inject} from "vue"
+import {computed, inject, ref} from "vue"
 
 import {Puzzle, PieceId} from "~lib"
 
@@ -7,7 +7,7 @@ import {Action} from "~/ui/actions.ts"
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 import ListSelect from "~/ui/common/ListSelect.vue"
 
-defineProps<{
+const props = defineProps<{
     puzzle: Puzzle,
     selectedPieceIds: PieceId[],
 }>()
@@ -17,17 +17,34 @@ const emit = defineEmits<{
     action: [action: Action]
 }>()
 
+const focused = ref(false)
+
+defineExpose({
+    setFocus(focus: boolean) {
+        focused.value = focus
+    }
+})
+
 const allUiButtons = inject("uiButtons") as Record<string, UiButtonDefinition>
-const uiButtons = [
-    allUiButtons.duplicatePiece,
-    allUiButtons.deletePiece,
-    allUiButtons.newPiece,
-]
+const uiButtons = computed(() => {
+    const newPieceButton = {...allUiButtons.newPiece}
+    if(
+        focused.value &&
+        props.puzzle.pieces.length === 0
+    ) {
+        newPieceButton.alwaysShowTooltip = true
+    }
+
+    return [
+        allUiButtons.duplicatePiece,
+        allUiButtons.deletePiece,
+        newPieceButton,
+    ]
+})
 </script>
 
 <template>
     <ListSelect
-        enableEditButtons
         :items="Array.from(puzzle.pieces.values())"
         :selectedIds="selectedPieceIds"
         :uiButtons="uiButtons"

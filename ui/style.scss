@@ -18,3 +18,21 @@ code {
 .table-striped tbody tr:nth-of-type(odd) {
     background: rgba(0, 0, 0, .02);
 }
+
+/**
+ * Add arrow to the top of tooltips with contentClass set, like this:
+ *
+ *   <VTooltip contentClass="tooltip-arrow-up" location="bottom">
+ */
+.tooltip-arrow-up::after {
+    border-right: solid 8px transparent;
+    border-left: solid 8px transparent;
+    transform: translateX(-50%);
+    position: absolute;
+    content: '';
+    bottom: 100%;
+    left: 50%;
+    height: 0;
+    width: 0;
+    border-bottom: solid 8px rgb(var(--v-theme-surface-variant));
+}

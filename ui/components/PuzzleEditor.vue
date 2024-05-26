@@ -4,7 +4,7 @@
 -->
 
 <script setup lang="ts">
-import {ref, Ref, onMounted} from "vue"
+import {ref, Ref, onMounted, watch} from "vue"
 import Split from "split-grid"
 
 import {Puzzle, PieceId, ProblemId, AssemblySolution} from "~lib"
@@ -35,6 +35,8 @@ const selectedProblemIds: Ref<ProblemId[]> = ref(
 )
 
 const pieceEditor: Ref<InstanceType<typeof PieceEditor> | null> = ref(null)
+const pieceList: Ref<InstanceType<typeof PieceList> | null> = ref(null)
+const problemList: Ref<InstanceType<typeof ProblemList> | null> = ref(null)
 const solutionList: Ref<InstanceType<typeof SolutionList> | null> = ref(null)
 
 const currentTabId = ref("pieces")
@@ -83,6 +85,22 @@ function performAction(action: Action) {
 function setUiFocus(focus: "pieces" | "problems" | "solutions") {
     currentTabId.value = focus
 }
+
+// Set focus on pieces and problems list.
+// We unfocus immediately when tab changes, but don't re-focus until after a
+// delay because of the transition effect.
+watch(currentTabId, (tabId) => {
+    pieceList.value?.setFocus(false)
+    problemList.value?.setFocus(false)
+
+    setTimeout(() => {
+        if(tabId !== currentTabId.value) {
+            return
+        }
+        if(tabId === "pieces") { pieceList.value?.setFocus(true) }
+        if(tabId === "problems") { problemList.value?.setFocus(true) }
+    }, 500)
+}, {immediate: true})
 </script>
 
 <template>
@@ -98,6 +116,7 @@ function setUiFocus(focus: "pieces" | "problems" | "solutions") {
             >
                 <template v-slot:pieces>
                     <PieceList
+                        ref="pieceList"
                         :puzzle="puzzle"
                         v-model:selectedPieceIds="selectedPieceIds"
                         @action="performAction"
@@ -105,6 +124,7 @@ function setUiFocus(focus: "pieces" | "problems" | "solutions") {
                 </template>
                 <template v-slot:problems>
                     <ProblemList
+                        ref="problemList"
                         :puzzle="puzzle"
                         v-model:selectedProblemIds="selectedProblemIds"
                         @action="performAction"
