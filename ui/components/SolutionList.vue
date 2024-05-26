@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, ref, Ref} from "vue"
+import {computed, ref, Ref, watch} from "vue"
 
 import {Puzzle, ProblemId} from "~lib"
 import ListSelect from "~/ui/common/ListSelect.vue"
@@ -30,6 +30,19 @@ const solutionItems = computed(() => {
         }
     })
 })
+
+// Auto-select first piece when solutions are added
+// ListSelect normally does this automatically, but only if items are added one
+// at a time.
+watch(solutionItems, (newItems, oldItems) => {
+    if(
+        selectedSolutionIds.value.length === 0 &&
+        (oldItems === undefined || oldItems.length === 0) &&
+        newItems.length > 0
+    ) {
+        selectedSolutionIds.value = [newItems[0].id]
+    }
+}, {immediate: true})
 
 const selectedSolutions = computed(() => {
     if(!problem.value || problem.value.solutions === undefined) {
