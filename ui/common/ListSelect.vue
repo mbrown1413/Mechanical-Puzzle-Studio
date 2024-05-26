@@ -6,6 +6,9 @@
 <script setup lang="ts">
 import {ref, Ref, watch} from "vue"
 
+import UiButton from "~/ui/components/UiButton.vue"
+import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
+
 const el: Ref<HTMLSelectElement | null> = ref(null)
 
 type Item = {
@@ -18,16 +21,14 @@ const props = withDefaults(
     defineProps<{
         items: Item[],
         selectedIds: number[],
-        showButtons?: boolean,
+        uiButtons?: UiButtonDefinition[],
     }>(), {
-        showButtons: false,
+        uiButtons: () => [],
     }
 )
 
 const emit = defineEmits<{
     "update:selectedIds": [ids: number[]],
-    add: [],
-    remove: [],
 }>()
 
 function arraysEqual<T>(array1: Array<T>, array2: Array<T>) {
@@ -77,15 +78,11 @@ function onItemsSelect() {
 
 <template>
     <div class="list-container">
-        <div class="buttons" v-if="showButtons">
-            <button
-                class="action-button del-button"
-                @click="emit('remove')"
-            >-</button>
-            <button
-                class="action-button add-button"
-                @click="emit('add')"
-            >+</button>
+        <div class="buttons" v-if="uiButtons.length">
+            <UiButton
+                v-for="uiButton in uiButtons"
+                :uiButton="uiButton"
+            />
         </div>
         <select
             ref="el"
@@ -111,6 +108,13 @@ function onItemsSelect() {
 </template>
 
 <style scoped>
+.buttons {
+    display: flex;
+    justify-content: center;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+
 .list-container {
     height: 100%;
     display: flex;
@@ -127,16 +131,6 @@ select .empty-label {
 }
 select .empty-label span {
     font-size: 75%;
-}
-
-.action-button {
-    width: 50%;
-}
-.add-button {
-    background-color: green;
-}
-.del-button {
-    background-color: red;
 }
 
 /* Colored block showing the item color. */

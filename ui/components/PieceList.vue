@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import {inject} from "vue"
+
 import {Puzzle, PieceId} from "~lib"
 
-import {Action, NewPieceAction, DeletePiecesAction} from "~/ui/actions.ts"
+import {Action} from "~/ui/actions.ts"
+import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 import ListSelect from "~/ui/common/ListSelect.vue"
 
 defineProps<{
@@ -13,15 +16,21 @@ const emit = defineEmits<{
     "update:selectedPieceIds": [pieceIds: PieceId[]],
     action: [action: Action]
 }>()
+
+const allUiButtons = inject("uiButtons") as Record<string, UiButtonDefinition>
+const uiButtons = [
+    allUiButtons.duplicatePiece,
+    allUiButtons.deletePiece,
+    allUiButtons.newPiece,
+]
 </script>
 
 <template>
     <ListSelect
-            showButtons
-            :items="Array.from(puzzle.pieces.values())"
-            :selectedIds="selectedPieceIds"
-            @update:selectedIds="emit('update:selectedPieceIds', $event)"
-            @add="emit('action', new NewPieceAction())"
-            @remove="emit('action', new DeletePiecesAction(selectedPieceIds))"
+        enableEditButtons
+        :items="Array.from(puzzle.pieces.values())"
+        :selectedIds="selectedPieceIds"
+        :uiButtons="uiButtons"
+        @update:selectedIds="emit('update:selectedPieceIds', $event)"
     />
 </template>

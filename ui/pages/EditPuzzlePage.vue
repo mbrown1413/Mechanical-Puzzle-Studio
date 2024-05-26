@@ -1,21 +1,20 @@
 <script setup lang="ts">
-import {computed, ref, Ref, watch, watchEffect, onErrorCaptured, onUnmounted} from "vue"
+import {computed, ComputedRef, ref, Ref, watch, watchEffect, onErrorCaptured, onUnmounted, nextTick, provide} from "vue"
 
 import {PuzzleFile} from "~lib"
 
 import {taskRunner, title} from "~/ui/globals.ts"
-import {setActionManager, clearActionManager} from "~/ui/ActionManager.ts"
+import {ActionManager, setActionManager, clearActionManager} from "~/ui/ActionManager.ts"
 import {getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
-import {ActionManager} from "~/ui/ActionManager.ts"
-import {Action, DuplicatePieceAction, DuplicateProblemAction} from "~/ui/actions.ts"
-import {downloadPuzzle} from "~/ui/utils/download.ts"
+import {Action} from "~/ui/actions.ts"
+import {UiButtonDefinition, useUiButtonComposible} from "~/ui/ui-buttons.ts"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import Modal from "~/ui/common/Modal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
 import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
 import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
-import {nextTick} from "vue"
+import UiButton from "~/ui/components/UiButton.vue"
 
 const props = defineProps<{
     storageId: StorageId,
@@ -60,6 +59,19 @@ watchEffect(() => {
 })
 
 setPuzzleFile()
+
+const uiButtons = useUiButtonComposible(
+    puzzleFile,
+    storage,
+    actionManager,
+    performAction,
+    puzzleEditor,
+    saveModal,
+    metadataModal,
+    rawDataModal,
+)
+
+provide("uiButtons", uiButtons)
 
 function setPuzzleFile(ignoreErrors=false) {
     puzzleError.value = null
@@ -153,144 +165,50 @@ watch(taskRunner.finished, () => {
 
 type Menu = {
     text: string,
-    items: MenuItem[],
+    items: UiButtonDefinition[],
 }
 
-type MenuItem = {
-    text: string | (() => string),
-    icon?: string,
-    perform: () => void,
-    enabled?: () => boolean,
-}
+const menus: ComputedRef<Menu[]> = computed(() => {
+    let pieceOrProblemMenuItems: UiButtonDefinition[]
+    if(puzzleEditor.value?.currentTabId === "pieces") {
+        pieceOrProblemMenuItems = [
+            uiButtons.newPiece,
+            uiButtons.deletePiece,
+            uiButtons.duplicatePiece,
+        ]
+    } else {
+        pieceOrProblemMenuItems = [
+            uiButtons.newProblem,
+            uiButtons.deleteProblem,
+            uiButtons.duplicateProblem,
+        ]
+    }
 
-/** Flat list of all available menu items. */
-const menuItems: {[name: string]: MenuItem} = {
-    newPuzzle: {
-        text: "New",
-        icon: "mdi-file-plus",
-        perform() {
-            saveModal.value?.openNew(storage.value)
+    return [
+        {
+            text: "Puzzle",
+            items: [
+                uiButtons.newPuzzle,
+                uiButtons.puzzleMetadata,
+                uiButtons.puzzleRawData,
+                uiButtons.downloadPuzzle,
+                uiButtons.saveAs,
+            ],
         },
-    },
-    metadata: {
-        text: "Metadata",
-        icon: "mdi-file-code",
-        perform() {
-            metadataModal.value?.open()
+        {
+            text: "Edit",
+            items: [
+                uiButtons.undo,
+                uiButtons.redo,
+                ...pieceOrProblemMenuItems
+            ],
         },
-    },
-    saveAs: {
-        text: "Save As...",
-        icon: "mdi-content-save-plus",
-        perform() {
-            if(puzzleFile.value) {
-                saveModal.value?.openSaveAs(storage.value, puzzleFile.value)
-            }
-        },
-    },
-    rawData: {
-        text: "Raw Data",
-        icon: "mdi-code-braces",
-        perform() {
-            if(puzzleFile.value) {
-                rawDataModal.value?.openFromPuzzle(puzzleFile.value)
-            }
-        },
-        enabled: () => Boolean(puzzleFile.value),
-    },
-    download: {
-        text: "Download",
-        icon: "mdi-download",
-        perform() {
-            if(puzzleFile.value) {
-                downloadPuzzle(puzzleFile.value)
-            }
-        },
-        enabled: () => Boolean(puzzleFile.value)
-    },
-    undo: {
-        text: () => {
-            const action = actionManager.getUndoAction()
-            const actionString = action ? ` "${action.toString()}"` : ""
-            return "Undo" + actionString
-        },
-        icon: "mdi-undo",
-        perform: () => actionManager.undo(),
-        enabled: () => actionManager.canUndo(),
-    },
-    redo: {
-        text: () => {
-            const action = actionManager.getRedoAction()
-            const actionString = action ? ` "${action.toString()}"` : ""
-            return "Redo" + actionString
-        },
-        icon: "mdi-redo",
-        perform: () => actionManager.redo(),
-        enabled: () => actionManager.canRedo(),
-    },
-    duplicate: {
-        text: () => {
-            if(puzzleEditor.value?.currentTabId === "pieces") {
-                return "Duplicate Piece"
-            } else if(puzzleEditor.value?.currentTabId === "problems") {
-                return "Duplicate Problem"
-            } else {
-                return "Duplicate"
-            }
-        },
-        icon: "mdi-content-duplicate",
-        perform: () => {
-            let action: Action | null = null
-            if(puzzleEditor.value?.currentTabId === "pieces") {
-                action = new DuplicatePieceAction(
-                    puzzleEditor.value.selectedPieceIds[0]
-                )
-            } else if(puzzleEditor.value?.currentTabId === "problems") {
-                action = new DuplicateProblemAction(
-                    puzzleEditor.value.selectedProblemIds[0]
-                )
-            }
-            if(action) {
-                actionManager.performAction(action)
-            }
-        },
-        enabled: () => {
-            if(puzzleEditor.value?.currentTabId === "pieces") {
-                return puzzleEditor.value.selectedPieceIds.length == 1
-            } else if(puzzleEditor.value?.currentTabId === "problems") {
-                return puzzleEditor.value.selectedProblemIds.length == 1
-            } else {
-                return false
-            }
-        },
-    },
-}
+    ]
+})
 
-const menus: Menu[] = [
-    {
-        text: "Puzzle",
-        items: [
-            menuItems.newPuzzle,
-            menuItems.metadata,
-            menuItems.rawData,
-            menuItems.download,
-            menuItems.saveAs,
-        ],
-    },
-    {
-        text: "Edit",
-        items: [
-            menuItems.undo,
-            menuItems.redo,
-            menuItems.duplicate,
-        ],
-    },
-]
-
-const tools: MenuItem[] = [
-    menuItems.undo,
-    menuItems.redo,
-    menuItems.duplicate,
+const toolbarButtons: UiButtonDefinition[] = [
+    uiButtons.undo,
+    uiButtons.redo,
 ]
 </script>
 
@@ -321,24 +239,10 @@ const tools: MenuItem[] = [
         </div>
 
         <div class="toolbar-center">
-            <VTooltip
-                v-for="tool in tools"
-                :text="typeof tool.text === 'string' ? tool.text : tool.text()"
-                location="bottom"
-            >
-                <template v-slot:activator="{props}">
-                    <!-- Wrap in span so tooltips show on disabled buttons -->
-                    <span v-bind="props">
-                        <VBtn
-                            rounded
-                            :disabled="tool.enabled === undefined ? false : !tool.enabled()"
-                            @click="tool.perform()"
-                        >
-                            <VIcon v-if="tool.icon" :icon="tool.icon" :aria-label="tool.text" aria-hidden="false" />
-                        </VBtn>
-                    </span>
-                </template>
-            </VTooltip>
+            <UiButton
+                v-for="toolbarButton in toolbarButtons"
+                :uiButton="toolbarButton"
+            />
         </div>
 
         <div class="toolbar-right">

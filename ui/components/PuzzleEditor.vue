@@ -41,7 +41,7 @@ const currentTabId = ref("pieces")
 const sideTabs = [
     {id: "pieces", text: "Pieces"},
     {id: "problems", text: "Problems"},
-    {id: "solutions", text: "Solutions"},
+    {id: "solutions", text: "Solutions", slot: "problems"},
 ]
 
 defineExpose({
@@ -106,15 +106,6 @@ function setUiFocus(focus: "pieces" | "problems" | "solutions") {
                 <template v-slot:problems>
                     <ProblemList
                         :puzzle="puzzle"
-                        :allowCreateDelete="true"
-                        v-model:selectedProblemIds="selectedProblemIds"
-                        @action="performAction"
-                    />
-                </template>
-                <template v-slot:solutions>
-                    <ProblemList
-                        :puzzle="puzzle"
-                        :allowCreateDelete="false"
                         v-model:selectedProblemIds="selectedProblemIds"
                         @action="performAction"
                     />

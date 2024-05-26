@@ -1,8 +1,14 @@
 <script setup lang="ts">
+import {computed} from 'vue'
 
-withDefaults(
+
+const props = withDefaults(
     defineProps<{
-        tabs: {id: string, text: string}[],
+        tabs: {
+            id: string,
+            text: string
+            slot?: string,
+        }[],
         currentTabId: string,
         contentStyle: any,
     }>(), {
@@ -14,6 +20,20 @@ withDefaults(
 const emit = defineEmits<{
     "update:currentTabId": [value: string]
 }>()
+
+const slotNames = computed(() =>
+    [...new Set(
+        props.tabs.map(tab => tab.slot || tab.id)
+    )]
+)
+
+const currentWindowSlot = computed(() => {
+    const tab = props.tabs.find(
+        tab => tab.id === props.currentTabId
+    )
+    if(tab === undefined) { return null }
+    return tab.slot || tab.id
+})
 </script>
 
 <template>
@@ -30,13 +50,13 @@ const emit = defineEmits<{
     </VTabs>
 
     <VWindow
-        :model-value="currentTabId"
+        :modelValue="currentWindowSlot"
     >
         <VWindowItem
-                v-for="tab in tabs"
-                :value="tab.id"
+                v-for="slotName in slotNames"
+                :value="slotName"
         >
-            <slot :name="tab.id"></slot>
+            <slot :name="slotName"></slot>
         </VWindowItem>
     </VWindow>
 </template>
