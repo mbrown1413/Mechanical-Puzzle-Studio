@@ -52,7 +52,7 @@ export class Puzzle extends SerializableClass {
     private generateNewId(
         type: "piece" | "problem"
     ): ItemId {
-        return ++this.idCounters[type]
+        return this.idCounters[type]++
     }
 
     getNewPieceColor(): string {

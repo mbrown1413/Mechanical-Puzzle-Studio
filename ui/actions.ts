@@ -4,6 +4,23 @@ import {
 } from "~lib"
 
 
+function getNewItemLabel(
+    prefix: string,
+    existingItems: {label?: string}[]
+): string {
+    const existingLabels = new Set(
+        existingItems.map(item => item.label)
+    )
+    let label = prefix + (existingItems.length + 1)
+    for(let i=existingItems.length + 1; i<existingItems.length * 2; i++) {
+        label = prefix + i
+        if(!existingLabels.has(label)) {
+            break
+        }
+    }
+    return label
+}
+
 function getDuplicateItemLabel(
     labelToDuplicate: string | undefined,
     existingLabels: (string| undefined)[],
@@ -214,7 +231,7 @@ export class NewPieceAction extends Action {
         const piece = new Piece(
             puzzle.generatePieceId(),
         )
-        piece.label = `Piece ${piece.id}`
+        piece.label = getNewItemLabel("Piece ", puzzle.pieces)
         piece.color = puzzle.getNewPieceColor()
         piece.bounds = this.bounds || puzzle.grid.getDefaultPieceBounds()
         puzzle.addPiece(piece)
@@ -342,7 +359,7 @@ export class NewProblemAction extends Action {
         const problem = new AssemblyProblem(
             puzzle.generateProblemId()
         )
-        problem.label = `Problem ${problem.id}`
+        problem.label = getNewItemLabel("Problem ", puzzle.problems)
         puzzle.addProblem(problem)
     }
 

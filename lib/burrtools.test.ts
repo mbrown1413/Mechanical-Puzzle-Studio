@@ -129,7 +129,7 @@ describe("burrtools read", () => {
                   {
                     "bounds": "xSize:2 ySize:3 zSize:4",
                     "color": "#0000FF",
-                    "id": 1,
+                    "id": 0,
                     "label": "Piece 1",
                     "type": "Piece",
                     "voxels": "0,0,0; 1,1,0; 1,2,1; 1,2,3",
@@ -192,7 +192,7 @@ describe("burrtools read", () => {
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
-                    "id": 1,
+                    "id": 0,
                     "label": "This is a piece label!",
                     "type": "Piece",
                     "voxels": "",
@@ -237,7 +237,7 @@ describe("burrtools read", () => {
                   {
                     "bounds": "xSize:5 ySize:4 zSize:3",
                     "color": "#0000FF",
-                    "id": 1,
+                    "id": 0,
                     "label": "Piece 1",
                     "type": "Piece",
                     "voxelAttributes": {
@@ -388,7 +388,7 @@ describe("burrtools read", () => {
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
-                    "id": 1,
+                    "id": 0,
                     "label": "Piece 1",
                     "type": "Piece",
                     "voxels": "0,0,1",
@@ -473,7 +473,7 @@ describe("burrtools read", () => {
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
-                    "id": 1,
+                    "id": 0,
                     "label": "Piece 1",
                     "type": "Piece",
                     "voxels": "0,0,1",
