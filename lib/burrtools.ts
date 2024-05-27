@@ -47,7 +47,13 @@ type BurrToolsFileReadResult = {
 export async function readXmlForBurrTools(
     stringContents: string
 ): Promise<XmlRoot> {
-    return await parseXml(stringContents, {emptyTag: () => ({})})
+    return await parseXml(
+        stringContents,
+        {
+            emptyTag: () => ({}),
+            explicitCharkey: true,
+        }
+    )
 }
 
 /**
@@ -104,7 +110,18 @@ export async function readBurrTools(
     }
 
     emptyOrUnsupported(xml.puzzle, "colors", "Voxel colors", unsupportedFeatures)
-    emptyOrUnsupported(xml.puzzle, "comment", "Comment", unsupportedFeatures)
+
+    if(Array.isArray(xml.puzzle.comment)) {
+        if(xml.puzzle.comment.length > 1) {
+            throw new Error(`Expected one comment, found ${xml.puzzle.comment.length}`)
+        }
+        if("popup" in (xml.puzzle.comment[0].$ || {})) {
+            unsupportedFeatures.add("Comment popup")
+        }
+        const comment = xml.puzzle.comment[0]._
+        puzzleFile.description = comment
+    }
+
 
     const result: BurrToolsFileReadResult = {puzzleFile}
     if(unsupportedFeatures.size > 0) {

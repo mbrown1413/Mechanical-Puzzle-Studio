@@ -1054,7 +1054,7 @@ describe("burrtools read", () => {
         `)
     })
 
-    test("comment unsupported", async () => {
+    test("comment", async () => {
         const xml = await readXmlForBurrTools(`
             <?xml version="1.0"?>
             <puzzle version="2">
@@ -1069,6 +1069,42 @@ describe("burrtools read", () => {
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
+              "description": "foo",
+              "name": "puzzle.xmpuzzle",
+              "puzzle": {
+                "grid": {
+                  "type": "CubicGrid",
+                },
+                "idCounters": {
+                  "piece": 0,
+                  "problem": 0,
+                },
+                "pieces": [],
+                "problems": [],
+                "type": "Puzzle",
+              },
+              "type": "PuzzleFile",
+            },
+          }
+        `)
+    })
+
+    test("comment popup unsupported", async () => {
+        const xml = await readXmlForBurrTools(`
+            <?xml version="1.0"?>
+            <puzzle version="2">
+                <gridType type="0"/>
+                <colors/>
+                <shapes/>
+                <problems/>
+                <comment popup="">foo</comment>
+            </puzzle>
+        `)
+        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        expect(serialize(puzzle)).toMatchInlineSnapshot(`
+          {
+            "puzzleFile": {
+              "description": "foo",
               "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
@@ -1085,7 +1121,7 @@ describe("burrtools read", () => {
               "type": "PuzzleFile",
             },
             "unsupportedFeatures": [
-              "Comment",
+              "Comment popup",
             ],
           }
         `)
