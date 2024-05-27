@@ -2,6 +2,7 @@ import {parseStringPromise as parseXml} from "xml2js"
 
 import {PuzzleFile} from "~/lib/PuzzleFile.ts"
 import {Puzzle} from "~/lib/Puzzle.ts"
+import {Problem, AssemblyProblem} from "~/lib/Problem.ts"
 import {Piece} from "~/lib/Piece.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 
@@ -87,7 +88,8 @@ export async function readBurrTools(
     if(xml.puzzle.shapes.length !== 1) {
         throw new Error(`Expected one gridType definition, found ${xml.puzzle.shapes.length}`)
     }
-    for(const shape of xml.puzzle.shapes[0].voxel || []) {
+    const shapes = xml.puzzle.shapes[0].voxel || []
+    for(const shape of shapes) {
         const piece = readBtShape(puzzleFile.puzzle, shape, unsupportedFeatures)
         puzzleFile.puzzle.addPiece(piece)
     }
@@ -95,8 +97,10 @@ export async function readBurrTools(
     if(xml.puzzle.problems.length !== 1) {
         throw new Error(`Expected one problems definition, found ${xml.puzzle.problems.length}`)
     }
-    if((xml.puzzle.problems[0].problem || []).length > 0) {
-        unsupportedFeatures.add("Problems")
+    const btProblems = xml.puzzle.problems[0].problem || []
+    for(const btProblem of btProblems) {
+        const problem = readBtProblem(puzzleFile.puzzle, btProblem, unsupportedFeatures)
+        puzzleFile.puzzle.addProblem(problem)
     }
 
     emptyOrUnsupported(xml.puzzle, "colors", "Voxel colors", unsupportedFeatures)
@@ -137,6 +141,7 @@ function readGrid(xml: XmlRoot) {
 }
 
 function readBtShape(puzzle: Puzzle, shape: XmlNode, unsupportedFeatures: Set<string>): Piece {
+    const piece = new Piece(puzzle.generatePieceId())
 
     if((shape.$?.type || "0") !== "0") {
         throw new Error(`Unsupported BurrTools voxel type: ${shape.$?.type}`)
@@ -152,8 +157,6 @@ function readBtShape(puzzle: Puzzle, shape: XmlNode, unsupportedFeatures: Set<st
     ) {
         throw new Error("Malformed BurrTools file: voxel tag must have x, y, and z attributes as positive integers")
     }
-
-    const piece = new Piece(puzzle.generatePieceId())
     piece.bounds = {xSize, ySize, zSize}
 
     if(shape.$?.name) {
@@ -252,4 +255,93 @@ function readVoxelString(
     if(z < zSize) {
         throw new Error(`Malformed BurrTools file: not enough characters in voxel space`)
     }
+}
+
+function readBtProblem(puzzle: Puzzle, btProblem: XmlNode, unsupportedFeatures: Set<string>): Problem {
+    const problem = new AssemblyProblem(puzzle.generateProblemId())
+
+    if(btProblem.$?.name) {
+        problem.label = btProblem.$.name
+    } else {
+        problem.label = `Problem ${puzzle.problems.length + 1}`
+    }
+
+    if(btProblem.$?.maxHoles !== undefined) {
+        unsupportedFeatures.add("Solution max holes")
+    }
+
+    const nShapesDefs = Array.isArray(btProblem.shapes) ? btProblem.shapes.length : 0
+    if(nShapesDefs !== 1) {
+        throw new Error(`Expected one shapes definition in problem, found ${nShapesDefs}`)
+    }
+    const shapeNode = btProblem.shapes[0]
+    for(const shape of shapeNode.shape || []) {
+
+        if(shape.$?.id === undefined) {
+            throw new Error(`Malformed BurrTools file: Problem shape missing id`)
+        }
+        const shapeId = Number(shape.$?.id)
+        if(Number.isNaN(shapeId) || shapeId < 0) {
+            throw new Error(`Malformed BurrTools file: Problem shape id must be a positive integer, not "${shape.$?.id}"`)
+        }
+        if(!puzzle.getPiece(shapeId)) {
+            throw new Error(`Malformed BurrTools file: Problem uses piece id ${shapeId} which does not exist`)
+        }
+        if(shapeId in problem.usedPieceCounts) {
+            throw new Error(`Malformed BurrTools file: Repeat shape in problem`)
+        }
+
+        let countString: string
+        if("min" in shape.$ && "max" in shape.$) {
+            unsupportedFeatures.add("Problem with min/max piece counts")
+            countString = shape.$.max
+        } else if("count" in shape.$) {
+            countString = shape.$.count
+        } else {
+            throw new Error(`Malformed BurrTools file: Expected problem shape to have either count, or min and max attributes.`)
+        }
+        const shapeCount = Number(countString)
+        if(Number.isNaN(shapeCount) || shapeCount < 0) {
+            throw new Error(`Malformed BurrTools file: Problem shape count must be a positive integer, not "${countString}"`)
+        }
+
+        if(shape.$?.group !== undefined || "group" in shape) {
+            unsupportedFeatures.add("Piece groups")
+        }
+
+        problem.usedPieceCounts[shapeId] = shapeCount
+    }
+
+    if(btProblem.result?.length !== 1) {
+        throw new Error(`Expected one result in problem, found ${btProblem.result?.length || 0}`)
+    }
+    const resultNode = btProblem.result[0]
+    const resultIdString = resultNode.$?.id
+    if(resultIdString === undefined) {
+        throw new Error('Malformed BurrTools file: Expected problem result to have "id" attribute')
+    }
+    const resultId = Number(resultIdString)
+    if(Number.isNaN(resultId) || resultId < 0) {
+        throw new Error(`Malformed BurrTools file: Problem result id must be a positive integer, not "${resultIdString}"`)
+    }
+    if(resultId in problem.usedPieceCounts) {
+        throw new Error(`Malformed BurrTools file: Problem result cannot also be a used piece`)
+    }
+    if(resultId === 0xffffffff) {
+        // Value for "no result is set"
+    } else {
+        const resultPiece = puzzle.getPiece(resultId)
+        if(resultPiece) {
+            problem.goalPieceId = resultPiece.id
+        } else {
+            throw new Error(`Malformed BurrTools file: Problem uses piece id ${resultId} which does not exist`)
+        }
+    }
+
+    // <bitmap> is unsupported, but we check if colors are used in pieces so we
+    // don't need to do it here.
+
+    emptyOrUnsupported(btProblem, "solutions", "Solutions", unsupportedFeatures)
+
+    return problem
 }

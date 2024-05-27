@@ -491,7 +491,92 @@ describe("burrtools read", () => {
         `)
     })
 
-    test("problems unsupported", async () => {
+    test("problem", async () => {
+        const xml = await readXmlForBurrTools(`
+            <?xml version="1.0"?>
+            <puzzle version="2">
+                <gridType type="0"/>
+                <colors/>
+                <shapes>
+                    <voxel x="2" y="2" z="2" type="0">________</voxel>
+                    <voxel x="2" y="2" z="2" type="0">________</voxel>
+                    <voxel x="2" y="2" z="2" type="0">________</voxel>
+                </shapes>
+                <problems>
+                    <problem state="0">
+                        <shapes>
+                            <shape id="1" count="1"/>
+                            <shape id="2" count="2"/>
+                        </shapes>
+                        <result id="0"/>
+                        <bitmap/>
+                    </problem>
+                </problems>
+                <comment/>
+            </puzzle>
+        `)
+        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        expect(serialize(puzzle)).toMatchInlineSnapshot(`
+          {
+            "puzzleFile": {
+              "name": "puzzle.xmpuzzle",
+              "puzzle": {
+                "grid": {
+                  "type": "CubicGrid",
+                },
+                "idCounters": {
+                  "piece": 3,
+                  "problem": 1,
+                },
+                "pieces": [
+                  {
+                    "bounds": "xSize:2 ySize:2 zSize:2",
+                    "color": "#0000FF",
+                    "id": 0,
+                    "label": "Piece 1",
+                    "type": "Piece",
+                    "voxels": "",
+                  },
+                  {
+                    "bounds": "xSize:2 ySize:2 zSize:2",
+                    "color": "#00FF00",
+                    "id": 1,
+                    "label": "Piece 2",
+                    "type": "Piece",
+                    "voxels": "",
+                  },
+                  {
+                    "bounds": "xSize:2 ySize:2 zSize:2",
+                    "color": "#FF0000",
+                    "id": 2,
+                    "label": "Piece 3",
+                    "type": "Piece",
+                    "voxels": "",
+                  },
+                ],
+                "problems": [
+                  {
+                    "disassemble": false,
+                    "goalPieceId": 0,
+                    "id": 0,
+                    "label": "Problem 1",
+                    "solverId": "assembly",
+                    "type": "AssemblyProblem",
+                    "usedPieceCounts": {
+                      "1": 1,
+                      "2": 2,
+                    },
+                  },
+                ],
+                "type": "Puzzle",
+              },
+              "type": "PuzzleFile",
+            },
+          }
+        `)
+    })
+
+    test("empty problem", async () => {
         const xml = await readXmlForBurrTools(`
             <?xml version="1.0"?>
             <puzzle version="2">
@@ -499,7 +584,11 @@ describe("burrtools read", () => {
                 <colors/>
                 <shapes/>
                 <problems>
-                    <problem/>
+                    <problem state="0">
+                        <shapes/>
+                        <result id="4294967295"/>
+                        <bitmap/>
+                    </problem>
                 </problems>
                 <comment/>
             </puzzle>
@@ -515,16 +604,451 @@ describe("burrtools read", () => {
                 },
                 "idCounters": {
                   "piece": 0,
-                  "problem": 0,
+                  "problem": 1,
                 },
                 "pieces": [],
-                "problems": [],
+                "problems": [
+                  {
+                    "disassemble": false,
+                    "id": 0,
+                    "label": "Problem 1",
+                    "solverId": "assembly",
+                    "type": "AssemblyProblem",
+                    "usedPieceCounts": {},
+                  },
+                ],
+                "type": "Puzzle",
+              },
+              "type": "PuzzleFile",
+            },
+          }
+        `)
+    })
+
+    test("malformed problems", async () => {
+        let xml = await readXmlForBurrTools(`
+            <?xml version="1.0"?>
+            <puzzle version="2">
+                <gridType type="0"/>
+                <colors/>
+                <shapes/>
+                <problems>
+                    <problem/>
+                </problems>
+                <comment/>
+            </puzzle>
+        `)
+        expect(
+            readBurrTools("puzzle.xmpuzzle", xml)
+        ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Expected one shapes definition in problem, found 0]`)
+
+        xml = await readXmlForBurrTools(`
+            <?xml version="1.0"?>
+            <puzzle version="2">
+                <gridType type="0"/>
+                <colors/>
+                <shapes/>
+                <problems>
+                    <problem state="0">
+                        <shapes>
+                            <shape id="-1" count="1"/>
+                        </shapes>
+                        <result id="0"/>
+                        <bitmap/>
+                    </problem>
+                </problems>
+                <comment/>
+            </puzzle>
+        `)
+        expect(
+            readBurrTools("puzzle.xmpuzzle", xml)
+        ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools file: Problem shape id must be a positive integer, not "-1"]`)
+
+        xml = await readXmlForBurrTools(`
+            <?xml version="1.0"?>
+            <puzzle version="2">
+                <gridType type="0"/>
+                <colors/>
+                <shapes/>
+                <problems>
+                    <problem state="0">
+                        <shapes>
+                            <shape count="1"/>
+                        </shapes>
+                        <result id="0"/>
+                        <bitmap/>
+                    </problem>
+                </problems>
+                <comment/>
+            </puzzle>
+        `)
+        expect(
+            readBurrTools("puzzle.xmpuzzle", xml)
+        ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools file: Problem shape missing id]`)
+
+        xml = await readXmlForBurrTools(`
+            <?xml version="1.0"?>
+            <puzzle version="2">
+                <gridType type="0"/>
+                <colors/>
+                <shapes>
+                    <voxel x="2" y="2" z="2" type="0">________</voxel>
+                </shapes>
+                <problems>
+                    <problem state="0">
+                        <shapes>
+                            <shape id="0"/>
+                        </shapes>
+                        <result id="0"/>
+                        <bitmap/>
+                    </problem>
+                </problems>
+                <comment/>
+            </puzzle>
+        `)
+        expect(
+            readBurrTools("puzzle.xmpuzzle", xml)
+        ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools file: Expected problem shape to have either count, or min and max attributes.]`)
+    })
+
+    test("problem label", async () => {
+        const xml = await readXmlForBurrTools(`
+            <?xml version="1.0"?>
+            <puzzle version="2">
+                <gridType type="0"/>
+                <colors/>
+                <shapes/>
+                <problems>
+                    <problem name="Problem 1 label!" state="0">
+                        <shapes/>
+                        <result id="4294967295"/>
+                        <bitmap/>
+                    </problem>
+                </problems>
+                <comment/>
+            </puzzle>
+        `)
+        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        expect(serialize(puzzle)).toMatchInlineSnapshot(`
+          {
+            "puzzleFile": {
+              "name": "puzzle.xmpuzzle",
+              "puzzle": {
+                "grid": {
+                  "type": "CubicGrid",
+                },
+                "idCounters": {
+                  "piece": 0,
+                  "problem": 1,
+                },
+                "pieces": [],
+                "problems": [
+                  {
+                    "disassemble": false,
+                    "id": 0,
+                    "label": "Problem 1 label!",
+                    "solverId": "assembly",
+                    "type": "AssemblyProblem",
+                    "usedPieceCounts": {},
+                  },
+                ],
+                "type": "Puzzle",
+              },
+              "type": "PuzzleFile",
+            },
+          }
+        `)
+    })
+
+    test("piece min/max unsupported", async () => {
+        const xml = await readXmlForBurrTools(`
+            <?xml version="1.0"?>
+            <puzzle version="2">
+                <gridType type="0"/>
+                <colors/>
+                <shapes>
+                    <voxel x="2" y="2" z="2" type="0">________</voxel>
+                    <voxel x="2" y="2" z="2" type="0">________</voxel>
+                </shapes>
+                <problems>
+                    <problem state="0">
+                        <shapes>
+                            <shape id="1" min="4" max="5"/>
+                        </shapes>
+                        <result id="0"/>
+                        <bitmap/>
+                    </problem>
+                </problems>
+                <comment/>
+            </puzzle>
+        `)
+        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        expect(serialize(puzzle)).toMatchInlineSnapshot(`
+          {
+            "puzzleFile": {
+              "name": "puzzle.xmpuzzle",
+              "puzzle": {
+                "grid": {
+                  "type": "CubicGrid",
+                },
+                "idCounters": {
+                  "piece": 2,
+                  "problem": 1,
+                },
+                "pieces": [
+                  {
+                    "bounds": "xSize:2 ySize:2 zSize:2",
+                    "color": "#0000FF",
+                    "id": 0,
+                    "label": "Piece 1",
+                    "type": "Piece",
+                    "voxels": "",
+                  },
+                  {
+                    "bounds": "xSize:2 ySize:2 zSize:2",
+                    "color": "#00FF00",
+                    "id": 1,
+                    "label": "Piece 2",
+                    "type": "Piece",
+                    "voxels": "",
+                  },
+                ],
+                "problems": [
+                  {
+                    "disassemble": false,
+                    "goalPieceId": 0,
+                    "id": 0,
+                    "label": "Problem 1",
+                    "solverId": "assembly",
+                    "type": "AssemblyProblem",
+                    "usedPieceCounts": {
+                      "1": 5,
+                    },
+                  },
+                ],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",
             },
             "unsupportedFeatures": [
-              "Problems",
+              "Problem with min/max piece counts",
+            ],
+          }
+        `)
+    })
+
+    test("piece group unsupported", async () => {
+        let xml = await readXmlForBurrTools(`
+            <?xml version="1.0"?>
+            <puzzle version="2">
+                <gridType type="0"/>
+                <colors/>
+                <shapes>
+                    <voxel x="2" y="2" z="2" type="0">________</voxel>
+                </shapes>
+                <problems>
+                    <problem state="0">
+                        <shapes>
+                            <shape id="0" count="1" group="2"/>
+                        </shapes>
+                        <result id="4294967295"/>
+                        <bitmap/>
+                    </problem>
+                </problems>
+                <comment/>
+            </puzzle>
+        `)
+        let puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        expect(serialize(puzzle)).toMatchInlineSnapshot(`
+          {
+            "puzzleFile": {
+              "name": "puzzle.xmpuzzle",
+              "puzzle": {
+                "grid": {
+                  "type": "CubicGrid",
+                },
+                "idCounters": {
+                  "piece": 1,
+                  "problem": 1,
+                },
+                "pieces": [
+                  {
+                    "bounds": "xSize:2 ySize:2 zSize:2",
+                    "color": "#0000FF",
+                    "id": 0,
+                    "label": "Piece 1",
+                    "type": "Piece",
+                    "voxels": "",
+                  },
+                ],
+                "problems": [
+                  {
+                    "disassemble": false,
+                    "id": 0,
+                    "label": "Problem 1",
+                    "solverId": "assembly",
+                    "type": "AssemblyProblem",
+                    "usedPieceCounts": {
+                      "0": 1,
+                    },
+                  },
+                ],
+                "type": "Puzzle",
+              },
+              "type": "PuzzleFile",
+            },
+            "unsupportedFeatures": [
+              "Piece groups",
+            ],
+          }
+        `)
+
+        xml = await readXmlForBurrTools(`
+            <?xml version="1.0"?>
+            <puzzle version="2">
+                <gridType type="0"/>
+                <colors/>
+                <shapes>
+                    <voxel x="2" y="2" z="2" type="0">________</voxel>
+                </shapes>
+                <problems>
+                    <problem state="0">
+                        <shapes>
+                            <shape id="0" count="1">
+                                <group group="1" count="1"/>
+                                <group group="2" count="1"/>
+                            </shape>
+                        </shapes>
+                        <result id="4294967295"/>
+                        <bitmap/>
+                    </problem>
+                </problems>
+                <comment/>
+            </puzzle>
+        `)
+        puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        expect(serialize(puzzle)).toMatchInlineSnapshot(`
+          {
+            "puzzleFile": {
+              "name": "puzzle.xmpuzzle",
+              "puzzle": {
+                "grid": {
+                  "type": "CubicGrid",
+                },
+                "idCounters": {
+                  "piece": 1,
+                  "problem": 1,
+                },
+                "pieces": [
+                  {
+                    "bounds": "xSize:2 ySize:2 zSize:2",
+                    "color": "#0000FF",
+                    "id": 0,
+                    "label": "Piece 1",
+                    "type": "Piece",
+                    "voxels": "",
+                  },
+                ],
+                "problems": [
+                  {
+                    "disassemble": false,
+                    "id": 0,
+                    "label": "Problem 1",
+                    "solverId": "assembly",
+                    "type": "AssemblyProblem",
+                    "usedPieceCounts": {
+                      "0": 1,
+                    },
+                  },
+                ],
+                "type": "Puzzle",
+              },
+              "type": "PuzzleFile",
+            },
+            "unsupportedFeatures": [
+              "Piece groups",
+            ],
+          }
+        `)
+    })
+
+    test("solutions unsupported", async () => {
+        const xml = await readXmlForBurrTools(`
+            <?xml version="1.0"?>
+            <puzzle version="2">
+                <gridType type="0"/>
+                <colors/>
+                <shapes>
+                    <voxel x="1" y="1" z="1" type="0">#</voxel>
+                    <voxel x="1" y="1" z="1" type="0">#</voxel>
+                </shapes>
+                <problems>
+                    <problem state="2" assemblies="1" solutions="0" time="0">
+                        <shapes>
+                            <shape id="1" count="1"/>
+                        </shapes>
+                        <result id="0"/>
+                        <bitmap/>
+                        <solutions>
+                            <solution>
+                                <assembly>0 0 0 0</assembly>
+                            </solution>
+                        </solutions>
+                    </problem>
+                </problems>
+                <comment/>
+            </puzzle>
+        `)
+        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        expect(serialize(puzzle)).toMatchInlineSnapshot(`
+          {
+            "puzzleFile": {
+              "name": "puzzle.xmpuzzle",
+              "puzzle": {
+                "grid": {
+                  "type": "CubicGrid",
+                },
+                "idCounters": {
+                  "piece": 2,
+                  "problem": 1,
+                },
+                "pieces": [
+                  {
+                    "bounds": "xSize:1 ySize:1 zSize:1",
+                    "color": "#0000FF",
+                    "id": 0,
+                    "label": "Piece 1",
+                    "type": "Piece",
+                    "voxels": "0,0,0",
+                  },
+                  {
+                    "bounds": "xSize:1 ySize:1 zSize:1",
+                    "color": "#00FF00",
+                    "id": 1,
+                    "label": "Piece 2",
+                    "type": "Piece",
+                    "voxels": "0,0,0",
+                  },
+                ],
+                "problems": [
+                  {
+                    "disassemble": false,
+                    "goalPieceId": 0,
+                    "id": 0,
+                    "label": "Problem 1",
+                    "solverId": "assembly",
+                    "type": "AssemblyProblem",
+                    "usedPieceCounts": {
+                      "1": 1,
+                    },
+                  },
+                ],
+                "type": "Puzzle",
+              },
+              "type": "PuzzleFile",
+            },
+            "unsupportedFeatures": [
+              "Solutions",
             ],
           }
         `)
