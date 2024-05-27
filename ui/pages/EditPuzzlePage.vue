@@ -24,6 +24,7 @@ const props = defineProps<{
 const storage = computed(() => getStorageInstances()[props.storageId])
 const puzzleFile: Ref<PuzzleFile | null> = ref(null)
 const actionManager = new ActionManager(storage, puzzleFile)
+provide("actionManager", actionManager)
 
 setActionManager(actionManager)
 onUnmounted(() => {

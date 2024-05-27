@@ -1,12 +1,13 @@
 <script setup lang="ts">
+import {computed, inject} from "vue"
+
 import {PuzzleFile} from "~lib"
+import {ActionManager} from "~/ui/ActionManager.ts"
 import TaskStatusDisplay from "./TaskStatusDisplay.vue";
-import {PuzzleStorage} from "~/ui/storage.ts";
 
 withDefaults(
     defineProps<{
         puzzleFile?: PuzzleFile | null,
-        storage?: PuzzleStorage,
         flat?: boolean,
     }>(), {
         flat: false,
@@ -14,6 +15,31 @@ withDefaults(
 )
 
 const appTitle = import.meta.env.VITE_APP_TITLE
+
+const actionManager = inject("actionManager") as ActionManager | null
+
+const savePill = computed(() => {
+    if(!actionManager) {
+        return null
+    }
+    switch(actionManager.saveState.value) {
+        case "readOnly":
+            return {
+                color: "red",
+                text: "Read Only",
+                tooltip: 'Select "Save As" under the File menu to save changes'
+            }
+        case "saved":
+            return {
+                color: "green",
+                text: "Saved",
+                tooltip: "Auto-saving after every change"
+            }
+        default:
+            const exhaustiveCheck: never = actionManager.saveState.value
+            return exhaustiveCheck
+    }
+})
 </script>
 
 <template>
@@ -27,19 +53,19 @@ const appTitle = import.meta.env.VITE_APP_TITLE
         <VAppBarTitle v-if="puzzleFile" class="page-title">
             {{ puzzleFile.name }}
 
-            <VTooltip v-if="storage?.readOnly">
+            <VTooltip v-if="savePill">
                 <template v-slot:activator="{props}">
                     <VChip
                         v-bind="props"
-                        color="red"
+                        :color="savePill.color"
                         density="compact"
                         class="ml-2"
                     >
-                        Read Only
+                        {{ savePill.text }}
                     </VChip>
                 </template>
                 <template v-slot>
-                    Select "Save As" under the File menu to save changes
+                    {{ savePill.tooltip }}
                 </template>
             </VTooltip>
 

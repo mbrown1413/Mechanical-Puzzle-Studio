@@ -1,4 +1,4 @@
-import {Ref, reactive} from "vue"
+import {ref, Ref, reactive, watch} from "vue"
 import {diff, patch as doPatch, unpatch as doUnpatch, Delta} from "jsondiffpatch"
 
 import {PuzzleFile, serialize, deserialize, SerializedData} from "~lib"
@@ -45,11 +45,18 @@ export class ActionManager {
     performedActions: PerformedAction[]
     undoneActions: PerformedAction[]
 
+    saveState: Ref<"saved" | "readOnly">
+
     constructor(storageRef: Ref<PuzzleStorage>, puzzleFileRef: Ref<PuzzleFile | null>) {
         this.storageRef = storageRef
         this.puzzleFileRef = puzzleFileRef
         this.performedActions = reactive([])
         this.undoneActions = reactive([])
+        this.saveState = ref(this.storage.readOnly ? "readOnly" : "saved")
+
+        watch(storageRef, () => {
+            this.saveState.value = this.storage.readOnly ? "readOnly" : "saved"
+        })
     }
 
     get storage() {

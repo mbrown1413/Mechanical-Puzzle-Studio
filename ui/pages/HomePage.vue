@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, Ref, reactive} from "vue"
+import {ref, Ref, reactive, provide} from "vue"
 import {VDataTable} from "vuetify/components"
 
 import {title} from "~/ui/globals.ts"
@@ -14,6 +14,8 @@ title.value = ""
 
 const saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null> = ref(null)
 const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
+
+provide("actionManager", null)
 
 const puzzlesByStorage = reactive(
     Object.values(getStorageInstances()).map((storage) => {
