@@ -209,6 +209,9 @@ async function submit(event?: Event) {
             @submit="submit"
         >
 
+            <template v-if="mode === 'upload'">
+                Upload a .json puzzle file or BurrTools .xmpuzzle
+            </template>
             <VFileInput
                 v-if="mode === 'upload'"
                 label="File"
