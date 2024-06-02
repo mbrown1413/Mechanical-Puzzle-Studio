@@ -1,5 +1,5 @@
 import * as THREE from "three"
-import {mergeGeometries, mergeVertices} from "three/addons/utils/BufferGeometryUtils.js"
+import {mergeGeometries} from "three/addons/utils/BufferGeometryUtils.js"
 
 import {Voxel, Piece, SideInfo, tweakColor} from "~lib"
 
@@ -220,7 +220,7 @@ export class PieceVoxelPainter extends VoxelPainter {
             return []
         }
         return [new THREE.Mesh(
-            mergeVertices(mergeGeometries(geometries)),
+            mergeGeometries(geometries),
             material
         )]
     }
