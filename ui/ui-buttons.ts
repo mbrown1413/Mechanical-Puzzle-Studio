@@ -108,7 +108,15 @@ export function useUiButtonComposible(
             text: "New Piece",
             icon: "mdi-plus",
             perform: () => {
-                performAction(new NewPieceAction())
+                let bounds = undefined
+                if(puzzleEditor.value?.selectedPieceIds.length === 1) {
+                    const id = puzzleEditor.value?.selectedPieceIds[0]
+                    const piece = puzzleFile.value?.puzzle.getPiece(id)
+                    if(piece && piece.bounds) {
+                        bounds = Object.assign({}, piece.bounds)
+                    }
+                }
+                performAction(new NewPieceAction(bounds))
             }
         },
 

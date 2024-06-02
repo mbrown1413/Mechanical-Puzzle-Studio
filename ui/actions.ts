@@ -222,9 +222,9 @@ export class EditPuzzleMetadataAction extends Action {
 export class NewPieceAction extends Action {
     bounds?: Bounds
 
-    constructor() {
+    constructor(bounds?: Bounds) {
         super()
-        this.bounds = undefined
+        this.bounds = bounds
     }
 
     perform(puzzle: Puzzle) {

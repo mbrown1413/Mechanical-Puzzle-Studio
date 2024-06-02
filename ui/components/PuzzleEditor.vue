@@ -9,7 +9,7 @@ import Split from "split-grid"
 
 import {Puzzle, PieceId, ProblemId, AssemblySolution} from "~lib"
 
-import {Action, NewPieceAction} from "~/ui/actions.ts"
+import {Action} from "~/ui/actions.ts"
 import TabLayout from "~/ui/common/TabLayout.vue"
 import PieceEditor from "~/ui/components/PieceEditor.vue"
 import SolutionDisplay from "~/ui/components/SolutionDisplay.vue"
@@ -71,14 +71,6 @@ onMounted(() => {
 })
 
 function performAction(action: Action) {
-    if(action instanceof NewPieceAction && selectedPieceIds.value.length === 1) {
-        const id = selectedPieceIds.value[0]
-        const piece = props.puzzle.getPiece(id)
-        if(piece && piece.bounds !== undefined) {
-            action.bounds = Object.assign({}, piece.bounds)
-        }
-    }
-
     emit("action", action)
 }
 
