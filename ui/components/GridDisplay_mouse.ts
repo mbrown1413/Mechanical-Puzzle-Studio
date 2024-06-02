@@ -1,4 +1,5 @@
-import { Ref, onMounted} from "vue"
+import {Ref, onMounted} from "vue"
+import debounce from "lodash.debounce"
 
 import * as THREE from "three"
 import {Vector2} from "three"
@@ -60,10 +61,14 @@ export function useGridDisplayMouseComposible(
     onMounted(() => {
 
         // Hovering to highlight
-        element.value.addEventListener("mousemove", (event: MouseEvent) => {
+        const processMouseMove = (event: MouseEvent) => {
             highlightObjectAtPosition(event.clientX, event.clientY)
-        })
-        element.value.addEventListener("mouseout", clearHighlight)
+        }
+        element.value.addEventListener(
+            "mousemove",
+            debounce(processMouseMove, 50, {maxWait: 100, leading: false, trailing: true})
+        )
+        //element.value.addEventListener("mousemove", processMouseMove)
         element.value.addEventListener("mouseout", clearHighlight)
 
         // Click to modify piece

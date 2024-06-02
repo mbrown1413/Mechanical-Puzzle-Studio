@@ -3,6 +3,7 @@ import {ref, Ref, ComputedRef, onMounted, onUnmounted, computed, watchEffect, wa
 import * as THREE from "three"
 import {Vector3} from "three"
 import {OrbitControls} from "three/addons/controls/OrbitControls.js"
+import {mergeGeometries} from "three/addons/utils/BufferGeometryUtils.js"
 
 import {Voxel, SideInfo, Viewpoint, Grid, Piece, Bounds, isColorSimilar} from "~lib"
 import {ThreeJsResourceTracker} from "~/ui/utils/ThreeJsResourceTracker.ts"
@@ -178,11 +179,9 @@ export function useGridDisplaySceneComposible(
             // Populate hitTestObjects and save what voxel the object was drawn
             // for so we can pull it out later after a raycast intersects it.
             if(displayOnly ? pieceAtVoxel : inLayer) {
-                const objects = getVoxelHitTestObjects(sides)
-                for(const object of objects) {
-                    object.userData = {voxel}
-                }
-                hitTestObjects.value.push(...objects)
+                const object = getVoxelHitTestObject(sides)
+                object.userData = {voxel}
+                hitTestObjects.value.push(object)
             }
         }
 
@@ -253,13 +252,11 @@ function getVoxelHighlightColor(piece: Piece | null) {
     }
 }
 
-function getVoxelHitTestObjects(sides: SideInfo[]): THREE.Object3D[] {
-    const material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide})
-    const meshes: THREE.Mesh[] = []
-    for(const side of sides) {
-        meshes.push(
-            new THREE.Mesh(side.solid, material)
-        )
-    }
-    return meshes
+function getVoxelHitTestObject(sides: SideInfo[]): THREE.Object3D {
+    const solids = sides.map(side => side.solid)
+    const geometries = mergeGeometries(solids)
+    return new THREE.Mesh(
+        geometries,
+        new THREE.MeshBasicMaterial({side: THREE.DoubleSide})
+    )
 }

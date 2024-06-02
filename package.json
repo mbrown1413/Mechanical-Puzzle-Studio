@@ -19,6 +19,7 @@
     "fflate": "^0.8.2",
     "file-saver": "^2.0.5",
     "jsondiffpatch": "^0.6.0",
+    "lodash.debounce": "^4.0.8",
     "three": "^0.153.0",
     "vite-plugin-vuetify": "^1.0.2",
     "vue": "3.4.10",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@mdi/font": "^7.4.47",
     "@popperjs/core": "^2.11.8",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20.8.10",
     "@types/three": "^0.154.0",
     "@types/uuid": "^9.0.6",
