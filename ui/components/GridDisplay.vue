@@ -8,8 +8,8 @@ import {ref, Ref, computed} from "vue"
 
 import {Grid, Piece, Voxel, Bounds} from "~lib"
 
-import {useGridDrawComposible} from "./GridDisplay_draw.ts"
-import {useGridMouseComposible} from "./GridDisplay_mouse.ts"
+import {useGridDisplaySceneComposible} from "./GridDisplay_scene.ts"
+import {useGridDisplayMouseComposible} from "./GridDisplay_mouse.ts"
 
 const props = withDefaults(
     defineProps<{
@@ -86,7 +86,7 @@ const bounds = computed(() => {
 const {
     camera,
     hitTestObjects,
-} = useGridDrawComposible(
+} = useGridDisplaySceneComposible(
     drawElement,
     props.grid,
     pieces,
@@ -98,7 +98,7 @@ const {
     props.highlightBy,
 )
 
-useGridMouseComposible(
+useGridDisplayMouseComposible(
     drawElement,
     camera,
     hitTestObjects,

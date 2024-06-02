@@ -5,7 +5,7 @@ import {Vector2} from "three"
 
 import {Voxel} from "~lib"
 
-export function useGridMouseComposible(
+export function useGridDisplayMouseComposible(
     // Inputs
     element: Ref<HTMLElement>,
     camera: THREE.Camera,
