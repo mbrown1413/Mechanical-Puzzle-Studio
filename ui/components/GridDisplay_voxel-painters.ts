@@ -2,6 +2,7 @@ import * as THREE from "three"
 import {mergeGeometries} from "three/addons/utils/BufferGeometryUtils.js"
 
 import {Voxel, Piece, SideInfo, tweakColor} from "~lib"
+import {makeCylinderTransform} from "~/ui/utils/threejs-objects.ts"
 
 type VoxelVisitData = {
     voxel: Voxel,
@@ -85,7 +86,7 @@ export class GridPainter extends VoxelPainter {
         for(const [point1, point2] of this.linePoints) {
             lines.setMatrixAt(
                 i++,
-                this.makeCylinderTransform(point1, point2)
+                makeCylinderTransform(point1, point2)
             )
         }
 
@@ -108,36 +109,6 @@ export class GridPainter extends VoxelPainter {
             lines,
             spheres,
         ]
-    }
-
-    /** Returns a transform to place a cylinder to be placed starting at point1
-     * and ending at point2. */
-    makeCylinderTransform(
-        point1: THREE.Vector3,
-        point2: THREE.Vector3
-    ): THREE.Matrix4 {
-        const unitDirection = new THREE.Vector3().subVectors(point2, point1)
-        const length = unitDirection.length()
-        unitDirection.normalize()
-
-        // The CylinderGeometry starts 1 unit long, centered at (0, 0, 0), with
-        // its long axis pointing along the Y axis. Here we translate so it
-        // goes from (0, 0, 0) to (0, 1, 0).
-        const m = new THREE.Matrix4().makeTranslation(0, 0.5, 0)
-
-        // Stretch so it's the same length as our target line
-        m.premultiply(new THREE.Matrix4().makeScale(1, length, 1))
-
-        // Rotate to point in the same direction as our target line
-        const up = new THREE.Vector3(0, 1, 0)
-        const q = new THREE.Quaternion().setFromUnitVectors(up, unitDirection)
-        const rotationMatrix = new THREE.Matrix4().makeRotationFromQuaternion(q)
-        m.premultiply(rotationMatrix)
-
-        // Move from starting at (0, 0, 0) to our target start, point1.
-        m.premultiply(new THREE.Matrix4().makeTranslation(point1))
-
-        return m
     }
 }
 

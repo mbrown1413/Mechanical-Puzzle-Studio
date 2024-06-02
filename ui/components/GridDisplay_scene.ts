@@ -9,6 +9,7 @@ import {Voxel, SideInfo, Viewpoint, Grid, Piece, Bounds, isColorSimilar} from "~
 import {ThreeJsResourceTracker} from "~/ui/utils/ThreeJsResourceTracker.ts"
 import {VoxelPainter, GridPainter, PieceVoxelPainter} from "./GridDisplay_voxel-painters.ts"
 import {multiRenderer} from "~/ui/utils/MultiRenderer.ts"
+import {makeAxesHelper} from "~/ui/utils/threejs-objects.ts"
 
 export function useGridDisplaySceneComposible(
     element: Ref<HTMLElement>,
@@ -116,7 +117,11 @@ export function useGridDisplaySceneComposible(
         scene.add(...getLights())
 
         const gridBoxSize = gridBoundingBox.value.getSize(new Vector3())
-        const axesHelper = new THREE.AxesHelper(Math.max(...gridBoxSize.toArray()) + 1)
+        const axesHelper = makeAxesHelper(
+            gridBoxSize.x + 1,
+            gridBoxSize.y + 1,
+            gridBoxSize.z + 1,
+        )
         axesHelper.position.set(-1, -1, -1)
         scene.add(axesHelper)
 
