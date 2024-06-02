@@ -163,6 +163,11 @@ export function useGridDisplaySceneComposible(
 
         ]
 
+        // Hide layer grid when no piece is selected
+        if(pieces.value.length === 0) {
+            voxelPainters.length = 0
+        }
+
         hitTestObjects.value = []
         for(const voxel of grid.getVoxels(bounds.value)) {
             const voxelInfo = grid.getVoxelInfo(voxel)
