@@ -141,14 +141,14 @@ export function useGridDisplaySceneComposible(
             new GridPainter(
                 ({inLayer, piece}) => !inLayer && piece !== null,
                 new THREE.MeshBasicMaterial({color: 0xdddddd}),
-                0.002
+                0.015
             ),
 
             // Make a bolded grid on the current layer
             new GridPainter(
                 ({inLayer}) => inLayer,
                 new THREE.MeshBasicMaterial({color: 0x000000}),
-                0.005
+                0.015
             ),
 
             // Draw solids for voxels with pieces
@@ -158,7 +158,7 @@ export function useGridDisplaySceneComposible(
             new GridPainter(
                 ({voxel}) => voxel === highlightedVoxel.value,
                 new THREE.MeshBasicMaterial({color: highlightColor}),
-                0.005
+                0.020
             )
 
         ]

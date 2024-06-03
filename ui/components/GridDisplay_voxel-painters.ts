@@ -197,11 +197,11 @@ export class PieceVoxelPainter extends VoxelPainter {
     }
 
     makeOptionalVoxelTexture() {
-        const dark = [255, 255, 255, 255]
-        const light = [0, 0, 0, 255]
+        const light = [255, 255, 255, 255]
+        const dark = [100, 100, 100, 255]
         const buffer = new Uint8Array([
-            ...dark, ...light,
             ...light, ...dark,
+            ...dark, ...light,
         ])
         const texture = new THREE.DataTexture(buffer, 2, 2, THREE.RGBAFormat)
         texture.repeat.set(4, 4)
