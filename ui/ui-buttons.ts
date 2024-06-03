@@ -191,7 +191,20 @@ export function useUiButtonComposible(
                     )
                 }
             },
-            enabled: () => (puzzleEditor.value?.selectedProblemIds.length || 0) > 0,
+            enabled: () => {
+                const problemId = puzzleEditor.value?.selectedProblemIds[0]
+                if(problemId === undefined) { return false }
+                for(const taskInfo of taskRunner.getTasks()) {
+                    if(
+                        taskInfo.task instanceof ProblemSolveTask && 
+                        taskInfo.task.problemId === puzzleEditor.value?.selectedProblemIds[0] && 
+                        ["running", "queued"].includes(taskInfo.status)
+                    ) {
+                        return false
+                    }
+                }
+                return true
+            }
         },
 
     }
