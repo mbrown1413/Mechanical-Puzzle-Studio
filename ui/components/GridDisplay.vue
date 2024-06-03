@@ -8,7 +8,7 @@ import {ref, Ref, computed} from "vue"
 
 import {Grid, Piece, Voxel, Bounds} from "~lib"
 
-import {useGridDisplaySceneComposible} from "./GridDisplay_scene.ts"
+import {useGridDisplaySceneComposible} from "./GridDisplay_render.ts"
 import {useGridDisplayMouseComposible} from "./GridDisplay_mouse.ts"
 
 const props = withDefaults(
