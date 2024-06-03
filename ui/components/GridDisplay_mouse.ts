@@ -18,8 +18,54 @@ export function useGridDisplayMouseComposible(
 ) {
     const raycaster = new THREE.Raycaster()
 
-    /* from x, y position on screen (typically from a mouse event.clientX/Y)
-     * get the object drawn at that location. */
+    onMounted(() => {
+        // Pixels of mouse movement before we consider it to be dragging, and
+        // not just clicking on a voxel
+        const movementTolerance = 5
+
+        let state: "up" | "down" | "drag" = "up"
+        let pressedPosition: [number, number] | null = null
+
+        element.value.addEventListener("mousemove", (event: MouseEvent) => {
+            if(state === "down" && pressedPosition) {
+                // Have we moved enough from pressedPosition to be considered dragging?
+                const distSquared = (
+                    (event.clientX - pressedPosition[0])**2 +
+                    (event.clientY - pressedPosition[1])**2
+                )
+                if(distSquared > movementTolerance**2) {
+                    state = "drag"
+                }
+            }
+
+            if(state === "drag") {
+                highlightObjectDebounced(event.clientX, event.clientY)
+            } else {
+                highlightObject(event.clientX, event.clientY)
+            }
+        })
+
+        element.value.addEventListener("mousedown", (event: MouseEvent) => {
+            state = "down"
+            pressedPosition = [event.clientX, event.clientY]
+        })
+
+        element.value.addEventListener("mouseup", (event: MouseEvent) => {
+            if(state === "down") {
+                clickObject(event)
+            }
+            highlightObject(event.clientX, event.clientY)
+            state = "up"
+            pressedPosition = null
+        })
+
+        element.value.addEventListener("mouseout", () => {
+            highlightedVoxel.value = null
+        })
+
+    })
+
+    /* Get the object at the given screen position */
     function getObjectOnScreen(x: number, y: number) {
         const canvas = element.value
         const rect = canvas.getBoundingClientRect()
@@ -32,8 +78,8 @@ export function useGridDisplayMouseComposible(
         return intersects.length === 0 ? null : intersects[0].object
     }
 
-    /* Set highlightedVoxel based on object at screen position x, y. */
-    function highlightObjectAtPosition(x: number, y: number) {
+    /* Set highlightedVoxel based on object at the given screen position */
+    function highlightObject(x: number, y: number) {
         const intersectedObject = getObjectOnScreen(x, y)
         if(intersectedObject) {
             highlightedVoxel.value = intersectedObject.userData.voxel
@@ -42,12 +88,13 @@ export function useGridDisplayMouseComposible(
         }
     }
 
-    function clearHighlight() {
-        highlightedVoxel.value = null
-    }
+    const highlightObjectDebounced = debounce(
+        highlightObject,
+        50,
+        {leading: false, trailing: true}
+    )
 
-    /* Emit appropriate action (via actionCallback) for clicking on the object
-    * at the given position and click type in the event. */
+    /* Find object at mouse position and call clickCallback */
     function clickObject(event: MouseEvent) {
         const intersectedObject = getObjectOnScreen(event.clientX, event.clientY)
         if(intersectedObject) {
@@ -58,43 +105,4 @@ export function useGridDisplayMouseComposible(
         }
     }
 
-    onMounted(() => {
-
-        // Hovering to highlight
-        const processMouseMove = (event: MouseEvent) => {
-            highlightObjectAtPosition(event.clientX, event.clientY)
-        }
-        element.value.addEventListener(
-            "mousemove",
-            debounce(processMouseMove, 50, {maxWait: 100, leading: false, trailing: true})
-        )
-        //element.value.addEventListener("mousemove", processMouseMove)
-        element.value.addEventListener("mouseout", clearHighlight)
-
-        // Click to modify piece
-        // Track position of mousedown and if we move further than
-        // mouseTolerance pixels away, consider it a drag and not a click.
-        let mouseDownPosition: [number, number] | null = null
-        const movementTolerance = 5  // Pixels
-        element.value.addEventListener("mousedown", (event: MouseEvent) => {
-            mouseDownPosition = [event.clientX, event.clientY]
-        });
-        element.value.addEventListener("mousemove", (event: MouseEvent) => {
-            if(mouseDownPosition === null) return
-            const distSquared = (
-                (event.clientX - mouseDownPosition[0])**2 +
-                (event.clientY - mouseDownPosition[1])**2
-            )
-            if(distSquared > movementTolerance**2) {
-                mouseDownPosition = null
-            }
-        });
-        element.value.addEventListener("mouseup", (event: MouseEvent) => {
-            if(mouseDownPosition !== null) {
-                clickObject(event)
-            }
-        });
-
-        //TODO: Touch events
-    })
 }
