@@ -42,7 +42,7 @@ function deletePuzzle(storage: PuzzleStorage, puzzleName: string) {
     clearStorageCache()
 }
 
-const tableHeaders: VDataTable["headers"] = [
+const tableHeaders: VDataTable["$props"]["headers"] = [
     {title: "Name", key: "name", align: "start"},
     //{title: "Created", key: "createdUTCString"},
     //{title: "Modified", key: "modifiedUTCString"},

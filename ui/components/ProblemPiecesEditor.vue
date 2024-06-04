@@ -24,7 +24,7 @@ const emit = defineEmits<{
 
 const selectedPieceIds: Ref<PieceId[]> = ref([])
 
-const tableHeaders: VDataTable["headers"] = [
+const tableHeaders: VDataTable["$props"]["headers"] = [
     {title: "Piece Name", key: "label"},
     {title: "Count", key: "count", align: "center"},
     {title: "", key: "display", sortable: false},
