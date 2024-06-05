@@ -4,7 +4,7 @@
 -->
 
 <script setup lang="ts">
-import {ref, Ref, onMounted, watch} from "vue"
+import {ref, Ref, watch, watchEffect} from "vue"
 import Split from "split-grid"
 
 import {Puzzle, PieceId, ProblemId, AssemblySolution} from "~lib"
@@ -54,8 +54,11 @@ defineExpose({
 
 const columnSlider: Ref<HTMLDivElement | null> = ref(null)
 const rowSlider: Ref<HTMLDivElement | null> = ref(null)
-onMounted(() => {
-    if(columnSlider.value && rowSlider.value) {
+
+runOnceOnCondition(
+    () => Boolean(columnSlider.value && rowSlider.value),
+    () => {
+        if(!columnSlider.value || !rowSlider.value) { return }
         Split({
             minSize: 315,
             columnGutters: [{
@@ -68,7 +71,22 @@ onMounted(() => {
             }]
         })
     }
-})
+)
+
+/* Run func once when condition is met. Condition should read vue references.
+ * Whenever those references change, the condition will be rerun until it
+ * returns true. Then func will be called. */
+function runOnceOnCondition(
+    condition: () => boolean,
+    func: () => void,
+) {
+    const cancel = watchEffect(() => {
+        if(condition()) {
+            func()
+            cancel()
+        }
+    })
+}
 
 function performAction(action: Action) {
     emit("action", action)
