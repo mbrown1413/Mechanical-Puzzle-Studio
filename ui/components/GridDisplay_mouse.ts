@@ -9,7 +9,7 @@ import {Voxel} from "~lib"
 export function useGridDisplayMouseComposible(
     // Inputs
     element: Ref<HTMLElement>,
-    camera: THREE.Camera,
+    camera: Ref<THREE.Camera>,
     hitTestObjects: Ref<THREE.Object3D[]>,
 
     // Output
@@ -73,7 +73,7 @@ export function useGridDisplayMouseComposible(
             (x - rect.left) / rect.width * 2 - 1,
             (y - rect.top) / rect.height * -2 + 1,
         )
-        raycaster.setFromCamera(pickPosition, camera)
+        raycaster.setFromCamera(pickPosition, camera.value)
         const intersects = raycaster.intersectObjects(hitTestObjects.value)
         return intersects.length === 0 ? null : intersects[0].object
     }

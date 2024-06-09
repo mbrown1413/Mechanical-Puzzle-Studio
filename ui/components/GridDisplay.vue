@@ -4,12 +4,13 @@
 -->
 
 <script setup lang="ts">
-import {ref, Ref, computed} from "vue"
+import {ref, Ref, toRef, computed} from "vue"
 
 import {Grid, Piece, Voxel, Bounds} from "~lib"
 
-import {useGridDisplaySceneComposible} from "./GridDisplay_render.ts"
+import {useGridDisplayRenderComposible} from "./GridDisplay_render.ts"
 import {useGridDisplayMouseComposible} from "./GridDisplay_mouse.ts"
+import {CameraSchemeName} from "./GridDisplay_camera.ts"
 
 const props = withDefaults(
     defineProps<{
@@ -21,12 +22,14 @@ const props = withDefaults(
         size?: "fill" | number,
         highlightBy?: "voxel" | "piece",
         showTools?: boolean,
+        cameraScheme?: CameraSchemeName,
     }>(), {
         displayOnly: false,
         noLayers: false,
         size: "fill",
         highlightBy: "voxel",
         showTools: false,
+        cameraScheme: "3D",
     }
 )
 
@@ -86,7 +89,7 @@ const bounds = computed(() => {
 const {
     camera,
     hitTestObjects,
-} = useGridDisplaySceneComposible(
+} = useGridDisplayRenderComposible(
     drawElement,
     props.grid,
     pieces,
@@ -96,6 +99,7 @@ const {
     viewpoint,
     highlightedVoxel,
     props.highlightBy,
+    toRef(props, "cameraScheme"),
 )
 
 useGridDisplayMouseComposible(

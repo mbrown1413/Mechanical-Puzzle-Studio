@@ -2,16 +2,15 @@ import {ref, Ref, ComputedRef, onMounted, onUnmounted, computed, watchEffect, wa
 
 import * as THREE from "three"
 import {Vector3} from "three"
-import {OrbitControls} from "three/addons/controls/OrbitControls.js"
 import {mergeGeometries} from "three/addons/utils/BufferGeometryUtils.js"
 
 import {Voxel, SideInfo, Viewpoint, Grid, Piece, Bounds, isColorSimilar} from "~lib"
-import {ThreeJsResourceTracker} from "~/ui/utils/ThreeJsResourceTracker.ts"
 import {VoxelPainter, GridPainter, PieceVoxelPainter} from "./GridDisplay_voxel-painters.ts"
+import {CameraScheme, CameraSchemeName, ThreeDimensionalCameraScheme, TwoDimensionalCameraScheme} from "./GridDisplay_camera.ts"
+import {ThreeJsResourceTracker} from "~/ui/utils/ThreeJsResourceTracker.ts"
 import {multiRenderer} from "~/ui/utils/MultiRenderer.ts"
-import {makeAxesHelper} from "~/ui/utils/threejs-objects.ts"
 
-export function useGridDisplaySceneComposible(
+export function useGridDisplayRenderComposible(
     element: Ref<HTMLElement>,
     grid: Grid,
     pieces: ComputedRef<Piece[]>,
@@ -21,39 +20,46 @@ export function useGridDisplaySceneComposible(
     viewpoint: Ref<Viewpoint>,
     highlightedVoxel: Ref<Voxel | null>,
     highlightBy: "voxel" | "piece",
+    cameraSchemeName: Ref<CameraSchemeName>,
 ) {
     const scene = new THREE.Scene()
-    const fov = 75
-    const camera = new THREE.PerspectiveCamera(fov, 2, 0.1, 10)
-    let controls: OrbitControls | null = null
     const hitTestObjects: Ref<THREE.Object3D[]> = ref([])
-
     const resourceTracker = new ThreeJsResourceTracker()
     let renderAreaId: string
 
+    const gridBoundingBox = computed(() => getGridBoundingBox(grid, bounds.value))
+
+    const availableCameraSchemes: Record<CameraSchemeName, CameraScheme> = {
+        "2D": makeCameraScheme("2D"),
+        "3D": makeCameraScheme("3D"),
+    }
+    const cameraScheme = computed(() =>
+        availableCameraSchemes[cameraSchemeName.value]
+    )
+
     onMounted(() => {
         renderAreaId = multiRenderer.addRenderArea(element.value, render)
-
-        controls = new OrbitControls(camera, element.value)
-        controls.addEventListener('change', () => multiRenderer.requestRender())
+        cameraScheme.value.enable(element.value)
 
         watchEffect(() => {
             buildScene()
             multiRenderer.requestRender()
         })
 
-        setCameraPosition()
-        setCameraTarget()
+    })
 
-        watch(() => bounds.value, () => {
-            setCameraTarget()
-        })
+    watch(cameraScheme, (newScheme, oldScheme) => {
+        newScheme.enable(element.value)
+        oldScheme.disable()
+        multiRenderer.requestRender()
     })
 
     onUnmounted(() => {
         multiRenderer.removeRenderArea(renderAreaId)
         resourceTracker.releaseAll()
-        controls?.dispose()
+        for(const availableCameraScheme of Object.values(availableCameraSchemes)) {
+            availableCameraScheme.dispose()
+        }
     })
 
     const voxelPieceMap = computed(() => {
@@ -70,44 +76,28 @@ export function useGridDisplaySceneComposible(
         return piece === undefined ? null : piece
     }
 
-    const gridBoundingBox = computed(() => getGridBoundingBox(grid, bounds.value))
+    function makeCameraScheme(schemeName: CameraSchemeName): CameraScheme {
+        let cameraSchemeClass
+        if(schemeName === "2D") {
+            cameraSchemeClass = TwoDimensionalCameraScheme
+        } else {
+            cameraSchemeClass = ThreeDimensionalCameraScheme
+        }
+        return new cameraSchemeClass(
+            () => multiRenderer.requestRender(),
+            bounds,
+            gridBoundingBox,
+            viewpoint,
+            layerN,
+        )
+    }
 
     /* Call this when things like camera and window size change. */
     function render(renderer: THREE.WebGLRenderer) {
-        const width = element.value.offsetWidth
-        const height = element.value.offsetHeight
-        camera.aspect = width / height
-        camera.updateProjectionMatrix()
-
-        // Calculate camera near/far to fit entire scene
-        const boundingBox = new THREE.Box3().setFromObject(scene)
-        const boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere())
-        const sphereDistance = boundingSphere.distanceToPoint(camera.position)
-        camera.near = Math.max(sphereDistance * .9, 0.1)
-        camera.far = (sphereDistance + boundingSphere.radius*2) * 1.1
-
-        renderer.render(scene, camera)
-    }
-
-    function setCameraPosition() {
-        const center = gridBoundingBox.value.getCenter(new Vector3())
-
-        const boundingSphere = gridBoundingBox.value.getBoundingSphere(new THREE.Sphere())
-        const fovRadians = fov * (Math.PI/180)
-        const cameraPosition = viewpoint.value.forwardVector.clone().normalize()
-        cameraPosition.multiplyScalar(
-            -1 * (boundingSphere.radius * 1.2) / Math.tan(fovRadians / 2)
-        )
-        cameraPosition.add(center)
-        camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z)
-    }
-
-    function setCameraTarget() {
-        if(controls) {
-            const center = gridBoundingBox.value.getCenter(new Vector3())
-            controls.target = center
-            camera.lookAt(center)
-        }
+        const screenWidth = element.value.offsetWidth
+        const screenHeight = element.value.offsetHeight
+        cameraScheme.value.beforeRender(scene, screenWidth, screenHeight)
+        renderer.render(scene, cameraScheme.value.camera)
     }
 
     /* Call rebuild() when the objects in the scene need to be updated. */
@@ -116,14 +106,7 @@ export function useGridDisplaySceneComposible(
         scene.clear()
         scene.add(...getLights())
 
-        const gridBoxSize = gridBoundingBox.value.getSize(new Vector3())
-        const axesHelper = makeAxesHelper(
-            gridBoxSize.x + 1,
-            gridBoxSize.y + 1,
-            gridBoxSize.z + 1,
-        )
-        axesHelper.position.set(-1, -1, -1)
-        scene.add(axesHelper)
+        cameraScheme.value.addObjects(scene)
 
         let highlightedPiece: Piece | null = null
         if(highlightBy === "piece" && highlightedVoxel.value) {
@@ -169,7 +152,7 @@ export function useGridDisplaySceneComposible(
         }
 
         hitTestObjects.value = []
-        for(const voxel of grid.getVoxels(bounds.value)) {
+        for(const voxel of cameraScheme.value.iterVoxels(grid)) {
             const voxelInfo = grid.getVoxelInfo(voxel)
             const inLayer = displayOnly ? false : viewpoint.value.isInLayer(voxel, layerN.value)
             const pieceAtVoxel = getPieceAtVoxel(voxel)
@@ -208,7 +191,7 @@ export function useGridDisplaySceneComposible(
 
     return {
         scene,
-        camera,
+        camera: computed(() => cameraScheme.value.camera),
         hitTestObjects,
     }
 }

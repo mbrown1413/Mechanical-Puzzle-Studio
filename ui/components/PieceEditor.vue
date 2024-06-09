@@ -50,12 +50,21 @@ function voxelClicked(event: MouseEvent, voxel: Voxel) {
     }
 }
 
+const cameraSchemeName = computed(() =>
+    toggles.value.includes("twoDimensional") ? "2D" : "3D"
+)
+
+const cameraSchemeIcon = computed(() =>
+    toggles.value.includes("twoDimensional") ? "mdi-cube-off-outline" : "mdi-cube-outline"
+)
+
 </script>
 
 <template>
     <GridDisplay
             :grid="puzzle.grid"
             :pieces="pieces"
+            :cameraScheme="cameraSchemeName"
             @voxelClicked="voxelClicked"
             boundsSizing="pieceBounds"
             showTools
@@ -69,7 +78,7 @@ function voxelClicked(event: MouseEvent, voxel: Voxel) {
 
                 <VTooltip
                     text="Optional voxel draw"
-                    location="left"
+                    location="bottom"
                 >
                     <template v-slot:activator="{props}">
                         <VBtn
@@ -82,6 +91,27 @@ function voxelClicked(event: MouseEvent, voxel: Voxel) {
                                 icon="mdi-checkerboard"
                                 size="x-large"
                                 aria-label="Optional voxel draw"
+                                aria-hidden="false"
+                            />
+                        </VBtn>
+                    </template>
+                </VTooltip>
+
+                <VTooltip
+                    :text="cameraSchemeName"
+                    location="bottom"
+                >
+                    <template v-slot:activator="{props}">
+                        <VBtn
+                            rounded
+                            @click=""
+                            value="twoDimensional"
+                            v-bind="props"
+                        >
+                            <VIcon
+                                :icon="cameraSchemeIcon"
+                                size="x-large"
+                                :aria-label="cameraSchemeName"
                                 aria-hidden="false"
                             />
                         </VBtn>
