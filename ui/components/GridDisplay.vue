@@ -4,9 +4,9 @@
 -->
 
 <script setup lang="ts">
-import {ref, Ref, toRef, computed, watchEffect} from "vue"
+import {ref, Ref, toRef, computed, watch, watchEffect} from "vue"
 
-import {Grid, Piece, Voxel, Bounds} from "~lib"
+import {Grid, Piece, Voxel, Bounds, Viewpoint} from "~lib"
 
 import {useGridDisplayRenderComposible} from "./GridDisplay_render.ts"
 import {useGridDisplayMouseComposible} from "./GridDisplay_mouse.ts"
@@ -22,19 +22,27 @@ const props = withDefaults(
         size?: "fill" | number,
         highlightBy?: "voxel" | "piece",
         showTools?: boolean,
+        showLayers?: boolean,
         cameraScheme?: CameraSchemeName,
+        highlightedVoxel?: Voxel | null,
+        viewpoint?: Viewpoint,
+        layerN?: number,
     }>(), {
         displayOnly: false,
         noLayers: false,
         size: "fill",
         highlightBy: "voxel",
         showTools: false,
+        showLayers: true,
         cameraScheme: "3D",
     }
 )
 
 const emit = defineEmits<{
     voxelClicked: [mouseEvent: MouseEvent, voxel: Voxel]
+    "update:highlightedVoxel": [Voxel | null]
+    "update:viewpoint": [Viewpoint]
+    "update:layerN": [number]
 }>()
 
 const pieceDisplayStyle = computed(() => {
@@ -49,6 +57,27 @@ const viewpoints = props.grid.getViewpoints()
 const viewpoint = ref(viewpoints[0])
 const layerN = ref(0)
 const highlightedVoxel: Ref<Voxel | null> = ref(null)
+
+watchEffect(() => {
+    if(props.highlightedVoxel !== undefined) {
+        highlightedVoxel.value = props.highlightedVoxel
+    }
+})
+watch(highlightedVoxel, () => emit("update:highlightedVoxel", highlightedVoxel.value))
+
+watchEffect(() => {
+    if(props.viewpoint !== undefined) {
+        viewpoint.value = props.viewpoint
+    }
+})
+watch(viewpoint, () => emit("update:viewpoint", viewpoint.value))
+
+watchEffect(() => {
+    if(props.layerN !== undefined) {
+        layerN.value = props.layerN
+    }
+})
+watch(layerN, () => emit("update:layerN", layerN.value))
 
 const viewpointOptions = computed(() =>
     viewpoints.map((viewpoint) => {
@@ -121,7 +150,7 @@ useGridDisplayMouseComposible(
 <template>
     <div class="grid-display" :style="pieceDisplayStyle">
         <div class="draw-element" ref="drawElement"></div>
-        <div class="overlay controls" v-if="!displayOnly">
+        <div class="overlay controls" v-if="!displayOnly && showLayers">
             <VSelect
                     v-model="viewpoint"
                     :items="viewpointOptions"

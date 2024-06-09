@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, ref, Ref} from "vue"
 
-import {Puzzle, PieceId, Voxel} from  "~lib"
+import {Puzzle, PieceId, Voxel, Viewpoint} from  "~lib"
 
 import {Action, EditPieceAction} from "~/ui/actions.ts"
 import GridDisplay from "~/ui/components/GridDisplay.vue"
@@ -9,6 +9,7 @@ import GridDisplay from "~/ui/components/GridDisplay.vue"
 const props = defineProps<{
     puzzle: Puzzle,
     pieceId: PieceId | null,
+    auxEditArea: HTMLElement | null,
 }>()
 
 const emit = defineEmits<{
@@ -16,6 +17,9 @@ const emit = defineEmits<{
 }>()
 
 const toggles: Ref<string[]> = ref([])
+const highlightedVoxel: Ref<Voxel | null> = ref(null)
+const viewpoint: Ref<Viewpoint | undefined> = ref()
+const layerN: Ref<number | undefined> = ref()
 
 const piece = computed(() =>
     props.pieceId === null ? null : props.puzzle.getPiece(props.pieceId) || null
@@ -61,67 +65,92 @@ const cameraSchemeIcon = computed(() =>
 </script>
 
 <template>
-    <GridDisplay
+    <div style="width: 100%; height: 100%;">
+        <GridDisplay
             :grid="puzzle.grid"
             :pieces="pieces"
             :cameraScheme="cameraSchemeName"
+            :highlightedVoxel="highlightedVoxel"
+            :viewpoint="viewpoint"
+            :layerN="layerN"
+            @update:highlightedVoxel="highlightedVoxel = $event"
+            @update:viewpoint="viewpoint = $event"
+            @update:layerN="layerN = $event"
             @voxelClicked="voxelClicked"
             boundsSizing="pieceBounds"
             showTools
-    >
-        <template v-slot:tools>
+        >
+            <template v-slot:tools>
 
-            <VBtnToggle
-                v-model="toggles"
-                multiple
-            >
-
-                <VTooltip
-                    text="Optional voxel draw"
-                    location="bottom"
+                <VBtnToggle
+                    v-model="toggles"
+                    multiple
                 >
-                    <template v-slot:activator="{props}">
-                        <VBtn
-                            rounded
-                            @click=""
-                            value="optional"
-                            v-bind="props"
-                        >
-                            <VIcon
-                                icon="mdi-checkerboard"
-                                size="x-large"
-                                aria-label="Optional voxel draw"
-                                aria-hidden="false"
-                            />
-                        </VBtn>
-                    </template>
-                </VTooltip>
 
-                <VTooltip
-                    :text="cameraSchemeName"
-                    location="bottom"
-                >
-                    <template v-slot:activator="{props}">
-                        <VBtn
-                            rounded
-                            @click=""
-                            value="twoDimensional"
-                            v-bind="props"
-                        >
-                            <VIcon
-                                :icon="cameraSchemeIcon"
-                                size="x-large"
-                                :aria-label="cameraSchemeName"
-                                aria-hidden="false"
-                            />
-                        </VBtn>
-                    </template>
-                </VTooltip>
+                    <VTooltip
+                        text="Optional voxel draw"
+                        location="bottom"
+                    >
+                        <template v-slot:activator="{props}">
+                            <VBtn
+                                rounded
+                                @click=""
+                                value="optional"
+                                v-bind="props"
+                            >
+                                <VIcon
+                                    icon="mdi-checkerboard"
+                                    size="x-large"
+                                    aria-label="Optional voxel draw"
+                                    aria-hidden="false"
+                                />
+                            </VBtn>
+                        </template>
+                    </VTooltip>
 
-            </VBtnToggle>
+                    <VTooltip
+                        :text="cameraSchemeName"
+                        location="bottom"
+                    >
+                        <template v-slot:activator="{props}">
+                            <VBtn
+                                rounded
+                                @click=""
+                                value="twoDimensional"
+                                v-bind="props"
+                            >
+                                <VIcon
+                                    :icon="cameraSchemeIcon"
+                                    size="x-large"
+                                    :aria-label="cameraSchemeName"
+                                    aria-hidden="false"
+                                />
+                            </VBtn>
+                        </template>
+                    </VTooltip>
 
-        </template>
-    </GridDisplay>
+                </VBtnToggle>
+
+            </template>
+        </GridDisplay>
+
+        <Teleport v-if="auxEditArea" :to="auxEditArea">
+            <GridDisplay
+                :grid="puzzle.grid"
+                :pieces="pieces"
+                :cameraScheme="cameraSchemeName === '3D' ? '2D' : '3D'"
+                :showLayers="false"
+                :highlightedVoxel="highlightedVoxel"
+                :viewpoint="viewpoint"
+                :layerN="layerN"
+                @update:highlightedVoxel="highlightedVoxel = $event"
+                @update:viewpoint="viewpoint = $event"
+                @update:layerN="layerN = $event"
+                @voxelClicked="voxelClicked"
+                boundsSizing="pieceBounds"
+            />
+        </Teleport>
+    </div>
 </template>
 
 <style>

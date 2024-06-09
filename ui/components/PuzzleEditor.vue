@@ -38,6 +38,7 @@ const pieceEditor: Ref<InstanceType<typeof PieceEditor> | null> = ref(null)
 const pieceList: Ref<InstanceType<typeof PieceList> | null> = ref(null)
 const problemList: Ref<InstanceType<typeof ProblemList> | null> = ref(null)
 const solutionList: Ref<InstanceType<typeof SolutionList> | null> = ref(null)
+const auxEditArea: Ref<HTMLElement | null> = ref(null)
 
 const currentTabId = ref("pieces")
 const sideTabs = [
@@ -146,13 +147,18 @@ watch(currentTabId, (tabId) => {
         <div class="slider row-slide" ref="rowSlider"></div>
 
         <div class="grid-cell side-bot">
-            <ItemMetadataEditor
+            <div
                 v-show="currentTabId === 'pieces' && selectedPieceIds.length"
-                :puzzle="puzzle"
-                itemType="piece"
-                :itemId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
-                @action="performAction"
-            />
+                style="height: 100%; display: flex; flex-direction: column;"
+            >
+                <ItemMetadataEditor
+                    :puzzle="puzzle"
+                    itemType="piece"
+                    :itemId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
+                    @action="performAction"
+                />
+                <div ref="auxEditArea" style="flex-grow: 1;"></div>
+            </div>
             <ProblemSolverForm
                 v-show="currentTabId === 'problems' && selectedProblemIds.length"
                 :puzzle="puzzle"
@@ -174,6 +180,7 @@ watch(currentTabId, (tabId) => {
                 v-show="currentTabId === 'pieces'"
                 :puzzle="puzzle"
                 :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
+                :auxEditArea="auxEditArea"
                 @action="performAction"
             />
             <ItemMetadataEditor
@@ -201,7 +208,7 @@ watch(currentTabId, (tabId) => {
     grid-template:
         "side-top  col-slide main" 1fr
         "row-slide col-slide main" 5px
-        "side-bot  col-slide main" 1fr
+        "side-bot  col-slide main" 2.5fr
         / 315px    5px       4fr;
 }
 
