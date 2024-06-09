@@ -4,7 +4,7 @@
 -->
 
 <script setup lang="ts">
-import {ref, Ref, toRef, computed} from "vue"
+import {ref, Ref, toRef, computed, watchEffect} from "vue"
 
 import {Grid, Piece, Voxel, Bounds} from "~lib"
 
@@ -83,6 +83,13 @@ const bounds = computed(() => {
 
     } else {
         return props.boundsSizing
+    }
+})
+
+watchEffect(() => {
+    const maxLayerN = viewpoint.value.getNLayers(bounds.value) - 1
+    if(layerN.value > maxLayerN) {
+        layerN.value = maxLayerN
     }
 })
 
