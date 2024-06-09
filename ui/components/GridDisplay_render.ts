@@ -171,9 +171,14 @@ export function useGridDisplayRenderComposible(
 
             // Populate hitTestObjects and save what voxel the object was drawn
             // for so we can pull it out later after a raycast intersects it.
-            if(displayOnly ? pieceAtVoxel : inLayer) {
+            if(displayOnly ? pieceAtVoxel : (inLayer || pieceAtVoxel)) {
                 const object = getVoxelHitTestObject(sides)
-                object.userData = {voxel}
+                // Only add the voxel userData if we want this to be
+                // highlighted. Otherwise it will occlude other voxels but not
+                // be highlighted itself.
+                if(displayOnly || inLayer) {
+                    object.userData = {voxel}
+                }
                 hitTestObjects.value.push(object)
             }
         }

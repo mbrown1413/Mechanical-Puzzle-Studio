@@ -66,7 +66,7 @@ export function useGridDisplayMouseComposible(
     })
 
     /* Get the object at the given screen position */
-    function getObjectOnScreen(x: number, y: number) {
+    function getVoxelOnScreen(x: number, y: number): Voxel | null {
         const canvas = element.value
         const rect = canvas.getBoundingClientRect()
         const pickPosition = new Vector2(
@@ -75,17 +75,16 @@ export function useGridDisplayMouseComposible(
         )
         raycaster.setFromCamera(pickPosition, camera.value)
         const intersects = raycaster.intersectObjects(hitTestObjects.value)
-        return intersects.length === 0 ? null : intersects[0].object
+        if(intersects.length === 0) { return null }
+
+        const voxel = intersects[0].object.userData.voxel
+        if(voxel === undefined) { return null }
+        return voxel
     }
 
     /* Set highlightedVoxel based on object at the given screen position */
     function highlightObject(x: number, y: number) {
-        const intersectedObject = getObjectOnScreen(x, y)
-        if(intersectedObject) {
-            highlightedVoxel.value = intersectedObject.userData.voxel
-        } else {
-            highlightedVoxel.value = null
-        }
+        highlightedVoxel.value = getVoxelOnScreen(x, y)
     }
 
     const highlightObjectDebounced = debounce(
@@ -96,12 +95,9 @@ export function useGridDisplayMouseComposible(
 
     /* Find object at mouse position and call clickCallback */
     function clickObject(event: MouseEvent) {
-        const intersectedObject = getObjectOnScreen(event.clientX, event.clientY)
-        if(intersectedObject) {
-            clickCallback(
-                event,
-                intersectedObject.userData.voxel,
-            )
+        const voxel = getVoxelOnScreen(event.clientX, event.clientY)
+        if(voxel) {
+            clickCallback(event, voxel)
         }
     }
 
