@@ -90,6 +90,7 @@ const cameraSchemeIcon = computed(() =>
                     <VTooltip
                         text="Optional voxel draw"
                         location="bottom"
+                        contentClass="tooltip-arrow-up"
                     >
                         <template v-slot:activator="{props}">
                             <VBtn
@@ -111,6 +112,7 @@ const cameraSchemeIcon = computed(() =>
                     <VTooltip
                         :text="cameraSchemeName"
                         location="bottom"
+                        contentClass="tooltip-arrow-up"
                     >
                         <template v-slot:activator="{props}">
                             <VBtn

@@ -19,6 +19,16 @@ code {
     background: rgba(0, 0, 0, .02);
 }
 
+/* Default opacity of --v-medium-emphasis-opacity=0.6 makes bare labels look
+ * disabled. Labels inside an input look fine though, so we re-enable the
+ * medium opacity for them. */
+.v-label {
+    opacity: 0.85;
+}
+.v-label.v-field-label {
+    opacity: var(--v-medium-emphasis-opacity);
+}
+
 /**
  * Add arrow to the top of tooltips with contentClass set, like this:
  *
