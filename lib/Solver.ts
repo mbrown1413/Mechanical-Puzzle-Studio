@@ -44,11 +44,13 @@ type GroupedCoverProblem = {
 export class AssemblySolver extends Solver {
     removeSymmetries: boolean
     disassemble: boolean
+    removeNoDisassembly: boolean
 
-    constructor(disassemble: boolean) {
+    constructor(disassemble: boolean, removeNoDisassembly: boolean) {
         super()
         this.removeSymmetries = true
         this.disassemble = disassemble
+        this.removeNoDisassembly = removeNoDisassembly
     }
 
     solve(
@@ -75,7 +77,7 @@ export class AssemblySolver extends Solver {
         callbacks.progressCallback(0, "Assembling")
         const coverSolutions = this.solveCover(coverProblem, callbacks)
 
-        const solutions = []
+        let solutions = []
         for(const pickedRows of coverSolutions) {
             const solution = new AssemblySolution(
                 pickedRows.map(
@@ -87,11 +89,16 @@ export class AssemblySolver extends Solver {
 
         if(this.disassemble) {
             callbacks.progressCallback(0, "Disassembling")
+            const newSolutions = []
             for(const [i, solution] of solutions.entries()) {
                 const disassembler = new SimpleDisassembler(puzzle.grid, solution.placements)
                 solution.disassemblies = disassembler.disassemble()
+                if(solution.disassemblies.length > 0 || !this.removeNoDisassembly) {
+                    newSolutions.push(solution)
+                }
                 callbacks.progressCallback(i / coverSolutions.length)
             }
+            solutions = newSolutions
         }
 
         return solutions

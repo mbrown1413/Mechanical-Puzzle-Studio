@@ -46,6 +46,7 @@ export abstract class Problem extends SerializableClass {
 export class AssemblyProblem extends Problem {
     goalPieceId?: PieceId
     disassemble: boolean
+    removeNoDisassembly: boolean
 
     /* Maps piece ID to how many of that piece are used in this problem.
      *
@@ -58,6 +59,7 @@ export class AssemblyProblem extends Problem {
         super(id)
         this.usedPieceCounts = {}
         this.disassemble = false
+        this.removeNoDisassembly = true
     }
 
     getSolvers() {
@@ -65,7 +67,7 @@ export class AssemblyProblem extends Problem {
             assembly: {
                 solver: AssemblySolver,
                 isUsable: {bool: true as const},
-                args: [this.disassemble],
+                args: [this.disassemble, this.removeNoDisassembly],
             },
         }
     }

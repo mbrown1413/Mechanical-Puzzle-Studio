@@ -560,6 +560,7 @@ describe("burrtools read", () => {
                     "goalPieceId": 0,
                     "id": 0,
                     "label": "Problem 1",
+                    "removeNoDisassembly": true,
                     "solverId": "assembly",
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {
@@ -612,6 +613,7 @@ describe("burrtools read", () => {
                     "disassemble": false,
                     "id": 0,
                     "label": "Problem 1",
+                    "removeNoDisassembly": true,
                     "solverId": "assembly",
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {},
@@ -747,6 +749,7 @@ describe("burrtools read", () => {
                     "disassemble": false,
                     "id": 0,
                     "label": "Problem 1 label!",
+                    "removeNoDisassembly": true,
                     "solverId": "assembly",
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {},
@@ -819,6 +822,7 @@ describe("burrtools read", () => {
                     "goalPieceId": 0,
                     "id": 0,
                     "label": "Problem 1",
+                    "removeNoDisassembly": true,
                     "solverId": "assembly",
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {
@@ -886,6 +890,7 @@ describe("burrtools read", () => {
                     "disassemble": false,
                     "id": 0,
                     "label": "Problem 1",
+                    "removeNoDisassembly": true,
                     "solverId": "assembly",
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {
@@ -954,6 +959,7 @@ describe("burrtools read", () => {
                     "disassemble": false,
                     "id": 0,
                     "label": "Problem 1",
+                    "removeNoDisassembly": true,
                     "solverId": "assembly",
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {
@@ -1036,6 +1042,7 @@ describe("burrtools read", () => {
                     "goalPieceId": 0,
                     "id": 0,
                     "label": "Problem 1",
+                    "removeNoDisassembly": true,
                     "solverId": "assembly",
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {

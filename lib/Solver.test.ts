@@ -108,7 +108,7 @@ describe("AssemblySolver", () => {
     problem2.usedPieceCounts[problem2_piece0.id] = 2
     problem2.usedPieceCounts[problem2_piece1.id] = 1
 
-    const solver = new AssemblySolver(false)
+    const solver = new AssemblySolver(false, false)
 
     test("solve problem 0", () => {
         solver.removeSymmetries = false
@@ -256,7 +256,7 @@ describe("AssemblySolver optional voxels", () => {
 
     test("voxel count sanity-check", () => {
         const puzzle = new Puzzle(new CubicGrid())
-        const solver = new AssemblySolver(false)
+        const solver = new AssemblySolver(false, false)
 
         const goal = puzzle.addPiece(new Piece(
             100,
@@ -302,7 +302,7 @@ describe("AssemblySolver optional voxels", () => {
 
     test("No optional voxels in pieces", () => {
         const puzzle = new Puzzle(new CubicGrid())
-        const solver = new AssemblySolver(false)
+        const solver = new AssemblySolver(false, false)
 
         const goal = puzzle.addPiece(new Piece(
             100,
@@ -330,7 +330,7 @@ describe("AssemblySolver optional voxels", () => {
 
     test("Simple optional voxel problem", () => {
         const puzzle = new Puzzle(new CubicGrid())
-        const solver = new AssemblySolver(false)
+        const solver = new AssemblySolver(false, false)
 
         const goal = puzzle.addPiece(new Piece(
             100,
@@ -359,7 +359,7 @@ describe("AssemblySolver optional voxels", () => {
 
     test("Complex optional voxel problem", () => {
         const puzzle = new Puzzle(new CubicGrid())
-        const solver = new AssemblySolver(false)
+        const solver = new AssemblySolver(false, false)
 
         const goal = puzzle.addPiece(new Piece(
             100,

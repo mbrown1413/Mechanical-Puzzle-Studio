@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, inject} from "vue"
 
-import {Puzzle, ProblemId} from "~lib"
+import {Puzzle, ProblemId, AssemblyProblem} from "~lib"
 
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 import {Action, EditProblemMetadataAction} from "~/ui/actions.ts"
@@ -19,14 +19,20 @@ const emit = defineEmits<{
 }>()
 
 const problem = computed(() =>
-    props.puzzle.problems.find(p => p.id === props.problemId) || null
+    props.puzzle.problems.find(p => p.id === props.problemId) as AssemblyProblem || null
 )
 
-function toggleDisassemble() {
+type BooleanMetadata = {
+    disassemble?: boolean
+    removeNoDisassembly?: boolean
+}
+function toggleBoolean(field: keyof BooleanMetadata) {
     if(!problem.value) { return }
+    const metadataEdit: BooleanMetadata = {}
+    metadataEdit[field] = !problem.value[field]
     emit("action", new EditProblemMetadataAction(
         problem.value.id,
-        {disassemble: !problem.value.disassemble}
+        metadataEdit
     ))
 }
 
@@ -45,19 +51,33 @@ const solveButton = allUiButtons.startSolve
             />
         </div>
 
-        <VCheckbox
-            label="Perform Disassembly"
-            :model-value="problem?.disassemble"
-            @click="toggleDisassemble"
-        />
+        <fieldset>
+            <legend>
+                <VCheckbox
+                    label="Disassembly"
+                    :model-value="problem?.disassemble"
+                    @click="toggleBoolean('disassemble')"
+                />
+            </legend>
+            <VCheckbox
+                label="Remove solutions with no disassemblies"
+                :model-value="problem?.removeNoDisassembly"
+                :disabled="!problem?.disassemble"
+                @click="toggleBoolean('removeNoDisassembly')"
+            />
+        </fieldset>
     </div>
 </template>
 
-<style>
+<style scoped>
 .solver-form {
     margin: 1em;
 }
 .solver-form h4 {
     margin-bottom: 0.5em;
+}
+
+legend .v-input {
+    grid-template-areas: unset;
 }
 </style>
