@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, ComputedRef} from "vue"
+import {VNumberInput} from "vuetify/labs/VNumberInput"
 
 import {Bounds, Piece, Puzzle, Problem, AssemblyProblem, ItemId, PieceId} from  "~lib"
 
@@ -119,11 +120,12 @@ function handlePieceInput(field: Field, piece: Piece) {
     emit("action", action)
 }
 
-function handleBoundsInput(field: Field, boundsProperty: string, el: HTMLInputElement) {
+function handleBoundsInput(field: Field, boundsProperty: string, value?: number) {
+    if(!value) return
     if(props.itemId === null || item.value === null) return
     const metadata: any = {}
     metadata[field.property] = Object.assign({}, typeUnsafeItem.value[field.property])
-    metadata[field.property][boundsProperty] = Number(el.value)
+    metadata[field.property][boundsProperty] = value
     const action = new actionClass(props.itemId, metadata)
     emit("action", action)
 
@@ -181,13 +183,15 @@ function handleBoundsInput(field: Field, boundsProperty: string, el: HTMLInputEl
                 <VRow>
                     <VCol
                             v-for="dimension in puzzle.grid.boundsEditInfo.dimensions"
+                            style="padding: 4px;"
                     >
-                        <VTextField
+                        <VNumberInput
+                                control-variant="stacked"
                                 :label="dimension.name"
-                                type="number"
-                                min="1"
+                                :min="1"
+                                :max="99"
                                 :model-value="(typeUnsafeItem[field.property] as Bounds)[dimension.boundsProperty]"
-                                @input="handleBoundsInput(field, dimension.boundsProperty, $event.target as HTMLInputElement)"
+                                @update:model-value="handleBoundsInput(field, dimension.boundsProperty, $event)"
                         />
                     </VCol>
                 </VRow>

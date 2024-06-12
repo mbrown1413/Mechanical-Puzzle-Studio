@@ -6,6 +6,7 @@
 import {computed, ref, Ref} from "vue"
 import {VDataTable} from "vuetify/components/VDataTable"
 import {VToolbar} from "vuetify/components/VToolbar"
+import {VNumberInput} from "vuetify/labs/VNumberInput"
 
 import {Puzzle, AssemblyProblem, PieceId} from '~lib'
 
@@ -134,11 +135,11 @@ const selectionButtons = [
         <template v-slot:bottom />
 
         <template v-slot:item.count="{item}">
-            <VTextField
-                    type="number"
-                    min="0"
+            <VNumberInput
+                    control-variant="stacked"
+                    :min="0"
                     :disabled="item.isGoal"
-                    :value="item.isGoal ? '' : item.count"
+                    :model-value="item.isGoal ? '' : item.count"
                     @update:model-value="updatePieceCount(item.id, Number($event))"
                     hide-details="auto"
                     variant="solo-filled"
