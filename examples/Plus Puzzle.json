@@ -1,0 +1,110 @@
+{
+    "type": "PuzzleFile",
+    "name": "Plus Puzzle",
+    "author": "Michael S. Brown",
+    "description": "A simple interlocking puzzle demonstrating optional voxels, disassembly, and multiple problems in one file.\n\nDesigned by Michael Brown in 2023.",
+    "puzzle": {
+        "type": "Puzzle",
+        "grid": {
+            "type": "CubicGrid"
+        },
+        "pieces": [
+            {
+                "type": "Piece",
+                "id": 0,
+                "voxels": "1,3,0; 2,3,0; 2,2,0; 1,2,0; 1,1,0; 2,1,0; 2,0,0; 1,0,0; 0,2,1; 0,1,1; 0,0,1; 0,3,1; 3,3,1; 3,2,1; 3,1,1; 3,0,1; 1,3,1; 2,3,1; 2,0,1; 1,0,1; 1,2,1; 2,2,1; 2,1,1; 1,1,1; 1,2,2; 2,2,2; 2,1,2; 1,1,2; 1,3,2; 2,3,2; 2,0,2; 1,0,2; 3,1,2; 3,2,2; 0,2,2; 0,1,2; 1,3,3; 2,3,3; 2,2,3; 1,2,3; 1,1,3; 2,1,3; 2,0,3; 1,0,3; 0,3,2; 0,0,2; 3,3,2; 3,0,2",
+                "bounds": "xSize:4 ySize:4 zSize:4",
+                "label": "Goal",
+                "color": "#023eff",
+                "voxelAttributes": {
+                    "optional": {
+                        "1,2,1": true,
+                        "2,2,1": true,
+                        "2,1,1": true,
+                        "1,1,1": true,
+                        "1,2,2": true,
+                        "2,2,2": true,
+                        "2,1,2": true,
+                        "1,1,2": true
+                    }
+                }
+            },
+            {
+                "type": "Piece",
+                "id": 2,
+                "voxels": "3,3,0; 2,3,0; 1,3,0; 0,3,0; 0,2,0; 0,1,0; 0,0,0; 1,0,0; 2,0,0; 3,1,1; 3,1,0; 2,1,0",
+                "bounds": "xSize:4 ySize:4 zSize:2",
+                "label": "g",
+                "color": "#1ac938"
+            },
+            {
+                "type": "Piece",
+                "id": 1,
+                "voxels": "3,3,0; 2,3,0; 1,3,0; 0,3,0; 0,2,0; 0,1,0; 0,0,0; 1,0,0; 2,0,0; 3,0,0; 3,3,1; 3,1,1; 3,1,0",
+                "bounds": "xSize:4 ySize:4 zSize:2",
+                "label": "G",
+                "color": "#ff7c00"
+            },
+            {
+                "type": "Piece",
+                "id": 4,
+                "voxels": "0,3,0; 0,2,0; 0,1,0; 0,0,0; 1,2,0; 2,2,0; 3,2,0; 3,1,0; 3,0,0",
+                "bounds": "xSize:4 ySize:4 zSize:2",
+                "label": "h",
+                "color": "#8b2be2"
+            },
+            {
+                "type": "Piece",
+                "id": 3,
+                "voxels": "0,3,0; 0,2,0; 0,1,0; 0,0,0; 3,0,0; 3,1,0; 3,2,0; 3,3,0; 2,2,0; 1,2,0; 3,0,1",
+                "bounds": "xSize:4 ySize:4 zSize:2",
+                "label": "H",
+                "color": "#e8000b"
+            },
+            {
+                "type": "Piece",
+                "id": 5,
+                "voxels": "0,3,0; 0,2,0; 0,1,0; 0,0,0; 3,0,0; 3,1,0; 3,2,0; 3,3,0; 3,0,1; 2,1,0; 1,1,0",
+                "bounds": "xSize:4 ySize:4 zSize:2",
+                "label": "H (variation)",
+                "color": "#9f4800"
+            }
+        ],
+        "problems": [
+            {
+                "type": "AssemblyProblem",
+                "id": 0,
+                "label": "Plus Puzzle",
+                "solverId": "assembly",
+                "goalPieceId": 0,
+                "disassemble": true,
+                "removeNoDisassembly": false,
+                "usedPieceCounts": {
+                    "1": 1,
+                    "2": 1,
+                    "3": 1,
+                    "4": 1
+                }
+            },
+            {
+                "type": "AssemblyProblem",
+                "id": 1,
+                "label": "Variation",
+                "solverId": "assembly",
+                "goalPieceId": 0,
+                "disassemble": true,
+                "removeNoDisassembly": false,
+                "usedPieceCounts": {
+                    "1": 1,
+                    "2": 1,
+                    "4": 1,
+                    "5": 1
+                }
+            }
+        ],
+        "idCounters": {
+            "piece": 6,
+            "problem": 2
+        }
+    }
+}
