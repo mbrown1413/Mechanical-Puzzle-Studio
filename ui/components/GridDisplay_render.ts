@@ -104,7 +104,7 @@ export function useGridDisplayRenderComposible(
     function buildScene() {
         resourceTracker.markUnused(scene)
         scene.clear()
-        scene.add(...getLights())
+        scene.add(new THREE.AmbientLight(0xffffff, 1))
 
         cameraScheme.value.addObjects(scene)
 
@@ -123,7 +123,7 @@ export function useGridDisplayRenderComposible(
             // Outline voxels in pieces with the grid wireframe
             new GridPainter(
                 ({inLayer, piece}) => !inLayer && piece !== null,
-                new THREE.MeshBasicMaterial({color: 0xdddddd}),
+                new THREE.MeshBasicMaterial({color: 0xcccccc}),
                 0.015
             ),
 
@@ -199,18 +199,6 @@ export function useGridDisplayRenderComposible(
         camera: computed(() => cameraScheme.value.camera),
         hitTestObjects,
     }
-}
-
-function getLights(): THREE.Object3D[] {
-    const light1 = new THREE.DirectionalLight(0xffffff, 3)
-    light1.position.set(5, 5, 5)
-    light1.lookAt(new Vector3(0, 0, 0))
-
-    const light2 = new THREE.DirectionalLight(0xffffff, 3)
-    light2.position.set(-5, -5, -5)
-    light2.lookAt(new Vector3(0, 0, 0))
-
-    return [light1, light2]
 }
 
 function getGridBoundingBox(grid: Grid, bounds: Bounds): THREE.Box3 {

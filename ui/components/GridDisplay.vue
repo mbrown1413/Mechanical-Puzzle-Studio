@@ -179,7 +179,7 @@ useGridDisplayMouseComposible(
 <style scoped>
 .grid-display {
     position: relative;  /* Make this the containing block for .controls */
-    background-color: #dddddd;
+    background-color: #e0e0e0;
 }
 .draw-element {
     position: absolute;
