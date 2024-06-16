@@ -17,7 +17,7 @@ const emit = defineEmits<{
 }>()
 
 const toggles: Ref<string[]> = ref([])
-const highlightedVoxel: Ref<Voxel | null> = ref(null)
+const highlightedVoxels: Ref<Voxel[]> = ref([])
 const viewpoint: Ref<Viewpoint | undefined> = ref()
 const layerN: Ref<number | undefined> = ref()
 
@@ -29,15 +29,15 @@ const pieces = computed(() =>
     piece.value === null ? [] : [piece.value]
 )
 
-function voxelClicked(event: MouseEvent, voxel: Voxel) {
+function voxelsClicked(event: MouseEvent, voxels: Voxel[]) {
     if(piece.value === null) { return }
 
     let toAdd: Voxel[] = []
     let toRemove: Voxel[] = []
     if(event.ctrlKey || event.button === 2) {
-        toRemove = [voxel]
+        toRemove = voxels
     } else {
-        toAdd = [voxel]
+        toAdd = voxels
     }
     if(piece.value.id === null) {
         throw new Error("Cannot edit piece with no ID")
@@ -70,14 +70,15 @@ const cameraSchemeIcon = computed(() =>
             :grid="puzzle.grid"
             :pieces="pieces"
             :cameraScheme="cameraSchemeName"
-            :highlightedVoxel="highlightedVoxel"
+            :highlightedVoxels="highlightedVoxels"
             :viewpoint="viewpoint"
             :layerN="layerN"
-            @update:highlightedVoxel="highlightedVoxel = $event"
+            @update:highlightedVoxels="highlightedVoxels = $event"
             @update:viewpoint="viewpoint = $event"
             @update:layerN="layerN = $event"
-            @voxelClicked="voxelClicked"
+            @voxelsClicked="voxelsClicked"
             boundsSizing="pieceBounds"
+            :boxToolEnabled="cameraSchemeName === '2D'"
             showTools
         >
             <template v-slot:tools>
@@ -142,14 +143,15 @@ const cameraSchemeIcon = computed(() =>
                 :pieces="pieces"
                 :cameraScheme="cameraSchemeName === '3D' ? '2D' : '3D'"
                 :showLayers="false"
-                :highlightedVoxel="highlightedVoxel"
+                :highlightedVoxels="highlightedVoxels"
                 :viewpoint="viewpoint"
                 :layerN="layerN"
-                @update:highlightedVoxel="highlightedVoxel = $event"
+                @update:highlightedVoxels="highlightedVoxels = $event"
                 @update:viewpoint="viewpoint = $event"
                 @update:layerN="layerN = $event"
-                @voxelClicked="voxelClicked"
+                @voxelsClicked="voxelsClicked"
                 boundsSizing="pieceBounds"
+                :boxToolEnabled="cameraSchemeName === '3D'"
             />
         </Teleport>
     </div>

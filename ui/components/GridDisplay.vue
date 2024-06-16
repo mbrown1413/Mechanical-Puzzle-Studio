@@ -24,9 +24,10 @@ const props = withDefaults(
         showTools?: boolean,
         showLayers?: boolean,
         cameraScheme?: CameraSchemeName,
-        highlightedVoxel?: Voxel | null,
+        highlightedVoxels?: Voxel[],
         viewpoint?: Viewpoint,
         layerN?: number,
+        boxToolEnabled?: boolean,
     }>(), {
         displayOnly: false,
         noLayers: false,
@@ -35,12 +36,13 @@ const props = withDefaults(
         showTools: false,
         showLayers: true,
         cameraScheme: "3D",
+        boxToolEnabled: false,
     }
 )
 
 const emit = defineEmits<{
-    voxelClicked: [mouseEvent: MouseEvent, voxel: Voxel]
-    "update:highlightedVoxel": [Voxel | null]
+    voxelsClicked: [mouseEvent: MouseEvent, voxels: Voxel[]]
+    "update:highlightedVoxels": [Voxel[]]
     "update:viewpoint": [Viewpoint]
     "update:layerN": [number]
 }>()
@@ -56,14 +58,14 @@ const drawElement = ref()
 const viewpoints = props.grid.getViewpoints()
 const viewpoint = ref(viewpoints[0])
 const layerN = ref(0)
-const highlightedVoxel: Ref<Voxel | null> = ref(null)
+const highlightedVoxels: Ref<Voxel[]> = ref([])
 
 watchEffect(() => {
-    if(props.highlightedVoxel !== undefined) {
-        highlightedVoxel.value = props.highlightedVoxel
+    if(props.highlightedVoxels !== undefined) {
+        highlightedVoxels.value = props.highlightedVoxels
     }
 })
-watch(highlightedVoxel, () => emit("update:highlightedVoxel", highlightedVoxel.value))
+watch(highlightedVoxels, () => emit("update:highlightedVoxels", highlightedVoxels.value))
 
 watchEffect(() => {
     if(props.viewpoint !== undefined) {
@@ -133,7 +135,7 @@ const {
     props.displayOnly,
     layerN,
     viewpoint,
-    highlightedVoxel,
+    highlightedVoxels,
     props.highlightBy,
     toRef(props, "cameraScheme"),
 )
@@ -141,9 +143,11 @@ const {
 useGridDisplayMouseComposible(
     drawElement,
     camera,
+    props.grid,
     hitTestObjects,
-    (mouseEvent, voxel) => emit("voxelClicked", mouseEvent, voxel),
-    highlightedVoxel,  // Output ref
+    toRef(props, "boxToolEnabled"),
+    (mouseEvent, voxels) => emit("voxelsClicked", mouseEvent, voxels),
+    highlightedVoxels,  // Output ref
 )
 </script>
 

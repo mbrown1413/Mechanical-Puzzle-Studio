@@ -187,6 +187,7 @@ export class TwoDimensionalCameraScheme extends CameraScheme {
         CameraScheme.prototype.enable.call(this, element)
         if(this.controls) {
             this.controls.enableRotate = false
+            this.controls.enablePan = false
         }
     }
 

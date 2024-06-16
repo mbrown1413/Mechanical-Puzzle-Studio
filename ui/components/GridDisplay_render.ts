@@ -18,7 +18,7 @@ export function useGridDisplayRenderComposible(
     displayOnly: boolean,
     layerN: Ref<number>,
     viewpoint: Ref<Viewpoint>,
-    highlightedVoxel: Ref<Voxel | null>,
+    highlightedVoxels: Ref<Voxel[]>,
     highlightBy: "voxel" | "piece",
     cameraSchemeName: Ref<CameraSchemeName>,
 ) {
@@ -108,12 +108,20 @@ export function useGridDisplayRenderComposible(
 
         cameraScheme.value.addObjects(scene)
 
-        let highlightedPiece: Piece | null = null
-        if(highlightBy === "piece" && highlightedVoxel.value) {
-            highlightedPiece = getPieceAtVoxel(highlightedVoxel.value)
+        let highlightedPieces: Piece[]
+        if(highlightBy === "piece" && highlightedVoxels.value.length) {
+            highlightedPieces = [...new Set(
+                highlightedVoxels.value.map(
+                    voxel => getPieceAtVoxel(voxel)
+                ).filter(
+                    (piece): piece is Piece => piece !== null
+                )
+            )]
+        } else {
+            highlightedPieces = []
         }
         const highlightColor = new THREE.Color(
-            getVoxelHighlightColor(highlightedPiece)
+            getVoxelHighlightColor(highlightedPieces[0] || null)
         )
 
         // Voxel Painters accumulate data as we visit each voxel and at the
@@ -135,11 +143,11 @@ export function useGridDisplayRenderComposible(
             ),
 
             // Draw solids for voxels with pieces
-            new PieceVoxelPainter(highlightedPiece),
+            new PieceVoxelPainter(highlightedPieces),
 
             // Different colored grid on highlighted voxel
             new GridPainter(
-                ({voxel}) => voxel === highlightedVoxel.value,
+                ({voxel}) => highlightedVoxels.value.includes(voxel),
                 new THREE.MeshBasicMaterial({color: highlightColor}),
                 0.020
             )

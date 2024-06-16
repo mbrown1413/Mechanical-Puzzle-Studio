@@ -4,28 +4,31 @@ import debounce from "lodash.debounce"
 import * as THREE from "three"
 import {Vector2} from "three"
 
-import {Voxel} from "~lib"
+import {Grid, Voxel} from "~lib"
 
 export function useGridDisplayMouseComposible(
     // Inputs
     element: Ref<HTMLElement>,
     camera: Ref<THREE.Camera>,
+    grid: Grid,
     hitTestObjects: Ref<THREE.Object3D[]>,
+    boxToolEnabled: Ref<boolean>,
 
     // Output
-    clickCallback: (mouseEvent: MouseEvent, voxel: Voxel) => void,
-    highlightedVoxel: Ref<Voxel | null>,
+    clickCallback: (mouseEvent: MouseEvent, voxels: Voxel[]) => void,
+    highlightedVoxels: Ref<Voxel[]>,
 ) {
+    let state: "up" | "down" | "drag" = "up"
+    let pressedPosition: [number, number] | null = null
+    let pressedVoxel: Voxel | null = null
+
+    // Pixels of mouse movement before we consider it to be dragging, and
+    // not just clicking on a voxel
+    const movementTolerance = 5
+
     const raycaster = new THREE.Raycaster()
 
     onMounted(() => {
-        // Pixels of mouse movement before we consider it to be dragging, and
-        // not just clicking on a voxel
-        const movementTolerance = 5
-
-        let state: "up" | "down" | "drag" = "up"
-        let pressedPosition: [number, number] | null = null
-
         element.value.addEventListener("mousemove", (event: MouseEvent) => {
             if(state === "down" && pressedPosition) {
                 // Have we moved enough from pressedPosition to be considered dragging?
@@ -39,7 +42,11 @@ export function useGridDisplayMouseComposible(
             }
 
             if(state === "drag") {
-                highlightObjectDebounced(event.clientX, event.clientY)
+                if(boxToolEnabled.value) {
+                    boxDragTo(event.clientX, event.clientY)
+                } else {
+                    highlightObjectDebounced(event.clientX, event.clientY)
+                }
             } else {
                 highlightObject(event.clientX, event.clientY)
             }
@@ -48,19 +55,27 @@ export function useGridDisplayMouseComposible(
         element.value.addEventListener("mousedown", (event: MouseEvent) => {
             state = "down"
             pressedPosition = [event.clientX, event.clientY]
+            pressedVoxel = getVoxelOnScreen(...pressedPosition)
         })
 
         element.value.addEventListener("mouseup", (event: MouseEvent) => {
-            if(state === "down") {
-                clickObject(event)
+            if(state === "drag" && boxToolEnabled.value) {
+                boxDragTo(event.clientX, event.clientY)
+                clickCallback(event, highlightedVoxels.value)
+            } else if(state === "down") {
+                const voxel = getVoxelOnScreen(event.clientX, event.clientY)
+                if(voxel) {
+                    clickCallback(event, [voxel])
+                }
             }
             highlightObject(event.clientX, event.clientY)
             state = "up"
             pressedPosition = null
+            pressedVoxel = null
         })
 
         element.value.addEventListener("mouseout", () => {
-            highlightedVoxel.value = null
+            highlightedVoxels.value = []
         })
 
     })
@@ -84,7 +99,8 @@ export function useGridDisplayMouseComposible(
 
     /* Set highlightedVoxel based on object at the given screen position */
     function highlightObject(x: number, y: number) {
-        highlightedVoxel.value = getVoxelOnScreen(x, y)
+        const voxel = getVoxelOnScreen(x, y)
+        highlightedVoxels.value = voxel ? [voxel] : []
     }
 
     const highlightObjectDebounced = debounce(
@@ -93,12 +109,12 @@ export function useGridDisplayMouseComposible(
         {leading: false, trailing: true}
     )
 
-    /* Find object at mouse position and call clickCallback */
-    function clickObject(event: MouseEvent) {
-        const voxel = getVoxelOnScreen(event.clientX, event.clientY)
-        if(voxel) {
-            clickCallback(event, voxel)
-        }
+    function boxDragTo(x: number, y: number) {
+        if(pressedVoxel === null) { return }
+        const toVoxel = getVoxelOnScreen(x, y)
+        if(toVoxel === null) { return }
+        const bounds = grid.getVoxelBounds(pressedVoxel, toVoxel)
+        highlightedVoxels.value = grid.getVoxels(bounds)
     }
 
 }

@@ -117,15 +117,15 @@ export class PieceVoxelPainter extends VoxelPainter {
         default: THREE.BufferGeometry[]
         optional: THREE.BufferGeometry[]
     }
-    highlightPiece: Piece | null
+    highlightedPieces: Piece[]
 
-    constructor(highlightPiece: Piece | null = null) {
+    constructor(highlightPieces: Piece[]) {
         super(() => true)
         this.geometries = {
             default: [],
             optional: [],
         }
-        this.highlightPiece = highlightPiece
+        this.highlightedPieces = highlightPieces
     }
 
     visitVoxel(
@@ -134,7 +134,7 @@ export class PieceVoxelPainter extends VoxelPainter {
         if(!piece) { return }
 
         let color = piece && piece.color ? piece.color : "rgb(0,0,0)"
-        if(piece === this.highlightPiece) {
+        if(this.highlightedPieces.includes(piece)) {
             // Discolor whole highlighted piece
             color = tweakColor(color)
         }
