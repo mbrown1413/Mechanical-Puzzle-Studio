@@ -44,6 +44,73 @@ const tableItems = computed(() => {
     })
 })
 
+const piecesVoxelCount: Ref<number> = computed(() => {
+    if(!props.problem) { return 0 }
+    let n = 0
+    for(const [pieceId, count] of Object.entries(props.problem.usedPieceCounts)) {
+        n += count * getPieceNVoxels(pieceId)
+    }
+    return n
+})
+
+const goalVoxelCount = computed(() => {
+    if(!props.problem) return { goalMin: 0, goalMax: 0 }
+
+    let goalMin: number = 0
+    let goalMax: number = 0
+    if(props.problem.goalPieceId !== undefined) {
+        goalMin = getPieceNVoxels(props.problem.goalPieceId, false)
+        goalMax = getPieceNVoxels(props.problem.goalPieceId)
+    }
+    return { goalMin, goalMax }
+})
+
+const voxelCountInfo = computed(() => {
+    const pieceN = piecesVoxelCount.value
+    const goalMin = goalVoxelCount.value.goalMin
+    const goalMax = goalVoxelCount.value.goalMax
+
+    let summary: string
+    let description: string
+    if(goalMin === goalMax) {
+        summary = `${pieceN || "-"} / ${goalMin || "-"}`
+        description = `${pieceN} voxels in pieces and ${goalMin} voxels in goal`
+    } else {
+        summary = `${pieceN || "-"} / ${goalMin}-${goalMax}`
+        description = `${pieceN} voxels in pieces and ${goalMin} to ${goalMax} voxels in goal`
+    }
+
+    let warning: boolean = (
+        pieceN < goalMin ||
+        pieceN > goalMax ||
+        pieceN === 0 ||
+        goalMax === 0
+    )
+
+    return {
+        pieceN, goalMin, goalMax,
+        warning, summary, description
+    }
+})
+
+function getPieceNVoxels(pieceId: string | number, includeOptionalVoxels=true) {
+    pieceId = Number(pieceId)
+    const piece = props.puzzle.getPiece(Number(pieceId))
+    if(!piece) { return 0 }
+
+    if(includeOptionalVoxels) {
+        return piece.voxels.length
+    } else {
+        let n = 0
+        for(const voxel of piece.voxels) {
+            if(!piece.getVoxelAttribute("optional", voxel)) {
+                n++
+            }
+        }
+        return n
+    }
+}
+
 function updatePieceCount(pieceId: PieceId, count: number) {
     if(props.problem === null) { return }
     const newPieceCounts = Object.assign({}, props.problem.usedPieceCounts)
@@ -56,7 +123,7 @@ function updatePieceCount(pieceId: PieceId, count: number) {
     emit("action", action)
 }
 
-function updateGoal(pieceId: PieceId | null) {
+function updateGoal(pieceId: PieceId | undefined) {
     if(props.problem === null) { return }
     const action = new EditProblemMetadataAction(
         props.problem.id, {
@@ -120,6 +187,23 @@ const selectionButtons = [
     >
         <template v-slot:top>
             <VToolbar flat density="compact" :title="label">
+
+                <VTooltip
+                    :text="voxelCountInfo.description"
+                    location="top"
+                >
+                    <template v-slot:activator="{props}">
+                        <VChip
+                            v-bind="props"
+                            :color="voxelCountInfo.warning ? 'red' : undefined"
+                            density="compact"
+                            class="mr-6"
+                        >
+                            {{ voxelCountInfo.summary }}
+                        </VChip>
+                    </template>
+                </VTooltip>
+
                 <VBtn
                     v-for="button in selectionButtons"
                     variant="tonal"
@@ -129,6 +213,7 @@ const selectionButtons = [
                 >
                     {{ button.text }}
                 </VBtn>
+
             </VToolbar>
         </template>
 
@@ -167,7 +252,7 @@ const selectionButtons = [
                 v-if="item.isGoal"
                 closable
                 size="x-large"
-                @click:close="updateGoal(null)"
+                @click:close="updateGoal(undefined)"
             >
                 Goal
             </VChip>
