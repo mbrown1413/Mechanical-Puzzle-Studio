@@ -27,6 +27,7 @@ const selectedPieceIds: Ref<PieceId[]> = ref([])
 
 const tableHeaders: VDataTable["$props"]["headers"] = [
     {title: "Piece Name", key: "label"},
+    {title: "Voxels", key: "nVoxels", align: "center"},
     {title: "Count", key: "count", align: "center"},
     {title: "", key: "display", sortable: false},
     {title: "", key: "actions", sortable: false, align: "center"},
@@ -34,10 +35,13 @@ const tableHeaders: VDataTable["$props"]["headers"] = [
 
 const tableItems = computed(() => {
     return props.puzzle.pieces.map((piece) => {
+        const nVoxelsMin = getPieceNVoxels(piece.id, false)
+        const nVoxelsMax = getPieceNVoxels(piece.id)
         return {
             id: piece.id,
             piece: piece,
             label: piece.label,
+            nVoxels: nVoxelsMin === nVoxelsMax ? nVoxelsMin : `${nVoxelsMin}-${nVoxelsMax}`,
             count: props.problem?.usedPieceCounts[piece.id] || 0,
             isGoal: piece.id === props.problem?.goalPieceId,
         }
