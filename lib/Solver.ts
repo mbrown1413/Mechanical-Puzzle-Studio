@@ -79,7 +79,8 @@ export class AssemblySolver extends Solver {
 
         let solutions = []
         for(const pickedRows of coverSolutions) {
-            const solution = new AssemblySolution(
+            const solution: AssemblySolution = new AssemblySolution(
+                -1,
                 pickedRows.map(
                     (placementIdx, pieceIdx) => coverProblem.placementsByPieceIdx[pieceIdx][placementIdx]
                 )
@@ -99,6 +100,10 @@ export class AssemblySolver extends Solver {
                 callbacks.progressCallback(i / coverSolutions.length)
             }
             solutions = newSolutions
+        }
+
+        for(const [i, solution] of solutions.entries()) {
+            solution.id = i + 1
         }
 
         return solutions

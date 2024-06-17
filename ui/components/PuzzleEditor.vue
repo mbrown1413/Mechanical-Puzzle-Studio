@@ -171,6 +171,7 @@ watch(currentTabId, (tabId) => {
                 v-show="currentTabId === 'solutions'"
                 :puzzle="puzzle"
                 :problemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
+                @action="performAction"
             />
         </div>
 

@@ -1,6 +1,6 @@
 import {
     Voxel, Puzzle, Item, ItemId, Piece, PieceId, Problem, AssemblyProblem,
-    PuzzleFile, Bounds
+    PuzzleFile, Bounds, ProblemId, AssemblySolution
 } from "~lib"
 
 
@@ -416,6 +416,89 @@ export class DuplicateProblemAction extends DuplicateItemAction<Problem> {
 
     addItem(puzzle: Puzzle, problem: Problem, index: number) {
         puzzle.addProblem(problem, index)
+    }
+
+}
+
+
+////////// Solution Actions //////////
+
+type SolutionListActionType = (
+    "sortBy: movesToDisassemble" |
+    "sortBy: movesToRemoveFirst" |
+    "sortBy: orderFound" |
+    "delete: noDisassemblies"
+)
+
+export class SolutionListAction extends Action {
+    problemId: ProblemId
+    actionType: SolutionListActionType
+
+    constructor(problemId: ProblemId, actionType: SolutionListActionType) {
+        super()
+        this.problemId = problemId
+        this.actionType = actionType
+    }
+
+    toString() {
+        const categoryString = {
+            "sortBy": "Sort solutions by ",
+            "delete": "Delete solutions ",
+        }[this.getCategory()]
+        return categoryString + this.getPartialString()
+    }
+
+    getCategory() {
+        const categories: Record<SolutionListActionType, string> = {
+            "sortBy: movesToDisassemble": "sortBy",
+            "sortBy: movesToRemoveFirst": "sortBy",
+            "sortBy: orderFound": "sortBy",
+            "delete: noDisassemblies": "delete",
+        }
+        return categories[this.actionType]
+    }
+
+    getPartialString() {
+        const partialStrings: Record<SolutionListActionType, string> = {
+            "sortBy: movesToDisassemble": "moves to completely disassemble (increasing)",
+            "sortBy: movesToRemoveFirst": "moves until first separation (increasing)",
+            "sortBy: orderFound": "order found",
+            "delete: noDisassemblies": "with no disassemblies",
+        }
+        return partialStrings[this.actionType]
+    }
+
+    perform(puzzle: Puzzle) {
+        const problem = puzzle.getProblem(this.problemId)
+        if(!problem) {
+            throw new Error(`Problem with ID ${this.problemId} not found`)
+        }
+        if(problem.solutions === undefined) {
+            return
+        }
+
+        const keyFunc: (solution: AssemblySolution) => number = {
+            "sortBy: movesToDisassemble": (s: AssemblySolution) => {
+                if(!s.disassemblies || !s.disassemblies.length) return Infinity
+                return s.disassemblies[0].steps.length
+            },
+            "sortBy: movesToRemoveFirst": (s: AssemblySolution) => {
+                if(!s.disassemblies || !s.disassemblies.length) return Infinity
+                const disassembly = s.disassemblies[0]
+                return disassembly.stepsToFirstSeparation
+            },
+            "sortBy: orderFound": (s: AssemblySolution) => s.id,
+            "delete: noDisassemblies": (s: AssemblySolution) =>
+                s.disassemblies ? s.disassemblies.length : 1,
+        }[this.actionType]
+
+        if(this.actionType.startsWith("sortBy:")) {
+            problem.solutions.sort(
+                (a, b) => keyFunc(a as AssemblySolution) - keyFunc(b as AssemblySolution)
+            )
+        } else if(this.actionType.startsWith("delete:")) {
+            problem.solutions = problem.solutions.filter((s) => keyFunc(s as AssemblySolution))
+        }
     }
 
 }

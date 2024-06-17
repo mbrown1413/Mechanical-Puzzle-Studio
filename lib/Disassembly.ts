@@ -66,6 +66,16 @@ export class Disassembly extends SerializableClass {
         return this.steps.length + 1
     }
 
+    /** Return the number of steps until the first part separates. */
+    get stepsToFirstSeparation(): number {
+        let i = 0
+        for(const step of this.steps) {
+            i++
+            if(step.separates) return i
+        }
+        return Infinity
+    }
+
     /**
      * Get each intermediate placement of pieces between the start and
      * disassembly.

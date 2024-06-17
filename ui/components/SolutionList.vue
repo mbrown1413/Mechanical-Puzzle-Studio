@@ -6,12 +6,17 @@ import {taskRunner} from "~/ui/globals.ts"
 import {TaskInfo} from "~/ui/TaskRunner.ts"
 import {ProblemSolveTask} from "~/ui/tasks.ts"
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
+import {SolutionListAction} from "~/ui/actions.ts"
 import ListSelect from "~/ui/common/ListSelect.vue"
 import UiButton from "~/ui/components/UiButton.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
     problemId: ProblemId | null,
+}>()
+
+defineEmits<{
+    action: [action: SolutionListAction]
 }>()
 
 const problem = computed(() =>
@@ -24,10 +29,10 @@ const solutionItems = computed(() => {
     if(!problem.value || problem.value.solutions === undefined) {
         return []
     }
-    return problem.value.solutions.map((solution, i) => {
+    return problem.value.solutions.map(solution => {
         return {
-            id: i,
-            label: `Solution ${i+1}`,
+            id: solution.id,
+            label: `Solution ${solution.id}`,
             solution,
         }
     })
@@ -51,14 +56,9 @@ const selectedSolutions = computed(() => {
         return []
     }
 
-    const solutions = []
-    for(const solutionId of selectedSolutionIds.value) {
-        const solution = problem.value.solutions[solutionId]
-        if(solution) {
-            solutions.push(solution)
-        }
-    }
-    return solutions
+    return problem.value.solutions.filter((solution) =>
+        selectedSolutionIds.value.includes(solution.id)
+    )
 })
 
 function taskInfoMatchesProblem(taskInfo: TaskInfo): boolean {
@@ -85,12 +85,63 @@ defineExpose({
 
 const allUiButtons = inject("uiButtons") as Record<string, UiButtonDefinition>
 const solveButton = allUiButtons.startSolve
+
+const actionCategories = [
+    {
+        text: "Sort by...",
+        icon: "mdi-sort",
+        actions: [
+            new SolutionListAction(-1, "sortBy: movesToDisassemble"),
+            new SolutionListAction(-1, "sortBy: movesToRemoveFirst"),
+            new SolutionListAction(-1, "sortBy: orderFound"),
+        ],
+    },
+    {
+        text: "Delete solutions...",
+        icon: "mdi-trash-can-outline",
+        actions: [
+            new SolutionListAction(-1, "delete: noDisassemblies"),
+        ],
+    },
+]
 </script>
 
 <template>
     <div class="solution-list">
         <div class="header-row">
             <h4>Solutions</h4>
+
+            <VMenu>
+                <template v-slot:activator="{props: menuProps}">
+                    <VBtn
+                        v-bind="menuProps"
+                        :disabled="problemId === null"
+                        rounded
+                    >
+                        <VIcon
+                            icon="mdi-playlist-edit"
+                            aria-label="Solution list actions"
+                            aria-hidden="false"
+                        />
+                    </VBtn>
+                </template>
+
+                <VCard v-if="problemId !== null">
+                    <VList v-for="actionCategory of actionCategories">
+                        <VListSubheader>
+                            <VIcon :icon="actionCategory.icon" />
+                            {{ actionCategory.text }}
+                        </VListSubheader>
+                        <VListItem
+                            v-for="action of actionCategory.actions"
+                            @click="$emit('action', new SolutionListAction(problemId, action.actionType))"
+                        >
+                            ...{{ action.getPartialString() }}
+                        </VListItem>
+                    </VList>
+                </VCard>
+            </VMenu>
+
             <UiButton :uiButton="solveButton" variant="text" />
         </div>
 
