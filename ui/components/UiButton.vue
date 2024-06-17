@@ -36,6 +36,7 @@ const text = computed(() =>
         :modelValue="uiButton.alwaysShowTooltip ? true : undefined"
         contentClass="tooltip-arrow-up"
         location="bottom"
+        :disabled="variant === 'text'"
     >
         <template v-slot:activator="{props}">
             <!-- Wrap in span so tooltips show on disabled buttons -->
