@@ -330,6 +330,9 @@ export class SimpleDisassembler extends Disassembler {
         }
 
         iterate(this.start, [this.nodes[0]], [])
+        for(const solution of solutions) {
+            solution.reorder()
+        }
         return solutions
     }
 }

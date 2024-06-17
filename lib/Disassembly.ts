@@ -76,6 +76,23 @@ export class Disassembly extends SerializableClass {
         return Infinity
     }
 
+    /** Returns a string describing the number of steps between each
+     * separation.  */
+    get detailString(): string {
+        const movesBetweenSeparations: number[] = []
+
+        let i = 0
+        for(const step of this.steps) {
+            i++
+            if(step.separates) {
+                movesBetweenSeparations.push(i)
+                i = 0
+            }
+        }
+
+        return movesBetweenSeparations.join(".")
+    }
+
     /**
      * Get each intermediate placement of pieces between the start and
      * disassembly.
@@ -107,8 +124,7 @@ export class Disassembly extends SerializableClass {
      * Reorder steps so each time a move separates the assembly into two
      * subassemblies, all of the moves from the first subassembly are done
      * before the second. In order words, this orders the moves to be
-     * depth-first, instead of whatever came out of the assembler (likely
-     * breadth-first).
+     * depth-first.
      */
     reorder() {
 

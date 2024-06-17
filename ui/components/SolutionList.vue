@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, ref, Ref, watch, inject} from "vue"
 
-import {Puzzle, ProblemId} from "~lib"
+import {Puzzle, ProblemId, AssemblySolution} from "~lib"
 import {taskRunner} from "~/ui/globals.ts"
 import {TaskInfo} from "~/ui/TaskRunner.ts"
 import {ProblemSolveTask} from "~/ui/tasks.ts"
@@ -30,9 +30,21 @@ const solutionItems = computed(() => {
         return []
     }
     return problem.value.solutions.map(solution => {
+        const assemblySolution = solution as AssemblySolution
+
+        let detailString: string | null = null
+        if(assemblySolution.disassemblies) {
+            if(assemblySolution.disassemblies.length === 0) {
+                detailString = "No disassembly"
+            } else {
+                const disassembly = assemblySolution.disassemblies[0]
+                detailString = disassembly.detailString
+            }
+        }
+
         return {
             id: solution.id,
-            label: `Solution ${solution.id}`,
+            label: `Solution ${solution.id}${detailString ? ' — '+detailString : ''}`,
             solution,
         }
     })
