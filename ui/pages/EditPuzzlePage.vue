@@ -5,7 +5,7 @@ import {PuzzleFile} from "~lib"
 
 import {taskRunner, title} from "~/ui/globals.ts"
 import {ActionManager, setActionManager, clearActionManager} from "~/ui/ActionManager.ts"
-import {getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
+import {PuzzleStorage, getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
 import {Action} from "~/ui/actions.ts"
 import {UiButtonDefinition, useUiButtonComposible} from "~/ui/ui-buttons.ts"
 import TitleBar from "~/ui/components/TitleBar.vue"
@@ -21,7 +21,9 @@ const props = defineProps<{
     puzzleName: string,
 }>()
 
-const storage = computed(() => getStorageInstances()[props.storageId])
+const storage: Ref<PuzzleStorage | null> = computed(
+    () => getStorageInstances()[props.storageId] || null
+)
 const puzzleFile: Ref<PuzzleFile | null> = ref(null)
 const actionManager = new ActionManager(storage, puzzleFile)
 provide("actionManager", actionManager)
@@ -77,7 +79,7 @@ provide("uiButtons", uiButtons)
 function setPuzzleFile(ignoreErrors=false) {
     puzzleError.value = null
     puzzleFile.value = null
-    if(storage.value === undefined) {
+    if(!storage.value) {
         puzzleError.value = {
             title: "Storage not found",
             errorMessage: `The storage ID "${props.storageId}" does not exist in this browser.`,
@@ -289,7 +291,7 @@ const toolbarButtons: UiButtonDefinition[] = [
     </Modal>
 
     <PuzzleMetadataModal
-        v-if="puzzleFile"
+        v-if="puzzleFile && storage"
         ref="metadataModal"
         :puzzleFile="puzzleFile"
         :storage="storage"

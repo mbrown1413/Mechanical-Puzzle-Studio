@@ -39,7 +39,7 @@ export function saveCurrentPuzzle() {
  * functionality.
  */
 export class ActionManager {
-    storageRef: Ref<PuzzleStorage>
+    storageRef: Ref<PuzzleStorage | null>
     puzzleFileRef: Ref<PuzzleFile | null>
 
     performedActions: PerformedAction[]
@@ -47,15 +47,21 @@ export class ActionManager {
 
     saveState: Ref<"saved" | "readOnly">
 
-    constructor(storageRef: Ref<PuzzleStorage>, puzzleFileRef: Ref<PuzzleFile | null>) {
+    constructor(storageRef: Ref<PuzzleStorage | null>, puzzleFileRef: Ref<PuzzleFile | null>) {
         this.storageRef = storageRef
         this.puzzleFileRef = puzzleFileRef
         this.performedActions = reactive([])
         this.undoneActions = reactive([])
-        this.saveState = ref(this.storage.readOnly ? "readOnly" : "saved")
+        this.saveState = ref(
+            this.storage === null || this.storage.readOnly ? "readOnly" : "saved"
+        )
 
         watch(storageRef, () => {
-            this.saveState.value = this.storage.readOnly ? "readOnly" : "saved"
+            if(this.storage === null) {
+                this.saveState.value = "readOnly"
+            } else {
+                this.saveState.value = this.storage.readOnly ? "readOnly" : "saved"
+            }
         })
     }
 
@@ -103,7 +109,7 @@ export class ActionManager {
         if(serialized === undefined) {
             serialized = serialize(this.puzzleFile)
         }
-        if(!this.storage.readOnly) {
+        if(this.storage && !this.storage.readOnly) {
             this.storage.save(this.puzzleFile, JSON.stringify(serialized))
         }
     }

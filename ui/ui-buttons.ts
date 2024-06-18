@@ -1,4 +1,4 @@
-import {ComputedRef, Ref} from "vue"
+import {Ref} from "vue"
 
 import {PuzzleFile} from "~lib"
 
@@ -24,7 +24,7 @@ export type UiButtonDefinition = {
 
 export function useUiButtonComposible(
     puzzleFile: Ref<PuzzleFile | null>,
-    storage: ComputedRef<PuzzleStorage>,
+    storage: Ref<PuzzleStorage | null>,
     actionManager: ActionManager,
     performAction: (action: Action) => void,
     puzzleEditor: Ref<InstanceType<typeof PuzzleEditor> | null>,
@@ -37,8 +37,11 @@ export function useUiButtonComposible(
         newPuzzle: {
             text: "New",
             icon: "mdi-file-plus",
+            enabled: () => storage.value !== null,
             perform() {
-                saveModal.value?.openNew(storage.value)
+                if(storage.value) {
+                    saveModal.value?.openNew(storage.value)
+                }
             },
         },
 
@@ -53,8 +56,9 @@ export function useUiButtonComposible(
         saveAs: {
             text: "Save As...",
             icon: "mdi-content-save-plus",
+            enabled: () => storage.value !== null,
             perform() {
-                if(puzzleFile.value) {
+                if(puzzleFile.value && storage.value) {
                     saveModal.value?.openSaveAs(storage.value, puzzleFile.value)
                 }
             },
