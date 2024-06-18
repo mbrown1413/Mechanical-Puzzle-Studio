@@ -7,6 +7,7 @@ import {mdi} from "vuetify/iconsets/mdi"
 import App from "~/ui/App.vue"
 import HomePage from "~/ui/pages/HomePage.vue"
 import EditPuzzlePage from "~/ui/pages/EditPuzzlePage.vue"
+import NotFoundPage from "~/ui/pages/NotFoundPage.vue"
 import {clearStorageCache} from "~/ui/storage.ts"
 
 import "~/ui/style.scss"
@@ -24,6 +25,11 @@ const routes: RouteRecordRaw[] = [
         path: "/puzzle/:storageId/:puzzleName",
         props: true,
         component: EditPuzzlePage
+    },
+    {
+        name: 'notFound',
+        path: '/:pathMatch(.*)*',
+        component: NotFoundPage
     },
 ]
 
