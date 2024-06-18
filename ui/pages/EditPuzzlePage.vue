@@ -82,7 +82,7 @@ function setPuzzleFile(ignoreErrors=false) {
     if(!storage.value) {
         puzzleError.value = {
             title: "Storage not found",
-            errorMessage: `The storage ID "${props.storageId}" does not exist in this browser.`,
+            errorMessage: `The storage not found: "${props.storageId}"`,
             userMessage: "Return home to select another puzzle.",
             recoverable: false,
         }
@@ -96,7 +96,7 @@ function setPuzzleFile(ignoreErrors=false) {
             puzzleError.value = {
                 title: "Puzzle not found",
                 errorMessage: stripIfStartsWith(String(e), "Error:"),
-                userMessage: "Return home to select another puzzle.",
+                userMessage: "Puzzles are stored locally inside the browser. The puzzle you're looking for may have been created in another browser, or your browser data may have been cleared.\n\nReturn home to select another puzzle.",
                 recoverable: false,
             }
             return
@@ -279,7 +279,7 @@ const toolbarButtons: UiButtonDefinition[] = [
     >
         <code>{{ puzzleError?.errorMessage }}</code>
 
-        <p v-if="puzzleError?.userMessage">
+        <p v-if="puzzleError?.userMessage" style="white-space: pre-wrap;">
             {{ puzzleError?.userMessage }}
         </p>
         <p v-else-if="puzzleError?.recoverable">
