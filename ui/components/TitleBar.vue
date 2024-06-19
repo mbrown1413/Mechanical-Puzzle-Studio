@@ -53,21 +53,15 @@ const savePill = computed(() => {
         <VAppBarTitle v-if="puzzleFile" class="page-title">
             {{ puzzleFile.name }}
 
-            <VTooltip v-if="savePill">
-                <template v-slot:activator="{props}">
-                    <VChip
-                        v-bind="props"
-                        :color="savePill.color"
-                        density="compact"
-                        class="ml-2"
-                    >
-                        {{ savePill.text }}
-                    </VChip>
-                </template>
-                <template v-slot>
-                    {{ savePill.tooltip }}
-                </template>
-            </VTooltip>
+            <VChip
+                v-if="savePill"
+                :color="savePill.color"
+                density="compact"
+                class="ml-2"
+                v-tooltip="savePill.tooltip"
+            >
+                {{ savePill.text }}
+            </VChip>
 
         </VAppBarTitle>
 

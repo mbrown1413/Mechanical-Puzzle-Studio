@@ -192,21 +192,14 @@ const selectionButtons = [
         <template v-slot:top>
             <VToolbar flat density="compact" :title="label">
 
-                <VTooltip
-                    :text="voxelCountInfo.description"
-                    location="top"
+                <VChip
+                    :color="voxelCountInfo.warning ? 'red' : undefined"
+                    density="compact"
+                    class="mr-6"
+                    v-tooltip.top="voxelCountInfo.description"
                 >
-                    <template v-slot:activator="{props}">
-                        <VChip
-                            v-bind="props"
-                            :color="voxelCountInfo.warning ? 'red' : undefined"
-                            density="compact"
-                            class="mr-6"
-                        >
-                            {{ voxelCountInfo.summary }}
-                        </VChip>
-                    </template>
-                </VTooltip>
+                    {{ voxelCountInfo.summary }}
+                </VChip>
 
                 <VBtn
                     v-for="button in selectionButtons"

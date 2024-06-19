@@ -12,7 +12,6 @@ import Modal from "~/ui/common/Modal.vue"
 withDefaults(
     defineProps<{
         title?: string,
-        tooltip?: string | null,
         text?: string,
         buttonColor?: VBtn["color"],
         buttonVariant?: VBtn["variant"],
@@ -21,7 +20,6 @@ withDefaults(
         disabled?: boolean,
     }>(), {
         title: "Confirm",
-        tooltip: null,
         text: "Are you sure?",
         confirmText: "Confirm",
         confirmButtonColor: undefined,
@@ -37,27 +35,24 @@ const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 </script>
 
 <template>
-    <VTooltip :text="tooltip || ''">
-        <template v-slot:activator="{props}">
-            <VBtn
-                :color="buttonColor"
-                :variant="buttonVariant"
-                :disabled="disabled"
-                @click="modal?.open()"
-                v-bind="tooltip ? props : {}"
-            >
-                <slot></slot>
-            </VBtn>
-        </template>
-    </VTooltip>
+    <span>
+        <VBtn
+            :color="buttonColor"
+            :variant="buttonVariant"
+            :disabled="disabled"
+            @click="modal?.open()"
+        >
+            <slot></slot>
+        </VBtn>
 
-    <Modal
-            ref="modal"
-            :title="title"
-            :okText="confirmText"
-            @ok="$emit('confirm'); modal?.close()"
-            :okColor="confirmButtonColor"
-    >
-        {{ text }}
-    </Modal>
+        <Modal
+                ref="modal"
+                :title="title"
+                :okText="confirmText"
+                @ok="$emit('confirm'); modal?.close()"
+                :okColor="confirmButtonColor"
+        >
+            {{ text }}
+        </Modal>
+    </span>
 </template>

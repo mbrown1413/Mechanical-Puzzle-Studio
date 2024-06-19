@@ -155,46 +155,34 @@ const appTitle = import.meta.env.VITE_APP_TITLE
 
                 <template v-slot:item.actions="{item}">
 
-                    <VTooltip text="Download">
-                        <template v-slot:activator="{props}">
-                            <VBtn
-                                v-bind="props"
-                                @click="downloadFromStorage(storage, item.name)"
-                            >
-                                <VIcon icon="mdi-download" aria-label="Download" aria-hidden="false" />
-                            </VBtn>
-                        </template>
-                    </VTooltip>
+                    <VBtn
+                        @click="downloadFromStorage(storage, item.name)"
+                        v-tooltip.top="'Download'"
+                    >
+                        <VIcon icon="mdi-download" aria-label="Download" aria-hidden="false" />
+                    </VBtn>
 
-                    <VTooltip text="Raw Data">
-                        <template v-slot:activator="{props}">
-                            <VBtn
-                                @click="rawDataModal?.openFromStorage(storage, item.name)"
-                                v-bind="props"
-                            >
-                                <VIcon icon="mdi-code-braces" aria-label="Raw Data" aria-hidden="false" />
-                            </VBtn>
-                        </template>
-                    </VTooltip>
+                    <VBtn
+                        @click="rawDataModal?.openFromStorage(storage, item.name)"
+                        v-tooltip.top="'Raw Data'"
+                    >
+                        <VIcon icon="mdi-code-braces" aria-label="Raw Data" aria-hidden="false" />
+                    </VBtn>
 
-                    <VTooltip text="Copy">
-                        <template v-slot:activator="{props}">
-                            <VBtn
-                                v-bind="props"
-                                @click="saveModal?.openCopy(storage, item.name)"
-                            >
-                                <VIcon icon="mdi-content-copy" aria-label="Copy" aria-hidden="false" />
-                            </VBtn>
-                        </template>
-                    </VTooltip>
+                    <VBtn
+                        @click="saveModal?.openCopy(storage, item.name)"
+                        v-tooltip.top="'Copy'"
+                    >
+                        <VIcon icon="mdi-content-copy" aria-label="Copy" aria-hidden="false" />
+                    </VBtn>
 
                     <ConfirmButton
                         :text="`Delete Puzzle ${item.name}?`"
                         :disabled="storage.readOnly"
-                        tooltip="Delete"
                         confirmText="Delete"
                         confirmButtonColor="red"
                         @confirm="deletePuzzle(storage, item.name)"
+                        v-tooltip.top="'Delete'"
                     >
                         <VIcon icon="mdi-delete" aria-label="Delete" aria-hidden="false" />
                     </ConfirmButton>
