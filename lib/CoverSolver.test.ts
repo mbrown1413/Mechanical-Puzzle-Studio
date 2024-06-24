@@ -1,6 +1,6 @@
 import {test, expect, describe} from "vitest"
 
-import {CoverSolver} from "./CoverSolver.ts"
+import {CoverSolver, CoverSolution} from "./CoverSolver.ts"
 
 describe("CoverSolver", () => {
 
@@ -25,6 +25,14 @@ describe("CoverSolver", () => {
           1 . 1
           . 1 ."
         `)
+
+        solver.setColumnOptional(0)
+        expect(solver.toString()).toMatchInlineSnapshot(`
+          "A? B 2?
+          -- - --
+          1  . 1
+          .  1 ."
+        `)
     })
 
     test("Simple problems", () => {
@@ -32,15 +40,15 @@ describe("CoverSolver", () => {
         solver.addRow([1, 0, 0])
         solver.addRow([0, 1, 0])
         solver.addRow([1, 0, 1])
-        expect(solver.solve()).toEqual([
-            [["Y"], ["Z", "X"]],
+        expect(solve(solver)).toEqual([
+            [["X", "Z"], ["Y"]],
         ])
 
         solver = new CoverSolver(["X", "Y", "Z"])
         solver.addRow([1, 1, 0])
         solver.addRow([0, 1, 1])
         solver.addRow([0, 0, 1])
-        expect(solver.solve()).toEqual([
+        expect(solve(solver)).toEqual([
             [["X", "Y"], ["Z"]],
         ])
 
@@ -49,21 +57,21 @@ describe("CoverSolver", () => {
         solver.addRow([1, 0, 0])
         solver.addRow([0, 1, 0])
         solver.addRow([0, 0, 1])
-        expect(solver.solve()).toEqual([
-            [["X", "Y", "Z"]],
+        expect(solve(solver)).toEqual([
             [["X"], ["Y"], ["Z"]],
+            [["X", "Y", "Z"]],
         ])
     })
 
     test("Edge cases", () => {
         const solver = new CoverSolver(["X", "Y", "Z"])
-        expect(solver.solve()).toEqual([])
+        expect(solve(solver)).toEqual([])
 
         solver.addRow([0, 0, 0])
-        expect(solver.solve()).toEqual([])
+        expect(solve(solver)).toEqual([])
 
         solver.addRow([1, 1, 1])
-        expect(solver.solve()).toEqual([
+        expect(solve(solver)).toEqual([
             [["X", "Y", "Z"]],
         ])
     })
@@ -90,34 +98,139 @@ describe("CoverSolver", () => {
           . . . 1 1 . 1"
         `)
 
-        expect(solver.solve()).toEqual([
-            [["A", "D"], ["E", "F", "C"], ["B", "G"]],
+        expect(solve(solver)).toEqual([
+            [["A", "D"], ["B", "G"], ["C", "E", "F"]],
         ])
     })
 
     test("Optional columns", () => {
         let solver = new CoverSolver(["X", "Y", "Z"], 1)
         solver.addRow([1, 1, 0])
-        expect(solver.solve()).toEqual([
+        expect(solve(solver)).toEqual([
             [["X", "Y"]],
         ])
 
         solver.addRow([0, 0, 1])
-        expect(solver.solve()).toEqual([
+        expect(solve(solver)).toEqual([
             [["X", "Y"]],
         ])
 
         solver = new CoverSolver(["X", "Y", "Z"], 1)
         solver.addRow([1, 0, 1])
         solver.addRow([0, 1, 1])
-        expect(solver.solve()).toEqual([])
+        expect(solve(solver)).toEqual([])
 
         solver = new CoverSolver(["X", "Y", "Z", "Optional1", "Optional2"], 2)
         solver.addRow([1, 0, 0, 1, 0])
         solver.addRow([0, 1, 1, 1, 0])
         solver.addRow([1, 0, 0, 0, 1])
-        expect(solver.solve()).toEqual([
-            [["Y", "Z", "Optional1"], ["X", "Optional2"]],
+        expect(solve(solver)).toEqual([
+            [["X", "Optional2"], ["Y", "Z", "Optional1"]],
+        ])
+
+        solver = new CoverSolver(["X", "Y", "Z"])
+        solver.addRow([1, 0, 1])
+        expect(solve(solver)).toEqual([])
+        solver.setColumnOptional(1)
+        expect(solve(solver)).toEqual([
+            [["X", "Z"]],
+        ])
+    })
+
+    test("Column min/max", () => {
+        let solver = new CoverSolver(["X", "Y", "Z"])
+        solver.setColumnRange(2, 0, 2)
+        solver.addRow([1, 0, 1])
+        solver.addRow([0, 1, 1])
+        expect(solve(solver)).toEqual([
+            [["X", "Z"], ["Y", "Z"]],
+        ])
+
+        // Equivalent to the 1-D assembly problem:
+        //
+        // Goal: 3 units wide, with voxels labeled "X", "Y", "Z"
+        // Piece A: 1 unit wide
+        // Piece B: 2 units wide
+        solver = new CoverSolver(["X", "Y", "Z", "A", "B"])
+        solver.addRow([1, 0, 0, 1, 0])
+        solver.addRow([0, 1, 0, 1, 0])
+        solver.addRow([0, 0, 1, 1, 0])
+        solver.addRow([1, 1, 0, 0, 1])
+        solver.addRow([0, 1, 1, 0, 1])
+        expect(solve(solver)).toEqual([
+            [["X", "Y", "B"], ["Z", "A"]],
+            [["X", "A"], ["Y", "Z", "B"]],
+        ])
+
+        solver.setColumnRange(3, 1, 3)
+        solver.setColumnRange(4, 0, 1)
+        expect(solve(solver)).toEqual([
+            [["X", "Y", "B"], ["Z", "A"]],
+            [["X", "A"], ["Y", "Z", "B"]],
+            [["X", "A"], ["Y", "A"], ["Z", "A"]],
+        ])
+
+        // Equivalent to the 1-D assembly problem:
+        //
+        // Goal: 4 units wide, with voxels labeled "W", "X", "Y", "Z"
+        // Piece A: 1 unit wide
+        // Piece B: 2 units wide
+        solver = new CoverSolver(["W", "X", "Y", "Z", "A", "B"])
+        solver.addRow([1, 0, 0, 0, 1, 0])
+        solver.addRow([0, 1, 0, 0, 1, 0])
+        solver.addRow([0, 0, 1, 0, 1, 0])
+        solver.addRow([0, 0, 0, 1, 1, 0])
+        solver.addRow([1, 1, 0, 0, 0, 1])
+        solver.addRow([0, 1, 1, 0, 0, 1])
+        solver.addRow([0, 0, 1, 1, 0, 1])
+
+        solver.setColumnRange(4, 2, 2)
+        expect(solve(solver)).toEqual([
+            [["W", "X", "B"], ["Y", "A"], ["Z", "A"]],
+            [["W", "A"], ["X", "Y", "B"], ["Z", "A"]],
+            [["W", "A"], ["X", "A"], ["Y", "Z", "B"]],
+        ])
+
+        solver.setColumnRange(4, 0, 4)
+        solver.setColumnRange(5, 0, 1)
+        expect(solve(solver)).toEqual([
+            [["W", "X", "B"], ["Y", "A"], ["Z", "A"]],
+            [["W", "A"], ["X", "Y", "B"], ["Z", "A"]],
+            [["W", "A"], ["X", "A"], ["Y", "Z", "B"]],
+            [["W", "A"], ["X", "A"], ["Y", "A"], ["Z", "A"]],
+        ])
+
+        solver.setColumnRange(4, 0, 4)
+        solver.setColumnRange(5, 0, 2)
+        expect(solve(solver)).toEqual([
+            [["W", "X", "B"], ["Y", "Z", "B"]],
+            [["W", "X", "B"], ["Y", "A"], ["Z", "A"]],
+            [["W", "A"], ["X", "Y", "B"], ["Z", "A"]],
+            [["W", "A"], ["X", "A"], ["Y", "Z", "B"]],
+            [["W", "A"], ["X", "A"], ["Y", "A"], ["Z", "A"]],
+        ])
+
+        solver.setColumnRange(4, 0, 4)
+        solver.setColumnRange(5, 1, 2)
+        expect(solve(solver)).toEqual([
+            [["W", "X", "B"], ["Y", "Z", "B"]],
+            [["W", "X", "B"], ["Y", "A"], ["Z", "A"]],
+            [["W", "A"], ["X", "Y", "B"], ["Z", "A"]],
+            [["W", "A"], ["X", "A"], ["Y", "Z", "B"]],
+        ])
+    })
+
+    test("No duplicate solutions", () => {
+        // 2-2 with 2 col
+        // The condition in which duplicates can occur is when when a max > 1
+        // column is chosen twice.
+        const solver = new CoverSolver(["X", "Y"])
+        solver.addRow([1, 0])
+        solver.addRow([0, 1])
+        solver.addRow([0, 1])
+        solver.setColumnRange(1, 2, 2)
+        expect(solve(solver)).toEqual([
+            [["X"], ["Y"], ["Y"]],
         ])
     })
 
@@ -126,9 +239,9 @@ describe("CoverSolver", () => {
         expect(solver.toString()).toMatchInlineSnapshot(`
           "File 0 Rank 0
           ------ ------
-          1      1"
+            1      1"
         `)
-        expect(solver.solve()).toEqual([
+        expect(solve(solver)).toEqual([
             [["File 0", "Rank 0"]],
         ])
 
@@ -136,10 +249,10 @@ describe("CoverSolver", () => {
         expect(solver.toString()).toMatchInlineSnapshot(`
           "File 0 File 1 Rank 0 Rank 1 Diagonal A 0? Diagonal B 0?
           ------ ------ ------ ------ ------------- -------------
-          1      .      1      .      .             1
-          1      .      .      1      1             .
-          .      1      1      .      1             .
-          .      1      .      1      .             1"
+            1      .      1      .          .             1
+            1      .      .      1          1             .
+            .      1      1      .          1             .
+            .      1      .      1          .             1"
         `)
         expect(solver.solve()).toEqual([])
 
@@ -147,7 +260,7 @@ describe("CoverSolver", () => {
         expect(solver.solve()).toEqual([])
 
         solver = getNQueensCoverProblem(4)
-        expect(solver.solve()).toEqual([
+        expect(solve(solver)).toEqual([
             [
                 ["File 0", "Rank 1", "Diagonal A 0", "Diagonal B 1"],
                 ["File 1", "Rank 3", "Diagonal B 0", "Diagonal A 3"],
@@ -165,6 +278,17 @@ describe("CoverSolver", () => {
         solver = getNQueensCoverProblem(5)
         expect(solver.solve().length).toEqual(10)
     })
+
+    /*
+    test("Performance Test", () => {
+        console.time("nqueens-13 x 3")
+        for(let i=0; i<3; i++) {
+            const solver = getNQueensCoverProblem(13)
+            expect(solver.solve().length).toEqual(73712)
+        }
+        console.timeEnd("nqueens-13 x 3")
+    })
+    */
 
 })
 
@@ -221,4 +345,53 @@ function getNQueensCoverProblem(n: number) {
     }
 
     return solver
+}
+
+/**
+ * Runs solver and normalizes result order.
+ */
+function solve<Data>(solver: CoverSolver<Data>): CoverSolution<Data>[] {
+    const solutions = solver.solve()
+
+    const compareData = (data1: Data, data2: Data) => {
+        const index1 = solver.columnData.indexOf(data1)
+        const index2 = solver.columnData.indexOf(data2)
+        return index1 - index2
+    }
+
+    const compareRows = (row1: Data[], row2: Data[]) => {
+        for(let i=0; i<Math.min(row1.length, row2.length); i++) {
+            const cmp = compareData(row1[i], row2[i])
+            if(cmp !== 0) {
+                return cmp
+            }
+        }
+        return row1.length - row2.length
+    }
+
+    for(const solution of solutions) {
+
+        // Sort data order within each solution row
+        for(const row of solution) {
+            row.sort(compareData)
+        }
+
+        // Sort row order within each solution
+        solution.sort(compareRows)
+    }
+
+    // Sort solution order
+    solutions.sort((solution1, solution2) => {
+        for(let i=0; i<Math.min(solution1.length, solution2.length); i++) {
+            const row1 = solution1[i]
+            const row2 = solution2[i]
+            const cmp = compareRows(row1, row2)
+            if(cmp !== 0) {
+                return cmp
+            }
+        }
+        return solution1.length - solution2.length
+    })
+
+    return solutions
 }
