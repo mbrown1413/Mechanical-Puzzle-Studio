@@ -9,20 +9,35 @@ import {AssemblySolution} from "~/lib/Solution.ts"
 
 import {AssemblySolver} from "./Solver.ts"
 
-type SolutionShorthand = {[pieceId: string]: Voxel[]}
-function assertSolutionEqual(solution: AssemblySolution, expected: SolutionShorthand) {
-    const actual: SolutionShorthand = {}
+type SolutionShorthand = {[pieceId: string]: Voxel[] | Set<Voxel>}
+
+function solutionToShorthand(solution: AssemblySolution): SolutionShorthand {
+    const shorthand: SolutionShorthand = {}
     for(const placement of solution.placements) {
         const pieceId = placement.completeId
         if(pieceId === null) {
             throw new Error("Piece should have an ID")
         }
-        if(pieceId in actual) {
+        if(pieceId in shorthand) {
             throw new Error(`Duplicate piece ID ${pieceId}`)
         }
-        actual[pieceId] = placement.voxels
+        shorthand[pieceId] = new Set(placement.voxels)
     }
-    expect(actual).toEqual(expected)
+    return shorthand
+}
+
+function assertSolutionsEqual(solutions: AssemblySolution[], expected: SolutionShorthand[]) {
+    const actual = solutions.map(solutionToShorthand)
+
+    // Make sure expected solution shorthands all use sets and not lists for
+    // a piece's voxels.
+    for(const solution of expected) {
+        for(const pieceId of Object.keys(solution)) {
+            solution[pieceId] = new Set(solution[pieceId])
+        }
+    }
+
+    expect(new Set(actual)).toEqual(new Set(expected))
 }
 
 describe("AssemblySolver", () => {
@@ -113,84 +128,79 @@ describe("AssemblySolver", () => {
     test("solve problem 0", () => {
         solver.removeSymmetries = false
         const solutions = solver.solve(puzzle, problem0)
-        expect(solutions.length).toEqual(2)
-        assertSolutionEqual(solutions[0], {
-            4: ["1,1,0", "2,1,0", "2,0,0"],
-            5: ["0,0,0", "0,1,0"],
-        })
-        assertSolutionEqual(solutions[1], {
-            4: ["1,1,0", "0,1,0", "0,0,0"],
-            5: ["2,0,0", "2,1,0"],
-        })
+        assertSolutionsEqual(solutions, [
+            {
+                4: ["1,1,0", "2,1,0", "2,0,0"],
+                5: ["0,0,0", "0,1,0"],
+            }, {
+                4: ["1,1,0", "0,1,0", "0,0,0"],
+                5: ["2,0,0", "2,1,0"],
+            }
+        ])
     })
 
     test("solve problem 0 with removed symmetries", () => {
         solver.removeSymmetries = true
         const solutions = solver.solve(puzzle, problem0)
-        expect(solutions.length).toEqual(1)
-        assertSolutionEqual(solutions[0], {
+        assertSolutionsEqual(solutions, [{
             4: ["1,1,0", "2,1,0", "2,0,0"],
             5: ["0,0,0", "0,1,0"],
-        })
+        }])
     })
 
     test("solve problem 1", () => {
         solver.removeSymmetries = false
         const solutions = solver.solve(puzzle, problem1)
-        expect(solutions.length).toEqual(4)
-        assertSolutionEqual(solutions[0], {
-            7: ["0,1,0", "0,2,0", "1,2,0", "2,2,0", "2,1,0"],
-            8: ["0,0,0", "1,0,0", "2,0,0", "1,1,0"],
-        })
-        assertSolutionEqual(solutions[1], {
-            7: ["0,1,0", "0,0,0", "1,0,0", "2,0,0", "2,1,0"],
-            8: ["0,2,0", "1,2,0", "2,2,0", "1,1,0"],
-        })
-        assertSolutionEqual(solutions[2], {
-            7: ["1,2,0", "2,2,0", "2,1,0", "2,0,0", "1,0,0"],
-            8: ["0,2,0", "0,1,0", "0,0,0", "1,1,0"],
-        })
-        assertSolutionEqual(solutions[3], {
-            7: ["1,0,0", "0,0,0", "0,1,0", "0,2,0", "1,2,0"],
-            8: ["2,0,0", "2,1,0", "2,2,0", "1,1,0"],
-        })
+        assertSolutionsEqual(solutions, [
+            {
+                7: ["0,1,0", "0,2,0", "1,2,0", "2,2,0", "2,1,0"],
+                8: ["0,0,0", "1,0,0", "2,0,0", "1,1,0"],
+            }, {
+                7: ["0,1,0", "0,0,0", "1,0,0", "2,0,0", "2,1,0"],
+                8: ["0,2,0", "1,2,0", "2,2,0", "1,1,0"],
+            }, {
+                7: ["1,2,0", "2,2,0", "2,1,0", "2,0,0", "1,0,0"],
+                8: ["0,2,0", "0,1,0", "0,0,0", "1,1,0"],
+            }, {
+                7: ["1,0,0", "0,0,0", "0,1,0", "0,2,0", "1,2,0"],
+                8: ["2,0,0", "2,1,0", "2,2,0", "1,1,0"],
+            }
+        ])
     })
 
     test("solve problem 1 with removed symmetries", () => {
         solver.removeSymmetries = true
         const solutions = solver.solve(puzzle, problem1)
-        expect(solutions.length).toEqual(1)
-        assertSolutionEqual(solutions[0], {
+        assertSolutionsEqual(solutions, [{
             7: ["0,1,0", "0,2,0", "1,2,0", "2,2,0", "2,1,0"],
             8: ["0,0,0", "1,0,0", "2,0,0", "1,1,0"],
-        })
+        }])
     })
 
     test("solve problem 2", () => {
         solver.removeSymmetries = false
         const solutions = solver.solve(puzzle, problem2)
-        expect(solutions.length).toEqual(2)
-        assertSolutionEqual(solutions[0], {
-            "10-0": ["0,1,0", "0,0,0", "1,0,0"],
-            "10-1": ["4,0,0", "4,1,0", "3,1,0"],
-            "11": ["1,1,0", "2,1,0", "2,0,0", "3,0,0"],
-        })
-        assertSolutionEqual(solutions[1], {
-            "10-0": ["0,0,0", "0,1,0", "1,1,0"],
-            "10-1": ["4,1,0", "4,0,0", "3,0,0"],
-            "11": ["1,0,0", "2,0,0", "2,1,0", "3,1,0"],
-        })
+        assertSolutionsEqual(solutions, [
+            {
+                "10-0": ["0,1,0", "0,0,0", "1,0,0"],
+                "10-1": ["4,0,0", "4,1,0", "3,1,0"],
+                "11": ["1,1,0", "2,1,0", "2,0,0", "3,0,0"],
+            }, {
+                "10-0": ["0,0,0", "0,1,0", "1,1,0"],
+                "10-1": ["4,1,0", "4,0,0", "3,0,0"],
+                "11": ["1,0,0", "2,0,0", "2,1,0", "3,1,0"],
+            }
+        ])
     })
 
     test("solve problem 2 with removed symmetries", () => {
         solver.removeSymmetries = true
         const solutions = solver.solve(puzzle, problem2)
-        expect(solutions.length).toEqual(1)
-        assertSolutionEqual(solutions[0], {
+        assertSolutionsEqual(solutions, [{
             "10-0": ["0,1,0", "0,0,0", "1,0,0"],
             "10-1": ["4,0,0", "4,1,0", "3,1,0"],
             "11": ["1,1,0", "2,1,0", "2,0,0", "3,0,0"],
-        })
+        }])
     })
 
     test("voxel count sanity-check", () => {
@@ -351,10 +361,9 @@ describe("AssemblySolver optional voxels", () => {
         problem.goalPieceId = goal.id
         problem.usedPieceCounts[piece1.id] = 1
         const solutions = solver.solve(puzzle, problem)
-        expect(solutions.length).toEqual(1)
-        assertSolutionEqual(solutions[0], {
+        assertSolutionsEqual(solutions, [{
             "101": ["0,0,0", "1,0,0", "0,1,0"],
-        })
+        }])
     })
 
     test("Complex optional voxel problem", () => {
@@ -414,28 +423,27 @@ describe("AssemblySolver optional voxels", () => {
         problem.usedPieceCounts[piece3.id] = 1
 
         let solutions = solver.solve(puzzle, problem)
-        expect(solutions.length).toEqual(1)
-        assertSolutionEqual(solutions[0], {
+        assertSolutionsEqual(solutions, [{
             "101": ["3,3,0", "3,2,0", "3,1,0", "2,3,0", "2,2,0", "2,1,0"],
             "102": ["1,1,0", "0,0,0", "1,0,0", "2,0,0", "3,0,0"],
             "103": ["1,3,0", "0,3,0", "0,2,0", "0,1,0"],
-        })
+        }])
 
         for(const voxel of outer12Voxels) {
             goal.setVoxelAttribute("optional", voxel, true)
         }
 
         solutions = solver.solve(puzzle, problem)
-        expect(solutions.length).toEqual(2)
-        assertSolutionEqual(solutions[0], {
-            "101": ["0,3,0", "1,3,0", "2,3,0", "0,2,0", "1,2,0", "2,2,0"],
-            "102": ["1,1,0", "0,0,0", "1,0,0", "2,0,0", "3,0,0"],
-            "103": ["2,1,0", "3,1,0", "3,2,0", "3,3,0"],
-        })
-        assertSolutionEqual(solutions[1], {
-            "101": ["3,3,0", "3,2,0", "3,1,0", "2,3,0", "2,2,0", "2,1,0"],
-            "102": ["1,1,0", "0,0,0", "1,0,0", "2,0,0", "3,0,0"],
-            "103": ["1,3,0", "0,3,0", "0,2,0", "0,1,0"],
-        })
+        assertSolutionsEqual(solutions, [
+            {
+                "101": ["0,3,0", "1,3,0", "2,3,0", "0,2,0", "1,2,0", "2,2,0"],
+                "102": ["1,1,0", "0,0,0", "1,0,0", "2,0,0", "3,0,0"],
+                "103": ["2,1,0", "3,1,0", "3,2,0", "3,3,0"],
+            }, {
+                "101": ["3,3,0", "3,2,0", "3,1,0", "2,3,0", "2,2,0", "2,1,0"],
+                "102": ["1,1,0", "0,0,0", "1,0,0", "2,0,0", "3,0,0"],
+                "103": ["1,3,0", "0,3,0", "0,2,0", "0,1,0"],
+            }
+        ])
     })
 })

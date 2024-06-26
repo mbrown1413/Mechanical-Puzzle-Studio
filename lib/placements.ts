@@ -1,7 +1,7 @@
-import {Piece, PieceWithId, PieceId, PieceCompleteId} from "~/lib/Piece.ts"
+import {Piece, PieceWithId, PieceId} from "~/lib/Piece.ts"
 import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
 
-type PlacementsByPiece = {[pieceId: PieceCompleteId]: PieceWithId[]}
+type PlacementsByPiece = {[pieceId: PieceId]: PieceWithId[]}
 
 type SymmetryInfo = {
     piece: Piece,
@@ -53,7 +53,7 @@ export function getPieceTranslations(
 }
 
 /**
- * Get all possible placements for a piece, given that all of the
+ * Get all possible placements for a single piece, given that all of the
  * transformed piece's voxels must be in `availableVoxels`.
  */
 export function getPiecePlacements(
@@ -78,11 +78,15 @@ export function getPiecePlacements(
     return placements
 }
 
+/**
+ * For each piece given, return the valid placements of that piece given that
+ * it must fit into the goal piece.
+ */
 export function getPlacements(
     grid: Grid,
     goal: Piece,
     pieces: PieceWithId[],
-    removeSymmetries: boolean,
+    symmetryReductionCandidates?: PieceWithId[],
 ): {
     placementsByPiece: PlacementsByPiece,
     symmetryInfo: SymmetryInfo | null,
@@ -90,8 +94,8 @@ export function getPlacements(
     const rotations = grid.getRotations()
 
     let symmetryInfo = null
-    if(removeSymmetries) {
-        symmetryInfo = findSymmetryPiece(grid, goal, pieces, rotations)
+    if(symmetryReductionCandidates) {
+        symmetryInfo = findSymmetryPiece(grid, goal, symmetryReductionCandidates, rotations)
     }
 
     // Enumerate piece placements
@@ -110,7 +114,7 @@ export function getPlacements(
             allowedRotations = null
         }
 
-        placementsByPiece[piece.completeId] = getPiecePlacements(
+        placementsByPiece[piece.id] = getPiecePlacements(
             grid,
             piece,
             goal.voxels,
