@@ -279,6 +279,22 @@ describe("CoverSolver", () => {
         expect(solver.solve().length).toEqual(10)
     })
 
+    test("Remove column from header only once", () => {
+        // This is specifically designed so A is covered twice: the first time
+        // sets min=0 max=1, removing it from the header, then the second time
+        // covered we must not try to remove it from the header again.
+        const solver = new CoverSolver(["A", "B"])
+        solver.addRow([1, 1])
+        solver.addRow([1, 0])
+        solver.addRow([0, 1])
+        solver.setColumnRange(0, 1, 2)
+        expect(solver.solve()).toMatchInlineSnapshot([
+            [ [ "A", "B", ], ],
+            [ [ "A", ], [ "B", "A", ], ],
+            [ [ "A", ], [ "B", ], ],
+        ])
+    })
+
     /*
     test("Performance Test", () => {
         console.time("nqueens-13 x 3")

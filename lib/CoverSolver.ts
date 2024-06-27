@@ -471,8 +471,11 @@ export class CoverSolver<Data> {
         column.min -= 1
         column.max -= 1
 
-        if(column.min <= 0) {
-            // Remove column from header if we don't want it to be chosen
+        // Remove column from header so it isn't chosen in the future. It's
+        // important that this condition is exact equality, since we may still
+        // cover this column in the future if max > 0, and we don't want to try
+        // removing it from the header more than once.
+        if(column.min === 0) {
             column.r.l = column.l
             column.l.r = column.r
         }
@@ -508,7 +511,7 @@ export class CoverSolver<Data> {
         column.min += 1
         column.max += 1
 
-        if(column.min > 0) {
+        if(column.min === 1) {
             // Restore column header
             column.r.l = column
             column.l.r = column
