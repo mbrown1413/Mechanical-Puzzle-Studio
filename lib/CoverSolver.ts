@@ -29,11 +29,11 @@
  *
  * We go a step further and allow a column to have a minimum and maximum. That
  * is, a column may have anywhere from `col.min` to `col.max` 1's in the
- * solution. When covering a column, we decrement both min and max. If min
+ * solution. When covering a column, we decrement both min and max. When min
  * reaches 0, the column is removed from the header just like a normal optional
- * column. If max is greater than 0, we don't actually continue covering the
- * column by removing rows from the matrix, since those rows could still be
- * used. The uncover operation similarly undoes those steps.
+ * column. Until max reaches 0, we don't actually continue covering the column
+ * by removing rows from the matrix, since those rows could still be used. The
+ * uncover operation similarly undoes those steps.
  *
  * Column min/max can be set with the `setColumnRange()` method.
  *
@@ -43,12 +43,27 @@
  *
  * Allowing columns to be used more than once presents a problem: we can end up
  * with duplicate solutions. This happens if the same column with max > 1 is
- * chosen twice. The same two rows can be chosen each time, just in a different
- * order.
+ * used twice. The same two rows can be chosen for two different solutions,
+ * just in a different order.
  *
- * The fix is to limit ourselves to considering rows only below any already chosen
- * rows in that column. The second time we choose a column, we iterate over
- * rows starting just after the last row chosen in that column.
+ * We fix this by removing rows as we iterate over them (only if max > 1,
+ * otherwise the cover operation on the column will remove them anyways). This
+ * doesn't miss any solutions because we fully explore rows after they're
+ * chosen, so it's redundant to explore them again at a greater depth. Of
+ * course once we've iterated over all of the rows in the column we must
+ * restore the rows we deleted.
+ *
+ * This mimicks how you might enumerate combinations of a set using nested
+ * loops, each loop starting one after the previous loop's chosen item. For
+ * example, you might enumerate all combinations of 2 items from a list like
+ * this:
+ * 
+ *     for(let i=0; i<items.length; i++) {
+ *          // Start the inner loop at i+1, where the outer loop left off.
+ *          for(let j=i+1; j<items.length; j++) {
+ *              yield [items[i], items[j]]
+ *          }
+ *      }
  *
  *
  * Filling optional columns after a solution is found
@@ -64,6 +79,7 @@
  * solutions, every solver will have its quirks, and we can always change this
  * later.
  */
+
 
 /**
  * Each row in a solution represents a row chosen, and each item in the the row
@@ -95,10 +111,6 @@ type ColumnHeader = {
     // column for a valid solution.
     min: number
     max: number
-
-    // For columns with max > 1, this stack saves the position of the column.d
-    // pointer so it can be restored later.
-    nextRowStack: (Node | ColumnHeader)[]
 }
 
 type Node = {
@@ -270,7 +282,6 @@ export class CoverSolver<Data> {
                 d: {} as ColumnHeader,
                 min: 1,
                 max: 1,
-                nextRowStack: [],
             }
             node.u = node
             node.d = node
@@ -295,12 +306,15 @@ export class CoverSolver<Data> {
         this.setColumnRange(columnIndex, 0, 1)
     }
 
+    /**
+     * Set the number of 1s which may appear in a column for a valid solution.
+     */
     setColumnRange(columnIndex: number, min: number, max: number) {
         const col = this.allCols[columnIndex]
 
         if(col.min <= 0 && min > 0) {
             // Add column back to header
-            col.l = this.header.r
+            col.l = this.header.l
             col.r = this.header
             this.header.l.r = col
             this.header.l = col
@@ -360,16 +374,35 @@ export class CoverSolver<Data> {
         return solutions
     }
 
+    /** Recursive method which accumulates solutions in the `solutions` list. */
     private search(solutions: CoverSolution<Data>[], depth=0) {
-        const {column, solutionFound} = this.chooseColumn()
-        if(solutionFound) {
+        if(this.header.r === this.header) {
+            // No required columns are left in the header. Solution found!
             solutions.push(this.getPartialSolution(depth))
+            return
         }
+
+        const column = this.chooseColumn()
         if(!column) { return }
 
         this.coverColumn(column)
 
-        // For each "1" in this column
+        // This is what prevents us from duplicating solutions if a column has
+        // max > 1. The previous cover operation will have decremented
+        // `column.max`, and if it didn't reach zero we still may choose rows
+        // from this column in the future. In this case we must remove rows as
+        // we choose them at this iteration level, since choosing those rows
+        // again at a later depth would be a repeat solution.
+        //
+        // If `column.min > 0` still, we're likely to choose this column next.
+        // If `column.min <= 0` the column won't be chosen again, but we may
+        // still use rows that have 1s in this column. In either case it's
+        // important to not choose rows again which we've already explored at
+        // this depth.
+        const removeRowsDuringIteration = column.max !== 0
+        const removedRows: Node[] = []
+
+        // For each "1" in chosen column
         for(
             let row = column.d;
             row !== column;
@@ -380,12 +413,10 @@ export class CoverSolver<Data> {
             // Set this row as part of the solution
             this.partialSolution[depth] = row
 
-            if(column.max > 0) {
-                // Save the current next row so it can be restored later
-                column.nextRowStack.push(column.d as Node)
-                // Limit the rows we consider next time this column is picked
-                // to rows after one we just picked.
-                column.d = row.d
+            // Remove the chosen row, including the node from the current column
+            if(removeRowsDuringIteration) {
+                removedRows.push(row)
+                this.removeRow(row)
             }
 
             // Cover each column in which this row has a 1
@@ -408,10 +439,12 @@ export class CoverSolver<Data> {
             ) {
                 this.uncoverColumn(node.c)
             }
+        }
 
-            if(column.max > 0) {
-                column.d = column.nextRowStack.pop() as Node | ColumnHeader
-            }
+        // Restore rows we've removed during iteration
+        for(let i=removedRows.length-1; i >= 0; i--) {
+            const row = removedRows[i]
+            this.restoreRow(row)
         }
 
         this.uncoverColumn(column)
@@ -438,38 +471,75 @@ export class CoverSolver<Data> {
         return solution
     }
 
-    /** Return the best column to iterate over next, or null if no more
-     * columns are necessary, and therefore we've found a solution. Also checks
-     * if the current state is a valid solution. */
-    private chooseColumn(): {
-        column: ColumnHeader | null,
-        solutionFound: boolean,
-     } {
-        let chosenCol: ColumnHeader | null = null
-        let hasRequiredCols = false
+    /** Return the best column to iterate over next, or null if we've reached a
+     * dead-end and no solutions are possible. */
+    private chooseColumn(): ColumnHeader | null {
+        let chosenCol = this.header.r as ColumnHeader
 
         for(
-            let col: ColumnHeader | MainHeader = this.header.r;
+            let col = chosenCol.r as ColumnHeader;
             col !== this.header;
             col = col.r as ColumnHeader
         ) {
-            if(col.min > 0) {
-                hasRequiredCols = true
-            }
-            if(chosenCol === null || (col.min > 0 && col.count < chosenCol.count)) {
+            if(col.count < chosenCol.count) {
                 chosenCol = col
             }
         }
 
-        return {
-            column: chosenCol,
-            solutionFound: !hasRequiredCols,
+        if(chosenCol.count <= 0) {
+            return null
+        }
+        return chosenCol
+    }
+
+    /**
+     * Remove the row containing `startNode` from all of the columns it appears
+     * in. If `removeStartNode` is set, also remove `startNode` itself, which
+     * you may want to avoid if you still need to iterate over rows in that
+     * column.
+     */
+    private removeRow(startNode: Node, removeStartNode=true) {
+        if(removeStartNode) {
+            startNode.d.u = startNode.u
+            startNode.u.d = startNode.d
+            startNode.c.count--
+        }
+        for(
+            let node = startNode.r;
+            node !== startNode;
+            node = node.r
+        ) {
+            node.d.u = node.u
+            node.u.d = node.d
+            node.c.count--
         }
     }
 
+    /**
+     * Opposite of `removeRow()` and must be performed in reverse order with
+     * the same arguments to undo.
+     */
+    private restoreRow(startNode: Node, restoreStartNode=true) {
+        if(restoreStartNode) {
+            startNode.d.u = startNode
+            startNode.u.d = startNode
+            startNode.c.count++
+        }
+        for(
+            let node = startNode.l;
+            node !== startNode;
+            node = node.l
+        ) {
+            node.d.u = node
+            node.u.d = node
+            node.c.count++
+        }
+    }
+
+    /** Called whenever a 1 is chosen in the given column. */
     private coverColumn(column: ColumnHeader) {
-        column.min -= 1
-        column.max -= 1
+        column.min--
+        column.max--
 
         // Remove column from header so it isn't chosen in the future. It's
         // important that this condition is exact equality, since we may still
@@ -480,7 +550,7 @@ export class CoverSolver<Data> {
             column.l.r = column.r
         }
 
-        if(column.max > 0) {
+        if(column.max !== 0) {
             // Don't actually cover if we can use this column more times.
             return
         }
@@ -492,24 +562,16 @@ export class CoverSolver<Data> {
             row = row.d
         ) {
             row = row as Node
-
-            // Remove the row
-            for(
-                let node = row.r;
-                node !== row;
-                node = node.r
-            ) {
-                node.d.u = node.u
-                node.u.d = node.d
-                node.c.count -= 1
-            }
-
+            this.removeRow(row, false)
         }
     }
 
+    /**
+     * Opposite of `coverColumn()` and must be performed in reverse order to undo.
+     */
     private uncoverColumn(column: ColumnHeader) {
-        column.min += 1
-        column.max += 1
+        column.min++
+        column.max++
 
         if(column.min === 1) {
             // Restore column header
@@ -517,7 +579,7 @@ export class CoverSolver<Data> {
             column.l.r = column
         }
 
-        if(column.max <= 0) {
+        if(column.max !== 1) {
             // Don't uncover until we can actually use this column
             return
         }
@@ -529,17 +591,7 @@ export class CoverSolver<Data> {
             row = row.u
         ) {
             row = row as Node
-
-            // Restore the row
-            for(
-                let node = row.l;
-                node !== row;
-                node = node.l
-            ) {
-                node.c.count += 1
-                node.d.u = node
-                node.u.d = node
-            }
+            this.restoreRow(row, false)
         }
     }
 }

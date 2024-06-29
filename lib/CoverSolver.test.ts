@@ -224,13 +224,33 @@ describe("CoverSolver", () => {
         // 2-2 with 2 col
         // The condition in which duplicates can occur is when when a max > 1
         // column is chosen twice.
-        const solver = new CoverSolver(["X", "Y"])
+        let solver = new CoverSolver(["X", "Y"])
         solver.addRow([1, 0])
         solver.addRow([0, 1])
         solver.addRow([0, 1])
         solver.setColumnRange(1, 2, 2)
         expect(solve(solver)).toEqual([
             [["X"], ["Y"], ["Y"]],
+        ])
+
+        // This cover problem is crafted so:
+        // 1. Column A is chosen first
+        // 2. Row 1 of column A is selected and proceeds normally to return one solution.
+        // 3. Row 2 of column A is selected...
+        // 4. Since column A now has min=0, it is not chosen next even though it has max > 1.
+        // 5. Column B is chosen next
+        // 6. Row 1 of column B  is selected, which includes a "1" from column A.
+        // 7. A duplicate solution is returned because we've already tried row 1 of column A.
+        solver = new CoverSolver(["A", "B", "C"])
+        solver.addRow([1, 1, 0])
+        solver.addRow([1, 0, 1])
+        solver.addRow([0, 1, 1])
+        solver.addRow([0, 1, 1])
+        solver.setColumnRange(0, 1, 2)
+        solver.setColumnRange(1, 3, 3)
+        solver.setColumnRange(2, 3, 3)
+        expect(solve(solver)).toEqual([
+            [["A", "B"], ["A", "C"], ["B", "C"], ["B", "C"]],
         ])
     })
 
@@ -288,10 +308,9 @@ describe("CoverSolver", () => {
         solver.addRow([1, 0])
         solver.addRow([0, 1])
         solver.setColumnRange(0, 1, 2)
-        expect(solver.solve()).toMatchInlineSnapshot([
-            [ [ "A", "B", ], ],
-            [ [ "A", ], [ "B", "A", ], ],
-            [ [ "A", ], [ "B", ], ],
+        expect(solver.solve()).toEqual([
+            [["A", "B"]],
+            [["A"], ["B"]],
         ])
     })
 
