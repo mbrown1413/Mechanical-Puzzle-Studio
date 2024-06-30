@@ -17,7 +17,7 @@ runs completely in the browser, with no data sent off your computer.
 ## Puzzling Resources
 
 Communities
-* [Mechanical Puzzles Discord (MPD)](https://discord.gg/waaZ2K9M) - Active community of friendly puzzle enthusiasts.
+* [Mechanical Puzzles Discord (MPD)](https://discord.gg/H8qYN4uKCG) - Active community of friendly puzzle enthusiasts.
 * [r/mechanicalpuzzles](https://www.reddit.com/r/mechanicalpuzzles/)
 
 Other puzzle programs
