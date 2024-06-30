@@ -1,6 +1,6 @@
 import {AssemblyProblem, Problem} from "~/lib/Problem.ts"
 import {Puzzle} from "~/lib/Puzzle.ts"
-import {Piece, PieceId, PieceInstanceId, PieceWithId} from "~/lib/Piece.ts"
+import {Piece, PieceId, PieceInstanceId} from "~/lib/Piece.ts"
 import {getPlacements} from "~/lib/placements.ts"
 import {AssemblySolution, Solution} from "~/lib/Solution.ts"
 import {TaskCallbacks, voidTaskCallbacks} from "~/lib/types.ts"
@@ -64,10 +64,10 @@ export class AssemblySolver extends Solver {
 
     voxelCountCheck(
         problem: AssemblyProblem,
-        pieces: PieceWithId[],
-        goal: PieceWithId
+        pieces: Piece[],
+        goal: Piece
     ): string | null {
-        const countVoxels = (p: PieceWithId) => new Set(p.voxels).size
+        const countVoxels = (p: Piece) => new Set(p.voxels).size
         const countOptionalVoxels = (p: Piece) => {
             const optionalAttr = (p.voxelAttributes || {})["optional"] || {}
             const variable = p.voxels.filter(v => optionalAttr[v] === true)
@@ -135,7 +135,7 @@ export class AssemblySolver extends Solver {
             throw new Error(voxelCountError)
         }
 
-        let symmetryBreakerCandidates: PieceWithId[] = []
+        let symmetryBreakerCandidates: Piece[] = []
         if(this.removeSymmetries) {
             symmetryBreakerCandidates = pieces.filter(
                 piece => problem.usedPieceCounts[piece.id] === 1
@@ -203,7 +203,7 @@ export class AssemblySolver extends Solver {
 
 function getAssemblyFromCoverSolution(
     problem: AssemblyProblem,
-    coverSolution: CoverSolution<Voxel | PieceWithId>
+    coverSolution: CoverSolution<Voxel | Piece>
 ): AssemblySolution {
 
     // Instance ID of the next instance, for pieces with duplicates
@@ -212,7 +212,7 @@ function getAssemblyFromCoverSolution(
     const placements = []
     for(const row of coverSolution) {
 
-        let piece: PieceWithId | null = null
+        let piece: Piece | null = null
         const voxels = []
 
         // Each cover solution row has a piece ID and all of the voxels

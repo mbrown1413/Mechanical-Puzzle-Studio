@@ -1,7 +1,7 @@
-import {Piece, PieceWithId, PieceId} from "~/lib/Piece.ts"
+import {Piece, PieceId} from "~/lib/Piece.ts"
 import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
 
-type PlacementsByPiece = {[pieceId: PieceId]: PieceWithId[]}
+type PlacementsByPiece = {[pieceId: PieceId]: Piece[]}
 
 type SymmetryInfo = {
     piece: Piece,
@@ -14,14 +14,14 @@ type SymmetryInfo = {
  */
 export function getPieceOrientations(
     grid: Grid,
-    piece: PieceWithId,
+    piece: Piece,
     allowedRotations: Transform[] | null = null
-): PieceWithId[] {
+): Piece[] {
     if(allowedRotations === null) {
         allowedRotations = grid.getRotations()
     }
 
-    const placements: PieceWithId[] = []
+    const placements: Piece[] = []
     for(const rotation of allowedRotations) {
         const transformedPiece = piece.copy().transform(grid, rotation)
 
@@ -37,9 +37,9 @@ export function getPieceOrientations(
  */
 export function getPieceTranslations(
     grid: Grid,
-    piece: PieceWithId,
+    piece: Piece,
     availableVoxels: Voxel[],
-): PieceWithId[] {
+): Piece[] {
     const translations = []
     availableVoxels = [...new Set(availableVoxels)]
     for(const toVoxel of availableVoxels) {
@@ -58,10 +58,10 @@ export function getPieceTranslations(
  */
 export function getPiecePlacements(
     grid: Grid,
-    piece: PieceWithId,
+    piece: Piece,
     availableVoxels: Voxel[],
     allowedRotations: Transform[] | null = null
-): PieceWithId[] {
+): Piece[] {
     const placements = []
 
     const orientationPlacements = filterTranslationCongruentPlacements(
@@ -85,8 +85,8 @@ export function getPiecePlacements(
 export function getPlacements(
     grid: Grid,
     goal: Piece,
-    pieces: PieceWithId[],
-    symmetryReductionCandidates?: PieceWithId[],
+    pieces: Piece[],
+    symmetryReductionCandidates?: Piece[],
 ): {
     placementsByPiece: PlacementsByPiece,
     symmetryInfo: SymmetryInfo | null,
@@ -133,7 +133,7 @@ export function getPlacements(
 function findSymmetryPiece(
     grid: Grid,
     goal: Piece,
-    pieces: PieceWithId[],
+    pieces: Piece[],
     rotations: Transform[]
 ): SymmetryInfo | null {
     const goalGroups = getSymmetryGroups(grid, goal, rotations)
@@ -259,9 +259,9 @@ function getSymmetryGroups(grid: Grid, piece: Piece, orientations: Transform[]):
 /** Filter out placements which are congruent via translation. */
 function filterTranslationCongruentPlacements(
     grid: Grid,
-    placements: PieceWithId[]
-): PieceWithId[] {
-    const newPlacements: PieceWithId[] = []
+    placements: Piece[]
+): Piece[] {
+    const newPlacements: Piece[] = []
     for(const placement of placements) {
         const existingCongruent = newPlacements.some(
             p => isTranslationCongruent(grid, p, placement)

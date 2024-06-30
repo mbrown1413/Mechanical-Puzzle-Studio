@@ -1,4 +1,4 @@
-import {PieceWithId} from "~/lib/Piece.ts"
+import {Piece} from "~/lib/Piece.ts"
 import {Disassembly} from "~/lib/Disassembly.ts"
 import {SerializableClass, registerClass, clone} from "~/lib/serialize.ts"
 
@@ -13,10 +13,10 @@ export abstract class Solution extends SerializableClass {
 }
 
 export class AssemblySolution extends Solution {
-    placements: PieceWithId[]
+    placements: Piece[]
     disassemblies?: Disassembly[]
 
-    constructor(id: number, placements: PieceWithId[]) {
+    constructor(id: number, placements: Piece[]) {
         super(id)
         this.placements = placements.map((placement) =>
             clone(placement)

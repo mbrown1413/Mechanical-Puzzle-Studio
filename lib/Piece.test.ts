@@ -17,7 +17,7 @@ describe("Piece", () => {
     })
 
     test("edit voxels", () => {
-        const piece = new Piece()
+        const piece = new Piece(0)
         expect(piece.voxels).toEqual([])
 
         piece.addVoxel("0,0,0")
@@ -34,13 +34,13 @@ describe("Piece", () => {
     })
 
     test("adding voxel attribute to voxel that doesn't exist", () => {
-        const piece = new Piece()
+        const piece = new Piece(0)
         piece.setVoxelAttribute("foo", "0,0,0", true)
         expect(piece.voxelAttributes).toEqual(undefined)
     })
 
     test("voxel attributes removed when voxel removed", () => {
-        const piece = new Piece()
+        const piece = new Piece(0)
         piece.addVoxel("0,0,0")
         piece.addVoxel("1,0,0")
         piece.addVoxel("2,0,0")
@@ -65,7 +65,7 @@ describe("Piece", () => {
     })
 
     test("unset voxel attribute", () => {
-        const piece = new Piece()
+        const piece = new Piece(0)
         piece.addVoxel("0,0,0")
         piece.setVoxelAttribute("foo", "0,0,0", true)
         piece.setVoxelAttribute("bar", "0,0,0", false)
@@ -84,20 +84,20 @@ describe("Piece", () => {
     })
 
     test("copy", () => {
-        const piece0 = new Piece()
+        const piece0 = new Piece(0)
         const copy0 = piece0.copy()
         expect(copy0).not.toBe(piece0)
-        expect(copy0).toEqual(Object.assign(piece0, {id: undefined}))
+        expect(copy0).toEqual(piece0)
 
-        const piece1 = new Piece()
+        const piece1 = new Piece(1)
         const copy1 = piece1.copy()
         expect(copy1).not.toBe(piece1)
         expect(copy1).toEqual(piece1)
     })
 
     test("equality", () => {
-        const piece1 = new Piece()
-        const piece2 = new Piece(0)
+        const piece1 = new Piece(1)
+        const piece2 = new Piece(2)
 
         piece1.voxels = ["0,0,0", "1,1,1"]
         piece2.voxels = ["1,1,1", "0,0,0"]
@@ -111,8 +111,8 @@ describe("Piece", () => {
     })
 
     test("equality with voxelAttribute", () => {
-        const piece1 = new Piece()
-        const piece2 = new Piece()
+        const piece1 = new Piece(1)
+        const piece2 = new Piece(2)
 
         piece1.voxels = ["0,0,0", "1,1,1"]
         piece2.voxels = ["0,0,0", "1,1,1"]
@@ -139,7 +139,7 @@ describe("Piece", () => {
     })
 
     test("transform", () => {
-        const piece = new Piece()
+        const piece = new Piece(0)
         piece.voxels = ["0,0,0", "1,1,1"]
 
         const translate = grid.getTranslation("0,0,0", "1,0,0")
@@ -149,7 +149,7 @@ describe("Piece", () => {
     })
 
     test("transform with voxelAttributes", () => {
-        const piece = new Piece()
+        const piece = new Piece(0)
         piece.voxels = ["0,0,0", "1,1,1"]
         piece.setVoxelAttribute("foo", "0,0,0", true)
 
@@ -175,17 +175,16 @@ describe("Piece", () => {
     })
 
     test("serialization", () => {
-        const piece = new Piece(["0,0,0", "1,1,1"])
+        const piece = new Piece(0, ["0,0,0", "1,1,1"])
         piece.bounds = {a: 1, b: 2, c: 3}
 
         const serialized = serialize(piece)
-        expect(serialized).toMatchInlineSnapshot(`
-          {
-            "bounds": "a:1 b:2 c:3",
+        expect(serialized).toEqual({
             "type": "Piece",
+            "id": 0,
+            "bounds": "a:1 b:2 c:3",
             "voxels": "0,0,0; 1,1,1",
-          }
-        `)
+        })
 
         const deserialized = deserialize(serialized)
         expect(deserialized).toEqual(piece)

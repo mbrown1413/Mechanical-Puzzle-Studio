@@ -1,6 +1,6 @@
 import {registerClass} from '~/lib/serialize.ts'
 import {CubicBounds, CubicGrid} from "~/lib/grids/CubicGrid.ts"
-import {Piece, PieceWithId} from '~/lib/Piece.ts'
+import {Piece} from '~/lib/Piece.ts'
 
 export class SquareGrid extends CubicGrid {
 
@@ -71,8 +71,8 @@ export class SquareGrid extends CubicGrid {
      *         111
      *     `)
      */
-    piecesFromString(layoutString: string): PieceWithId[] {
-        const pieces: {[id: number]: PieceWithId} = {}
+    piecesFromString(layoutString: string): Piece[] {
+        const pieces: {[id: number]: Piece} = {}
         for(const [y, line] of layoutString.split("\n").entries()) {
             for(let x=0; x<line.length; x++) {
                 const char = line[x]

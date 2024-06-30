@@ -1,11 +1,11 @@
 import {Grid} from "~/lib/Grid.ts"
-import {Piece, PieceWithId, PieceCompleteId} from "~/lib/Piece.ts"
+import {Piece, PieceCompleteId} from "~/lib/Piece.ts"
 import {Transform} from "~/lib/Grid.ts"
 
 export type Movement = {
     movedPieces: PieceCompleteId[]
     transform: Transform
-    placements: PieceWithId[]
+    placements: Piece[]
     repeat: number
     separates: boolean
 }
@@ -13,7 +13,7 @@ export type Movement = {
 /**
  * List the ways any single movement can be applied to the given pieces.
  */
-export function getMovements(grid: Grid, pieces: PieceWithId[]): Movement[] {
+export function getMovements(grid: Grid, pieces: Piece[]): Movement[] {
     const availableTransforms = grid.getDisassemblyTransforms()
 
     // If we're moving more than this many pieces as a group, it's the same as

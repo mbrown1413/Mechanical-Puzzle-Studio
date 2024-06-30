@@ -1,7 +1,7 @@
 import {test, expect, describe} from "vitest"
 
 import {Puzzle} from "~/lib/Puzzle.ts"
-import {Piece, PieceWithId} from "~/lib/Piece.ts"
+import {Piece} from "~/lib/Piece.ts"
 import {Voxel} from "~/lib/Grid.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 import {AssemblyProblem} from "~/lib/Problem"
@@ -43,16 +43,16 @@ function assertSolutionsEqual(solutions: AssemblySolution[], expected: SolutionS
 describe("AssemblySolver", () => {
     const puzzle = new Puzzle(new CubicGrid())
 
-    const empty1 = puzzle.addPiece(new Piece(0)) as PieceWithId
+    const empty1 = puzzle.addPiece(new Piece(0))
     empty1.label = "empty1"
 
-    const empty2 = puzzle.addPiece(new Piece(1)) as PieceWithId
+    const empty2 = puzzle.addPiece(new Piece(1))
     empty2.label = "empty2"
 
     const large = puzzle.addPiece(new Piece(
         2,
         ["0,0,0", "1,0,0", "2,0,0", "3,0,0", "4,0,0"]
-    )) as PieceWithId
+    ))
     large.label = "large"
 
     // Problem 0
@@ -61,15 +61,15 @@ describe("AssemblySolver", () => {
     const problem0_goal = puzzle.addPiece(new Piece(
         3,
         ["0,0,0", "0,1,0", "1,1,0", "2,1,0", "2,0,0"]
-    )) as PieceWithId
+    ))
     const problem0_piece0 = puzzle.addPiece(new Piece(
         4,
         ["0,0,0", "1,0,0", "1,1,0"]
-    )) as PieceWithId
+    ))
     const problem0_piece1 = puzzle.addPiece(new Piece(
         5,
         ["0,0,0", "0,1,0"]
-    )) as PieceWithId
+    ))
     const problem0 = new AssemblyProblem(0)
     problem0.goalPieceId = problem0_goal.id
     problem0.usedPieceCounts[problem0_piece0.id] = 1
@@ -86,15 +86,15 @@ describe("AssemblySolver", () => {
             "0,1,0", "1,1,0", "2,1,0",
             "0,0,0", "1,0,0", "2,0,0",
         ]
-    )) as PieceWithId
+    ))
     const problem1_piece0 = puzzle.addPiece(new Piece(
         7,
         ["0,0,0", "0,1,0", "1,1,0", "2,1,0", "2,0,0"]
-    )) as PieceWithId
+    ))
     const problem1_piece1 = puzzle.addPiece(new Piece(
         8,
         ["0,0,0", "1,0,0", "2,0,0", "1,1,0"]
-    )) as PieceWithId
+    ))
     const problem1 = new AssemblyProblem(1)
     problem1.goalPieceId = problem1_goal.id
     problem1.usedPieceCounts[problem1_piece0.id] = 1
@@ -113,11 +113,11 @@ describe("AssemblySolver", () => {
     const problem2_piece0 = puzzle.addPiece(new Piece(
         10,
         ["0,1,0", "0,0,0", "1,0,0"]
-    )) as PieceWithId
+    ))
     const problem2_piece1 = puzzle.addPiece(new Piece(
         11,
         ["0,1,0", "1,1,0", "1,0,0", "2,0,0"]
-    )) as PieceWithId
+    ))
     const problem2 = new AssemblyProblem(2)
     problem2.goalPieceId = problem2_goal.id
     problem2.usedPieceCounts[problem2_piece0.id] = 2
@@ -278,7 +278,7 @@ describe("AssemblySolver optional voxels", () => {
         const piece1 = puzzle.addPiece(new Piece(
             101,
             ["0,1,0"]
-        )) as PieceWithId
+        ))
         const problem = new AssemblyProblem(0)
         problem.goalPieceId = goal.id
         goal.setVoxelAttribute("optional", "1,1,0", true)
@@ -326,7 +326,7 @@ describe("AssemblySolver optional voxels", () => {
         const piece1 = puzzle.addPiece(new Piece(
             1,
             ["0,1,0"]
-        )) as PieceWithId
+        ))
         piece1.label = "Piece 1"
         piece1.setVoxelAttribute("optional", "0,1,0", true)
 
@@ -356,7 +356,7 @@ describe("AssemblySolver optional voxels", () => {
                 "0,1,0", "1,1,0",
                 "0,0,0",
             ]
-        )) as PieceWithId
+        ))
         const problem = new AssemblyProblem(0)
         problem.goalPieceId = goal.id
         problem.usedPieceCounts[piece1.id] = 1
@@ -400,21 +400,21 @@ describe("AssemblySolver optional voxels", () => {
                 "0,1,0", "1,1,0", "2,1,0",
                 "0,0,0", "1,0,0", "2,0,0",
             ]
-        )) as PieceWithId
+        ))
         const piece2 = puzzle.addPiece(new Piece(
             102,
             [
                          "1,1,0",
                 "0,0,0", "1,0,0", "2,0,0", "3,0,0",
             ]
-        )) as PieceWithId
+        ))
         const piece3 = puzzle.addPiece(new Piece(
             103,
             [
                 "0,1,0",
                 "0,0,0", "1,0,0", "2,0,0",
             ]
-        )) as PieceWithId
+        ))
 
         const problem = new AssemblyProblem(0)
         problem.goalPieceId = goal.id

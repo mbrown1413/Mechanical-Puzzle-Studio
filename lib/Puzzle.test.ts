@@ -22,17 +22,6 @@ describe("Puzzle", () => {
             puzzle.addPiece(pieceWithSameId)
         }).toThrow("Duplicate piece ID: 0")
 
-        const pieceWithoutId = new Piece()
-        expect(() => {
-            puzzle.addPiece(pieceWithoutId)
-        }).toThrow("Cannot add piece without ID")
-        expect(puzzle.hasPiece(pieceWithoutId)).toBeFalsy()
-
-        puzzle.removePiece(pieceWithoutId, false)
-        expect(() => {
-            puzzle.removePiece(pieceWithoutId)
-        }).toThrow("Cannot remove piece without ID")
-
         expect(puzzle.hasPiece(pieceWithId)).toBeTruthy()
         puzzle.removePiece(pieceWithId)
         expect(puzzle.hasPiece(pieceWithId)).toBeFalsy()

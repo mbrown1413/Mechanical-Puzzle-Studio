@@ -1,5 +1,5 @@
 import {SerializableClass, registerClass} from "~/lib/serialize.ts"
-import {Piece, PieceWithId, PieceCompleteId} from "~/lib/Piece.ts"
+import {Piece, PieceCompleteId} from "~/lib/Piece.ts"
 import {Grid, Transform, Bounds, Voxel} from "~/lib/Grid.ts"
 import {clone} from "~/lib/serialize.ts"
 
@@ -97,7 +97,7 @@ export class Disassembly extends SerializableClass {
      * Get each intermediate placement of pieces between the start and
      * disassembly.
      */
-    getState(grid: Grid, start: PieceWithId[], stateNumber: number): PieceWithId[] {
+    getState(grid: Grid, start: Piece[], stateNumber: number): Piece[] {
         const state = start.map(piece => piece.copy())
         for(const step of this.steps.slice(0, stateNumber)) {
             performStep(grid, state, step)
@@ -105,13 +105,13 @@ export class Disassembly extends SerializableClass {
         return state
     }
 
-    *getAllStates(grid: Grid, start: PieceWithId[]): Iterable<PieceWithId[]> {
+    *getAllStates(grid: Grid, start: Piece[]): Iterable<Piece[]> {
         for(let i=0; i<this.nStates; i++) {
             yield this.getState(grid, start, i)
         }
     }
 
-    getBounds(grid: Grid, start: PieceWithId[]): Bounds {
+    getBounds(grid: Grid, start: Piece[]): Bounds {
         const allPieces: Piece[] = []
         for(const state of this.getAllStates(grid, start)) {
             allPieces.push(...state)
@@ -175,7 +175,7 @@ export class Disassembly extends SerializableClass {
      * separation between separate parts so they can be placed on the same grid
      * and viewed proprely.
      */
-    spaceSepratedParts(grid: Grid, start: PieceWithId[]) {
+    spaceSepratedParts(grid: Grid, start: Piece[]) {
 
         type SeparationEvent = {
             step: DisassemblyStep
@@ -184,7 +184,7 @@ export class Disassembly extends SerializableClass {
             partIndexes: [number, number]
         }
 
-        let state: PieceWithId[]
+        let state: Piece[]
         let parts: PieceCompleteId[][]
         let separations: SeparationEvent[]
 
@@ -325,7 +325,7 @@ registerClass(Disassembly)
 
 function performStep(
     grid: Grid,
-    state: PieceWithId[],
+    state: Piece[],
     step: DisassemblyStep,
     ignoreRepeat=false
 ) {

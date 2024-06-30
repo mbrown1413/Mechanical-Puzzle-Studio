@@ -5,8 +5,6 @@ export type PieceId = number
 export type PieceInstanceId = number
 export type PieceCompleteId = `${PieceId}` | `${PieceId}-${PieceInstanceId}`
 
-export type PieceWithId = Piece & {id: PieceId, completeId: PieceCompleteId}
-
 type AttributeValue = boolean
 
 /**
@@ -20,7 +18,7 @@ type PieceStoredData = {
 }
 
 export class Piece extends SerializableClass {
-    id?: PieceId
+    id: PieceId
     instance?: PieceInstanceId
     voxels: Voxel[]
     voxelAttributes?: {
@@ -33,21 +31,10 @@ export class Piece extends SerializableClass {
     label?: string
     color?: string
 
-    constructor()
-    constructor(voxels: Voxel[])
-    constructor(id: PieceId)
-    constructor(id: PieceId, voxels: Voxel[])
-    constructor(idOrVoxels: PieceId | Voxel[]=[], voxels: Voxel[]=[]) {
+    constructor(id: PieceId, voxels: Voxel[]=[]) {
         super()
-        if(typeof idOrVoxels === "number") {
-            this.id = idOrVoxels
-            this.voxels = voxels
-        } else {
-            this.voxels = idOrVoxels
-            if(voxels.length > 0) {
-                throw new Error("Bad argument types for Piece constructor")
-            }
-        }
+        this.id = id
+        this.voxels = voxels
     }
 
     static postSerialize(piece: Piece) {
@@ -74,18 +61,11 @@ export class Piece extends SerializableClass {
         }
     }
 
-    hasId(): this is PieceWithId {
-        return typeof this.id === "number"
-    }
-
     /**
      * Complete ID is unique not only to this piece, but to this instance of
      * the piece. It includes the piece ID and the piece instance number.
      */
-    get completeId(): PieceCompleteId | null {
-        if(typeof this.id !== "number") {
-            return null
-        }
+    get completeId(): PieceCompleteId {
         if(typeof this.instance === "number") {
             return `${this.id}-${this.instance}`
         } else {
@@ -93,7 +73,7 @@ export class Piece extends SerializableClass {
         }
     }
 
-    copy<T extends Piece | PieceWithId>(this: T): T {
+    copy(): Piece {
         return clone(this)
     }
 

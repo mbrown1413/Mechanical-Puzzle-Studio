@@ -1,4 +1,4 @@
-import {PieceWithId, PieceCompleteId} from "~/lib/Piece.ts"
+import {Piece, PieceCompleteId} from "~/lib/Piece.ts"
 import {TaskCallbacks} from "~/lib/types.ts"
 import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
 import {getMovements, Movement} from "~/lib/movement.ts"
@@ -38,14 +38,14 @@ type PlacementHash = string
 type QueueItem = {
     node: Node,
     path: number[]
-    placements: PieceWithId[]
+    placements: Piece[]
 }
 
 export abstract class Disassembler {
     grid: Grid
-    start: PieceWithId[]
+    start: Piece[]
 
-    constructor(grid: Grid, start: PieceWithId[]) {
+    constructor(grid: Grid, start: Piece[]) {
         this.grid = grid
         this.start = start
     }
@@ -64,7 +64,7 @@ export class SimpleDisassembler extends Disassembler {
     // found.
     findAll: boolean
 
-    constructor(grid: Grid, start: PieceWithId[]) {
+    constructor(grid: Grid, start: Piece[]) {
         super(grid, start)
         this.origin = grid.getVoxels(grid.getDefaultPieceBounds())[0]
         this.nodes = []
@@ -198,7 +198,7 @@ export class SimpleDisassembler extends Disassembler {
     }
 
     private getOrCreateNode(
-        placements: PieceWithId[],
+        placements: Piece[],
         depth: number
     ): [node: Node | null, nodeIndex: number, isNew: boolean] {
         if(placements.length <= 1) {
@@ -228,8 +228,8 @@ export class SimpleDisassembler extends Disassembler {
 
     /** Split the movement's resulting placements into two if it separates into
      * two parts. */
-    private getChildParts(movement: Movement): PieceWithId[][] {
-        let childPlacements: PieceWithId[][]
+    private getChildParts(movement: Movement): Piece[][] {
+        let childPlacements: Piece[][]
         if(movement.separates) {
             childPlacements = [[], []]
             for(const piece of movement.placements) {
@@ -245,7 +245,7 @@ export class SimpleDisassembler extends Disassembler {
         return childPlacements
     }
 
-    private hashPlacements(placements: PieceWithId[]): PlacementHash {
+    private hashPlacements(placements: Piece[]): PlacementHash {
         placements = placements.toSorted((a, b) => {
             if(a.completeId < b.completeId) {
                 return -1
@@ -272,7 +272,7 @@ export class SimpleDisassembler extends Disassembler {
         // nodes, one for each part our starting assembly has split into. We
         // recursively call iterate for every possible set of child nodes.
         const iterate = (
-            placements: PieceWithId[],
+            placements: Piece[],
             nodes: Node[],
             steps: DisassemblyStep[],
         ) => {

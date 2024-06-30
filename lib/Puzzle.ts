@@ -3,7 +3,7 @@ import {Grid} from "~/lib/Grid.ts"
 import {Problem} from "~/lib/Problem.ts"
 import {getNextColor} from "~/lib/colors.ts"
 
-import {Piece, PieceId, PieceWithId} from "~/lib/Piece.ts"
+import {Piece, PieceId} from "~/lib/Piece.ts"
 import {ProblemId} from "~/lib/Problem.ts"
 
 
@@ -14,7 +14,7 @@ export type ItemId = PieceId | ProblemId
 
 export class Puzzle extends SerializableClass {
     grid: Grid
-    pieces: PieceWithId[]
+    pieces: Piece[]
     problems: Problem[]
 
     /**
@@ -66,9 +66,6 @@ export class Puzzle extends SerializableClass {
     }
 
     addPiece(piece: Piece, index?: number): Piece {
-        if(!piece.hasId()) {
-            throw new Error("Cannot add piece without ID")
-        }
         if(this.hasPiece(piece.id)) {
             throw new Error(`Duplicate piece ID: ${piece.id}`)
         }
@@ -80,7 +77,7 @@ export class Puzzle extends SerializableClass {
         return piece
     }
 
-    getPiece(pieceOrId: Piece | PieceId): PieceWithId | null {
+    getPiece(pieceOrId: Piece | PieceId): Piece | null {
         const id = typeof pieceOrId === "number" ? pieceOrId : pieceOrId.id
         if(id === undefined) return null
         return this.pieces.find(piece => piece.id === id) || null
