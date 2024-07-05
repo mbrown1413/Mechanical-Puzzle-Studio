@@ -4,6 +4,7 @@ import {Puzzle} from "~/lib/Puzzle.ts"
 import {Piece} from "~/lib/Piece.ts"
 import {Voxel} from "~/lib/Grid.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
+import {SquareGrid} from "~/lib/grids/SquareGrid.ts"
 import {AssemblyProblem} from "~/lib/Problem"
 import {AssemblySolution} from "~/lib/Solution.ts"
 
@@ -254,11 +255,7 @@ describe("AssemblySolver", () => {
         problem.usedPieceCounts[empty2.id] = 1
         expect(() => {
             solver.solve(puzzle, problem)
-        }).toThrowErrorMatchingInlineSnapshot(`
-          [Error: No solutions because piece cannot be placed anywhere in goal.
-
-          Piece label: empty2]
-        `)
+        }).toThrowErrorMatchingInlineSnapshot(`[Error: Goal piece is empty]`)
     })
 })
 
@@ -289,7 +286,7 @@ describe("AssemblySolver optional voxels", () => {
         }).toThrowErrorMatchingInlineSnapshot(`
           [Error: Number of voxels in pieces don't add up to the voxels in the goal piece.
 
-          Voxels in goal: 3 to 4
+          Voxels in goal: 3-4
           Voxels in pieces: 2]
         `)
 
@@ -305,7 +302,7 @@ describe("AssemblySolver optional voxels", () => {
         }).toThrowErrorMatchingInlineSnapshot(`
           [Error: Number of voxels in pieces don't add up to the voxels in the goal piece.
 
-          Voxels in goal: 3 to 4
+          Voxels in goal: 3-4
           Voxels in pieces: 5]
         `)
     })
@@ -446,4 +443,40 @@ describe("AssemblySolver optional voxels", () => {
             }
         ])
     })
+})
+
+describe("AssemblySolver piece ranges", () => {
+
+    test("Simple problem", () => {
+        const puzzle = new Puzzle(new SquareGrid())
+        const goal = new Piece(0, ["0,0,0", "1,0,0", "2,0,0"])
+        const piece1 = new Piece(1, ["0,0,0"])
+        const piece2 = new Piece(2, ["0,0,0", "1,0,0"])
+        puzzle.addPiece(goal)
+        puzzle.addPiece(piece1)
+        puzzle.addPiece(piece2)
+
+        const problem = new AssemblyProblem(0)
+        problem.goalPieceId = goal.id
+        problem.usedPieceCounts[piece1.id] = {min: 0, max: 3}
+        problem.usedPieceCounts[piece2.id] = {min: 0, max: 2}
+
+        const solver = new AssemblySolver(false, false)
+        assertSolutionsEqual(solver.solve(puzzle, problem), [
+            {
+                "1-0": ["0,0,0"],
+                "1-1": ["1,0,0"],
+                "1-2": ["2,0,0"],
+            },
+            {
+                "1-0": ["0,0,0"],
+                "2-0": ["1,0,0", "2,0,0"],
+            },
+            {
+                "1-0": ["2,0,0"],
+                "2-0": ["0,0,0", "1,0,0"],
+            },
+        ])
+    })
+
 })

@@ -377,21 +377,6 @@ export class EditProblemMetadataAction extends EditItemMetadataAction<Problem> {
     static metadata: {
         label?: string
     }
-
-    postEdit(problem: Problem) {
-        if(problem instanceof AssemblyProblem) {
-            // Remove used piece entries with "0" count
-            for(const pieceId of problem.usedPieces) {
-                if(problem.getPieceCount(pieceId) <= 0) {
-                    delete problem.usedPieceCounts[pieceId]
-                }
-            }
-            // Remove "goal" piece from used pieces
-            if(problem.goalPieceId !== undefined) {
-                delete problem.usedPieceCounts[problem.goalPieceId]
-            }
-        }
-    }
 }
 
 export class DuplicateProblemAction extends DuplicateItemAction<Problem> {

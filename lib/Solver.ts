@@ -62,34 +62,6 @@ export class AssemblySolver extends Solver {
         return solutions
     }
 
-    voxelCountCheck(
-        problem: AssemblyProblem,
-        pieces: Piece[],
-        goal: Piece
-    ): string | null {
-        const countVoxels = (p: Piece) => new Set(p.voxels).size
-        const countOptionalVoxels = (p: Piece) => {
-            const optionalAttr = (p.voxelAttributes || {})["optional"] || {}
-            const variable = p.voxels.filter(v => optionalAttr[v] === true)
-            return new Set(variable).size
-        }
-
-        const pieceCount = pieces.map(
-            piece => countVoxels(piece) * problem.getPieceCount(piece.id)
-        ).reduce((a, b) => a + b, 0)
-        const goalMax = countVoxels(goal)
-        const goalOptional = countOptionalVoxels(goal)
-        const goalMin = goalMax - goalOptional
-
-        if(pieceCount < goalMin || pieceCount > goalMax) {
-            const goalCountMsg = goalOptional === 0 ? goalMax : `${goalMin} to ${goalMax}`
-            return "Number of voxels in pieces don't add up to the voxels in the goal piece.\n\n" +
-                `Voxels in goal: ${goalCountMsg}\n` +
-                `Voxels in pieces: ${pieceCount}`
-        }
-        return null
-    }
-
     getCoverProblem(puzzle: Puzzle, problem: Problem, {logCallback}: TaskCallbacks) {
         if(!(problem instanceof AssemblyProblem)) {
             throw new Error("Assembly Solver can only solve Assembly Problems")
@@ -108,12 +80,7 @@ export class AssemblySolver extends Solver {
             throw new Error(`Goal piece ID ${problem.goalPieceId} not found`)
         }
 
-        const pieces = []
-        for(const pieceId of problem.usedPieces) {
-            const piece = puzzle.getPiece(pieceId)
-            if(!piece) { continue }  // Ignore references to deleted pieces
-            pieces.push(piece)
-        }
+        const pieces = problem.getUsedPieces(puzzle)
 
         if(pieces.length === 0) {
             throw new Error("No pieces in problem")
@@ -130,9 +97,9 @@ export class AssemblySolver extends Solver {
             }
         }
 
-        const voxelCountError = this.voxelCountCheck(problem, pieces, goal)
-        if(voxelCountError) {
-            throw new Error(voxelCountError)
+        const voxelCounts = problem.countVoxels(puzzle)
+        if(voxelCounts.warning) {
+            throw new Error(voxelCounts.warning)
         }
 
         let symmetryBreakerCandidates: Piece[] = []
@@ -165,8 +132,8 @@ export class AssemblySolver extends Solver {
 
         const coverSolver = new CoverSolver([...pieces, ...goalVoxels])
         for(const [i, piece] of pieces.entries()) {
-            const count = problem.getPieceCount(piece.id)
-            coverSolver.setColumnRange(i, count, count)
+            const range = problem.getPieceRange(piece.id)
+            coverSolver.setColumnRange(i, range.min, range.max)
         }
         for(const [i, voxel] of goalVoxels.entries()) {
             const isOptional = goal.getVoxelAttribute("optional", voxel)
@@ -226,7 +193,7 @@ function getAssemblyFromCoverSolution(
                     throw new Error("Multiple pieces found in cover solution row")
                 }
                 piece = item.copy()
-                if(problem.getPieceCount(piece.id) > 1) {
+                if(problem.getPieceRange(piece.id).max > 1) {
                     piece.instance = instanceCounters[piece.id] || 0
                     instanceCounters[piece.id] = piece.instance + 1
                 }

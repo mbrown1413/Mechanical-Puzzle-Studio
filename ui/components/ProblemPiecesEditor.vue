@@ -26,7 +26,7 @@ const emit = defineEmits<{
 const selectedPieceIds: Ref<PieceId[]> = ref([])
 
 const tableHeaders: VDataTable["$props"]["headers"] = [
-    {title: "Piece Name", key: "label"},
+    {title: "Name", key: "label"},
     {title: "Voxels", key: "nVoxels", align: "center"},
     {title: "Count", key: "count", align: "center"},
     {title: "", key: "display", sortable: false},
@@ -42,59 +42,22 @@ const tableItems = computed(() => {
             piece: piece,
             label: piece.label,
             nVoxels: nVoxelsMin === nVoxelsMax ? nVoxelsMin : `${nVoxelsMin}-${nVoxelsMax}`,
-            count: props.problem?.usedPieceCounts[piece.id] || 0,
+            range: props.problem?.getPieceRange(piece.id) || {min: 0, max: 0},
             isGoal: piece.id === props.problem?.goalPieceId,
         }
     })
 })
 
-const piecesVoxelCount: Ref<number> = computed(() => {
-    if(!props.problem) { return 0 }
-    let n = 0
-    for(const [pieceId, count] of Object.entries(props.problem.usedPieceCounts)) {
-        n += count * getPieceNVoxels(pieceId)
-    }
-    return n
-})
-
-const goalVoxelCount = computed(() => {
-    if(!props.problem) return { goalMin: 0, goalMax: 0 }
-
-    let goalMin: number = 0
-    let goalMax: number = 0
-    if(props.problem.goalPieceId !== undefined) {
-        goalMin = getPieceNVoxels(props.problem.goalPieceId, false)
-        goalMax = getPieceNVoxels(props.problem.goalPieceId)
-    }
-    return { goalMin, goalMax }
-})
-
 const voxelCountInfo = computed(() => {
-    const pieceN = piecesVoxelCount.value
-    const goalMin = goalVoxelCount.value.goalMin
-    const goalMax = goalVoxelCount.value.goalMax
-
-    let summary: string
-    let description: string
-    if(goalMin === goalMax) {
-        summary = `${pieceN || "-"} / ${goalMin || "-"}`
-        description = `${pieceN} voxels in pieces and ${goalMin} voxels in goal`
-    } else {
-        summary = `${pieceN || "-"} / ${goalMin}-${goalMax}`
-        description = `${pieceN} voxels in pieces and ${goalMin} to ${goalMax} voxels in goal`
+    if(!props.problem) {
+        return {warning: false, summary: "-/-", description: ""}
     }
+    const counts = props.problem?.countVoxels(props.puzzle)
 
-    let warning: boolean = (
-        pieceN < goalMin ||
-        pieceN > goalMax ||
-        pieceN === 0 ||
-        goalMax === 0
-    )
+    const summary = `${counts.piecesString} / ${counts.goalString}`
+    const description = `${counts.piecesString} voxels in pieces and ${counts.goalString} voxels in goal`
 
-    return {
-        pieceN, goalMin, goalMax,
-        warning, summary, description
-    }
+    return {summary, description, warning: counts.warning}
 })
 
 function getPieceNVoxels(pieceId: string | number, includeOptionalVoxels=true) {
@@ -115,10 +78,20 @@ function getPieceNVoxels(pieceId: string | number, includeOptionalVoxels=true) {
     }
 }
 
-function updatePieceCount(pieceId: PieceId, count: number) {
+function updatePieceCount(pieceId: PieceId, minOrMax: "min"|"max", value: number) {
     if(props.problem === null) { return }
+
+    const newRange = props.problem.getPieceRange(pieceId)
+    newRange[minOrMax] = value
+    if(minOrMax === "min" && newRange.max < newRange.min) {
+        newRange.max = newRange.min
+    }
+    if(minOrMax === "max" && newRange.min > newRange.max) {
+        newRange.min = newRange.max
+    }
+
     const newPieceCounts = Object.assign({}, props.problem.usedPieceCounts)
-    newPieceCounts[pieceId] = count
+    newPieceCounts[pieceId] = newRange
     const action = new EditProblemMetadataAction(
         props.problem.id, {
             usedPieceCounts: newPieceCounts
@@ -137,7 +110,7 @@ function updateGoal(pieceId: PieceId | undefined) {
     emit("action", action)
 }
 
-function selectionCountAction(newCountFunc: (oldCount: number) => number) {
+function selectionCountAction(actionType: "-1"|"0"|"+1") {
     if(props.problem === null) { return }
     const newPieceCounts = Object.assign({}, props.problem.usedPieceCounts)
 
@@ -149,8 +122,24 @@ function selectionCountAction(newCountFunc: (oldCount: number) => number) {
     }
 
     for(const pieceId of selected) {
-        const oldCount = newPieceCounts[pieceId] || 0
-        newPieceCounts[pieceId] = newCountFunc(oldCount)
+        const range = props.problem.getPieceRange(pieceId)
+
+        switch(actionType) {
+            case "-1":
+                range.min--
+                range.max--
+            break
+            case "0":
+                range.min = 0
+                range.max = 0
+            break
+            case "+1":
+                range.min++
+                range.max++
+            break
+        }
+
+        newPieceCounts[pieceId] = range
     }
     const action = new EditProblemMetadataAction(
         props.problem.id, {
@@ -164,17 +153,17 @@ const selectionButtons = [
     {
         text: "-1",
         color: "red",
-        action: () => selectionCountAction((oldCount) => oldCount - 1),
+        action: () => selectionCountAction("-1"),
     },
     {
         text: "0",
         color: undefined,
-        action: () => selectionCountAction(() => 0),
+        action: () => selectionCountAction("0"),
     },
     {
         text: "+1",
         color: "green",
-        action: () => selectionCountAction((oldCount) => oldCount + 1),
+        action: () => selectionCountAction("+1"),
     },
 ]
 </script>
@@ -217,15 +206,31 @@ const selectionButtons = [
         <template v-slot:bottom />
 
         <template v-slot:item.count="{item}">
-            <VNumberInput
-                    control-variant="stacked"
-                    :min="0"
-                    :disabled="item.isGoal"
-                    :model-value="item.isGoal ? '' : item.count"
-                    @update:model-value="updatePieceCount(item.id, Number($event))"
-                    hide-details="auto"
-                    variant="solo-filled"
-            />
+            <VRow>
+                <VCol style="padding: 4px;">
+                    <VNumberInput
+                            :label="item.isGoal ? '' : 'min'"
+                            :min="0"
+                            :disabled="item.isGoal"
+                            :model-value="item.isGoal ? '' : item.range.min"
+                            :hide-details="true"
+                            @update:model-value="updatePieceCount(item.id, 'min', Number($event))"
+                            control-variant="stacked"
+                            variant="solo-filled"
+                    />
+                </VCol>
+                <VCol style="padding: 4px;">
+                    <VNumberInput
+                            :label="item.isGoal ? '' : 'max'"
+                            :min="0"
+                            :disabled="item.isGoal"
+                            :model-value="item.isGoal ? '' : item.range.max"
+                            @update:model-value="updatePieceCount(item.id, 'max', Number($event))"
+                            control-variant="stacked"
+                            variant="solo-filled"
+                    />
+                </VCol>
+            </VRow>
         </template>
 
         <template v-slot:item.display="{item}">
