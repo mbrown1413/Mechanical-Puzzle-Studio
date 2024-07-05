@@ -110,7 +110,7 @@ function updateGoal(pieceId: PieceId | undefined) {
     emit("action", action)
 }
 
-function selectionCountAction(actionType: "-1"|"0"|"+1") {
+function selectionCountAction(actionType: "-1"|"0"|"+1"|"min=0") {
     if(props.problem === null) { return }
     const newPieceCounts = Object.assign({}, props.problem.usedPieceCounts)
 
@@ -136,6 +136,9 @@ function selectionCountAction(actionType: "-1"|"0"|"+1") {
             case "+1":
                 range.min++
                 range.max++
+            break
+            case "min=0":
+                range.min = 0
             break
         }
 
@@ -164,6 +167,12 @@ const selectionButtons = [
         text: "+1",
         color: "green",
         action: () => selectionCountAction("+1"),
+    },
+    {
+        text: "min=0",
+        color: undefined,
+        action: () => selectionCountAction("min=0"),
+        class: "ml-8"
     },
 ]
 </script>
@@ -195,7 +204,7 @@ const selectionButtons = [
                     variant="tonal"
                     :color="button.color"
                     @click="button.action"
-                    class="ml-2"
+                    :class="button.class || 'ml-2'"
                 >
                     {{ button.text }}
                 </VBtn>
