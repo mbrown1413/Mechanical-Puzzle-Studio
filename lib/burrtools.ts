@@ -308,18 +308,22 @@ function readBtProblem(puzzle: Puzzle, btProblem: XmlNode, unsupportedFeatures: 
             throw new Error(`Malformed BurrTools file: Repeat shape in problem`)
         }
 
-        let countString: string
+        let shapeCount
         if("min" in shape.$ && "max" in shape.$) {
-            unsupportedFeatures.add("Problem with min/max piece counts")
-            countString = shape.$.max
+            shapeCount = {
+                min: Number(shape.$.min),
+                max: Number(shape.$.max)
+            }
+            if(Number.isNaN(shapeCount.min) || Number.isNaN(shapeCount.max) || shapeCount.min < 0 || shapeCount.max < 0) {
+                throw new Error(`Malformed BurrTools file: Problem shape min and max count must be a positive integer, not min="${shape.$.min}" max="${shape.$.max}"`)
+            }
         } else if("count" in shape.$) {
-            countString = shape.$.count
+            shapeCount = Number(shape.$.count)
+            if(Number.isNaN(shapeCount) || shapeCount < 0) {
+                throw new Error(`Malformed BurrTools file: Problem shape count must be a positive integer, not "${shape.$.count}"`)
+            }
         } else {
             throw new Error(`Malformed BurrTools file: Expected problem shape to have either count, or min and max attributes.`)
-        }
-        const shapeCount = Number(countString)
-        if(Number.isNaN(shapeCount) || shapeCount < 0) {
-            throw new Error(`Malformed BurrTools file: Problem shape count must be a positive integer, not "${countString}"`)
         }
 
         if(shape.$?.group !== undefined || "group" in shape) {

@@ -763,7 +763,7 @@ describe("burrtools read", () => {
         `)
     })
 
-    test("piece min/max unsupported", async () => {
+    test("piece min/max", async () => {
         const xml = await readXmlForBurrTools(`
             <?xml version="1.0"?>
             <puzzle version="2">
@@ -826,7 +826,10 @@ describe("burrtools read", () => {
                     "solverId": "assembly",
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {
-                      "1": 5,
+                      "1": {
+                        "max": 5,
+                        "min": 4,
+                      },
                     },
                   },
                 ],
@@ -834,9 +837,6 @@ describe("burrtools read", () => {
               },
               "type": "PuzzleFile",
             },
-            "unsupportedFeatures": [
-              "Problem with min/max piece counts",
-            ],
           }
         `)
     })
