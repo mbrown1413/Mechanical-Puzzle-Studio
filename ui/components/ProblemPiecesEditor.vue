@@ -206,8 +206,8 @@ const selectionButtons = [
         <template v-slot:bottom />
 
         <template v-slot:item.count="{item}">
-            <VRow>
-                <VCol style="padding: 4px;">
+            <VRow style="align-items: center;">
+                <VCol style="padding: 0 2px;">
                     <VNumberInput
                             :label="item.isGoal ? '' : 'min'"
                             :min="0"
@@ -216,18 +216,20 @@ const selectionButtons = [
                             :hide-details="true"
                             @update:model-value="updatePieceCount(item.id, 'min', Number($event))"
                             control-variant="stacked"
-                            variant="solo-filled"
+                            variant="outlined"
+                            reverse
                     />
                 </VCol>
-                <VCol style="padding: 4px;">
+                <VCol style="padding: 0 2px;">
                     <VNumberInput
                             :label="item.isGoal ? '' : 'max'"
                             :min="0"
                             :disabled="item.isGoal"
                             :model-value="item.isGoal ? '' : item.range.max"
+                            :hide-details="true"
                             @update:model-value="updatePieceCount(item.id, 'max', Number($event))"
                             control-variant="stacked"
-                            variant="solo-filled"
+                            variant="outlined"
                     />
                 </VCol>
             </VRow>
