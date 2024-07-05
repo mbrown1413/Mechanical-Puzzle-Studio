@@ -81,6 +81,8 @@
  */
 
 
+import {TaskCallbacks, voidTaskCallbacks} from "~/lib/types.ts"
+
 /**
  * Each row in a solution represents a row chosen, and each item in the the row
  * is a column's data given in the CoverSolver cosntructor. For example, if we
@@ -368,14 +370,64 @@ export class CoverSolver<Data> {
     /**
      * Find all solutions.
      */
-    solve(): CoverSolution<Data>[] {
+    solve(
+        callbacks: TaskCallbacks = voidTaskCallbacks,
+    ): CoverSolution<Data>[] {
+
+        // Progress works by choosing a depth, counting all "ticks" at that
+        // depth, then using that to calculate progress when we actually run
+        // the search algorithm. We try to find a good depth that gives us
+        // enough ticks but not too many.
+        let progressDepth = 0
+        let progressTicks = 1
+        while(progressTicks < 50) {
+            progressDepth++
+            const prevProgressTicks = progressTicks
+
+            // Calculate ticks at progressDepth
+            progressTicks = 0
+            this.search([], 0, (depth) => {
+                if(depth === progressDepth) {
+                    progressTicks++
+                    return false
+                }
+                return true
+            })
+
+            if(progressTicks === 0) {
+                // We never reached this depth... we completely solved it!
+                // Fall back to the previous depth
+                progressTicks = prevProgressTicks
+                progressDepth = progressDepth - 1
+                break
+            }
+
+        }
+
         const solutions: CoverSolution<Data>[] = []
-        this.search(solutions)
+        let tick = 0
+        this.search(solutions, 0, (depth) => {
+            if(depth === progressDepth) {
+                callbacks.progressCallback(tick / progressTicks)
+                tick++
+            }
+            return true
+        })
         return solutions
     }
 
-    /** Recursive method which accumulates solutions in the `solutions` list. */
-    private search(solutions: CoverSolution<Data>[], depth=0) {
+    /**
+     * Recursive method which accumulates solutions in the `solutions` list.
+     *
+     * The hook method is called at every node visited. If hook returns
+     * `false`, the search is does not continue further on the current branch.
+     */
+    private search(
+        solutions: CoverSolution<Data>[],
+        depth: number,
+        hook: (depth: number) => boolean,
+    ) {
+        if(!hook(depth)) { return }
         if(this.header.r === this.header) {
             // No required columns are left in the header. Solution found!
             solutions.push(this.getPartialSolution(depth))
@@ -429,7 +481,7 @@ export class CoverSolver<Data> {
             }
 
             // We've modified the matrix for our partial solution. Now recurse!
-            this.search(solutions, depth + 1)
+            this.search(solutions, depth + 1, hook)
 
             // Uncover columns covered above
             for(

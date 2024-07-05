@@ -13,7 +13,7 @@ export type StartMessage = {
 
 type ProgressMessage = {
     msgType: "progress",
-    percent: number,
+    percent: number | null,
     progressMessage?: string | null,
 }
 

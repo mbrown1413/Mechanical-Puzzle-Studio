@@ -15,7 +15,7 @@ function sendMessage(message: WorkerToRunnerMessage) {
 }
 
 const callbacks = {
-    progressCallback(percent: number, progressMessage?: string | null) {
+    progressCallback(percent: number | null, progressMessage?: string | null) {
         sendMessage({msgType: "progress", percent, progressMessage})
     },
     logCallback(message: string) {

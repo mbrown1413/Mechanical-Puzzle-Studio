@@ -18,7 +18,7 @@ export type BoolWithReason = {
  * progress uses it.
  */
 export type TaskCallbacks = {
-    progressCallback: (percent: number, progressMessage?: string | null) => void,
+    progressCallback: (percent: number | null, progressMessage?: string | null) => void,
     logCallback: (message: string) => void,
 }
 
@@ -27,6 +27,6 @@ export type TaskCallbacks = {
  * case you want no callbacks, or want to set just a few callbacks.
  */
 export const voidTaskCallbacks: TaskCallbacks = {
-    logCallback: (_message: string) => {},
-    progressCallback: (_progressPercent: number) => {},
+    logCallback: () => {},
+    progressCallback: () => {},
 }

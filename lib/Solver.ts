@@ -36,10 +36,11 @@ export class AssemblySolver extends Solver {
         const coverSolver = this.getCoverProblem(puzzle, problem, callbacks)
 
         callbacks.progressCallback(0, "Assembling")
-        const coverSolutions = coverSolver.solve()
+        const coverSolutions = coverSolver.solve(callbacks)
         let solutions = coverSolutions.map(
             (coverSolution) => getAssemblyFromCoverSolution(problem, coverSolution)
         )
+        callbacks.progressCallback(100)
 
         if(this.disassemble) {
             callbacks.progressCallback(0, "Disassembling")
@@ -59,6 +60,7 @@ export class AssemblySolver extends Solver {
             solution.id = i + 1
         }
 
+        callbacks.progressCallback(null, "Saving Solutions")
         return solutions
     }
 
