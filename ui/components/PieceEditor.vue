@@ -54,32 +54,53 @@ function voxelsClicked(event: MouseEvent, voxels: Voxel[]) {
     }
 }
 
-const cameraSchemeName = computed(() =>
+const mainCameraSchemeName = computed(() =>
     toggles.value.includes("twoDimensional") ? "2D" : "3D"
 )
 
-const cameraSchemeIcon = computed(() =>
+const mainCameraSchemeIcon = computed(() =>
     toggles.value.includes("twoDimensional") ? "mdi-cube-off-outline" : "mdi-cube-outline"
 )
 
+const gridDisplayProps = computed(() => {
+    const common = {
+        grid: props.puzzle.grid,
+        pieces: pieces.value,
+        highlightedVoxels: highlightedVoxels.value,
+        viewpoint: viewpoint.value,
+        layerN: layerN.value,
+        boundsSizing: "pieceBounds" as const,
+    }
+    const threeD = {
+        cameraScheme: "3D" as const,
+    }
+    const twoD = {
+        cameraScheme: "2D" as const,
+        boxToolEnabled: true,
+    }
+    return {
+        main: {
+            ...common,
+            ...(mainCameraSchemeName.value === "3D" ? threeD : twoD),
+            showTools: true,
+        },
+        aux: {
+            ...common,
+            ...(mainCameraSchemeName.value === "3D" ? twoD : threeD),
+            showLayerSlider: false,
+        },
+    }
+})
 </script>
 
 <template>
     <div style="width: 100%; height: 100%;">
         <GridDisplay
-            :grid="puzzle.grid"
-            :pieces="pieces"
-            :cameraScheme="cameraSchemeName"
-            :highlightedVoxels="highlightedVoxels"
-            :viewpoint="viewpoint"
-            :layerN="layerN"
+            v-bind="gridDisplayProps.main"
             @update:highlightedVoxels="highlightedVoxels = $event"
             @update:viewpoint="viewpoint = $event"
             @update:layerN="layerN = $event"
             @voxelsClicked="voxelsClicked"
-            boundsSizing="pieceBounds"
-            :boxToolEnabled="cameraSchemeName === '2D'"
-            showTools
         >
             <template v-slot:tools>
 
@@ -111,7 +132,7 @@ const cameraSchemeIcon = computed(() =>
                     </VTooltip>
 
                     <VTooltip
-                        :text="cameraSchemeName"
+                        :text="mainCameraSchemeName"
                         location="bottom"
                         contentClass="tooltip-arrow-up"
                     >
@@ -123,9 +144,9 @@ const cameraSchemeIcon = computed(() =>
                                 v-bind="props"
                             >
                                 <VIcon
-                                    :icon="cameraSchemeIcon"
+                                    :icon="mainCameraSchemeIcon"
                                     size="x-large"
-                                    :aria-label="cameraSchemeName"
+                                    :aria-label="mainCameraSchemeName"
                                     aria-hidden="false"
                                 />
                             </VBtn>
@@ -139,19 +160,11 @@ const cameraSchemeIcon = computed(() =>
 
         <Teleport v-if="auxEditArea" :to="auxEditArea">
             <GridDisplay
-                :grid="puzzle.grid"
-                :pieces="pieces"
-                :cameraScheme="cameraSchemeName === '3D' ? '2D' : '3D'"
-                :showLayers="false"
-                :highlightedVoxels="highlightedVoxels"
-                :viewpoint="viewpoint"
-                :layerN="layerN"
+                v-bind="gridDisplayProps.aux"
                 @update:highlightedVoxels="highlightedVoxels = $event"
                 @update:viewpoint="viewpoint = $event"
                 @update:layerN="layerN = $event"
                 @voxelsClicked="voxelsClicked"
-                boundsSizing="pieceBounds"
-                :boxToolEnabled="cameraSchemeName === '3D'"
             />
         </Teleport>
     </div>

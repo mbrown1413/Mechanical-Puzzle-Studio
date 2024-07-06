@@ -22,7 +22,7 @@ const props = withDefaults(
         size?: "fill" | number,
         highlightBy?: "voxel" | "piece",
         showTools?: boolean,
-        showLayers?: boolean,
+        showLayerSlider?: boolean,
         cameraScheme?: CameraSchemeName,
         highlightedVoxels?: Voxel[],
         viewpoint?: Viewpoint,
@@ -34,7 +34,7 @@ const props = withDefaults(
         size: "fill",
         highlightBy: "voxel",
         showTools: false,
-        showLayers: true,
+        showLayerSlider: true,
         cameraScheme: "3D",
         boxToolEnabled: false,
     }
@@ -154,7 +154,7 @@ useGridDisplayMouseComposible(
 <template>
     <div class="grid-display" :style="pieceDisplayStyle">
         <div class="draw-element" ref="drawElement"></div>
-        <div class="overlay controls" v-if="!displayOnly && showLayers">
+        <div class="overlay controls" v-if="!displayOnly && showLayerSlider">
             <VSelect
                     v-model="viewpoint"
                     :items="viewpointOptions"
