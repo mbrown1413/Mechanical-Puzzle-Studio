@@ -29,11 +29,29 @@ export class Disassembly extends SerializableClass {
         return clone(this)
     }
 
+    /**
+     * Perform non-functional edits to make the disassembly read more
+     * logically.
+     */
+    prepareForStorage(grid: Grid, start: Piece[]) {
+        this.applyWeights(grid, start)
+        this.reorder()
+    }
+
+    /**
+     * Perform non-functional edits in addition to those done by
+     * `prepareForStorage()` to make the disassembly make more sense for
+     * display purposes.
+     */
+    prepareForDisplay(grid: Grid, start: Piece[]) {
+        this.spaceSepratedParts(grid, start)
+    }
+
     static postSerialize(disassembly: Disassembly) {
         const stored = disassembly as unknown as StoredDisassemblyData
 
         stored.steps = disassembly.steps.map(s => {
-            const repeatStr = s.repeat > 1 ? ` repeat=${s.repeat}` : ""
+            const repeatStr = s.repeat !== 1 ? ` repeat=${s.repeat}` : ""
             const separatesStr = s.separates ? " separates" : ""
             return `pieces=${s.movedPieces.join(",")} transform=${s.transform}${repeatStr}${separatesStr}`
         })
@@ -320,6 +338,52 @@ export class Disassembly extends SerializableClass {
         }
     }
 
+    /**
+     * Flips the movements so each individual step will tend to move lower
+     * weighted pieces, rather than move the inverse set of pieces in the
+     * opposite direction.
+     */
+    applyWeights(grid: Grid, pieces: Piece[]) {
+
+        const getPieceFromId = (pieceId: PieceCompleteId) => {
+            const piece = pieces.find(piece => piece.completeId === pieceId)
+            if(!piece) {
+                throw new Error(`Could not find piece id "${pieceId}" referenced in disassembly`)
+            }
+            return piece
+        }
+
+        const parts = [pieces.map(piece => piece.completeId)]
+        for(const step of this.steps) {
+
+            // Find part that this step acts on
+            const movedPartIdx = parts.findIndex(
+                part => part.includes(step.movedPieces[0])
+            )
+            const movedPart = parts[movedPartIdx]
+
+            // Consider inverting this step
+            const movedPieceIds = movedPart.filter(pieceId => step.movedPieces.includes(pieceId))
+            const stationaryPieceIds = movedPart.filter(pieceId => !step.movedPieces.includes(pieceId))
+            const movedPieces = movedPieceIds.map(getPieceFromId)
+            const stationaryPieces = stationaryPieceIds.map(getPieceFromId)
+            if(stepNeedsInverting(movedPieces, stationaryPieces)) {
+                step.transform = grid.scaleTransform(step.transform, -1)
+                step.movedPieces = stationaryPieceIds
+            }
+
+            // Split parts
+            if(step.separates) {
+                parts.push(parts[movedPartIdx].filter(
+                    pieceId => !step.movedPieces.includes(pieceId)
+                ))
+                parts[movedPartIdx] = [...step.movedPieces]
+            }
+
+        }
+
+    }
+
 }
 registerClass(Disassembly)
 
@@ -337,4 +401,15 @@ function performStep(
             }
         }
     }
+}
+
+function stepNeedsInverting(movedPieces: Piece[], stationaryPieces: Piece[]): boolean {
+
+    function getLargestPieceSize(pieces: Piece[]) {
+        return pieces.toSorted(
+            (a, b) => b.voxels.length - a.voxels.length
+        )[0].voxels.length
+    }
+
+    return getLargestPieceSize(movedPieces) > getLargestPieceSize(stationaryPieces)
 }

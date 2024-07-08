@@ -279,4 +279,38 @@ describe("Disassembly", () => {
           }
         `)
     })
+
+    test("applyWeights", () => {
+        const pieces = grid.piecesFromString(`
+            00001
+        `)
+        let disassembly = deserialize({
+            "type": "Disassembly",
+            "steps": [
+                "pieces=0 transform=t:1,0,0 repeat=3 separates"
+            ]
+        }) as Disassembly
+        disassembly.applyWeights(grid, pieces)
+        expect(serialize(disassembly)).toEqual({
+            "type": "Disassembly",
+            "steps": [
+                "pieces=1 transform=t:-1,0,0 repeat=3 separates"
+            ]
+        })
+
+        // Already weighted correctly, so it should not be modified
+        disassembly = deserialize({
+            "type": "Disassembly",
+            "steps": [
+                "pieces=1 transform=t:-1,0,0 repeat=3 separates"
+            ]
+        }) as Disassembly
+        disassembly.applyWeights(grid, pieces)
+        expect(serialize(disassembly)).toEqual({
+            "type": "Disassembly",
+            "steps": [
+                "pieces=1 transform=t:-1,0,0 repeat=3 separates"
+            ]
+        })
+    })
 })

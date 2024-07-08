@@ -185,6 +185,13 @@ export abstract class Grid extends SerializableClass {
     abstract doTransform(transform: Transform, voxels: Voxel[]): Voxel[]
 
     /**
+     * Return the transform which repeats the given transform `amount` times.
+     * Amount will always be an integer but it may be negative, indicating the
+     * transform should be done in the opposite direction.
+     */
+    abstract scaleTransform(transform: Transform, amount: number): Transform
+
+    /**
      * List all possible ways a set of voxels can be rotated.
      */
     abstract getRotations(): Transform[]

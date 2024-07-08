@@ -269,6 +269,23 @@ export class CubicGrid extends Grid {
         throw new Error(`Transform in unknown format: ${transform}`)
     }
 
+    scaleTransform(transform: Transform, amount: number): Transform {
+
+        if(/^t:(-?\d+,?){3}$/.test(transform)) {
+            const offsets = transform.slice(2).split(",").map(Number)
+            offsets[0] *= amount
+            offsets[1] *= amount
+            offsets[2] *= amount
+            return `t:${offsets[0]},${offsets[1]},${offsets[2]}`
+        }
+
+        if(/^r:[+-][XYZ],[0123]$/.test(transform)) {
+            throw new Error("CubicGrid does not support scaling rotation transforms")
+        }
+
+        throw new Error(`Transform in unknown format: ${transform}`)
+    }
+
     private doRotation(xFacingSide: CubicDirection, xRotations: number, voxels: Voxel[]) {
         // Matrices to rotate 3D voxel around X, Y or Z axis (clockwise
         // when viewed from a positive coordinate looking down at the origin).

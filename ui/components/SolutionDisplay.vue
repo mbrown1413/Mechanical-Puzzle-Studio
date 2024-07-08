@@ -32,7 +32,7 @@ const disassemblies = computed(() => props.solution?.disassemblies)
 const disassembly = computed(() => {
     if(!disassemblies.value || disassemblies.value.length === 0 || !props.solution) { return null }
     const disassembly = disassemblies.value[disassemblyNumber.value].copy()
-    disassembly.spaceSepratedParts(props.puzzle.grid, props.solution.placements)
+    disassembly.prepareForDisplay(props.puzzle.grid, props.solution.placements)
     return disassembly
 })
 </script>

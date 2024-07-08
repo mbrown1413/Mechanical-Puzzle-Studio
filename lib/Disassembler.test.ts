@@ -41,7 +41,7 @@ describe("Disassembler", () => {
           [
             {
               "steps": [
-                "pieces=0 transform=t:-1,0,0 separates",
+                "pieces=1 transform=t:1,0,0 separates",
               ],
               "type": "Disassembly",
             },
@@ -84,7 +84,7 @@ describe("Disassembler", () => {
           [
             {
               "steps": [
-                "pieces=0 transform=t:1,0,0 repeat=2 separates",
+                "pieces=1 transform=t:-1,0,0 repeat=2 separates",
               ],
               "type": "Disassembly",
             },
@@ -322,9 +322,9 @@ describe("Disassembler", () => {
             {
               "steps": [
                 "pieces=1 transform=t:1,0,0 repeat=4 separates",
-                "pieces=0 transform=t:0,1,0",
-                "pieces=0 transform=t:-1,0,0 repeat=4 separates",
-                "pieces=2 transform=t:0,-1,0 repeat=2 separates",
+                "pieces=2,3 transform=t:0,-1,0",
+                "pieces=2,3 transform=t:1,0,0 repeat=4 separates",
+                "pieces=3 transform=t:0,1,0 repeat=2 separates",
               ],
               "type": "Disassembly",
             },
@@ -448,19 +448,19 @@ describe("Disassembler", () => {
           [
             {
               "steps": [
-                "pieces=3,0 transform=t:-1,0,0 repeat=3 separates",
-                "pieces=0 transform=t:0,-1,0 repeat=2",
-                "pieces=0 transform=t:-1,0,0 repeat=3 separates",
-                "pieces=1 transform=t:0,1,0 separates",
+                "pieces=1,2 transform=t:1,0,0 repeat=3 separates",
+                "pieces=2 transform=t:0,-1,0 separates",
+                "pieces=3 transform=t:0,1,0 repeat=2",
+                "pieces=3 transform=t:1,0,0 repeat=3 separates",
               ],
               "type": "Disassembly",
             },
             {
               "steps": [
-                "pieces=3,0 transform=t:-1,0,0 repeat=3 separates",
-                "pieces=0 transform=t:0,-1,0",
-                "pieces=0 transform=t:-1,0,0 repeat=3 separates",
-                "pieces=1 transform=t:0,1,0 separates",
+                "pieces=1,2 transform=t:1,0,0 repeat=3 separates",
+                "pieces=2 transform=t:0,-1,0 separates",
+                "pieces=3 transform=t:0,1,0",
+                "pieces=3 transform=t:1,0,0 repeat=3 separates",
               ],
               "type": "Disassembly",
             },

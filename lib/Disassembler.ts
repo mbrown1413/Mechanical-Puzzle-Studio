@@ -331,7 +331,7 @@ export class SimpleDisassembler extends Disassembler {
 
         iterate(this.start, [this.nodes[0]], [])
         for(const solution of solutions) {
-            solution.reorder()
+            solution.prepareForStorage(this.grid, this.start)
         }
         return solutions
     }
