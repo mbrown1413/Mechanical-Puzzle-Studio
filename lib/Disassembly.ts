@@ -405,11 +405,13 @@ function performStep(
 
 function stepNeedsInverting(movedPieces: Piece[], stationaryPieces: Piece[]): boolean {
 
-    function getLargestPieceSize(pieces: Piece[]) {
-        return pieces.toSorted(
-            (a, b) => b.voxels.length - a.voxels.length
-        )[0].voxels.length
+    function countVoxels(pieces: Piece[]) {
+        let nVoxels = 0
+        for(const piece of pieces) {
+            nVoxels += piece.voxels.length
+        }
+        return nVoxels
     }
 
-    return getLargestPieceSize(movedPieces) > getLargestPieceSize(stationaryPieces)
+    return countVoxels(movedPieces) > countVoxels(stationaryPieces)
 }

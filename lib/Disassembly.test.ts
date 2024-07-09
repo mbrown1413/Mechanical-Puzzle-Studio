@@ -281,7 +281,7 @@ describe("Disassembly", () => {
     })
 
     test("applyWeights", () => {
-        const pieces = grid.piecesFromString(`
+        let pieces = grid.piecesFromString(`
             00001
         `)
         let disassembly = deserialize({
@@ -310,6 +310,24 @@ describe("Disassembly", () => {
             "type": "Disassembly",
             "steps": [
                 "pieces=1 transform=t:-1,0,0 repeat=3 separates"
+            ]
+        })
+
+        // Individual pieces add their voxels to be "heavier"
+        pieces = grid.piecesFromString(`
+            0123444
+        `)
+        disassembly = deserialize({
+            "type": "Disassembly",
+            "steps": [
+                "pieces=0,1,2,3 transform=t:1,0,0"
+            ]
+        }) as Disassembly
+        disassembly.applyWeights(grid, pieces)
+        expect(serialize(disassembly)).toEqual({
+            "type": "Disassembly",
+            "steps": [
+                "pieces=4 transform=t:-1,0,0"
             ]
         })
     })
