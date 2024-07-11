@@ -113,6 +113,7 @@ describe("CoverSolver", () => {
         solver.addRow([0, 0, 1])
         expect(solve(solver)).toEqual([
             [["X", "Y"]],
+            [["X", "Y"], ["Z"]],
         ])
 
         solver = new CoverSolver(["X", "Y", "Z"], 1)
@@ -308,9 +309,50 @@ describe("CoverSolver", () => {
         solver.addRow([1, 0])
         solver.addRow([0, 1])
         solver.setColumnRange(0, 1, 2)
-        expect(solver.solve()).toEqual([
-            [["A", "B"]],
+        expect(solve(solver)).toEqual([
+            [["A"], ["A", "B"]],
             [["A"], ["B"]],
+            [["A", "B"]],
+        ])
+    })
+
+    test("Optional columns must still be explored after required ones", () => {
+        let solver = new CoverSolver(["A", "B"])
+        solver.addRow([1, 0])
+        solver.addRow([0, 1])
+        solver.setColumnOptional(0)
+        solver.setColumnOptional(1)
+        expect(solve(solver)).toEqual([
+            [],
+            [["A"]],
+            [["A"], ["B"]],
+            [["B"]],
+        ])
+
+        solver = new CoverSolver(["A", "B", "C"])
+        solver.addRow([1, 1, 1])
+        solver.addRow([1, 0, 0])
+        solver.addRow([0, 1, 0])
+        solver.setColumnRange(0, 1, 2)
+        solver.setColumnRange(1, 1, 2)
+        expect(solve(solver)).toEqual([
+            [["A"], ["A", "B", "C"]],
+            [["A"], ["A", "B", "C"], ["B"]],
+            [["A", "B", "C"]],
+            [["A", "B", "C"], ["B"]],
+        ])
+
+        solver = new CoverSolver(["A", "B", "C"])
+        solver.addRow([1, 1, 0])
+        solver.addRow([1, 0, 1])
+        solver.setColumnRange(0, 0, 2)
+        solver.setColumnOptional(1)
+        solver.setColumnOptional(2)
+        expect(solve(solver)).toEqual([
+            [],
+            [["A", "B"]],
+            [["A", "B"], ["A", "C"]],
+            [["A", "C"]]
         ])
     })
 

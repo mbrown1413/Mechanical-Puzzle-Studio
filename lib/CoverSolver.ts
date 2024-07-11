@@ -23,8 +23,8 @@
  *
  * The typical addition to DLX is to allow for optional columns, which may have
  * a 1 present in the solution, but need not have one. This is implemented by
- * removing that column from the header. The search routine won't find it when
- * it's looking for columns to choose next, but otherwise the data is there and
+ * removing that column from the header. The solver won't find it when it's
+ * looking for columns to choose next, but otherwise the data is there and
  * connected to other nodes as usual.
  *
  * We go a step further and allow a column to have a minimum and maximum. That
@@ -46,11 +46,11 @@
  * used twice. The same two rows can be chosen for two different solutions,
  * just in a different order.
  *
- * We fix this by removing rows as we iterate over them (only if max > 1,
- * otherwise the cover operation on the column will remove them anyways). This
- * doesn't miss any solutions because we fully explore rows after they're
- * chosen, so it's redundant to explore them again at a greater depth. Of
- * course once we've iterated over all of the rows in the column we must
+ * We fix this by removing rows as we iterate over them. We only need to do
+ * this if we might actually choose the column again (the column's max > 1).
+ * This doesn't miss any solutions because we fully explore rows after they're
+ * chosen, so it's redundant to explore the same row again at a greater depth.
+ * Of course once we've iterated over all of the rows in the column we must
  * restore the rows we deleted.
  *
  * This mimicks how you might enumerate combinations of a set using nested
@@ -66,18 +66,31 @@
  *      }
  *
  *
- * Filling optional columns after a solution is found
- * ==================================================
+ * Choosing optional columns
+ * =========================
  *
  * What happens when we've found a solution, but more optional columns could
- * still be filled? Do we keep searching for more solutions or stop? Which way
- * we resolve this ambiguity has implications for the solutions that are
- * returned for the assembler. It also has performance implications.
+ * still be filled? Do we keep searching for more solutions or stop? In our
+ * case we don't just care about finding one solution, we want all solutions,
+ * so we must keep choosing optional columns until we cannot choose any more.
  *
- * For now, we don't continue searching for solutions. This keeps the
- * implementation fast and simple. Even though we may technically miss some
- * solutions, every solver will have its quirks, and we can always change this
- * later.
+ * To accomplish this, when we remove a column from the header, we add it to a
+ * list of optional columns. After all required columns have been chosen and
+ * the column header is empty, we start choosing from this optional column
+ * list instead.
+ *
+ * Of course when we choose an optional column like this, we must also consider
+ * the extra choice of that column not being present in the solution. We do
+ * this by recursing after we've considered all rows in the column, this time
+ * not adding any rows to the path as we recurse.
+ *
+ * Side note: With this method, we could actually go a step further and choose
+ * optional columns before required ones. When choosing we would have to add to
+ * the column's count based on the max, since each optional column effectively
+ * has an additional empty row choice (so it actually has `col.max` extra
+ * choices). When I tried this it was actually slower, resulting in many more
+ * nodes being explored. I'm not entirely sure why, so this idea is worth
+ * exploring more in the future.
  */
 
 
@@ -133,9 +146,7 @@ export class CoverSolver<Data> {
 
     private header: MainHeader
     private allCols: ColumnHeader[]  // Includes columns removed from the header
-
-    // Each item is one node from a row picked in the solution so far
-    private partialSolution: Node[]
+    private optionalCols: ColumnHeader[]  // Columns removed from header
 
     /**
      * `columnData` is an array containing information about each column. The
@@ -154,12 +165,11 @@ export class CoverSolver<Data> {
         const headerInfo = this.createHeader()
         this.header = headerInfo.mainHeader
         this.allCols = headerInfo.allCols
+        this.optionalCols = []
 
         for(let i=this.nCols - nOptionalColumns; i<this.nCols; i++) {
             this.setColumnOptional(i)
         }
-
-        this.partialSolution = []
     }
 
     private toMatrix(): number[][] {
@@ -320,12 +330,14 @@ export class CoverSolver<Data> {
             col.r = this.header
             this.header.l.r = col
             this.header.l = col
+            this.optionalCols.filter(c => c.index !== col.index)
         } else if(col.min > 0 && min <= 0) {
             // Remove column from header
             col.l.r = col.r
             col.r.l = col.l
             col.l = col
             col.r = col
+            this.optionalCols.push(col)
         }
 
         col.min = min
@@ -373,10 +385,12 @@ export class CoverSolver<Data> {
     solve(
         callbacks: TaskCallbacks = voidTaskCallbacks,
     ): CoverSolution<Data>[] {
+        // This whole method basically just calls the base case of
+        // `this.recursiveSearch()`. All the complexity is just to implement progress.
 
         // Progress works by choosing a depth, counting all "ticks" at that
         // depth, then using that to calculate progress when we actually run
-        // the search algorithm. We try to find a good depth that gives us
+        // the `recursiveSearch()`. We try to find a good depth that gives us
         // enough ticks but not too many.
         let progressDepth = 0
         let progressTicks = 1
@@ -386,7 +400,7 @@ export class CoverSolver<Data> {
 
             // Calculate ticks at progressDepth
             progressTicks = 0
-            this.search([], 0, (depth) => {
+            this.recursiveSearch([], [], 0, (depth) => {
                 if(depth === progressDepth) {
                     progressTicks++
                     return false
@@ -406,7 +420,7 @@ export class CoverSolver<Data> {
 
         const solutions: CoverSolution<Data>[] = []
         let tick = 0
-        this.search(solutions, 0, (depth) => {
+        this.recursiveSearch(solutions, [], 0, (depth) => {
             if(depth === progressDepth) {
                 callbacks.progressCallback(tick / progressTicks)
                 tick++
@@ -420,39 +434,31 @@ export class CoverSolver<Data> {
      * Recursive method which accumulates solutions in the `solutions` list.
      *
      * The hook method is called at every node visited. If hook returns
-     * `false`, the search is does not continue further on the current branch.
+     * `false`, the search does not continue further on the current branch.
      */
-    private search(
+    private recursiveSearch(
         solutions: CoverSolution<Data>[],
+        path: Node[],
         depth: number,
         hook: (depth: number) => boolean,
     ) {
         if(!hook(depth)) { return }
-        if(this.header.r === this.header) {
-            // No required columns are left in the header. Solution found!
-            solutions.push(this.getPartialSolution(depth))
+
+        const column = this.chooseColumn()
+        if(!column) {
+            if(this.header.r === this.header) {
+                // No required columns are left in the header. Solution found!
+                solutions.push(this.getPartialSolution(path))
+            }
             return
         }
 
-        const column = this.chooseColumn()
-        if(!column) { return }
+        // Consider if we want to remove rows during iteration.
+        // See "Removing Duplicate Solutions" docs above.
+        const removeRowsDuringIteration = column.max > 1
+        const removedRows: Node[] = []
 
         this.coverColumn(column)
-
-        // This is what prevents us from duplicating solutions if a column has
-        // max > 1. The previous cover operation will have decremented
-        // `column.max`, and if it didn't reach zero we still may choose rows
-        // from this column in the future. In this case we must remove rows as
-        // we choose them at this iteration level, since choosing those rows
-        // again at a later depth would be a repeat solution.
-        //
-        // If `column.min > 0` still, we're likely to choose this column next.
-        // If `column.min <= 0` the column won't be chosen again, but we may
-        // still use rows that have 1s in this column. In either case it's
-        // important to not choose rows again which we've already explored at
-        // this depth.
-        const removeRowsDuringIteration = column.max !== 0
-        const removedRows: Node[] = []
 
         // For each "1" in chosen column
         for(
@@ -461,9 +467,6 @@ export class CoverSolver<Data> {
             row = row.d
         ) {
             row = row as Node
-
-            // Set this row as part of the solution
-            this.partialSolution[depth] = row
 
             // Remove the chosen row, including the node from the current column
             if(removeRowsDuringIteration) {
@@ -481,7 +484,9 @@ export class CoverSolver<Data> {
             }
 
             // We've modified the matrix for our partial solution. Now recurse!
-            this.search(solutions, depth + 1, hook)
+            path.push(row)
+            this.recursiveSearch(solutions, path, depth + 1, hook)
+            path.pop()
 
             // Uncover columns covered above
             for(
@@ -491,6 +496,11 @@ export class CoverSolver<Data> {
             ) {
                 this.uncoverColumn(node.c)
             }
+        }
+
+        // For optional columns consider choosing no rows from it
+        if(column.min < 0) {
+            this.recursiveSearch(solutions, path, depth + 1, hook)
         }
 
         // Restore rows we've removed during iteration
@@ -506,9 +516,9 @@ export class CoverSolver<Data> {
      * Convert `this.partialSolution` (column indexes) into a `CoverSolution`
      * using `this.columnData`.
      */
-    private getPartialSolution(depth: number): CoverSolution<Data> {
+    private getPartialSolution(path: Node[]): CoverSolution<Data> {
         const solution = []
-        for(const row of this.partialSolution.slice(0, depth)) {
+        for(const row of path) {
             const rowOut = [this.columnData[row.c.index]]
             for(
                 let node = row.r;
@@ -526,22 +536,40 @@ export class CoverSolver<Data> {
     /** Return the best column to iterate over next, or null if we've reached a
      * dead-end and no solutions are possible. */
     private chooseColumn(): ColumnHeader | null {
-        let chosenCol = this.header.r as ColumnHeader
 
-        for(
-            let col = chosenCol.r as ColumnHeader;
-            col !== this.header;
-            col = col.r as ColumnHeader
-        ) {
-            if(col.count < chosenCol.count) {
-                chosenCol = col
+        // Case 1: We still have required columns in the header.
+        // Pick one of the required columns.
+        if(this.header.r !== this.header) {
+            let chosenCol = this.header.r as ColumnHeader
+            for(
+                let col = chosenCol.r as ColumnHeader;
+                col !== this.header;
+                col = col.r as ColumnHeader
+            ) {
+                if(col.count < chosenCol.count) {
+                    chosenCol = col
+                }
             }
+            if(chosenCol.count <= 0) {
+                return null
+            }
+            return chosenCol
+
+        // Case 2: We're out of required columns.
+        // Pick from the optional columns list.
+        } else {
+            let chosenCol = null
+            const candidates = this.optionalCols.filter(
+                col => col.count > 0 && col.max > 0
+            )
+            for(const col of candidates) {
+                if(!chosenCol || col.count < chosenCol.count) {
+                    chosenCol = col
+                }
+            }
+            return chosenCol
         }
 
-        if(chosenCol.count <= 0) {
-            return null
-        }
-        return chosenCol
     }
 
     /**
@@ -600,6 +628,9 @@ export class CoverSolver<Data> {
         if(column.min === 0) {
             column.r.l = column.l
             column.l.r = column.r
+            if(column.max > 0) {
+                this.optionalCols.push(column)
+            }
         }
 
         if(column.max !== 0) {
@@ -629,6 +660,9 @@ export class CoverSolver<Data> {
             // Restore column header
             column.r.l = column
             column.l.r = column
+            if(column.max > 1) {
+                this.optionalCols.pop()
+            }
         }
 
         if(column.max !== 1) {
