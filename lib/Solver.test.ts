@@ -480,3 +480,55 @@ describe("AssemblySolver piece ranges", () => {
     })
 
 })
+
+describe("AssemblySolver piece groups", () => {
+
+    test("Simple problem", () => {
+        const puzzle = new Puzzle(new CubicGrid())
+        const solver = new AssemblySolver(false, false)
+
+        const goal = puzzle.addPiece(new Piece(
+            100,
+            [
+                "0,0,0", "1,0,0", "2,0,0",
+            ]
+        ))
+        for(const voxel of goal.voxels) {
+            goal.setVoxelAttribute("optional", voxel, true)
+        }
+
+        const piece1 = puzzle.addPiece(new Piece(
+            101,
+            [
+                "0,0,0",
+            ]
+        ))
+        const piece2 = puzzle.addPiece(new Piece(
+            102,
+            [
+                "0,0,0", "1,0,0",
+            ]
+        ))
+
+        const problem = new AssemblyProblem(0)
+        problem.goalPieceId = goal.id
+        problem.usedPieceCounts[piece1.id] = {min: 0, max: 3}
+        problem.usedPieceCounts[piece2.id] = {min: 0, max: 3}
+        problem.constraints = [
+            {
+                type: "piece-group",
+                pieceIds: [piece1.id, piece2.id],
+                count: 1
+            },
+        ]
+        const solutions = solver.solve(puzzle, problem)
+        assertSolutionsEqual(solutions, [
+            {"101-0": ["0,0,0"]},
+            {"101-0": ["1,0,0"]},
+            {"101-0": ["2,0,0"]},
+            {"102-0": ["0,0,0", "1,0,0"]},
+            {"102-0": ["1,0,0", "2,0,0"]},
+        ])
+    })
+
+})

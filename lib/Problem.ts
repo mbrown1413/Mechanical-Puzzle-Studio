@@ -14,6 +14,12 @@ type SolverInfo = {
     args: unknown[],
 }
 
+export type ProblemConstraint = {
+    type: "piece-group"
+    pieceIds: PieceId[]
+    count: number | {min: number, max: number}
+}
+
 /**
  * Describes an objective of the puzzle.
  */
@@ -58,6 +64,8 @@ export class AssemblyProblem extends Problem {
     usedPieceCounts: {
         [pieceId: PieceId]: number | {min: number, max: number}
     }
+
+    constraints: ProblemConstraint[] | undefined
 
     constructor(id: ProblemId) {
         super(id)

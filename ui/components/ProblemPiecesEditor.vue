@@ -6,12 +6,12 @@
 import {computed, ref, Ref} from "vue"
 import {VDataTable} from "vuetify/components/VDataTable"
 import {VToolbar} from "vuetify/components/VToolbar"
-import {VNumberInput} from "vuetify/labs/VNumberInput"
 
-import {Puzzle, AssemblyProblem, PieceId} from '~lib'
+import {Puzzle, AssemblyProblem, PieceId, Range} from '~lib'
 
 import {Action, EditProblemMetadataAction} from "~/ui/actions.ts"
 import GridDisplay from "~/ui/components/GridDisplay.vue"
+import RangeEditor from "~/ui/common/RangeEditor.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
@@ -78,18 +78,8 @@ function getPieceNVoxels(pieceId: string | number, includeOptionalVoxels=true) {
     }
 }
 
-function updatePieceCount(pieceId: PieceId, minOrMax: "min"|"max", value: number) {
+function updatePieceCount(pieceId: PieceId, newRange: Range) {
     if(props.problem === null) { return }
-
-    const newRange = props.problem.getPieceRange(pieceId)
-    newRange[minOrMax] = value
-    if(minOrMax === "min" && newRange.max < newRange.min) {
-        newRange.max = newRange.min
-    }
-    if(minOrMax === "max" && newRange.min > newRange.max) {
-        newRange.min = newRange.max
-    }
-
     const newPieceCounts = Object.assign({}, props.problem.usedPieceCounts)
     newPieceCounts[pieceId] = newRange
     const action = new EditProblemMetadataAction(
@@ -215,33 +205,12 @@ const selectionButtons = [
         <template v-slot:bottom />
 
         <template v-slot:item.count="{item}">
-            <VRow style="align-items: center;">
-                <VCol style="padding: 0 2px;">
-                    <VNumberInput
-                            :label="item.isGoal ? '' : 'min'"
-                            :min="0"
-                            :disabled="item.isGoal"
-                            :model-value="item.isGoal ? '' : item.range.min"
-                            :hide-details="true"
-                            @update:model-value="updatePieceCount(item.id, 'min', Number($event))"
-                            control-variant="stacked"
-                            variant="outlined"
-                            reverse
-                    />
-                </VCol>
-                <VCol style="padding: 0 2px;">
-                    <VNumberInput
-                            :label="item.isGoal ? '' : 'max'"
-                            :min="0"
-                            :disabled="item.isGoal"
-                            :model-value="item.isGoal ? '' : item.range.max"
-                            :hide-details="true"
-                            @update:model-value="updatePieceCount(item.id, 'max', Number($event))"
-                            control-variant="stacked"
-                            variant="outlined"
-                    />
-                </VCol>
-            </VRow>
+            <RangeEditor
+                :value="item.range"
+                :disabled="item.isGoal"
+                :hideLabels="item.isGoal"
+                @update:value="updatePieceCount(item.id, $event)"
+            />
         </template>
 
         <template v-slot:item.display="{item}">

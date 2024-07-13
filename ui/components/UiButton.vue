@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import {computed} from "vue"
+import {VBtn} from "vuetify/components/VBtn"
+
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 
 const props = withDefaults(
@@ -7,9 +9,11 @@ const props = withDefaults(
         uiButton: UiButtonDefinition,
         disabled?: boolean,
         variant?: "icon" | "text",
+        vBtnVariant?: VBtn["$props"]["variant"]
     }>(), {
         disabled: false,
         variant: "icon",
+        vBtnVariant: undefined,
     }
 )
 
@@ -45,6 +49,7 @@ const text = computed(() =>
                     rounded
                     :disabled="disabled"
                     @click="$emit('click'); uiButton.perform()"
+                    :variant="vBtnVariant"
                 >
                     <VIcon
                         v-if="variant === 'icon' && uiButton.icon"

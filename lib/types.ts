@@ -9,6 +9,8 @@ export type BoolWithReason = {
     reason: string
 }
 
+export type Range = number | {min: number, max: number}
+
 /**
  * A set of callback functions for use with long-running tasks which may be run
  * asynchronously.

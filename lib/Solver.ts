@@ -1,4 +1,4 @@
-import {AssemblyProblem, Problem} from "~/lib/Problem.ts"
+import {AssemblyProblem, Problem, ProblemConstraint} from "~/lib/Problem.ts"
 import {Puzzle} from "~/lib/Puzzle.ts"
 import {Piece, PieceId, PieceInstanceId} from "~/lib/Piece.ts"
 import {getPlacements} from "~/lib/placements.ts"
@@ -132,7 +132,19 @@ export class AssemblySolver extends Solver {
 
         const goalVoxels = [...new Set(goal.voxels)]
 
-        const coverSolver = new CoverSolver([...pieces, ...goalVoxels])
+        const pieceGroups = []
+        for(const constraint of problem.constraints || []) {
+            if(constraint.type !== "piece-group") {
+                throw new Error(`Unhandled constraint type "${constraint.type}"`)
+            }
+            if(constraint.pieceIds.length === 0) { continue }
+            pieceGroups.push(constraint)
+        }
+
+        const coverSolver = new CoverSolver([...pieces, ...goalVoxels, ...pieceGroups])
+        const voxelColumnStart = pieces.length
+        const pieceGroupColumnStart = voxelColumnStart + goalVoxels.length
+
         for(const [i, piece] of pieces.entries()) {
             const range = problem.getPieceRange(piece.id)
             coverSolver.setColumnRange(i, range.min, range.max)
@@ -140,8 +152,18 @@ export class AssemblySolver extends Solver {
         for(const [i, voxel] of goalVoxels.entries()) {
             const isOptional = goal.getVoxelAttribute("optional", voxel)
             if(!isOptional) { continue }
-            const columnIndex = pieces.length + i
+            const columnIndex = voxelColumnStart + i
             coverSolver.setColumnOptional(columnIndex)
+        }
+        for(const [i, pieceGroup] of pieceGroups.entries()) {
+            const columnIndex = pieceGroupColumnStart + i
+            let range
+            if(typeof pieceGroup.count === "number") {
+                range = {min: pieceGroup.count, max: pieceGroup.count}
+            } else {
+                range = pieceGroup.count
+            }
+            coverSolver.setColumnRange(columnIndex, range.min, range.max)
         }
 
         for(const [i, piece] of pieces.entries()) {
@@ -161,7 +183,11 @@ export class AssemblySolver extends Solver {
                     placement.voxels.includes(voxel)
                 )
 
-                coverSolver.addRow([...pieceColumns, ...voxelColumns])
+                const pieceGroupColumns = pieceGroups.map((pieceGroup) =>
+                    pieceGroup.pieceIds.includes(piece.id)
+                )
+
+                coverSolver.addRow([...pieceColumns, ...voxelColumns, ...pieceGroupColumns])
             }
         }
 
@@ -172,7 +198,7 @@ export class AssemblySolver extends Solver {
 
 function getAssemblyFromCoverSolution(
     problem: AssemblyProblem,
-    coverSolution: CoverSolution<Voxel | Piece>
+    coverSolution: CoverSolution<Voxel | Piece | ProblemConstraint>
 ): AssemblySolution {
 
     // Instance ID of the next instance, for pieces with duplicates
@@ -198,6 +224,12 @@ function getAssemblyFromCoverSolution(
                 if(problem.getPieceRange(piece.id).max > 1) {
                     piece.instance = instanceCounters[piece.id] || 0
                     instanceCounters[piece.id] = piece.instance + 1
+                }
+            } else if(typeof item === "object") {
+                // This is a constraint. Make sure it's actually one that's
+                // supposed to be added to the cover problem.
+                if(item.type !== "piece-group") {
+                    throw new Error(`Unhandled constraint type "${item.type}"`)
                 }
             } else {
                 throw new Error("Unexpected return type from cover solution")

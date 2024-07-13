@@ -6,6 +6,7 @@ import {Bounds, Piece, Puzzle, Problem, AssemblyProblem, ItemId, PieceId} from  
 
 import {Action, EditPieceMetadataAction, EditProblemMetadataAction} from "~/ui/actions.ts"
 import ProblemPiecesEditor from "~/ui/components/ProblemPiecesEditor.vue"
+import ProblemConstraintEditor from "~/ui/components/ProblemConstraintEditor.vue"
 import ColorInput from "~/ui/common/ColorInput.vue"
 
 const props = defineProps<{
@@ -21,7 +22,7 @@ const emit = defineEmits<{
 type Field = {
     property: string,
     label: string,
-    type: "string" | "color" | "piece" | "pieces" | "bounds",
+    type: "string" | "color" | "piece" | "pieces" | "bounds" | "constraints",
     required?: boolean,
 
     //TODO: Field-specific stuff that should be factored out when a proper form
@@ -65,6 +66,10 @@ switch(props.itemType) {
                 property: "label",
                 label: "Name",
                 type: "string",
+            }, {
+                property: "constraints",
+                label: "Constraints",
+                type: "constraints",
             }, {
                 property: "piecesId",
                 label: "Pieces Used",
@@ -162,6 +167,14 @@ function handleBoundsInput(field: Field, boundsProperty: string, value?: number)
                     @update:modelValue="handlePieceInput(field, $event as Piece)"
             />
 
+            <ProblemConstraintEditor
+                    v-if="item && field.type ==='constraints'"
+                    :puzzle="puzzle"
+                    :problem="item as AssemblyProblem"
+                    :label="field.label"
+                    @action="emit('action', $event)"
+            />
+
             <!--
                 Note: This must render when item is null, since if there are
                 many pieces, this would have to initialize many grid displays
@@ -175,6 +188,7 @@ function handleBoundsInput(field: Field, boundsProperty: string, value?: number)
                     :problem="item as AssemblyProblem"
                     :label="field.label"
                     @action="emit('action', $event)"
+                    class="mt-6"
             />
 
             <VContainer
