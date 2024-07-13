@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, ComputedRef, ref, Ref, watch, watchEffect, onErrorCaptured, onUnmounted, nextTick, provide} from "vue"
+import {computed, ComputedRef, ref, Ref, watch, watchEffect, onErrorCaptured, onMounted, onUnmounted, nextTick, provide} from "vue"
 
 import {PuzzleFile} from "~lib"
 
@@ -8,6 +8,7 @@ import {ActionManager, setActionManager, clearActionManager} from "~/ui/ActionMa
 import {PuzzleStorage, getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
 import {Action} from "~/ui/actions.ts"
 import {UiButtonDefinition, useUiButtonComposible} from "~/ui/ui-buttons.ts"
+import {PuzzleStudioApi} from "../api"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import Modal from "~/ui/common/Modal.vue"
@@ -29,8 +30,15 @@ const actionManager = new ActionManager(storage, puzzleFile)
 provide("actionManager", actionManager)
 
 setActionManager(actionManager)
+
+onMounted(() => {
+    const api = new PuzzleStudioApi(puzzleEditor, uiButtons)
+    ;(globalThis as any).api = api
+})
+
 onUnmounted(() => {
     clearActionManager()
+    ;(globalThis as any).api = undefined
 })
 
 type PuzzleErrorInfo = {

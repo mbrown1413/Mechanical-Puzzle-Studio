@@ -77,10 +77,18 @@ export class Puzzle extends SerializableClass {
         return piece
     }
 
-    getPiece(pieceOrId: Piece | PieceId): Piece | null {
-        const id = typeof pieceOrId === "number" ? pieceOrId : pieceOrId.id
-        if(id === undefined) return null
-        return this.pieces.find(piece => piece.id === id) || null
+    /**
+     * Gets a Piece object from the puzzle, given a PieceId, piece label, or an
+     * existing Piece object. `null` is returned if there is no matching piece
+     * in the puzzle.
+     */
+    getPiece(identifier: PieceId | string | Piece): Piece | null {
+        if(typeof identifier === "string") {
+            return this.pieces.find(piece => piece.label === identifier) || null
+        }
+        const pieceId = typeof identifier === "number" ? identifier : identifier.id
+        if(pieceId === undefined) return null
+        return this.pieces.find(piece => piece.id === pieceId) || null
     }
 
     hasPiece(pieceOrId: Piece | PieceId): boolean {
@@ -116,9 +124,17 @@ export class Puzzle extends SerializableClass {
         return problem
     }
 
-    getProblem(problemOrId: Problem | ProblemId): Problem | null {
-        const id = typeof problemOrId === "number" ? problemOrId : problemOrId.id
-        return this.problems.find(problem => problem.id === id) || null
+    /**
+     * Gets a Problem object from the puzzle, given a ProblemId, problem label,
+     * or an existing Problem object. `null` is returned if there is no
+     * matching problem in the puzzle.
+     */
+    getProblem(identifier: ProblemId | string | Problem): Problem | null {
+        if(typeof identifier === "string") {
+            return this.problems.find(problem => problem.label === identifier) || null
+        }
+        const problemId = typeof identifier === "number" ? identifier : identifier.id
+        return this.problems.find(problem => problem.id === problemId) || null
     }
 
     hasProblem(problemOrId: Problem | ProblemId): boolean {
