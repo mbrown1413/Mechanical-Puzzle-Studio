@@ -178,7 +178,7 @@ describe("Piece", () => {
         const piece1 = new Piece(1, ["2,0,0", "3,0,0"])
 
         const translate = grid.getTranslation("0,0,0", "0,1,0")
-        Piece.transformMultiple(grid, [piece0, piece1], translate)
+        Piece.transformAssembly(grid, [piece0, piece1], translate)
 
         expect(piece0.voxels).toEqual(["0,1,0", "1,1,0"])
         expect(piece1.voxels).toEqual(["2,1,0", "3,1,0"])
@@ -188,7 +188,7 @@ describe("Piece", () => {
         const piece0 = new Piece(0, ["0,0,0", "1,0,0"])
         const piece1 = new Piece(1, ["2,0,0", "3,0,0"])
 
-        Piece.transformMultiple(grid, [piece0, piece1], "r:-Y,0")
+        Piece.transformAssembly(grid, [piece0, piece1], "r:-Y,0")
         expect(piece0.voxels).toEqual(["0,0,0", "0,1,0"])
         expect(piece1.voxels).toEqual(["0,2,0", "0,3,0"])
     })

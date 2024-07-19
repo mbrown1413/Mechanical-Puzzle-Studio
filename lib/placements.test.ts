@@ -25,7 +25,7 @@ describe("getPieceOrientations()", () => {
             orientations.map((placement) => placement.voxels)
         )
         const expectedOrientations = makePlacementSet(
-            rotationTestData.orientationsMinusSymmetries
+            rotationTestData.allOrientations
         )
         expect(actualOrientations).toEqual(expectedOrientations)
         expect(orientations[0].id).toEqual(piece.id)

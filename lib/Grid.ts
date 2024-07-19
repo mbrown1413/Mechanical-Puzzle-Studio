@@ -74,10 +74,6 @@ export type Viewpoint = {
  *
  * Each voxel in the output should correspond to the voxel at the same position
  * in the input array.
- *
- * How an individual voxel is mapped to the output may depend on the whole
- * input array. For example, a rotation may then translate all voxels to be in
- * bounds of what the grid can represent.
  */
 export type Transform = string
 
@@ -183,8 +179,13 @@ export abstract class Grid extends SerializableClass {
 
     /**
      * Perform a transformation, mapping an existing set of voxels to a new set
-     * of the same size. The position of returned voxels correspond one-to-one
-     * to voxels from the input.
+     * of the same size.
+     *
+     * The position of returned voxels correspond one-to-one to voxels from the
+     * input. In addition, each voxel's mapping must not depend on any other
+     * voxels in the list. So for example, a rotation transformation must
+     * always rotate about the same axis without normalizing the result to be
+     * centered around an origin.
      * 
      * Note that this just transforms the voxels. To transform a whole piece
      * and account for things like voxel attributes, use `Piece.transform()`.

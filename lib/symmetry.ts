@@ -152,7 +152,7 @@ export function filterSymmetricalAssemblies(grid: Grid, assemblies: Assembly[]):
         // Check first transform for an entry in `assembliesExplored`.
         // If we find a match, we've already explored all transforms of this
         // assembly.
-        const transformedAssembly = Piece.transformMultiple(grid, clone(assembly), symmetryTransforms[0])
+        const transformedAssembly = Piece.transformAssembly(grid, clone(assembly), symmetryTransforms[0])
         const hash = hashAssembly(grid, transformedAssembly, hashOrigin)
         if(assembliesExplored.has(hash)) { continue }
         assembliesExplored.add(hash)
@@ -162,7 +162,7 @@ export function filterSymmetricalAssemblies(grid: Grid, assemblies: Assembly[]):
         // covered again.
         uniqueAssemblies.push(assembly)
         for(const transform of symmetryTransforms.slice(1)) {
-            const transformedAssembly = Piece.transformMultiple(grid, clone(assembly), transform)
+            const transformedAssembly = Piece.transformAssembly(grid, clone(assembly), transform)
             const hash = hashAssembly(grid, transformedAssembly, hashOrigin)
             assembliesExplored.add(hash)
         }
@@ -190,7 +190,7 @@ function hashAssembly(grid: Grid, assembly: Piece[], origin: Voxel): string {
     const allVoxels = ([] as Voxel[]).concat(...assembly.map(piece => piece.voxels))
     const assemblyOrigin = grid.getBoundsOrigin(grid.getVoxelBounds(...allVoxels))
     const translation = grid.getTranslation(assemblyOrigin, origin)
-    Piece.transformMultiple(grid, assembly, translation)
+    Piece.transformAssembly(grid, assembly, translation)
 
     // Normalize by sorting voxels within pieces, then pieces by their first voxel
     for(const piece of assembly) {

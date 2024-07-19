@@ -352,14 +352,11 @@ export class CubicGrid extends Grid {
             return coordinate
         })
 
-        const minX = Math.min(...coordinates.map(c => c.x))
-        const minY = Math.min(...coordinates.map(c => c.y))
-        const minZ = Math.min(...coordinates.map(c => c.z))
         return coordinates.map((coordinate) =>
             this.coordinateToVoxel({
-                x: (coordinate.x - minX) * (mirror ? -1 : 1),
-                y: coordinate.y - minY,
-                z: coordinate.z - minZ
+                x: coordinate.x * (mirror ? -1 : 1),
+                y: coordinate.y,
+                z: coordinate.z
             })
         )
     }
