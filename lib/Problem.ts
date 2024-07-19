@@ -1,5 +1,5 @@
 import {serialize, deserialize, SerializableClass, registerClass} from "~/lib/serialize.ts"
-import {BoolWithReason} from "~/lib/types.ts"
+import {BoolWithReason, Range} from "~/lib/types.ts"
 import {Solver, AssemblySolver} from "~/lib/Solver.ts"
 import {Solution} from "~/lib/Solution.ts"
 import {Piece, PieceId} from "~/lib/Piece.ts"
@@ -17,7 +17,7 @@ type SolverInfo = {
 export type ProblemConstraint = {
     type: "piece-group"
     pieceIds: PieceId[]
-    count: number | {min: number, max: number}
+    count: Range
 }
 
 /**
@@ -62,7 +62,7 @@ export class AssemblyProblem extends Problem {
      * range.
      */
     usedPieceCounts: {
-        [pieceId: PieceId]: number | {min: number, max: number}
+        [pieceId: PieceId]: Range
     }
 
     constraints: ProblemConstraint[] | undefined
