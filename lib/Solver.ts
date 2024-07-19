@@ -178,9 +178,16 @@ export class AssemblySolver extends Solver {
 
         for(const [i, piece] of pieces.entries()) {
             const placements = placementResults.placementsByPiece[piece.id]
-            if(placements.length === 0) {
+            const minPlacements = problem.getPieceRange(piece.id).min
+            if(placements.length === 0 && minPlacements > 0) {
                 throw new Error(
                     "No solutions because piece cannot be placed anywhere in goal.\n\n" +
+                    `Piece label: ${piece.label}`
+                )
+            }
+            if(placements.length < minPlacements) {
+                throw new Error(
+                    `No solutions because piece cannot be placed its minimum count of ${minPlacements} times in goal.\n\n` +
                     `Piece label: ${piece.label}`
                 )
             }

@@ -228,7 +228,7 @@ describe("AssemblySolver", () => {
         `)
     })
 
-    test("no pieces can be placed in goal", () => {
+    test("pieces can be placed in goal", () => {
         const problem = new AssemblyProblem(1)
         problem.goalPieceId = problem0_goal.id
         problem.usedPieceCounts[large.id] = 1
@@ -238,6 +238,38 @@ describe("AssemblySolver", () => {
           [Error: No solutions because piece cannot be placed anywhere in goal.
 
           Piece label: large]
+        `)
+    })
+
+    test("don't error with no placements if piece min=0", () => {
+        const problem = new AssemblyProblem(1)
+        problem.goalPieceId = problem0_goal.id
+        problem.usedPieceCounts[large.id] = {min: 0, max: 1}
+        expect(solver.solve(puzzle, problem)).toEqual([])
+    })
+
+
+    test("not enough placements in goal", () => {
+        const puzzle = new Puzzle(new CubicGrid())
+        const goalPiece = puzzle.addPiece(new Piece(0, [
+            "0,1,0",
+            "0,0,0", "1,0,0", "2,0,0", "3,0,0", "4,0,0"
+        ]))
+        const lPiece = puzzle.addPiece(new Piece(1, [
+            "0,1,0",
+            "0,0,0", "1,0,0"
+        ]))
+        lPiece.label = "L"
+
+        const problem = new AssemblyProblem(1)
+        problem.goalPieceId = goalPiece.id
+        problem.usedPieceCounts[lPiece.id] = 2
+        expect(() => {
+            solver.solve(puzzle, problem)
+        }).toThrowErrorMatchingInlineSnapshot(`
+          [Error: No solutions because piece cannot be placed its minimum count of 2 times in goal.
+
+          Piece label: L]
         `)
     })
 
