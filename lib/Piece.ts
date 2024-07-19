@@ -5,6 +5,8 @@ export type PieceId = number
 export type PieceInstanceId = number
 export type PieceCompleteId = `${PieceId}` | `${PieceId}-${PieceInstanceId}`
 
+export type Assembly = Piece[]
+
 type AttributeValue = boolean
 
 /**
@@ -136,34 +138,56 @@ export class Piece extends SerializableClass {
         }
     }
 
+    /** Mutates the piece by the given transform. */
     transform(grid: Grid, transform: Transform): this {
-        const newVoxels = grid.doTransform(transform, this.voxels)
+        return Piece.transformMultiple(grid, [this], transform)[0] as this
+    }
 
-        // Transform attributes based map of old to new voxels
-        const newAttrs: {
-            [attribute: string]: {
-                [voxel: Voxel]: AttributeValue
-            }
-        } = {}
-        for(const [attrName, attrValues] of Object.entries(this.voxelAttributes || {})) {
-            newAttrs[attrName] = {}
-            for(const [voxel, value] of Object.entries(attrValues)) {
-                const voxelIdx = this.voxels.indexOf(voxel)
-                if(voxelIdx === -1) {
-                    continue
+    /**
+     * Mutates the piece list by the given transform.
+     * 
+     * This can be used to transform multiple pieces as a group, which can give
+     * different results than if done individually if, for example, a rotation
+     * transform rotates about a different axis depending on the piece's
+     * voxels.
+     */
+    static transformMultiple(
+        grid: Grid,
+        pieces: Piece[],
+        transform: Transform
+    ): Piece[] {
+
+        // Make a big transform on the union of all pieces
+        const allVoxels = ([] as Voxel[]).concat(...pieces.map(piece => piece.voxels))
+        const newVoxels = grid.doTransform(transform, allVoxels)
+
+        const newPieces = []
+        for(const oldPiece of pieces) {
+
+            // Map resulting voxels back to the piece they came from
+            const newPiece = new Piece(
+                oldPiece.id,
+                newVoxels.splice(0, oldPiece.voxels.length)
+            )
+
+            // Map old voxel attributes to their new voxels
+            const attributes = oldPiece.listVoxelAttributes()
+            for(let i=0; i<oldPiece.voxels.length; i++) {
+                for(const attribute of attributes) {
+                    const value = oldPiece.getVoxelAttribute(attribute, oldPiece.voxels[i])
+                    newPiece.setVoxelAttribute(attribute, newPiece.voxels[i], value)
                 }
-                const newVoxel = newVoxels[voxelIdx]
-                newAttrs[attrName][newVoxel] = value
             }
-        }
-        if(Object.keys(newAttrs).length == 0) {
-            this.voxelAttributes = undefined
-        } else {
-            this.voxelAttributes = newAttrs
+
+            newPieces.push(newPiece)
         }
 
-        this.voxels = newVoxels
-        return this
+        // Mutate given pieces and return them
+        for(let i=0; i<pieces.length; i++) {
+            pieces[i].voxels = newPieces[i].voxels
+            pieces[i].voxelAttributes = newPieces[i].voxelAttributes
+        }
+        return pieces
     }
 
     getVoxelAttribute(attribute: string, voxel: Voxel): AttributeValue | undefined {
@@ -204,6 +228,10 @@ export class Piece extends SerializableClass {
                 this.voxelAttributes = undefined
             }
         }
+    }
+
+    listVoxelAttributes(): string[] {
+        return Object.keys(this.voxelAttributes || {})
     }
 }
 registerClass(Piece)

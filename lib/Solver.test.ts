@@ -472,10 +472,6 @@ describe("AssemblySolver piece ranges", () => {
                 "1-0": ["0,0,0"],
                 "2-0": ["1,0,0", "2,0,0"],
             },
-            {
-                "1-0": ["2,0,0"],
-                "2-0": ["0,0,0", "1,0,0"],
-            },
         ])
     })
 
@@ -524,10 +520,7 @@ describe("AssemblySolver piece groups", () => {
         const solutions = solver.solve(puzzle, problem)
         assertSolutionsEqual(solutions, [
             {"101-0": ["0,0,0"]},
-            {"101-0": ["1,0,0"]},
-            {"101-0": ["2,0,0"]},
             {"102-0": ["0,0,0", "1,0,0"]},
-            {"102-0": ["1,0,0", "2,0,0"]},
         ])
     })
 

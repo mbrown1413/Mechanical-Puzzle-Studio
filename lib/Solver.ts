@@ -7,6 +7,7 @@ import {TaskCallbacks, voidTaskCallbacks} from "~/lib/types.ts"
 import {SimpleDisassembler} from "~/lib/Disassembler.ts"
 import {CoverSolution, CoverSolver} from "~/lib/CoverSolver.ts"
 import {Voxel} from "~/lib/Grid.ts"
+import {filterSymmetricalAssemblies} from "~/lib/symmetry.ts"
 
 export abstract class Solver {
     abstract solve(
@@ -33,14 +34,23 @@ export class AssemblySolver extends Solver {
         problem: AssemblyProblem,
         callbacks: TaskCallbacks = voidTaskCallbacks,
     ): AssemblySolution[] {
+
+        callbacks.progressCallback(null, "Generating cover problem")
         const coverSolver = this.getCoverProblem(puzzle, problem, callbacks)
 
         callbacks.progressCallback(0, "Assembling")
         const coverSolutions = coverSolver.solve(callbacks)
-        let solutions = coverSolutions.map(
+        let assemblies = coverSolutions.map(
             (coverSolution) => getAssemblyFromCoverSolution(problem, coverSolution)
         )
         callbacks.progressCallback(100)
+
+        if(this.removeSymmetries) {
+            callbacks.progressCallback(null, "Removing symmetric solutions")
+            assemblies = filterSymmetricalAssemblies(puzzle.grid, assemblies)
+        }
+
+        let solutions = assemblies.map(assembly => new AssemblySolution(-1, assembly))
 
         if(this.disassemble) {
             callbacks.progressCallback(0, "Disassembling")
@@ -199,7 +209,7 @@ export class AssemblySolver extends Solver {
 function getAssemblyFromCoverSolution(
     problem: AssemblyProblem,
     coverSolution: CoverSolution<Voxel | Piece | ProblemConstraint>
-): AssemblySolution {
+): Piece[] {
 
     // Instance ID of the next instance, for pieces with duplicates
     const instanceCounters: Record<PieceId, PieceInstanceId> = {}
@@ -242,5 +252,5 @@ function getAssemblyFromCoverSolution(
         placements.push(piece)
     }
 
-    return new AssemblySolution(-1, placements)
+    return placements
 }

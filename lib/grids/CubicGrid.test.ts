@@ -177,7 +177,7 @@ describe("Cubic grid", () => {
     })
 
     test("rotations", () => {
-        const rotations = grid.getRotations()
+        const rotations = grid.getRotations(false)
         const actualOrientations = makePlacementSet(
             rotations.map(
                 (orientation) => grid.doTransform(orientation, rotationTestData.originalPiece)

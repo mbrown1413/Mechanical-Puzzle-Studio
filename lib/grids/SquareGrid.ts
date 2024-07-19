@@ -27,13 +27,19 @@ export class SquareGrid extends CubicGrid {
         return ret
     }
 
-    getRotations() {
-        return [
+    getRotations(includeMirrors: boolean) {
+        const rotations = [
             "r:+X,0", "r:+X,2",
             "r:-X,0", "r:-X,2",
             "r:+Y,0", "r:+Y,2",
             "r:-Y,0", "r:-Y,2",
         ]
+        if(includeMirrors) {
+            rotations.push(...rotations.map(
+                rotation => rotation + "m"
+            ))
+        }
+        return rotations
     }
 
     getViewpoints() {

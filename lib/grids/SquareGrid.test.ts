@@ -29,7 +29,7 @@ describe("Square grid", () => {
             "0,1,0",
             "0,0,0", "1,0,0", "2,0,0",
         ]
-        const rotations = grid.getRotations()
+        const rotations = grid.getRotations(false)
         const actualOrientations = makePlacementSet(
             rotations.map(
                 (orientation) => grid.doTransform(orientation, originalVoxels)

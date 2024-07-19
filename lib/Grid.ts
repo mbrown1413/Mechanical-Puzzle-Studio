@@ -135,6 +135,13 @@ export abstract class Grid extends SerializableClass {
     abstract getBoundsMax(...bounds: Bounds[]): Bounds
 
     /**
+     * Returns the origin of a given bounds. The origin will typically be the
+     * voxel closest to a grid's global origin, although this may vary by
+     * implementation.
+     */
+    abstract getBoundsOrigin(bounds: Bounds): Voxel
+
+    /**
      * Return info describing the voxel.
      */
     abstract getVoxelInfo(voxel: Voxel): VoxelInfo
@@ -194,7 +201,7 @@ export abstract class Grid extends SerializableClass {
     /**
      * List all possible ways a set of voxels can be rotated.
      */
-    abstract getRotations(): Transform[]
+    abstract getRotations(includeMirrors: boolean): Transform[]
 
     /**
      * Return a translation which would move one voxel to another.

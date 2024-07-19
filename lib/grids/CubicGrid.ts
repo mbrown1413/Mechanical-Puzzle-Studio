@@ -146,6 +146,14 @@ export class CubicGrid extends Grid {
         }
     }
 
+    getBoundsOrigin(bounds: CubicBounds): Voxel {
+        return this.coordinateToVoxel({
+            x: bounds.x || 0,
+            y: bounds.y || 0,
+            z: bounds.z || 0
+        })
+    }
+
     getVoxelInfo(voxel: Voxel): CubicVoxelInfo {
         return {
             voxel: voxel,
@@ -222,8 +230,8 @@ export class CubicGrid extends Grid {
         return [neighbor, oppositeDir]
     }
 
-    getRotations() {
-        return [
+    getRotations(includeMirrors: boolean) {
+        const rotations = [
             "r:+X,0", "r:+X,1", "r:+X,2", "r:+X,3",
             "r:-X,0", "r:-X,1", "r:-X,2", "r:-X,3",
             "r:+Y,0", "r:+Y,1", "r:+Y,2", "r:+Y,3",
@@ -231,6 +239,12 @@ export class CubicGrid extends Grid {
             "r:+Z,0", "r:+Z,1", "r:+Z,2", "r:+Z,3",
             "r:-Z,0", "r:-Z,1", "r:-Z,2", "r:-Z,3",
         ]
+        if(includeMirrors) {
+            rotations.push(...rotations.map(
+                rotation => rotation + "m"
+            ))
+        }
+        return rotations
     }
 
     getTranslation(from: Voxel, to: Voxel) {
@@ -258,11 +272,12 @@ export class CubicGrid extends Grid {
             })
         }
 
-        if(/^r:[+-][XYZ],[0123]$/.test(transform)) {
+        if(/^r:[+-][XYZ],[0123]m?$/.test(transform)) {
             const xFacingSide = transform.slice(2, 4)
             const xRotations = Number(transform[5])
+            const mirror = transform[transform.length-1] === "m"
             if(isCubicDirection(xFacingSide)) {
-                return this.doRotation(xFacingSide, xRotations, voxels)
+                return this.doRotation(xFacingSide, xRotations, mirror, voxels)
             }
         }
 
@@ -279,14 +294,19 @@ export class CubicGrid extends Grid {
             return `t:${offsets[0]},${offsets[1]},${offsets[2]}`
         }
 
-        if(/^r:[+-][XYZ],[0123]$/.test(transform)) {
+        if(/^r:[+-][XYZ],[0123]m?$/.test(transform)) {
             throw new Error("CubicGrid does not support scaling rotation transforms")
         }
 
         throw new Error(`Transform in unknown format: ${transform}`)
     }
 
-    private doRotation(xFacingSide: CubicDirection, xRotations: number, voxels: Voxel[]) {
+    private doRotation(
+        xFacingSide: CubicDirection,
+        xRotations: number,
+        mirror: boolean,
+        voxels: Voxel[]
+    ) {
         // Matrices to rotate 3D voxel around X, Y or Z axis (clockwise
         // when viewed from a positive coordinate looking down at the origin).
         const rotateX = new Matrix3(
@@ -337,7 +357,7 @@ export class CubicGrid extends Grid {
         const minZ = Math.min(...coordinates.map(c => c.z))
         return coordinates.map((coordinate) =>
             this.coordinateToVoxel({
-                x: coordinate.x - minX,
+                x: (coordinate.x - minX) * (mirror ? -1 : 1),
                 y: coordinate.y - minY,
                 z: coordinate.z - minZ
             })
