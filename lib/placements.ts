@@ -142,27 +142,12 @@ function filterTranslationCongruentPlacements(
 
 /** Can one of the pieces be translated to match the other exactly? */
 export function isTranslationCongruent(grid: Grid, piece1: Piece, piece2: Piece): boolean {
-
-    // Establish one as stationary and the other we try translating to every
-    // voxel on the fixed piece to see if they match.
-    let fixedPiece: Piece
-    let nonFixedPiece: Piece
-    if(piece1.voxels.length < piece2.voxels.length) {
-        fixedPiece = piece1
-        nonFixedPiece = piece2
-    } else {
-        fixedPiece = piece2
-        nonFixedPiece = piece1
-    }
-
-    for(const dest of fixedPiece.voxels) {
-        const translation = grid.getTranslation(nonFixedPiece.voxels[0], dest)
-        const tempPiece = nonFixedPiece.copy().doTransform(grid, translation)
-
-        if(tempPiece.equals(fixedPiece)) {
-            return true
-        }
-    }
-
-    return false
+    const bounds1 = grid.getVoxelBounds(...piece1.voxels)
+    const bounds2 = grid.getVoxelBounds(...piece2.voxels)
+    const translation = grid.getTranslation(
+        grid.getBoundsOrigin(bounds1),
+        grid.getBoundsOrigin(bounds2),
+    )
+    const translatedPiece = piece1.copy().doTransform(grid, translation)
+    return translatedPiece.equals(piece2)
 }
