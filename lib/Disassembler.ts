@@ -297,7 +297,7 @@ export class SimpleDisassembler extends Disassembler {
                     for(const piece of newPlacements) {
                         if(child.movedPieces.includes(piece.completeId)) {
                             for(let i=0; i<(child.repeat || 1); i++) {
-                                piece.transform(this.grid, child.transform)
+                                piece.doTransform(this.grid, child.transform)
                             }
                         }
                     }

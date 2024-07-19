@@ -35,7 +35,7 @@ export function getMovements(grid: Grid, pieces: Piece[]): Movement[] {
 
                 // Move all pieces currently grouped together
                 for(const i of groupedIndexes) {
-                    piecesCopy[i].transform(grid, transform)
+                    piecesCopy[i].doTransform(grid, transform)
                 }
 
                 while(true) {  // eslint-disable-line no-constant-condition
@@ -68,7 +68,7 @@ export function getMovements(grid: Grid, pieces: Piece[]): Movement[] {
                     // by.
                     for(const overlappingIndex of overlappingPieceIndexes) {
                         for(let i=0; i<repeat; i++) {
-                            piecesCopy[overlappingIndex].transform(grid, transform)
+                            piecesCopy[overlappingIndex].doTransform(grid, transform)
                         }
                     }
 

@@ -18,7 +18,7 @@ export function getPieceOrientations(
 
     const placements: Piece[] = []
     for(const rotation of allowedRotations) {
-        const transformedPiece = piece.copy().transform(grid, rotation)
+        const transformedPiece = piece.copy().doTransform(grid, rotation)
 
         placements.push(transformedPiece)
     }
@@ -39,7 +39,7 @@ export function getPieceTranslations(
     availableVoxels = [...new Set(availableVoxels)]
     for(const toVoxel of availableVoxels) {
         const translation = grid.getTranslation(piece.voxels[0], toVoxel)
-        const newPiece = piece.copy().transform(grid, translation)
+        const newPiece = piece.copy().doTransform(grid, translation)
         if(newPiece.voxels.every(v => availableVoxels.includes(v))) {
             translations.push(newPiece)
         }
@@ -157,7 +157,7 @@ export function isTranslationCongruent(grid: Grid, piece1: Piece, piece2: Piece)
 
     for(const dest of fixedPiece.voxels) {
         const translation = grid.getTranslation(nonFixedPiece.voxels[0], dest)
-        const tempPiece = nonFixedPiece.copy().transform(grid, translation)
+        const tempPiece = nonFixedPiece.copy().doTransform(grid, translation)
 
         if(tempPiece.equals(fixedPiece)) {
             return true

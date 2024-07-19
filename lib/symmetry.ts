@@ -115,7 +115,7 @@ function getSymmetryGroups(grid: Grid, piece: Piece, orientations: Transform[]):
     const groupPieces: Map<number, Piece> = new Map()
     for(let i=0; i<orientations.length; i++) {
         const orientation = orientations[i]
-        const orientedPiece = piece.copy().transform(grid, orientation)
+        const orientedPiece = piece.copy().doTransform(grid, orientation)
 
         // Does this oriented piece match any previous group?
         let matchingGroup: number | null = null

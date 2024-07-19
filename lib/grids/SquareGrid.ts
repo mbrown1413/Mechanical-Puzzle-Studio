@@ -110,7 +110,7 @@ export class SquareGrid extends CubicGrid {
             "0,0,0"
         )
         for(const piece of Object.values(pieces)) {
-            piece.transform(this, translation)
+            piece.doTransform(this, translation)
         }
 
         return Object.values(pieces)

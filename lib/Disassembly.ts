@@ -397,7 +397,7 @@ function performStep(
     for(const piece of state) {
         if(step.movedPieces.includes(piece.completeId)) {
             for(let i=0; i<repeat; i++) {
-                piece.transform(grid, step.transform)
+                piece.doTransform(grid, step.transform)
             }
         }
     }

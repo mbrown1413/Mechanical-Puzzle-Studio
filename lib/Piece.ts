@@ -139,7 +139,7 @@ export class Piece extends SerializableClass {
     }
 
     /** Mutates the piece by the given transform. */
-    transform(grid: Grid, transform: Transform): this {
+    doTransform(grid: Grid, transform: Transform): this {
         return Piece.transformMultiple(grid, [this], transform)[0] as this
     }
 
