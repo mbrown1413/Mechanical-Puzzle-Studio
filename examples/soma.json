@@ -101,7 +101,8 @@
                     "5": 1,
                     "6": 1,
                     "7": 1
-                }
+                },
+                "symmetryReduction": "rotation+mirror"
             },
             {
                 "type": "AssemblyProblem",
@@ -117,7 +118,8 @@
                     "5": 1,
                     "6": 1,
                     "7": 1
-                }
+                },
+                "symmetryReduction": "rotation+mirror"
             }
         ]
     }

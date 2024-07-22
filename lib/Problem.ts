@@ -70,7 +70,7 @@ export class AssemblyProblem extends Problem {
 
     constructor(id: ProblemId) {
         super(id)
-        this.symmetryReduction = null
+        this.symmetryReduction = "rotation+mirror"
         this.usedPieceCounts = {}
         this.disassemble = false
         this.removeNoDisassembly = true

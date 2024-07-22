@@ -93,7 +93,7 @@ describe("AssemblyProblem", () => {
             "label": "Problem 0",
             "removeNoDisassembly": true,
             "solverId": "assembly",
-            "symmetryReduction": null,
+            "symmetryReduction": "rotation+mirror",
             "usedPieceCounts": {},
         })
 
@@ -106,7 +106,7 @@ describe("AssemblyProblem", () => {
             "label": "Problem 0",
             "removeNoDisassembly": true,
             "solverId": "assembly",
-            "symmetryReduction": null,
+            "symmetryReduction": "rotation+mirror",
             "usedPieceCounts": {0: 7},
         })
 
@@ -120,7 +120,7 @@ describe("AssemblyProblem", () => {
             "label": "Problem 0",
             "removeNoDisassembly": true,
             "solverId": "assembly",
-            "symmetryReduction": null,
+            "symmetryReduction": "rotation+mirror",
             "usedPieceCounts": {},
         })
     })
