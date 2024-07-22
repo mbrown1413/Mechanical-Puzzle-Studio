@@ -145,13 +145,23 @@ export function filterSymmetricalAssemblies(
     grid: Grid,
     assemblies: Assembly[],
     mirrorSymmetry=true,
+    progressCallback: (percent: number) => void = () => {}
 ): Assembly[] {
     const hashOrigin = grid.getBoundsOrigin(grid.getDefaultPieceBounds())
     const symmetryTransforms = grid.getRotations(mirrorSymmetry)
 
+    const progressStepSize = Math.round(assemblies.length / 50)
+
     const uniqueAssemblies = []
     const assembliesExplored = new Set()
+    let i = 0
     for(const assembly of assemblies) {
+
+        // Progress updates
+        i++
+        if(i % progressStepSize === 0) {
+            progressCallback(i / assemblies.length)
+        }
 
         // Check first transform for an entry in `assembliesExplored`.
         // If we find a match, we've already explored all transforms of this
@@ -170,6 +180,7 @@ export function filterSymmetricalAssemblies(
             const hash = hashAssembly(grid, transformedAssembly, hashOrigin)
             assembliesExplored.add(hash)
         }
+
     }
     return uniqueAssemblies
 }

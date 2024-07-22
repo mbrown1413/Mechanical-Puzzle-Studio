@@ -49,14 +49,14 @@ export class AssemblySolver extends Solver {
         let assemblies = coverSolutions.map(
             (coverSolution) => getAssemblyFromCoverSolution(problem, coverSolution)
         )
-        callbacks.progressCallback(100)
 
         if(this.symmetryReduction) {
-            callbacks.progressCallback(null, "Removing symmetric solutions")
+            callbacks.progressCallback(0, "Removing symmetric solutions")
             assemblies = filterSymmetricalAssemblies(
                 puzzle.grid,
                 assemblies,
-                this.symmetryReduction === "rotation+mirror"
+                this.symmetryReduction === "rotation+mirror",
+                callbacks.progressCallback,
             )
         }
 
