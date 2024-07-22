@@ -141,9 +141,13 @@ function getSymmetryGroups(grid: Grid, piece: Piece, orientations: Transform[]):
  * Return a filtered list of the given assemblies with only one representative
  * from each group of solutions which are symmetrical to each other.
  */
-export function filterSymmetricalAssemblies(grid: Grid, assemblies: Assembly[]): Assembly[] {
+export function filterSymmetricalAssemblies(
+    grid: Grid,
+    assemblies: Assembly[],
+    mirrorSymmetry=true,
+): Assembly[] {
     const hashOrigin = grid.getBoundsOrigin(grid.getDefaultPieceBounds())
-    const symmetryTransforms = grid.getRotations(true)
+    const symmetryTransforms = grid.getRotations(mirrorSymmetry)
 
     const uniqueAssemblies = []
     const assembliesExplored = new Set()

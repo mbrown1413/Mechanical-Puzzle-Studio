@@ -562,6 +562,7 @@ describe("burrtools read", () => {
                     "label": "Problem 1",
                     "removeNoDisassembly": true,
                     "solverId": "assembly",
+                    "symmetryReduction": null,
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {
                       "1": 1,
@@ -615,6 +616,7 @@ describe("burrtools read", () => {
                     "label": "Problem 1",
                     "removeNoDisassembly": true,
                     "solverId": "assembly",
+                    "symmetryReduction": null,
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {},
                   },
@@ -751,6 +753,7 @@ describe("burrtools read", () => {
                     "label": "Problem 1 label!",
                     "removeNoDisassembly": true,
                     "solverId": "assembly",
+                    "symmetryReduction": null,
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {},
                   },
@@ -824,6 +827,7 @@ describe("burrtools read", () => {
                     "label": "Problem 1",
                     "removeNoDisassembly": true,
                     "solverId": "assembly",
+                    "symmetryReduction": null,
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {
                       "1": {
@@ -892,6 +896,7 @@ describe("burrtools read", () => {
                     "label": "Problem 1",
                     "removeNoDisassembly": true,
                     "solverId": "assembly",
+                    "symmetryReduction": null,
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {
                       "0": 1,
@@ -961,6 +966,7 @@ describe("burrtools read", () => {
                     "label": "Problem 1",
                     "removeNoDisassembly": true,
                     "solverId": "assembly",
+                    "symmetryReduction": null,
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {
                       "0": 1,
@@ -1044,6 +1050,7 @@ describe("burrtools read", () => {
                     "label": "Problem 1",
                     "removeNoDisassembly": true,
                     "solverId": "assembly",
+                    "symmetryReduction": null,
                     "type": "AssemblyProblem",
                     "usedPieceCounts": {
                       "1": 1,

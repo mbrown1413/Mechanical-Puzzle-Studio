@@ -124,10 +124,9 @@ describe("AssemblySolver", () => {
     problem2.usedPieceCounts[problem2_piece0.id] = 2
     problem2.usedPieceCounts[problem2_piece1.id] = 1
 
-    const solver = new AssemblySolver(false, false)
 
     test("solve problem 0", () => {
-        solver.removeSymmetries = false
+        const solver = new AssemblySolver(null, false, false)
         const solutions = solver.solve(puzzle, problem0)
         assertSolutionsEqual(solutions, [
             {
@@ -141,7 +140,7 @@ describe("AssemblySolver", () => {
     })
 
     test("solve problem 0 with removed symmetries", () => {
-        solver.removeSymmetries = true
+        const solver = new AssemblySolver("rotation", false, false)
         const solutions = solver.solve(puzzle, problem0)
         assertSolutionsEqual(solutions, [{
             4: ["1,1,0", "2,1,0", "2,0,0"],
@@ -150,7 +149,7 @@ describe("AssemblySolver", () => {
     })
 
     test("solve problem 1", () => {
-        solver.removeSymmetries = false
+        const solver = new AssemblySolver(null, false, false)
         const solutions = solver.solve(puzzle, problem1)
         assertSolutionsEqual(solutions, [
             {
@@ -170,7 +169,7 @@ describe("AssemblySolver", () => {
     })
 
     test("solve problem 1 with removed symmetries", () => {
-        solver.removeSymmetries = true
+        const solver = new AssemblySolver("rotation", false, false)
         const solutions = solver.solve(puzzle, problem1)
         assertSolutionsEqual(solutions, [{
             7: ["0,1,0", "0,2,0", "1,2,0", "2,2,0", "2,1,0"],
@@ -179,7 +178,7 @@ describe("AssemblySolver", () => {
     })
 
     test("solve problem 2", () => {
-        solver.removeSymmetries = false
+        const solver = new AssemblySolver(null, false, false)
         const solutions = solver.solve(puzzle, problem2)
         assertSolutionsEqual(solutions, [
             {
@@ -195,7 +194,7 @@ describe("AssemblySolver", () => {
     })
 
     test("solve problem 2 with removed symmetries", () => {
-        solver.removeSymmetries = true
+        const solver = new AssemblySolver("rotation", false, false)
         const solutions = solver.solve(puzzle, problem2)
         assertSolutionsEqual(solutions, [{
             "10-0": ["0,1,0", "0,0,0", "1,0,0"],
@@ -205,6 +204,7 @@ describe("AssemblySolver", () => {
     })
 
     test("voxel count sanity-check", () => {
+        const solver = new AssemblySolver("rotation", false, false)
         let problem = problem0.copy()
         problem.usedPieceCounts[problem0_piece0.id] = 2
         expect(() => {
@@ -229,6 +229,7 @@ describe("AssemblySolver", () => {
     })
 
     test("pieces can be placed in goal", () => {
+        const solver = new AssemblySolver("rotation", false, false)
         const problem = new AssemblyProblem(1)
         problem.goalPieceId = problem0_goal.id
         problem.usedPieceCounts[large.id] = 1
@@ -242,6 +243,7 @@ describe("AssemblySolver", () => {
     })
 
     test("don't error with no placements if piece min=0", () => {
+        const solver = new AssemblySolver("rotation", false, false)
         const problem = new AssemblyProblem(1)
         problem.goalPieceId = problem0_goal.id
         problem.usedPieceCounts[large.id] = {min: 0, max: 1}
@@ -250,6 +252,7 @@ describe("AssemblySolver", () => {
 
 
     test("not enough placements in goal", () => {
+        const solver = new AssemblySolver("rotation", false, false)
         const puzzle = new Puzzle(new CubicGrid())
         const goalPiece = puzzle.addPiece(new Piece(0, [
             "0,1,0",
@@ -274,6 +277,7 @@ describe("AssemblySolver", () => {
     })
 
     test("no pieces", () => {
+        const solver = new AssemblySolver("rotation", false, false)
         const problem = new AssemblyProblem(1)
         problem.goalPieceId = empty1.id
         expect(() => {
@@ -282,6 +286,7 @@ describe("AssemblySolver", () => {
     })
 
     test("empty goal piece", () => {
+        const solver = new AssemblySolver("rotation", false, false)
         const problem = new AssemblyProblem(1)
         problem.goalPieceId = empty1.id
         problem.usedPieceCounts[empty2.id] = 1
@@ -295,7 +300,7 @@ describe("AssemblySolver optional voxels", () => {
 
     test("voxel count sanity-check", () => {
         const puzzle = new Puzzle(new CubicGrid())
-        const solver = new AssemblySolver(false, false)
+        const solver = new AssemblySolver("rotation", false, false)
 
         const goal = puzzle.addPiece(new Piece(
             100,
@@ -341,7 +346,7 @@ describe("AssemblySolver optional voxels", () => {
 
     test("No optional voxels in pieces", () => {
         const puzzle = new Puzzle(new CubicGrid())
-        const solver = new AssemblySolver(false, false)
+        const solver = new AssemblySolver("rotation", false, false)
 
         const goal = puzzle.addPiece(new Piece(
             100,
@@ -369,7 +374,7 @@ describe("AssemblySolver optional voxels", () => {
 
     test("Simple optional voxel problem", () => {
         const puzzle = new Puzzle(new CubicGrid())
-        const solver = new AssemblySolver(false, false)
+        const solver = new AssemblySolver("rotation", false, false)
 
         const goal = puzzle.addPiece(new Piece(
             100,
@@ -397,7 +402,7 @@ describe("AssemblySolver optional voxels", () => {
 
     test("Complex optional voxel problem", () => {
         const puzzle = new Puzzle(new CubicGrid())
-        const solver = new AssemblySolver(false, false)
+        const solver = new AssemblySolver("rotation", false, false)
 
         const goal = puzzle.addPiece(new Piece(
             100,
@@ -493,7 +498,7 @@ describe("AssemblySolver piece ranges", () => {
         problem.usedPieceCounts[piece1.id] = {min: 0, max: 3}
         problem.usedPieceCounts[piece2.id] = {min: 0, max: 2}
 
-        const solver = new AssemblySolver(false, false)
+        const solver = new AssemblySolver("rotation", false, false)
         assertSolutionsEqual(solver.solve(puzzle, problem), [
             {
                 "1-0": ["0,0,0"],
@@ -513,7 +518,7 @@ describe("AssemblySolver piece groups", () => {
 
     test("Simple problem", () => {
         const puzzle = new Puzzle(new CubicGrid())
-        const solver = new AssemblySolver(false, false)
+        const solver = new AssemblySolver("rotation", false, false)
 
         const goal = puzzle.addPiece(new Piece(
             100,

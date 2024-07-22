@@ -44,4 +44,13 @@ describe("filterSymmetricalAssemblies()", () => {
         const filtered = filterSymmetricalAssemblies(grid, assemblies)
         expect(filtered).toEqual([assemblies[0]])
     })
+
+    test("don't mirrored assemblies if mirrorSymmetry=false", () => {
+        const assemblies = [
+            [new Piece(0, ["0,0,0", "1,0,0", "1,1,0", "1,1,1"])],
+            [new Piece(1, ["0,0,0", "1,0,0", "1,1,0", "1,1,-1"])],
+        ]
+        const filtered = filterSymmetricalAssemblies(grid, assemblies, false)
+        expect(filtered).toEqual(assemblies)
+    })
 })

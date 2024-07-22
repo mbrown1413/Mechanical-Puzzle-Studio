@@ -17,14 +17,20 @@ export abstract class Solver {
     ): Solution[]
 }
 
+export type SymmetryReduction = null | "rotation" | "rotation+mirror"
+
 export class AssemblySolver extends Solver {
-    removeSymmetries: boolean
+    symmetryReduction: SymmetryReduction
     disassemble: boolean
     removeNoDisassembly: boolean
 
-    constructor(disassemble: boolean, removeNoDisassembly: boolean) {
+    constructor(
+        symmetryReduction: SymmetryReduction,
+        disassemble: boolean,
+        removeNoDisassembly: boolean
+    ) {
         super()
-        this.removeSymmetries = true
+        this.symmetryReduction = symmetryReduction
         this.disassemble = disassemble
         this.removeNoDisassembly = removeNoDisassembly
     }
@@ -45,9 +51,13 @@ export class AssemblySolver extends Solver {
         )
         callbacks.progressCallback(100)
 
-        if(this.removeSymmetries) {
+        if(this.symmetryReduction) {
             callbacks.progressCallback(null, "Removing symmetric solutions")
-            assemblies = filterSymmetricalAssemblies(puzzle.grid, assemblies)
+            assemblies = filterSymmetricalAssemblies(
+                puzzle.grid,
+                assemblies,
+                this.symmetryReduction === "rotation+mirror"
+            )
         }
 
         let solutions = assemblies.map(assembly => new AssemblySolution(-1, assembly))
@@ -115,7 +125,7 @@ export class AssemblySolver extends Solver {
         }
 
         let symmetryBreakerCandidates: Piece[] = []
-        if(this.removeSymmetries) {
+        if(this.symmetryReduction) {
             symmetryBreakerCandidates = pieces.filter(
                 piece => problem.usedPieceCounts[piece.id] === 1
             )
@@ -128,7 +138,7 @@ export class AssemblySolver extends Solver {
             symmetryBreakerCandidates
         )
 
-        if(this.removeSymmetries && placementResults.symmetryInfo) {
+        if(this.symmetryReduction && placementResults.symmetryInfo) {
             const symInfo = placementResults.symmetryInfo
             logCallback(
                 `Symmetry breaking piece: ${symInfo.piece.label}`
@@ -136,7 +146,7 @@ export class AssemblySolver extends Solver {
             logCallback(
                 `Symmetry reduced the problem by ${symInfo.reduction} times`
             )
-        } else if(this.removeSymmetries) {
+        } else if(this.symmetryReduction) {
             logCallback("No symmetry breaking piece found")
         }
 

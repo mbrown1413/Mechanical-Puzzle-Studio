@@ -1,6 +1,6 @@
 import {serialize, deserialize, SerializableClass, registerClass} from "~/lib/serialize.ts"
 import {BoolWithReason, Range} from "~/lib/types.ts"
-import {Solver, AssemblySolver} from "~/lib/Solver.ts"
+import {Solver, AssemblySolver, SymmetryReduction} from "~/lib/Solver.ts"
 import {Solution} from "~/lib/Solution.ts"
 import {Piece, PieceId} from "~/lib/Piece.ts"
 import {Puzzle} from "~/lib/Puzzle.ts"
@@ -52,6 +52,7 @@ export abstract class Problem extends SerializableClass {
  */
 export class AssemblyProblem extends Problem {
     goalPieceId?: PieceId
+    symmetryReduction: SymmetryReduction
     disassemble: boolean
     removeNoDisassembly: boolean
 
@@ -69,6 +70,7 @@ export class AssemblyProblem extends Problem {
 
     constructor(id: ProblemId) {
         super(id)
+        this.symmetryReduction = null
         this.usedPieceCounts = {}
         this.disassemble = false
         this.removeNoDisassembly = true
@@ -104,7 +106,12 @@ export class AssemblyProblem extends Problem {
             assembly: {
                 solver: AssemblySolver,
                 isUsable: {bool: true as const},
-                args: [this.disassemble, this.removeNoDisassembly],
+
+                args: [
+                    this.symmetryReduction,
+                    this.disassemble,
+                    this.removeNoDisassembly
+                ],
             },
         }
     }
