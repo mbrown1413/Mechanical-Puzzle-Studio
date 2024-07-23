@@ -102,11 +102,12 @@ const appTitle = import.meta.env.VITE_APP_TITLE
             <VDataTable
                     :headers="tableHeaders"
                     :items="puzzles"
+                    items-per-page="-1"
                     no-data-text="No puzzles in this storage location"
                     class="mt-10 ml-10 mr-10 table-striped"
                     style="max-width: 800px;"
             >
-                <template v-slot:bottom v-if="puzzles.length <= 10" />
+                <template v-slot:bottom />
 
                 <template v-slot:top>
                     <VToolbar
