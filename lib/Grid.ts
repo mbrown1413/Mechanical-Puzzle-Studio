@@ -10,6 +10,9 @@ import {SerializableClass} from "~/lib/serialize.ts"
  * implementation, that is, you should never count on the voxel values being
  * meaningful. However, under the hood, `Voxel` is actually just a string, so
  * you can use it as keys datatypes like `Set` or `Map`.
+ *
+ * Grids should not use "\n" or ";" characters in voxel values. This allows
+ * algorithms using grids to manipulate lists of voxels in various ways.
  */
 export type Voxel = string
 
@@ -35,7 +38,9 @@ export type SideInfo = {
 
 export type PieceBoundsEditInfo = {
     dimensions: {
+        /** Name to show in UI for this dimension. */
         name: string,
+        /** Property on Bounds object that should be edited for this dimension. */
         boundsProperty: string,
     }[]
 }
@@ -105,29 +110,19 @@ export type Transform = string
  */
 export abstract class Grid extends SerializableClass {
 
-    /**
-     * Return a reasonable bounds size to use for a piece.
-     */
+    /** Return a reasonable bounds size to use for a piece. */
     abstract getDefaultPieceBounds(): Bounds
 
-    /**
-     * Information about how to edit the bounds for a piece.
-     */
+    /** Information about how to edit the bounds for a piece. */
     abstract get boundsEditInfo(): PieceBoundsEditInfo
 
-    /**
-     * Is the given voxel inside the bounds?
-     */
+    /** Is the given voxel inside the bounds? */
     abstract isInBounds(voxel: Voxel, bounds: Bounds): boolean
 
-    /**
-     * Returns the smallest bounds which contains all of the given voxels.
-     */
+    /** Returns the smallest bounds which contains all of the given voxels. */
     abstract getVoxelBounds(...voxels: Voxel[]): Bounds
 
-    /**
-     * Returns the smallest bounds which contains all of the given bounds.
-     */
+    /** Returns the smallest bounds which contains all of the given bounds. */
     abstract getBoundsMax(...bounds: Bounds[]): Bounds
 
     /**
@@ -137,45 +132,14 @@ export abstract class Grid extends SerializableClass {
      */
     abstract getBoundsOrigin(bounds: Bounds): Voxel
 
-    /**
-     * Return info describing the voxel.
-     */
+    /** Return info describing the voxel. */
     abstract getVoxelInfo(voxel: Voxel): VoxelInfo
 
-    /**
-     * Return all voxels in the grid inside the bounds.
-     */
+    /** Return all voxels in the grid inside the bounds. */
     abstract getVoxels(bounds: Bounds): Voxel[]
 
+    /** Return info describing one side of a voxel. */
     abstract getSideInfo(voxel: Voxel, direction: Direction): SideInfo
-
-    /**
-     * Get voxel next to the given voxel in the given direction.
-     *
-     * Even though no bounds are passed in, this method may still return null
-     * if the grid is finite or irregular.
-     *
-     * @return [
-     *   The adjacent voxel or null if there is no voxel there,
-     *   The opposite direction (the direction which will get back to the original voxel)
-     * ]
-     */
-    abstract getAdjacent(
-        voxel: Voxel,
-        direction: Direction
-    ): [neighbor: Voxel|null, oppositeDirection: Direction]
-
-    /**
-     * Same as `getAdjacent()`, but adjacent voxels out of bounds are returned as null.
-     */
-    getAdjacentInBounds(voxel: Voxel, direction: Direction, bounds: Bounds): [Voxel|null, Direction] {
-        const [neighbor, oppositeDir] = this.getAdjacent(voxel, direction)
-        if(neighbor !== null && !this.isInBounds(neighbor, bounds)) {
-            return [null, oppositeDir]
-        } else {
-            return [neighbor, oppositeDir]
-        }
-    }
 
     /**
      * Perform a transformation, mapping an existing set of voxels to a new set
@@ -199,25 +163,18 @@ export abstract class Grid extends SerializableClass {
      */
     abstract scaleTransform(transform: Transform, amount: number): Transform
 
-    /**
-     * List all possible ways a set of voxels can be rotated.
-     */
+    /** List all possible ways a set of voxels can be rotated. */
     abstract getRotations(includeMirrors: boolean): Transform[]
 
-    /**
-     * Return a translation which would move one voxel to another.
-     */
+    /** Return a translation which would move one voxel to another. */
     abstract getTranslation(from: Voxel, to: Voxel): Transform
 
-    abstract getViewpoints(): Viewpoint[]
-
-    /**
-     * Get transforms which should be used as movements when disassembling.
-     */
+    /** Get transforms which should be used as movements when disassembling. */
     abstract getDisassemblyTransforms(): Transform[]
 
-    /**
-     * Are the two groups of voxels trivially separable from each other?
-     */
+    /** Are the two groups of voxels trivially separable from each other? */
     abstract isSeparate(group1: Voxel[], group2: Voxel[]): boolean
+
+    /** Get a list of viewpoints which the user can switch between. */
+    abstract getViewpoints(): Viewpoint[]
 }

@@ -1,6 +1,6 @@
-import {registerClass} from '~/lib/serialize.ts'
+import {registerClass} from "~/lib/serialize.ts"
 import {CubicBounds, CubicGrid} from "~/lib/grids/CubicGrid.ts"
-import {Piece} from '~/lib/Piece.ts'
+import {Piece} from "~/lib/Piece.ts"
 
 export class SquareGrid extends CubicGrid {
 
@@ -42,6 +42,15 @@ export class SquareGrid extends CubicGrid {
         return rotations
     }
 
+    getDisassemblyTransforms() {
+        return [
+            this.getTranslation("0,0,0", "1,0,0"),
+            this.getTranslation("0,0,0", "-1,0,0"),
+            this.getTranslation("0,0,0", "0,1,0"),
+            this.getTranslation("0,0,0", "0,-1,0"),
+        ]
+    }
+
     getViewpoints() {
         let viewpoints = CubicGrid.prototype.getViewpoints.call(this)
         viewpoints = viewpoints.filter(
@@ -51,15 +60,6 @@ export class SquareGrid extends CubicGrid {
             viewpoint.getNLayers = () => 1
         }
         return viewpoints
-    }
-
-    getDisassemblyTransforms() {
-        return [
-            this.getTranslation("0,0,0", "1,0,0"),
-            this.getTranslation("0,0,0", "-1,0,0"),
-            this.getTranslation("0,0,0", "0,1,0"),
-            this.getTranslation("0,0,0", "0,-1,0"),
-        ]
     }
 
     /**

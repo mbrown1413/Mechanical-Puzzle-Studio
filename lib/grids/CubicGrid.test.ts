@@ -135,18 +135,6 @@ describe("Cubic grid", () => {
         ])
     })
 
-    test("getAdjacent()", () => {
-        expect(grid.getAdjacent("0,0,0", "+X")).toEqual(["1,0,0", "-X"])
-        expect(grid.getAdjacent("0,0,0", "-X")).toEqual(["-1,0,0", "+X"])
-
-        expect(grid.getAdjacent("5,5,5", "+X")).toEqual(["6,5,5", "-X"])
-        expect(grid.getAdjacent("5,5,5", "-X")).toEqual(["4,5,5", "+X"])
-        expect(grid.getAdjacent("5,5,5", "+Y")).toEqual(["5,6,5", "-Y"])
-        expect(grid.getAdjacent("5,5,5", "-Y")).toEqual(["5,4,5", "+Y"])
-        expect(grid.getAdjacent("5,5,5", "+Z")).toEqual(["5,5,6", "-Z"])
-        expect(grid.getAdjacent("5,5,5", "-Z")).toEqual(["5,5,4", "+Z"])
-    })
-
     test("rotations", () => {
         const rotations = grid.getRotations(false)
         const actualOrientations = makePlacementSet(

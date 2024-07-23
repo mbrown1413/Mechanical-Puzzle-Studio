@@ -1,6 +1,6 @@
 import {Vector3, Matrix3, Matrix4, PlaneGeometry} from "three"
 
-import {registerClass} from '~/lib/serialize.ts'
+import {registerClass} from "~/lib/serialize.ts"
 import {Grid, Voxel, Viewpoint, Transform} from "~/lib/Grid.ts"
 
 type Coordinate3d = {x: number, y: number, z: number}
@@ -32,14 +32,6 @@ const CUBIC_DIR_DELTAS = {
     "+Z": [ 0,  0,  1],
     "-Z": [ 0,  0, -1],
 }
-const CUBIC_OPPOSITES: {[Property in CubicDirection]: CubicDirection} = {
-    "+X": "-X",
-    "-X": "+X",
-    "+Y": "-Y",
-    "-Y": "+Y",
-    "+Z": "-Z",
-    "-Z": "+Z",
-}
 
 const SIDE_POLYGONS: {[side in CubicDirection]: [number, number, number][]} = {
     "+X": [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]],
@@ -58,7 +50,8 @@ function isCubicDirection(d: string): d is CubicDirection {
 }
 
 export class CubicGrid extends Grid {
-    voxelToCoordinate(voxel: Voxel): Coordinate3d {
+
+    protected voxelToCoordinate(voxel: Voxel): Coordinate3d {
         const coord = voxel.split(",", 3)
         if(coord.length !== 3) {
             throw new Error(`Invalid cubic coordinate: ${voxel}`)
@@ -70,7 +63,7 @@ export class CubicGrid extends Grid {
         }
     }
 
-    coordinateToVoxel(coordinate: Coordinate3d): Voxel {
+    protected coordinateToVoxel(coordinate: Coordinate3d): Voxel {
         return `${coordinate.x},${coordinate.y},${coordinate.z}`
     }
 
@@ -161,6 +154,24 @@ export class CubicGrid extends Grid {
         }
     }
 
+    getVoxels(bounds: CubicBounds) {
+        const ret = []
+        const xMin = bounds.x || 0
+        const yMin = bounds.y || 0
+        const zMin = bounds.z || 0
+        const xMax = xMin + bounds.xSize
+        const yMax = yMin + bounds.ySize
+        const zMax = zMin + bounds.zSize
+        for(let x=xMin; x < xMax; x++) {
+            for(let y=yMin; y < yMax; y++) {
+                for(let z=zMin; z < zMax; z++) {
+                    ret.push(this.coordinateToVoxel({x, y, z}))
+                }
+            }
+        }
+        return ret
+    }
+
     getSideInfo(voxel: Voxel, direction: CubicDirection) {
         const {x, y, z} = this.voxelToCoordinate(voxel)
         const translation = new Vector3(x, y, z)
@@ -203,33 +214,12 @@ export class CubicGrid extends Grid {
         }
     }
 
-    getVoxels(bounds: CubicBounds) {
-        const ret = []
-        const xMin = bounds.x || 0
-        const yMin = bounds.y || 0
-        const zMin = bounds.z || 0
-        const xMax = xMin + bounds.xSize
-        const yMax = yMin + bounds.ySize
-        const zMax = zMin + bounds.zSize
-        for(let x=xMin; x < xMax; x++) {
-            for(let y=yMin; y < yMax; y++) {
-                for(let z=zMin; z < zMax; z++) {
-                    ret.push(this.coordinateToVoxel({x, y, z}))
-                }
-            }
-        }
-        return ret
-    }
-
-    getAdjacent(voxel: Voxel, direction: CubicDirection): [Voxel, CubicDirection] {
-        const {x, y, z} = this.voxelToCoordinate(voxel)
-        const [dx, dy, dz] = CUBIC_DIR_DELTAS[direction]
-        const [nx, ny, nz] = [x+dx, y+dy, z+dz]
-        const neighbor: Voxel|null = this.coordinateToVoxel({x: nx, y: ny, z: nz})
-        const oppositeDir = CUBIC_OPPOSITES[direction]
-        return [neighbor, oppositeDir]
-    }
-
+    /**
+     * Rotations start with "r:", followed by the side of a cube which should
+     * be rotated to point in the +X direction, followed by the number of times
+     * to rotate about the X axis. An "m" may be included at the end to
+     * additionally mirror about the Y-Z plane.
+     */
     getRotations(includeMirrors: boolean) {
         const rotations = [
             "r:+X,0", "r:+X,1", "r:+X,2", "r:+X,3",
@@ -247,6 +237,10 @@ export class CubicGrid extends Grid {
         return rotations
     }
 
+    /**
+     * Translations start with "t:" and contain numbers which are the amounts
+     * to translate in each axis.
+     */
     getTranslation(from: Voxel, to: Voxel) {
         const fromCoordinate = this.voxelToCoordinate(from)
         const toCoordinate = this.voxelToCoordinate(to)
@@ -361,34 +355,6 @@ export class CubicGrid extends Grid {
         )
     }
 
-    getViewpoints() {
-        const xy: Viewpoint = {
-            id: "xy",
-            name: "X-Y Plane",
-            forwardVector: new Vector3(0, 0, -1),
-            xVector: new Vector3(1, 0, 0),
-            getNLayers(bounds: CubicBounds) { return bounds.zSize },
-            isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).z == layerIndex,
-        }
-        const xz: Viewpoint = {
-            id: "xz",
-            name: "X-Z Plane",
-            forwardVector: new Vector3(0, -1, 0),
-            xVector: new Vector3(1, 0, 0),
-            getNLayers(bounds: CubicBounds) { return bounds.ySize },
-            isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).y == layerIndex,
-        }
-        const yz: Viewpoint = {
-            id: "yz",
-            name: "Y-Z Plane",
-            forwardVector: new Vector3(-1, 0, 0),
-            xVector: new Vector3(0, 0, -1),
-            getNLayers(bounds: CubicBounds) { return bounds.xSize },
-            isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).x == layerIndex,
-        }
-        return [xy, xz, yz]
-    }
-
     getDisassemblyTransforms(): Transform[] {
         return Object.values(CUBIC_DIR_DELTAS).map(delta =>
             this.getTranslation("0,0,0", `${delta[0]},${delta[1]},${delta[2]}`)
@@ -425,6 +391,35 @@ export class CubicGrid extends Grid {
         const box2 = getBox(group2.map(this.voxelToCoordinate))
         return boxesAreSeparate(box1, box2)
     }
+
+    getViewpoints() {
+        const xy: Viewpoint = {
+            id: "xy",
+            name: "X-Y Plane",
+            forwardVector: new Vector3(0, 0, -1),
+            xVector: new Vector3(1, 0, 0),
+            getNLayers(bounds: CubicBounds) { return bounds.zSize },
+            isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).z == layerIndex,
+        }
+        const xz: Viewpoint = {
+            id: "xz",
+            name: "X-Z Plane",
+            forwardVector: new Vector3(0, -1, 0),
+            xVector: new Vector3(1, 0, 0),
+            getNLayers(bounds: CubicBounds) { return bounds.ySize },
+            isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).y == layerIndex,
+        }
+        const yz: Viewpoint = {
+            id: "yz",
+            name: "Y-Z Plane",
+            forwardVector: new Vector3(-1, 0, 0),
+            xVector: new Vector3(0, 0, -1),
+            getNLayers(bounds: CubicBounds) { return bounds.xSize },
+            isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).x == layerIndex,
+        }
+        return [xy, xz, yz]
+    }
+
 }
 
 registerClass(CubicGrid)
