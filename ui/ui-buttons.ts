@@ -13,6 +13,7 @@ import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
 import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
+import GridEditModal from "~/ui/components/GridEditModal.vue"
 
 export type UiButtonDefinition = {
     text: string | (() => string),
@@ -31,6 +32,7 @@ export function useUiButtonComposible(
     saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null>,
     metadataModal: Ref<InstanceType<typeof PuzzleMetadataModal> | null>,
     rawDataModal: Ref<InstanceType<typeof RawDataModal> | null>,
+    gridEditModal: Ref<InstanceType<typeof GridEditModal> | null>,
 ): Record<string, UiButtonDefinition> {
     return {
 
@@ -50,6 +52,14 @@ export function useUiButtonComposible(
             icon: "mdi-file-code",
             perform() {
                 metadataModal.value?.open()
+            },
+        },
+
+        gridEdit: {
+            text: "Edit Grid",
+            icon: "mdi-grid",
+            perform() {
+                gridEditModal.value?.open()
             },
         },
 

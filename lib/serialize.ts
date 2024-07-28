@@ -260,7 +260,7 @@ function _serializeNode(
         }
 
         // Registered class
-        const classInfo = getRegisteredClass(type)
+        const classInfo = getClassInfo(type)
         if(classInfo !== null) {
             classInfo.cls.postSerialize(data)
             return {type, ...data}
@@ -407,7 +407,7 @@ function _deserializeNode(
             return obj
 
         } else {
-            const classInfo = getRegisteredClass(type)
+            const classInfo = getClassInfo(type)
             if(classInfo === null) {
                 throw new SerializerError(`Reference to unregistered class "${data.type}"`)
             }
@@ -465,8 +465,42 @@ export function registerClass(
     registeredClasses[cls.name] = {cls}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ConcreteClass<T> = new(...args: any[]) => T
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+type MaybeAbstractClass<T> = Function & {prototype: T}
+
 /* Return classInfo passed to `registerClass` for the given class name, or null
  * if a class with the given name has not been registered. */
-function getRegisteredClass(name: string): ClassInfo | null {
+function getClassInfo(name: string): ClassInfo | null {
     return registeredClasses[name] || null
+}
+
+/** Return the registered class with the given `className`. `null` is returned
+ * if the class is not registered, or is not a subclass of `expectedType`. */
+export function getRegisteredClass<T extends SerializableClass>(
+    expectedType: MaybeAbstractClass<T>,
+    className: string,
+): ConcreteClass<T> | null {
+    const classInfo = registeredClasses[className]
+    const cls = classInfo.cls as unknown as ConcreteClass<T>
+    if(cls === expectedType || cls.prototype instanceof expectedType) {
+        return cls
+    }
+    return null
+}
+
+/** List all registered subclasses of the given parent class. */
+export function listSubclasses<T extends SerializableClass>(
+    parentClass: MaybeAbstractClass<T>
+) {
+    const classes = []
+    for(const classInfo of Object.values(registeredClasses)) {
+        const cls = classInfo.cls
+        if(cls.prototype instanceof parentClass) {
+            classes.push(cls)
+        }
+    }
+    return classes
 }

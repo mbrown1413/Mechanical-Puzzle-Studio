@@ -158,6 +158,7 @@ async function submit(event?: Event) {
                 ),
                 fields.name
             )
+            puzzleFile.needsInitialConfigure = true
         break
 
         case "upload":

@@ -1,6 +1,7 @@
 import {
     Voxel, Puzzle, Item, ItemId, Piece, PieceId, Problem, AssemblyProblem,
-    PuzzleFile, Bounds, ProblemId, AssemblySolution
+    PuzzleFile, Bounds, ProblemId, AssemblySolution,
+    Grid, clone
 } from "~lib"
 
 
@@ -213,6 +214,23 @@ export class EditPuzzleMetadataAction extends Action {
 
     perform(_puzzle: Puzzle, puzzleFile: PuzzleFile) {
         Object.assign(puzzleFile, this.metadata)
+    }
+}
+
+export class GridSetAction extends Action {
+    grid: Grid
+
+    constructor(grid: Grid) {
+        super()
+        this.grid = grid
+    }
+
+    toString() {
+        return "Set grid"
+    }
+
+    perform(puzzle: Puzzle, _puzzleFile: PuzzleFile) {
+        puzzle.grid = clone(this.grid)
     }
 }
 

@@ -35,6 +35,10 @@ export class PuzzleFile extends SerializableClass {
     createdUTCString?: string
     modifiedUTCString?: string
 
+    // If true, indicates that initial configuration such as specifying the
+    // grid should be done when the user opens the puzzle file.
+    needsInitialConfigure: undefined | true
+
     constructor(
         puzzle: Puzzle,
         name: string,
