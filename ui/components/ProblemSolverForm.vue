@@ -69,7 +69,7 @@ const solveButton = allUiButtons.startSolve
         </div>
 
         <fieldset>
-            <legend>Assembly </legend>
+            <legend>Assembly</legend>
             <VSelect
                 label="Symmetry Reduction"
                 :items="symmetryReductionItems"

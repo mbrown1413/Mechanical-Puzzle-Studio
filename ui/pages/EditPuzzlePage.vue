@@ -6,7 +6,7 @@ import {PuzzleFile} from "~lib"
 import {taskRunner, title} from "~/ui/globals.ts"
 import {ActionManager, setActionManager, clearActionManager} from "~/ui/ActionManager.ts"
 import {PuzzleStorage, getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
-import {Action} from "~/ui/actions.ts"
+import {Action, GridSetAction} from "~/ui/actions.ts"
 import {UiButtonDefinition, useUiButtonComposible} from "~/ui/ui-buttons.ts"
 import {PuzzleStudioApi} from "../api"
 import TitleBar from "~/ui/components/TitleBar.vue"
@@ -15,6 +15,7 @@ import Modal from "~/ui/common/Modal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
 import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
 import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
+import GridEditModal from "~/ui/components/GridEditModal.vue"
 import UiButton from "~/ui/components/UiButton.vue"
 
 const props = defineProps<{
@@ -54,6 +55,7 @@ const puzzleEditor: Ref<InstanceType<typeof PuzzleEditor> | null> = ref(null)
 const metadataModal: Ref<InstanceType<typeof PuzzleMetadataModal> | null> = ref(null)
 const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
 const saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null> = ref(null)
+const gridEditModal: Ref<InstanceType<typeof GridEditModal> | null> = ref(null)
 
 watch(puzzleError, () => {
     nextTick(() => {
@@ -80,6 +82,7 @@ const uiButtons = useUiButtonComposible(
     saveModal,
     metadataModal,
     rawDataModal,
+    gridEditModal,
 )
 
 provide("uiButtons", uiButtons)
@@ -125,9 +128,22 @@ function setPuzzleFile(ignoreErrors=false) {
             recoverable: recoverable,
         }
     }
+
+    if(puzzleFile.value?.needsInitialConfigure) {
+        nextTick(() => {
+            if(puzzleFile.value) {
+                gridEditModal.value?.open()
+            }
+        })
+    }
 }
 
 function performAction(action: Action) {
+
+    if(action instanceof GridSetAction && puzzleFile.value) {
+        puzzleFile.value.needsInitialConfigure = undefined
+    }
+
     try {
         actionManager.performAction(action)
     } catch(e) {
@@ -201,6 +217,7 @@ const menus: ComputedRef<Menu[]> = computed(() => {
             items: [
                 uiButtons.newPuzzle,
                 uiButtons.puzzleMetadata,
+                uiButtons.gridEdit,
                 uiButtons.puzzleRawData,
                 uiButtons.downloadPuzzle,
                 uiButtons.saveAs,
@@ -307,6 +324,12 @@ const toolbarButtons: UiButtonDefinition[] = [
     />
     <RawDataModal ref="rawDataModal" />
     <PuzzleSaveModal ref="saveModal" @save="puzzleFile = $event" />
+    <GridEditModal
+        v-if="puzzleFile"
+        ref="gridEditModal"
+        :puzzle="puzzleFile.puzzle"
+        @action="performAction($event)"
+    />
 </template>
 
 <style scoped>

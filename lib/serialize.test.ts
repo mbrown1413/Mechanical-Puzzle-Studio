@@ -1,6 +1,6 @@
 import {test, expect, describe} from "vitest"
 
-import {deserialize, deserializeIgnoreErrors, serialize, Serializable, SerializedData, SerializableClass, registerClass} from "./serialize.ts"
+import {deserialize, deserializeIgnoreErrors, serialize, Serializable, SerializedData, SerializableClass, registerClass, getRegisteredClass, listSubclasses} from "./serialize.ts"
 
 // Classes to test out serializable classes
 class A extends SerializableClass {
@@ -27,6 +27,11 @@ class B extends SerializableClass {
     }
 }
 registerClass(B)
+
+class ASubclass1 extends A { }
+class ASubclass2 extends A { }
+registerClass(ASubclass1)
+registerClass(ASubclass2)
 
 class ClassWithTypeProperty extends SerializableClass {
     type: string
@@ -391,5 +396,18 @@ describe("deserialize safe mode", () => {
                 baz: null
             }
         ])
+    })
+
+    test("getRegisteredClass()", () => {
+        expect(getRegisteredClass(A, "A")).toEqual(A)
+        expect(getRegisteredClass(A, "ASubclass1")).toEqual(ASubclass1)
+        expect(getRegisteredClass(B, "ASubclass1")).toEqual(null)
+    })
+
+    test("listSubclasses()", () => {
+        expect(listSubclasses(A)).toEqual([
+            ASubclass1, ASubclass2
+        ])
+        expect(listSubclasses(B)).toEqual([])
     })
 })
