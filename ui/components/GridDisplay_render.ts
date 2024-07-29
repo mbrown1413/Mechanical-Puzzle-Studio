@@ -1,4 +1,4 @@
-import {ref, Ref, ComputedRef, onMounted, onUnmounted, computed, watchEffect, watch} from "vue"
+import {ref, Ref, onMounted, onUnmounted, computed, watchEffect, watch} from "vue"
 
 import * as THREE from "three"
 import {Vector3} from "three"
@@ -12,9 +12,9 @@ import {multiRenderer} from "~/ui/utils/MultiRenderer.ts"
 
 export function useGridDisplayRenderComposible(
     element: Ref<HTMLElement>,
-    grid: Grid,
-    pieces: ComputedRef<Piece[]>,
-    bounds: ComputedRef<Bounds>,
+    grid: Ref<Grid>,
+    pieces: Ref<Piece[]>,
+    bounds: Ref<Bounds>,
     displayOnly: boolean,
     layerN: Ref<number>,
     viewpoint: Ref<Viewpoint>,
@@ -27,7 +27,7 @@ export function useGridDisplayRenderComposible(
     const resourceTracker = new ThreeJsResourceTracker()
     let renderAreaId: string
 
-    const gridBoundingBox = computed(() => getGridBoundingBox(grid, bounds.value))
+    const gridBoundingBox = computed(() => getGridBoundingBox(grid.value, bounds.value))
 
     const availableCameraSchemes: Record<CameraSchemeName, CameraScheme> = {
         "2D": makeCameraScheme("2D"),
@@ -160,11 +160,11 @@ export function useGridDisplayRenderComposible(
         }
 
         hitTestObjects.value = []
-        for(const voxel of cameraScheme.value.iterVoxels(grid)) {
-            const voxelInfo = grid.getVoxelInfo(voxel)
+        for(const voxel of cameraScheme.value.iterVoxels(grid.value)) {
+            const voxelInfo = grid.value.getVoxelInfo(voxel)
             const inLayer = displayOnly ? false : viewpoint.value.isInLayer(voxel, layerN.value)
             const pieceAtVoxel = getPieceAtVoxel(voxel)
-            const sides = voxelInfo.sides.map(side => grid.getSideInfo(voxel, side))
+            const sides = voxelInfo.sides.map(side => grid.value.getSideInfo(voxel, side))
 
             for(const voxelPainter of voxelPainters) {
                 const args = {
