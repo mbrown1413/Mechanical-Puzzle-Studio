@@ -54,9 +54,10 @@ const pieceDisplayStyle = computed(() => {
     }
 })
 
+const viewpoints = computed(() => props.grid.getViewpoints())
+
 const drawElement = ref()
-const viewpoints = props.grid.getViewpoints()
-const viewpoint = ref(viewpoints[0])
+const viewpoint = ref(viewpoints.value[0])
 const layerN = ref(0)
 const highlightedVoxels: Ref<Voxel[]> = ref([])
 
@@ -81,8 +82,12 @@ watchEffect(() => {
 })
 watch(layerN, () => emit("update:layerN", layerN.value))
 
+watch(viewpoints, () => {
+    viewpoint.value = viewpoints.value[0]
+})
+
 const viewpointOptions = computed(() =>
-    viewpoints.map((viewpoint) => {
+    viewpoints.value.map((viewpoint) => {
         return {
             title: viewpoint.name,
             value: viewpoint,
@@ -129,7 +134,7 @@ const {
     hitTestObjects,
 } = useGridDisplayRenderComposible(
     drawElement,
-    props.grid,
+    toRef(props, "grid"),
     pieces,
     bounds,
     props.displayOnly,
@@ -143,7 +148,7 @@ const {
 useGridDisplayMouseComposible(
     drawElement,
     camera,
-    props.grid,
+    toRef(props, "grid"),
     hitTestObjects,
     toRef(props, "boxToolEnabled"),
     (mouseEvent, voxels) => emit("voxelsClicked", mouseEvent, voxels),

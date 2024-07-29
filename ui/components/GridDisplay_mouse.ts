@@ -10,7 +10,7 @@ export function useGridDisplayMouseComposible(
     // Inputs
     element: Ref<HTMLElement>,
     camera: Ref<THREE.Camera>,
-    grid: Grid,
+    grid: Ref<Grid>,
     hitTestObjects: Ref<THREE.Object3D[]>,
     boxToolEnabled: Ref<boolean>,
 
@@ -113,8 +113,8 @@ export function useGridDisplayMouseComposible(
         if(pressedVoxel === null) { return }
         const toVoxel = getVoxelOnScreen(x, y)
         if(toVoxel === null) { return }
-        const bounds = grid.getVoxelBounds(pressedVoxel, toVoxel)
-        highlightedVoxels.value = grid.getVoxels(bounds)
+        const bounds = grid.value.getVoxelBounds(pressedVoxel, toVoxel)
+        highlightedVoxels.value = grid.value.getVoxels(bounds)
     }
 
 }
