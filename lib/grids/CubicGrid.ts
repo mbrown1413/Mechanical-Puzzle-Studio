@@ -50,6 +50,8 @@ function isCubicDirection(d: string): d is CubicDirection {
 }
 
 export class CubicGrid extends Grid {
+    static gridTypeName = "Cubic"
+    static gridTypeDescription = "Regularly tiled cubes in three dimensions"
 
     protected voxelToCoordinate(voxel: Voxel): Coordinate3d {
         const coord = voxel.split(",", 3)

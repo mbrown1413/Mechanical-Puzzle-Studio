@@ -3,6 +3,8 @@ import {CubicBounds, CubicGrid} from "~/lib/grids/CubicGrid.ts"
 import {Piece} from "~/lib/Piece.ts"
 
 export class SquareGrid extends CubicGrid {
+    static gridTypeName = "Square"
+    static gridTypeDescription = "Regularly tiled squares in two dimensions"
 
     get boundsEditInfo() {
         return {

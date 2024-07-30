@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, Ref} from "vue"
+import {computed, ref, Ref} from "vue"
 
 import {Grid, CubicGrid, Puzzle, clone, listSubclasses, getRegisteredClass} from "~lib"
 
@@ -24,11 +24,17 @@ defineExpose({
 const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 const grid = ref(new CubicGrid() as never) as Ref<Grid>
 
-const gridItems = listSubclasses(Grid).map((gridClass) => {
+const gridItems = listGridClasses().map((gridClass) => {
     return {
-        title: gridClass.name,
+        title: gridClass.gridTypeName,
         value: gridClass.name,
+        description: gridClass.gridTypeDescription,
     }
+})
+
+const gridTypeDescription = computed(() => {
+    const item = gridItems.find(item => item.value === grid.value.constructor.name)
+    return item?.description || ""
 })
 
 function changeGridType(gridClassName: string) {
@@ -38,6 +44,16 @@ function changeGridType(gridClassName: string) {
     } else {
         throw new Error(`Grid type ${gridClassName} not found`)
     }
+}
+
+function listGridClasses() {
+    const gridClasses = []
+    for(const gridClass of listSubclasses(Grid)) {
+        gridClasses.push(
+            gridClass as unknown as typeof Grid
+        )
+    }
+    return gridClasses
 }
 
 function onSubmit() {
@@ -59,6 +75,8 @@ function onSubmit() {
             label="Grid Type"
             :items="gridItems"
             :model-value="grid.constructor.name"
+            :hint="gridTypeDescription"
+            persistent-hint
             @update:modelValue="changeGridType($event)"
         />
     </Modal>

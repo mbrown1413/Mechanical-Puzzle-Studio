@@ -494,7 +494,7 @@ export function getRegisteredClass<T extends SerializableClass>(
 /** List all registered subclasses of the given parent class. */
 export function listSubclasses<T extends SerializableClass>(
     parentClass: MaybeAbstractClass<T>
-) {
+): ConcreteClass<T>[] {
     const classes = []
     for(const classInfo of Object.values(registeredClasses)) {
         const cls = classInfo.cls
@@ -502,5 +502,5 @@ export function listSubclasses<T extends SerializableClass>(
             classes.push(cls)
         }
     }
-    return classes
+    return classes as unknown as ConcreteClass<T>[]
 }
