@@ -110,6 +110,12 @@ export type Transform = string
  */
 export abstract class Grid extends SerializableClass {
 
+    /** User-facing name for this type of grid. */
+    static get gridTypeName() { return "Unnamed Grid Type" }
+
+    /** User-facing description for this type of grid. */
+    static get gridTypeDescription() { return "" }
+
     /** Return a reasonable bounds size to use for a piece. */
     abstract getDefaultPieceBounds(): Bounds
 
