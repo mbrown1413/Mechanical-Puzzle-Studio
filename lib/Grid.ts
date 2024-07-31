@@ -128,6 +128,9 @@ export abstract class Grid extends SerializableClass {
     /** Returns the smallest bounds which contains all of the given voxels. */
     abstract getVoxelBounds(...voxels: Voxel[]): Bounds
 
+    /** Return true if the voxel is in a valid format for this grid. */
+    abstract validateVoxel(voxel: Voxel): boolean
+
     /** Returns the smallest bounds which contains all of the given bounds. */
     abstract getBoundsMax(...bounds: Bounds[]): Bounds
 

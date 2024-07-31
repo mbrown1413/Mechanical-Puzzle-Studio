@@ -231,6 +231,11 @@ export class GridSetAction extends Action {
 
     perform(puzzle: Puzzle, _puzzleFile: PuzzleFile) {
         puzzle.grid = clone(this.grid)
+        for(const piece of puzzle.pieces) {
+            piece.voxels = piece.voxels.filter(
+                voxel => puzzle.grid.validateVoxel(voxel)
+            )
+        }
     }
 }
 

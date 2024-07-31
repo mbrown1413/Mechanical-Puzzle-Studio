@@ -8,6 +8,7 @@ import Modal from "~/ui/common/Modal.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
+    initialConfig: boolean
 }>()
 
 const emit = defineEmits<{
@@ -36,6 +37,10 @@ const gridTypeDescription = computed(() => {
     const item = gridItems.find(item => item.value === grid.value.constructor.name)
     return item?.description || ""
 })
+
+const showWarning = computed(() =>
+    props.puzzle.pieces.filter(piece => piece.voxels.length > 0).length > 0
+)
 
 function changeGridType(gridClassName: string) {
     const gridClass = getRegisteredClass(Grid, gridClassName)
@@ -67,9 +72,9 @@ function onSubmit() {
     <Modal
         ref="modal"
         title="Configure Grid"
-        :cancelShow="false"
+        :cancelShow="!initialConfig"
+        :persistent="initialConfig"
         @ok="onSubmit"
-        persistent
     >
         <VSelect
             label="Grid Type"
@@ -79,5 +84,15 @@ function onSubmit() {
             persistent-hint
             @update:modelValue="changeGridType($event)"
         />
+        <VAlert
+            v-if="showWarning"
+            type="warning"
+            title="Warning!"
+            class="mt-4"
+        >
+            Changing grid types and parameters may affect existing pieces in
+            unexpected ways. Voxels which don't fit into the new grid's
+            coordinate system will be removed.
+        </VAlert>
     </Modal>
 </template>
