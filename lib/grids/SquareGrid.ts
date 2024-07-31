@@ -1,6 +1,7 @@
 import {registerClass} from "~/lib/serialize.ts"
-import {CubicBounds, CubicGrid} from "~/lib/grids/CubicGrid.ts"
+import {Voxel} from "~/lib/Grid.ts"
 import {Piece} from "~/lib/Piece.ts"
+import {CubicBounds, CubicGrid} from "~/lib/grids/CubicGrid.ts"
 
 export class SquareGrid extends CubicGrid {
     static gridTypeName = "Square"
@@ -27,6 +28,16 @@ export class SquareGrid extends CubicGrid {
             }
         }
         return ret
+    }
+
+    validateVoxel(voxel: Voxel) {
+        let coordinate
+        try {
+            coordinate = this.voxelToCoordinate(voxel)
+        } catch {
+            return false
+        }
+        return coordinate.z === 0
     }
 
     getRotations(includeMirrors: boolean) {

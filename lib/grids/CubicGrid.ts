@@ -174,6 +174,15 @@ export class CubicGrid extends Grid {
         return ret
     }
 
+    validateVoxel(voxel: Voxel) {
+        try {
+            this.voxelToCoordinate(voxel)
+        } catch {
+            return false
+        }
+        return true
+    }
+
     getSideInfo(voxel: Voxel, direction: CubicDirection) {
         const {x, y, z} = this.voxelToCoordinate(voxel)
         const translation = new Vector3(x, y, z)

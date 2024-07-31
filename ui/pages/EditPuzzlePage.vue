@@ -328,6 +328,7 @@ const toolbarButtons: UiButtonDefinition[] = [
         v-if="puzzleFile"
         ref="gridEditModal"
         :puzzle="puzzleFile.puzzle"
+        :initialConfig="puzzleFile.needsInitialConfigure || false"
         @action="performAction($event)"
     />
 </template>
