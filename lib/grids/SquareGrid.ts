@@ -7,6 +7,13 @@ export class SquareGrid extends CubicGrid {
     static gridTypeName = "Square"
     static gridTypeDescription = "Regularly tiled squares in two dimensions"
 
+    flippable: boolean
+
+    constructor() {
+        super()
+        this.flippable = true
+    }
+
     get boundsEditInfo() {
         return {
             dimensions: [
@@ -42,15 +49,20 @@ export class SquareGrid extends CubicGrid {
 
     getRotations(includeMirrors: boolean) {
         const rotations = [
-            "r:+X,0", "r:+X,2",
-            "r:-X,0", "r:-X,2",
-            "r:+Y,0", "r:+Y,2",
-            "r:-Y,0", "r:-Y,2",
+            "r:+X,0",
+            "r:-X,0",
+            "r:+Y,0",
+            "r:-Y,0",
         ]
-        if(includeMirrors) {
-            rotations.push(...rotations.map(
-                rotation => rotation + "m"
-            ))
+        // Flipping is the same as mirroring when we restrict ourselves to two
+        // dimensions, so we don't need to include mirrors in addition to flips.
+        if(this.flippable || includeMirrors) {
+            rotations.push(...[
+                "r:+X,2",
+                "r:-X,2",
+                "r:+Y,2",
+                "r:-Y,2",
+            ])
         }
         return rotations
     }
