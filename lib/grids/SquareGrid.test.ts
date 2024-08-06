@@ -1,11 +1,16 @@
 import {test, expect, describe} from "vitest"
 
 import {serialize} from "~/lib/serialize.ts"
+import {Grid} from "~/lib/Grid.ts"
 import {SquareGrid} from "./SquareGrid.ts"
 import {makePlacementSet} from "./CubicGrid.test.ts"
 
 describe("Square grid", () => {
     const grid = new SquareGrid()
+    grid.flippable = true
+
+    const gridUnflippable = new SquareGrid()
+    gridUnflippable.flippable = false
 
     test("getVoxels()", () => {
         expect(
@@ -29,14 +34,19 @@ describe("Square grid", () => {
             "0,1,0",
             "0,0,0", "1,0,0", "2,0,0",
         ]
-        const rotations = grid.getRotations(false)
-        const actualOrientations = makePlacementSet(
-            rotations.map(
-                (orientation) => grid.doTransform(orientation, originalVoxels)
+
+        const getVoxelRotations = (grid: Grid, includeMirrors: boolean) => {
+            const rotations = grid.getRotations(includeMirrors)
+            return makePlacementSet(
+                rotations.map(
+                    (orientation) => grid.doTransform(orientation, originalVoxels)
+                )
             )
-        )
-        expect(actualOrientations).toMatchInlineSnapshot(`
-          Set {
+        }
+
+        expect(
+            getVoxelRotations(grid, false)
+        ).toEqual(new Set([
             "0,1,0; 0,0,0; 1,0,0; 2,0,0",
             "0,-1,0; 0,0,0; 1,0,0; 2,0,0",
             "0,-1,0; 0,0,0; -1,0,0; -2,0,0",
@@ -45,8 +55,16 @@ describe("Square grid", () => {
             "1,0,0; 0,0,0; 0,1,0; 0,2,0",
             "-1,0,0; 0,0,0; 0,1,0; 0,2,0",
             "-1,0,0; 0,0,0; 0,-1,0; 0,-2,0",
-          }
-        `)
+        ]))
+
+        expect(
+            getVoxelRotations(gridUnflippable, false)
+        ).toEqual(new Set([
+            "0,1,0; 0,0,0; 1,0,0; 2,0,0",
+            "0,-1,0; 0,0,0; -1,0,0; -2,0,0",
+            "1,0,0; 0,0,0; 0,-1,0; 0,-2,0",
+            "-1,0,0; 0,0,0; 0,1,0; 0,2,0",
+        ]))
     })
 
     test("piecesFromString()", () => {
