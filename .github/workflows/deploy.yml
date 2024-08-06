@@ -31,7 +31,7 @@ jobs:
 
         - name: Build dist
           run: |
-              yarn build --base=/Mechanical-Puzzle-Studio/
+              yarn build
               cp dist/index.html dist/404.html
 
         - name: Configure Pages
