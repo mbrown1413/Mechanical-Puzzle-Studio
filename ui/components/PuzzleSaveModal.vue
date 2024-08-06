@@ -158,7 +158,10 @@ async function submit(event?: Event) {
                 ),
                 fields.name
             )
-            puzzleFile.needsInitialConfigure = true
+            // Uncomment the next line to pop up the grid configure dialog when
+            // a puzzle is created. For now, there aren't enough grids
+            // implemented for it to be useful.
+            //puzzleFile.needsInitialConfigure = true
         break
 
         case "upload":
