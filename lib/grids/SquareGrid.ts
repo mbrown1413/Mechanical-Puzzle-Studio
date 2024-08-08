@@ -2,6 +2,7 @@ import {registerClass} from "~/lib/serialize.ts"
 import {Voxel} from "~/lib/Grid.ts"
 import {Piece} from "~/lib/Piece.ts"
 import {CubicBounds, CubicGrid} from "~/lib/grids/CubicGrid.ts"
+import {Form} from "~/lib/forms.ts"
 
 export class SquareGrid extends CubicGrid {
     static gridTypeName = "Square"
@@ -12,6 +13,18 @@ export class SquareGrid extends CubicGrid {
     constructor() {
         super()
         this.flippable = true
+    }
+
+    getForm(): Form {
+        return {
+            fields: [
+                {
+                    type: "checkbox",
+                    property: "flippable",
+                    label: "Flippable",
+                },
+            ]
+        }
     }
 
     get boundsEditInfo() {
