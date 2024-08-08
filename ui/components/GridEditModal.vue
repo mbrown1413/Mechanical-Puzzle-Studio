@@ -19,12 +19,19 @@ const emit = defineEmits<{
 defineExpose({
     open() {
         grid.value = clone(props.puzzle.grid)
+        gridTypeInstances[grid.value.constructor.name] = grid.value
         modal.value?.open()
     },
 })
 
 const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 const grid = ref(new CubicGrid() as never) as Ref<Grid>
+
+// Maps grid class name to instance.
+// Stores persistent instances for tracking grids which aren't currently
+// selected. This prevents parameters from being cleared, so they are not
+// changed if the user switches to another type and back.
+const gridTypeInstances: Record<string, Grid> = {}
 
 const gridItems = listGridClasses().map((gridClass) => {
     return {
@@ -44,9 +51,15 @@ const showWarning = computed(() =>
 )
 
 function changeGridType(gridClassName: string) {
+    if(gridTypeInstances[gridClassName]) {
+        grid.value = gridTypeInstances[gridClassName]
+        return
+    }
+
     const gridClass = getRegisteredClass(Grid, gridClassName)
     if(gridClass) {
         grid.value = new gridClass()
+        gridTypeInstances[gridClassName] = grid.value
     } else {
         throw new Error(`Grid type ${gridClassName} not found`)
     }
