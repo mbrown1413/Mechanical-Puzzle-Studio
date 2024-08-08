@@ -5,6 +5,7 @@ import {Grid, CubicGrid, Puzzle, clone, listSubclasses, getRegisteredClass} from
 
 import {GridSetAction} from "~/ui/actions.ts"
 import Modal from "~/ui/common/Modal.vue"
+import FormEditor from "./FormEditor.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
@@ -83,6 +84,10 @@ function onSubmit() {
             :hint="gridTypeDescription"
             persistent-hint
             @update:modelValue="changeGridType($event)"
+        />
+        <FormEditor
+            :item="grid"
+            @edit="Object.assign(grid, $event)"
         />
         <VAlert
             v-if="showWarning"
