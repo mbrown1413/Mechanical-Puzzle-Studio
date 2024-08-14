@@ -80,3 +80,41 @@ export function makeCylinderTransform(
 
     return m
 }
+
+/**
+ * Given 4 coplanar points in a clockwise order, return a geometry which is a
+ * rectangle with those points as its corners.
+ */
+export function makeRectGeometry(
+    point1: THREE.Vector3,
+    point2: THREE.Vector3,
+    point3: THREE.Vector3,
+    point4: THREE.Vector3
+): THREE.BufferGeometry {
+    const geometry = new THREE.BufferGeometry()
+
+    const vertices = new Float32Array([
+        ...point1.toArray(),
+        ...point2.toArray(),
+        ...point3.toArray(),
+        ...point4.toArray(),
+    ])
+    geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3))
+
+    const indices = new Uint16Array([
+        0, 1, 2,
+        0, 2, 3
+    ])
+    geometry.setIndex(new THREE.BufferAttribute(indices, 1))
+
+    const uv = new Float32Array([
+        0, 1,
+        1, 0,
+        1, 1,
+        0, 1,
+    ])
+    geometry.setAttribute("uv", new THREE.BufferAttribute(uv, 2))
+
+    geometry.computeVertexNormals()
+    return geometry
+}
