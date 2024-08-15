@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed} from "vue"
 
-import {FormEditable} from "~/lib/forms.ts"
+import {FormEditable} from "~lib"
 
 import DynamicField from "~/ui/components/fields/DynamicField.vue"
 

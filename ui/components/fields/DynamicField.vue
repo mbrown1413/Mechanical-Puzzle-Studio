@@ -2,7 +2,7 @@
 <script lang="ts">
 import {FunctionalComponent, createVNode} from "vue"
 
-import {Field, FormEditable} from "~/lib/forms.ts"
+import {Field, FormEditable} from "~lib"
 
 import CheckboxField from "~/ui/components/fields/CheckboxField.vue"
 import Section from "~/ui/components/fields/Section.vue"

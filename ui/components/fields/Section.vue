@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {FormEditable, SectionField} from "~/lib/forms.ts"
+import {FormEditable, SectionField} from "~lib"
 
 import DynamicField from "~/ui/components/fields/DynamicField.vue"
 

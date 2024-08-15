@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import {computed} from "vue"
 
-import {FormEditable} from "~/lib/forms.ts"
-import {CheckboxField} from "~/lib/forms.ts"
+import {FormEditable, CheckboxField} from "~lib"
 
 const props = defineProps<{
     item: FormEditable
