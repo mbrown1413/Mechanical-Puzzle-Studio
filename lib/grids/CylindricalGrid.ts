@@ -37,7 +37,7 @@ export class CylindricalGrid extends Grid {
 
     constructor() {
         super()
-        this.nDivisions = 8
+        this.nDivisions = 21
     }
 
     protected voxelToCoordinate(voxel: Voxel): CylindricalCoord {
@@ -81,74 +81,100 @@ export class CylindricalGrid extends Grid {
     }
 
     isInBounds(voxel: Voxel, bounds: CylindricalBounds): boolean {
-        const {rho, zed} = this.voxelToCoordinate(voxel)
-        return (
-            rho >= (bounds.rho || 0) && rho < (bounds.rho || 0) + bounds.rhoSize &&
-            zed >= (bounds.zed || 0) && zed < (bounds.zed || 0) + bounds.zedSize
-        )
+        const {rho, phi, zed} = this.voxelToCoordinate(voxel)
+        const rhoMin = (bounds.rho || 0)
+        const phiMin = (bounds.phi || 0)
+        const zedMin = (bounds.zed || 0)
+        const rhoMax = rhoMin + bounds.rhoSize - 1
+        const phiMax = phiMin + (bounds.phiSize || this.nDivisions) - 1
+        const zedMax = zedMin + bounds.zedSize - 1
+        if(
+            rho < rhoMin || rho > rhoMax ||
+            zed < zedMin || zed > zedMax
+        ) {
+            return false
+        }
+        if(phi < phiMin || phi > phiMax) {
+            // Only phi didn't pass the check, so check if phiSize wraps around
+            // and our given phi fits within it.
+            return (
+                phiMax >= this.nDivisions &&
+                phi <= phiMax - this.nDivisions
+            )
+        }
+        return true
     }
 
-    getVoxelBounds(...voxels: Voxel[]): CylindricalBounds {
+    getVoxelBounds(voxels: Voxel[]): CylindricalBounds {
         if(voxels.length === 0) {
             return this.getDefaultPieceBounds()
         }
         const min = this.voxelToCoordinate(voxels[0])
         const max = this.voxelToCoordinate(voxels[0])
+        const allPhi: Set<number> = new Set()
         for(const voxel of voxels) {
-            const {rho, zed} = this.voxelToCoordinate(voxel)
+            const {rho, phi, zed} = this.voxelToCoordinate(voxel)
+            allPhi.add(phi)
             min.rho = Math.min(min.rho, rho)
             min.zed = Math.min(min.zed, zed)
             max.rho = Math.max(max.rho, rho)
             max.zed = Math.max(max.zed, zed)
         }
+
+        const {phiStart, phiSize} = getPhiRange(allPhi, this.nDivisions)
+
         return {
-            rho: min.rho, zed: min.zed,
+            rho: min.rho,
+            phi: phiStart,
+            zed: min.zed,
             rhoSize: max.rho - min.rho + 1,
+            phiSize: phiSize,
             zedSize: max.zed - min.zed + 1,
         }
     }
 
     validateVoxel(voxel: Voxel): boolean {
+        let coordinate
         try {
-            this.voxelToCoordinate(voxel)
+            coordinate = this.voxelToCoordinate(voxel)
         } catch {
             return false
         }
-        return true
+        return coordinate.phi >= 0 && coordinate.phi < this.nDivisions
     }
 
     getBoundsMax(...bounds: CylindricalBounds[]): CylindricalBounds {
         if(bounds.length === 0) {
             return this.getDefaultPieceBounds()
         }
-        const min = {
-            rho: bounds[0].rho || 0,
-            phi: bounds[0].phi || 0,
-            zed: bounds[0].zed || 0
-        }
-        const max = Object.assign({}, min)
-        for(const bound of bounds) {
-            min.rho = Math.min(min.rho, bound.rho || 0)
-            min.phi = Math.min(min.phi, bound.phi || 0)
-            min.zed = Math.min(min.zed, bound.zed || 0)
-            max.rho = Math.max(max.rho, (bound.rho || 0) + bound.rhoSize)
-            max.phi = Math.max(max.phi, (bound.phi || 0) + (bound.phiSize || this.nDivisions))
-            max.zed = Math.max(max.zed, (bound.zed || 0) + bound.zedSize)
-        }
-        return {
-            ...min,
-            rhoSize: max.rho - min.rho,
-            phiSize: max.phi - min.phi,
-            zedSize: max.zed - min.zed,
-        }
-    }
 
-    getBoundsOrigin(bounds: CylindricalBounds): Voxel {
-        return this.coordinateToVoxel({
-            rho: bounds.rho || 0,
-            phi: 0,
-            zed: bounds.zed || 0
-        })
+        let rhoMin = bounds[0].rho || 0
+        let zedMin = bounds[0].zed || 0
+        let rhoMax = rhoMin
+        let zedMax = zedMin
+
+        const allPhi: Set<number> = new Set()
+        for(const bound of bounds) {
+            rhoMin = Math.min(rhoMin, bound.rho || 0)
+            zedMin = Math.min(zedMin, bound.zed || 0)
+            rhoMax = Math.max(rhoMax, (bound.rho || 0) + bound.rhoSize - 1)
+            zedMax = Math.max(zedMax, (bound.zed || 0) + bound.zedSize - 1)
+
+            for(let i=0; i<(bound.phiSize || this.nDivisions); i++) {
+                allPhi.add(((bound.phi || 0) + i) % this.nDivisions)
+            }
+        }
+
+        const {phiStart, phiSize} = getPhiRange(allPhi, this.nDivisions)
+
+        return {
+            rho: rhoMin,
+            phi: phiStart,
+            zed: zedMin,
+            rhoSize: rhoMax - rhoMin + 1,
+            phiSize: phiSize,
+            zedSize: zedMax - zedMin + 1,
+        }
     }
 
     getVoxelInfo(voxel: Voxel): VoxelInfo {
@@ -156,7 +182,7 @@ export class CylindricalGrid extends Grid {
             "+rho", "+phi", "-phi", "+zed", "-zed"
         ]
 
-        if(this.voxelToCoordinate(voxel).phi !== 0) {
+        if(this.voxelToCoordinate(voxel).rho !== 0) {
             sides.push("-rho")
         }
         return {voxel, sides}
@@ -164,19 +190,14 @@ export class CylindricalGrid extends Grid {
 
     getVoxels(bounds: CylindricalBounds): Voxel[] {
         const ret = []
-        const rhoMin = bounds.rho || 0
-        const phiMin = bounds.phi || 0
-        const zedMin = bounds.zed || 0
-        const rhoMax = rhoMin + bounds.rhoSize
-        const phiMax = phiMin + (bounds.phiSize || this.nDivisions)
-        const zedMax = zedMin + bounds.zedSize
-        for(let rho=rhoMin; rho < rhoMax; rho++) {
-            for(let phi=rhoMin; phi < phiMax; phi++) {
-                for(let zed=zedMin; zed < zedMax; zed++) {
+        const phiSize = (bounds.phiSize || this.nDivisions)
+        for(let i=0; i<bounds.rhoSize; i++) {
+            for(let j=0; j<phiSize; j++) {
+                for(let k=0; k<bounds.zedSize; k++) {
                     ret.push(this.coordinateToVoxel({
-                        rho,
-                        phi: phi % this.nDivisions,
-                        zed
+                        rho: (bounds.rho || 0) + i,
+                        phi: ((bounds.phi || 0) + j) % this.nDivisions,
+                        zed: (bounds.zed || 0) + k,
                     }))
                 }
             }
@@ -263,21 +284,73 @@ export class CylindricalGrid extends Grid {
     }
 
     doTransform(transform: Transform, voxels: Voxel[]): Voxel[] {
+
+        // Translate around the cylindar (phi) and up and down (zed)
+        if(/^t:(-?\d+,?){2}$/.test(transform)) {
+            const offsets = transform.slice(2).split(",").map(Number)
+            return voxels.map((voxel: Voxel) => {
+                const coordinate = this.voxelToCoordinate(voxel)
+                return this.coordinateToVoxel({
+                    rho: coordinate.rho,
+                    phi: (coordinate.phi + offsets[0]) % this.nDivisions,
+                    zed: coordinate.zed + offsets[1],
+                })
+            })
+        }
+
+        // Flip about the zed=0 plane along the phi=0 line
+        if(transform === "flip") {
+            return voxels.map((voxel) => {
+                const coordinate = this.voxelToCoordinate(voxel)
+                return this.coordinateToVoxel({
+                    rho: coordinate.rho,
+                    phi: (this.nDivisions - coordinate.phi) % this.nDivisions,
+                    zed: coordinate.zed * -1,
+                })
+            })
+        }
+
+        throw new Error(`Transform in unknown format: ${transform}`)
     }
 
     scaleTransform(transform: Transform, amount: number): Transform {
+        if(/^t:(-?\d+,?){2}$/.test(transform)) {
+            const offsets = transform.slice(2).split(",").map(Number)
+            offsets[0] *= amount
+            offsets[1] *= amount
+            return `t:${offsets[0]},${offsets[1]}`
+        }
+
+        throw new Error(`Scaling not supported on transform: ${transform}`)
     }
 
-    getRotations(includeMirrors: boolean): Transform[] {
+    getRotations(_includeMirrors: boolean): Transform[] {
+        // Note: We don't yet have a transform for mirroring. We could also in
+        // the future add a flag "flippable" so pieces have an orientation and
+        // can't be turned upside down.
+        return ["t:0,0", "flip"]
     }
 
-    getTranslation(from: Voxel, to: Voxel): Transform {
+    getTranslation(from: Voxel, to: Voxel) {
+        const fromCoordinate = this.voxelToCoordinate(from)
+        const toCoordinate = this.voxelToCoordinate(to)
+        if(fromCoordinate.rho !== toCoordinate.rho) { return null }
+        const deltaPhi = toCoordinate.phi - fromCoordinate.phi
+        const deltaZed = toCoordinate.zed - fromCoordinate.zed
+        return `t:${deltaPhi},${deltaZed}`
+    }
+
+    getOriginTranslation(voxels: Voxel[]): Transform {
+        const bounds = this.getVoxelBounds(voxels)
+        return `t:${-(bounds.phi || 0)},${-(bounds.zed || 0)}`
     }
 
     getDisassemblyTransforms(): Transform[] {
+        throw new Error("Cylindrical grid does not support disassembly")
     }
 
-    isSeparate(group1: Voxel[], group2: Voxel[]): boolean {
+    isSeparate(_group1: Voxel[], _group2: Voxel[]): boolean {
+        throw new Error("Cylindrical grid does not support disassembly")
     }
 
     getViewpoints(): Viewpoint[] {
@@ -295,3 +368,36 @@ export class CylindricalGrid extends Grid {
 }
 
 registerClass(CylindricalGrid)
+
+
+/**
+ * Get the smallest range which covers all the phi values.
+ */
+function getPhiRange(allPhi: Set<number>, nDivisions: number) {
+    const sortedPhi = [...new Set(allPhi)].toSorted()
+
+    // Find the largest gap between sorted phi values. The inverse of this gap
+    // is our smallest range covering all values.
+    let largestGapSize: number = 1
+    let largestGapEnd: number | null = null
+    for(let i=0; i<sortedPhi.length; i++) {
+        const phi1 = sortedPhi[i]
+        const phi2 = sortedPhi[(i+1)% sortedPhi.length]
+        let gap = phi2 - phi1
+        if(gap < 0) {
+            gap += nDivisions
+        }
+        if(largestGapEnd === null || gap > largestGapSize) {
+            largestGapSize = gap
+            largestGapEnd = phi2
+        }
+    }
+    if(largestGapEnd === null) {
+        largestGapEnd = 0
+    }
+
+    return {
+        phiStart: largestGapEnd,
+        phiSize: largestGapSize === 0 ? 1 : nDivisions - largestGapSize + 1
+    }
+}
