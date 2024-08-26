@@ -8,7 +8,7 @@ defineProps<{
     field: SectionField
 }>()
 
-const emit = defineEmits<{
+defineEmits<{
     "edit": [editData: object]
 }>()
 </script>

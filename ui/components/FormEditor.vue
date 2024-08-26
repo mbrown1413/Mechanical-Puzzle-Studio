@@ -9,7 +9,7 @@ const props = defineProps<{
     item: FormEditable
 }>()
 
-const emit = defineEmits<{
+defineEmits<{
     "edit": [editData: object]
 }>()
 
