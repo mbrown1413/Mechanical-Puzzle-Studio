@@ -92,7 +92,7 @@ export class CubicGrid extends Grid {
         )
     }
 
-    getVoxelBounds(...voxels: Voxel[]): CubicBounds {
+    getVoxelBounds(voxels: Voxel[]): CubicBounds {
         if(voxels.length === 0) {
             return this.getDefaultPieceBounds()
         }
@@ -139,14 +139,6 @@ export class CubicGrid extends Grid {
             ySize: max.y - min.y,
             zSize: max.z - min.z,
         }
-    }
-
-    getBoundsOrigin(bounds: CubicBounds): Voxel {
-        return this.coordinateToVoxel({
-            x: bounds.x || 0,
-            y: bounds.y || 0,
-            z: bounds.z || 0
-        })
     }
 
     getVoxelInfo(voxel: Voxel): CubicVoxelInfo {
@@ -261,6 +253,19 @@ export class CubicGrid extends Grid {
             toCoordinate.z - fromCoordinate.z,
         ]
         return `t:${offset[0]},${offset[1]},${offset[2]}`
+    }
+
+    getOriginTranslation(voxels: Voxel[]): Transform {
+        const bounds = this.getVoxelBounds(voxels)
+        const smallestVoxel = this.coordinateToVoxel({
+            x: bounds.x || 0,
+            y: bounds.y || 0,
+            z: bounds.z || 0,
+        })
+        return this.getTranslation(
+            smallestVoxel,
+            "0,0,0"
+        )
     }
 
     doTransform(transform: Transform, voxels: Voxel[]): Voxel[] {

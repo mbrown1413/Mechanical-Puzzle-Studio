@@ -113,7 +113,7 @@ export function useGridDisplayMouseComposible(
         if(pressedVoxel === null) { return }
         const toVoxel = getVoxelOnScreen(x, y)
         if(toVoxel === null) { return }
-        const bounds = grid.value.getVoxelBounds(pressedVoxel, toVoxel)
+        const bounds = grid.value.getVoxelBounds([pressedVoxel, toVoxel])
         highlightedVoxels.value = grid.value.getVoxels(bounds)
     }
 

@@ -1,6 +1,6 @@
 import {Piece, PieceCompleteId} from "~/lib/Piece.ts"
 import {TaskCallbacks} from "~/lib/types.ts"
-import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
+import {Grid, Transform} from "~/lib/Grid.ts"
 import {getMovements, Movement} from "~/lib/movement.ts"
 import {Disassembly, DisassemblyStep} from "~/lib/Disassembly.ts"
 import {clone} from "~/lib/serialize.ts"
@@ -56,7 +56,6 @@ export abstract class Disassembler {
 }
 
 export class SimpleDisassembler extends Disassembler {
-    origin: Voxel
     nodes: Node[]
     nodeIndexesByHash: Map<PlacementHash, number>
 
@@ -66,7 +65,6 @@ export class SimpleDisassembler extends Disassembler {
 
     constructor(grid: Grid, start: Piece[]) {
         super(grid, start)
-        this.origin = grid.getVoxels(grid.getDefaultPieceBounds())[0]
         this.nodes = []
         this.nodeIndexesByHash = new Map()
         this.findAll = false
@@ -255,7 +253,7 @@ export class SimpleDisassembler extends Disassembler {
                 return 0
             }
         })
-        const translation = this.grid.getTranslation(placements[0].voxels[0], this.origin)
+        const translation = this.grid.getOriginTranslation(placements[0].voxels)
         return JSON.stringify([
             placements.map(p => p.completeId),
             placements.map(p => this.grid.doTransform(translation, p.voxels))

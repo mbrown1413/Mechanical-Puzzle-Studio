@@ -134,7 +134,7 @@ export class Disassembly extends SerializableClass {
         for(const state of this.getAllStates(grid, start)) {
             allPieces.push(...state)
         }
-        const allPieceBounds = allPieces.map(piece => grid.getVoxelBounds(...piece.voxels))
+        const allPieceBounds = allPieces.map(piece => grid.getVoxelBounds(piece.voxels))
         return grid.getBoundsMax(...allPieceBounds)
     }
 

@@ -106,7 +106,7 @@ const bounds = computed(() => {
         if(allVoxels.length === 0) {
             return props.grid.getDefaultPieceBounds()
         }
-        return props.grid.getVoxelBounds(...allVoxels)
+        return props.grid.getVoxelBounds(allVoxels)
 
     } else if(props.boundsSizing === "pieceBounds") {
         return props.grid.getBoundsMax(

@@ -138,7 +138,7 @@ export class SquareGrid extends CubicGrid {
         // Translate all pieces so the bounds is 0,0
         const bounds = this.getBoundsMax(
             ...Object.values(pieces).map(
-                p => this.getVoxelBounds(...p.voxels)
+                p => this.getVoxelBounds(p.voxels)
             )
         )
         const translation = this.getTranslation(

@@ -147,7 +147,6 @@ export function filterSymmetricalAssemblies(
     mirrorSymmetry=true,
     progressCallback: (percent: number) => void = () => {}
 ): Assembly[] {
-    const hashOrigin = grid.getBoundsOrigin(grid.getDefaultPieceBounds())
     const symmetryTransforms = grid.getRotations(mirrorSymmetry)
 
     const progressStepSize = Math.round(assemblies.length / 50)
@@ -167,7 +166,7 @@ export function filterSymmetricalAssemblies(
         // If we find a match, we've already explored all transforms of this
         // assembly.
         const transformedAssembly = Piece.transformAssembly(grid, clone(assembly), symmetryTransforms[0])
-        const hash = hashAssembly(grid, transformedAssembly, hashOrigin)
+        const hash = hashAssembly(grid, transformedAssembly)
         if(assembliesExplored.has(hash)) { continue }
         assembliesExplored.add(hash)
 
@@ -177,7 +176,7 @@ export function filterSymmetricalAssemblies(
         uniqueAssemblies.push(assembly)
         for(const transform of symmetryTransforms.slice(1)) {
             const transformedAssembly = Piece.transformAssembly(grid, clone(assembly), transform)
-            const hash = hashAssembly(grid, transformedAssembly, hashOrigin)
+            const hash = hashAssembly(grid, transformedAssembly)
             assembliesExplored.add(hash)
         }
 
@@ -199,12 +198,11 @@ export function filterSymmetricalAssemblies(
  * The origin voxel parameter can be any voxel, but it should be the same each
  * time called so the hash is translation invariant.
  */
-function hashAssembly(grid: Grid, assembly: Piece[], origin: Voxel): string {
+function hashAssembly(grid: Grid, assembly: Piece[]): string {
 
     // Translate the assembly's bounds origin to `origin`
     const allVoxels = ([] as Voxel[]).concat(...assembly.map(piece => piece.voxels))
-    const assemblyOrigin = grid.getBoundsOrigin(grid.getVoxelBounds(...allVoxels))
-    const translation = grid.getTranslation(assemblyOrigin, origin)
+    const translation = grid.getOriginTranslation(allVoxels)
     Piece.transformAssembly(grid, assembly, translation)
 
     // Normalize by sorting voxels within pieces, then pieces by their first voxel

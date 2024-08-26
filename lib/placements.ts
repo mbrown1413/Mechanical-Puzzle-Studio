@@ -39,6 +39,7 @@ export function getPieceTranslations(
     availableVoxels = [...new Set(availableVoxels)]
     for(const toVoxel of availableVoxels) {
         const translation = grid.getTranslation(piece.voxels[0], toVoxel)
+        if(translation === null) { continue }
         const newPiece = piece.copy().doTransform(grid, translation)
         if(newPiece.voxels.every(v => availableVoxels.includes(v))) {
             translations.push(newPiece)
@@ -142,12 +143,9 @@ function filterTranslationCongruentPlacements(
 
 /** Can one of the pieces be translated to match the other exactly? */
 export function isTranslationCongruent(grid: Grid, piece1: Piece, piece2: Piece): boolean {
-    const bounds1 = grid.getVoxelBounds(...piece1.voxels)
-    const bounds2 = grid.getVoxelBounds(...piece2.voxels)
-    const translation = grid.getTranslation(
-        grid.getBoundsOrigin(bounds1),
-        grid.getBoundsOrigin(bounds2),
-    )
-    const translatedPiece = piece1.copy().doTransform(grid, translation)
-    return translatedPiece.equals(piece2)
+    const translation1 = grid.getOriginTranslation(piece1.voxels)
+    const translation2 = grid.getOriginTranslation(piece2.voxels)
+    const piece1Translated = piece1.copy().doTransform(grid, translation1)
+    const piece2Translated = piece2.copy().doTransform(grid, translation2)
+    return piece1Translated.equals(piece2Translated)
 }

@@ -71,9 +71,9 @@ describe("Cubic grid", () => {
     })
 
     test("getVoxelBounds()", () => {
-        expect(grid.getVoxelBounds("0,0,0")).toEqual({x: 0, y: 0, z: 0, xSize: 1, ySize: 1, zSize: 1})
-        expect(grid.getVoxelBounds("1,1,1")).toEqual({x: 1, y: 1, z: 1, xSize: 1, ySize: 1, zSize: 1})
-        expect(grid.getVoxelBounds("1,1,1", "2,2,2")).toEqual({x: 1, y: 1, z: 1, xSize: 2, ySize: 2, zSize: 2})
+        expect(grid.getVoxelBounds(["0,0,0"])).toEqual({x: 0, y: 0, z: 0, xSize: 1, ySize: 1, zSize: 1})
+        expect(grid.getVoxelBounds(["1,1,1"])).toEqual({x: 1, y: 1, z: 1, xSize: 1, ySize: 1, zSize: 1})
+        expect(grid.getVoxelBounds(["1,1,1", "2,2,2"])).toEqual({x: 1, y: 1, z: 1, xSize: 2, ySize: 2, zSize: 2})
     })
 
     test("getBoundsMax()", () => {

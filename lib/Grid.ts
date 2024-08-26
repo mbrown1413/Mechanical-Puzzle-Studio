@@ -132,20 +132,13 @@ export abstract class Grid extends SerializableClass implements FormEditable {
     abstract isInBounds(voxel: Voxel, bounds: Bounds): boolean
 
     /** Returns the smallest bounds which contains all of the given voxels. */
-    abstract getVoxelBounds(...voxels: Voxel[]): Bounds
+    abstract getVoxelBounds(voxels: Voxel[]): Bounds
 
     /** Return true if the voxel is in a valid format for this grid. */
     abstract validateVoxel(voxel: Voxel): boolean
 
     /** Returns the smallest bounds which contains all of the given bounds. */
     abstract getBoundsMax(...bounds: Bounds[]): Bounds
-
-    /**
-     * Returns the origin of a given bounds. The origin will typically be the
-     * voxel closest to a grid's global origin, although this may vary by
-     * implementation.
-     */
-    abstract getBoundsOrigin(bounds: Bounds): Voxel
 
     /** Return info describing the voxel. */
     abstract getVoxelInfo(voxel: Voxel): VoxelInfo
@@ -181,8 +174,13 @@ export abstract class Grid extends SerializableClass implements FormEditable {
     /** List all possible ways a set of voxels can be rotated. */
     abstract getRotations(includeMirrors: boolean): Transform[]
 
-    /** Return a translation which would move one voxel to another. */
-    abstract getTranslation(from: Voxel, to: Voxel): Transform
+    /** Return a translation which would move one voxel to another, or null if
+     * such a translation is not possible. */
+    abstract getTranslation(from: Voxel, to: Voxel): Transform | null
+
+    /** Get a translation which moves the given voxels as close to the origin
+     * as possible. */
+    abstract getOriginTranslation(voxels: Voxel[]): Transform
 
     /** Get transforms which should be used as movements when disassembling. */
     abstract getDisassemblyTransforms(): Transform[]
