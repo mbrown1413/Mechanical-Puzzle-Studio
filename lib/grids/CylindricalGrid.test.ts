@@ -106,6 +106,20 @@ describe("CylindricalGrid", () => {
         )).toEqual(
             {rho: 0, phi: 2, zed: 0, rhoSize: 1, phiSize: 3, zedSize: 1},
         )
+
+        // Large phi
+        grid.nDivisions = 15
+        expect(grid.getBoundsMax(
+            {rho: 0, phi: 3, zed: 0, rhoSize: 1, phiSize: 3, zedSize: 1},
+        )).toEqual(
+            {rho: 0, phi: 3, zed: 0, rhoSize: 1, phiSize: 3, zedSize: 1},
+        )
+        expect(grid.getBoundsMax(
+            {rho: 0, phi: 3, zed: 0, rhoSize: 1, phiSize: 10, zedSize: 1},
+            {rho: 0, phi: 13, zed: 0, rhoSize: 1, phiSize: 5, zedSize: 1},
+        )).toEqual(
+            {rho: 0, phi: 0, zed: 0, rhoSize: 1, phiSize: 15, zedSize: 1},
+        )
     })
 
     test("getVoxelInfo()", () => {

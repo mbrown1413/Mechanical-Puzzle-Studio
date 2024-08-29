@@ -37,7 +37,7 @@ export class CylindricalGrid extends Grid {
 
     constructor() {
         super()
-        this.nDivisions = 21
+        this.nDivisions = 4
     }
 
     protected voxelToCoordinate(voxel: Voxel): CylindricalCoord {
@@ -374,7 +374,7 @@ registerClass(CylindricalGrid)
  * Get the smallest range which covers all the phi values.
  */
 function getPhiRange(allPhi: Set<number>, nDivisions: number) {
-    const sortedPhi = [...new Set(allPhi)].toSorted()
+    const sortedPhi = [...new Set(allPhi)].toSorted((a, b) => a - b)
 
     // Find the largest gap between sorted phi values. The inverse of this gap
     // is our smallest range covering all values.
@@ -393,6 +393,11 @@ function getPhiRange(allPhi: Set<number>, nDivisions: number) {
         }
     }
     if(largestGapEnd === null) {
+        largestGapEnd = 0
+    }
+
+    // If we've gone full circle, might as well start at 0
+    if(largestGapSize === 1) {
         largestGapEnd = 0
     }
 
