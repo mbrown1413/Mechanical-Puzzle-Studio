@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import {FormEditable, CheckboxField} from "~lib"
+import {VNumberInput} from "vuetify/labs/VNumberInput"
+
+import {FormEditable, IntegerField} from "~lib"
 
 const props = defineProps<{
     item: FormEditable
-    field: CheckboxField
+    field: IntegerField
 }>()
 
 const emit = defineEmits<{
     "edit": [editData: object]
 }>()
 
-function setValue(value: boolean) {
+function setValue(value: number) {
     const editData: any = {}
     editData[props.field.property] = value
     emit("edit", editData)
@@ -18,10 +20,13 @@ function setValue(value: boolean) {
 </script>
 
 <template>
-    <VCheckbox
+    <VNumberInput
+        control-variant="stacked"
         :label="props.field.label || props.field.property"
+        :min="field.min"
+        :max="field.max"
+        :messages="field.description"
         :model-value="(item as any)[field.property]"
         @update:model-value="setValue($event)"
-        hide-details
     />
 </template>

@@ -5,6 +5,7 @@ import {FunctionalComponent, createVNode} from "vue"
 import {Field, FormEditable} from "~lib"
 
 import CheckboxField from "~/ui/components/fields/CheckboxField.vue"
+import IntegerField from "~/ui/components/fields/IntegerField.vue"
 import Section from "~/ui/components/fields/Section.vue"
 
 type Props = {
@@ -37,6 +38,7 @@ function getComponent(field: Field) {
     const type = field.type
     switch(type) {
         case "checkbox": return CheckboxField
+        case "integer": return IntegerField
         case "section": return Section
         default:
             throw new Error(`Unrecognized field type "${type}"`)

@@ -2,6 +2,8 @@ import {BufferGeometry, Vector3, Shape, ShapeGeometry} from "three"
 
 import {registerClass} from "~/lib/serialize.ts"
 import {Grid, Voxel, Viewpoint, Transform, VoxelInfo} from "~/lib/Grid.ts"
+import {Form} from "~/lib/forms.ts"
+
 import {makeRectGeometry} from "~/ui/utils/threejs-objects.ts"
 
 /**
@@ -38,6 +40,20 @@ export class CylindricalGrid extends Grid {
     constructor() {
         super()
         this.nDivisions = 4
+    }
+
+    getForm(): Form {
+        return {
+            fields: [
+                {
+                    type: "integer",
+                    property: "nDivisions",
+                    label: "Wedges",
+                    description: "The number of radial slices of the cylinder",
+                    min: 1,
+                },
+            ]
+        }
     }
 
     protected voxelToCoordinate(voxel: Voxel): CylindricalCoord {
