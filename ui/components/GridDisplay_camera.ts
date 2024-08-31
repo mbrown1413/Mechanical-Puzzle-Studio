@@ -144,7 +144,11 @@ export class ThreeDimensionalCameraScheme extends CameraScheme {
             gridBoxSize.y + 1,
             gridBoxSize.z + 1,
         )
-        axesHelper.position.set(-1, -1, -1)
+        axesHelper.position.set(
+            this.gridBoundingBox.value.min.x - 1,
+            this.gridBoundingBox.value.min.y - 1,
+            this.gridBoundingBox.value.min.z - 1
+        )
         scene.add(axesHelper)
     }
 
