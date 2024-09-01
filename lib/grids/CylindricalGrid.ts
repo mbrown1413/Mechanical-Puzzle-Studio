@@ -121,6 +121,13 @@ export class CylindricalGrid extends Grid {
         return true
     }
 
+    validateBounds(bounds: CylindricalBounds) {
+        const keys = Object.keys(bounds)
+        return ["rhoSize", "zedSize"].every(
+            expectedKey => keys.includes(expectedKey)
+        )
+    }
+
     getVoxelBounds(voxels: Voxel[]): CylindricalBounds {
         if(voxels.length === 0) {
             return this.getDefaultPieceBounds()

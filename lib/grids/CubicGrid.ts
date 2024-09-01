@@ -92,6 +92,13 @@ export class CubicGrid extends Grid {
         )
     }
 
+    validateBounds(bounds: CubicBounds) {
+        const keys = Object.keys(bounds)
+        return ["xSize", "ySize", "zSize"].every(
+            expectedKey => keys.includes(expectedKey)
+        )
+    }
+
     getVoxelBounds(voxels: Voxel[]): CubicBounds {
         if(voxels.length === 0) {
             return this.getDefaultPieceBounds()

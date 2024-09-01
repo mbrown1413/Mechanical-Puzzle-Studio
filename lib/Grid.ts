@@ -131,6 +131,9 @@ export abstract class Grid extends SerializableClass implements FormEditable {
     /** Is the given voxel inside the bounds? */
     abstract isInBounds(voxel: Voxel, bounds: Bounds): boolean
 
+    /** Return true if the bounds is in a valid format for this grid. */
+    abstract validateBounds(bounds: Bounds): boolean
+
     /** Returns the smallest bounds which contains all of the given voxels. */
     abstract getVoxelBounds(voxels: Voxel[]): Bounds
 
