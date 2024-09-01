@@ -107,11 +107,16 @@ export function makeRectGeometry(
     ])
     geometry.setIndex(new THREE.BufferAttribute(indices, 1))
 
+    // Set UV coordinates. The first two points are set to be length 1, and the
+    // other rectangle side is set to match that aspect ratio.
+    const side1Length = new THREE.Vector3().copy(point1).sub(point2).length()
+    const side2Length = new THREE.Vector3().copy(point2).sub(point3).length()
+    const aspectRatio = side2Length / side1Length
     const uv = new Float32Array([
-        0, 1,
+        0, 0,
         1, 0,
-        1, 1,
-        0, 1,
+        1, aspectRatio,
+        0, aspectRatio,
     ])
     geometry.setAttribute("uv", new THREE.BufferAttribute(uv, 2))
 
