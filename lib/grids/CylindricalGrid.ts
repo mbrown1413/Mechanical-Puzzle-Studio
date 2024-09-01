@@ -1,4 +1,4 @@
-import {BufferGeometry, Vector3, Shape, ShapeGeometry} from "three"
+import {BufferGeometry, Vector3, Shape, ShapeGeometry, Matrix4} from "three"
 
 import {registerClass} from "~/lib/serialize.ts"
 import {Grid, Voxel, Viewpoint, Transform, VoxelInfo} from "~/lib/Grid.ts"
@@ -231,67 +231,78 @@ export class CylindricalGrid extends Grid {
         const outerRadius = rho + 1
         const thetaStart = 2*Math.PI * phi / shellDivisions
         const thetaEnd = 2*Math.PI * (phi + 1) / shellDivisions
-        const bottomZ = this.getLayerBottomZ(zed)
-        const topZ = this.getLayerTopZ(zed)
 
+        // The +zed cylindrical direction points in the world's +y direction.
+        // This is done because the camera rotates about the +y axis.
         const innerStartX = Math.cos(thetaStart) * innerRadius
-        const innerStartY = Math.sin(thetaStart) * innerRadius
+        const innerStartZ = Math.sin(thetaStart) * innerRadius
         const innerEndX = Math.cos(thetaEnd) * innerRadius
-        const innerEndY = Math.sin(thetaEnd) * innerRadius
+        const innerEndZ = Math.sin(thetaEnd) * innerRadius
         const outerStartX = Math.cos(thetaStart) * outerRadius
-        const outerStartY = Math.sin(thetaStart) * outerRadius
+        const outerStartZ = Math.sin(thetaStart) * outerRadius
         const outerEndX = Math.cos(thetaEnd) * outerRadius
-        const outerEndY = Math.sin(thetaEnd) * outerRadius
+        const outerEndZ = Math.sin(thetaEnd) * outerRadius
+        const bottomY = this.getLayerBottomZ(zed)
+        const topY = this.getLayerTopZ(zed)
 
         let wireframe: Vector3[]
         let solid: BufferGeometry
 
         if(coord === "rho") {
             const startX = polarity === "-" ? innerStartX : outerStartX
-            const startY = polarity === "-" ? innerStartY : outerStartY
+            const startZ = polarity === "-" ? innerStartZ : outerStartZ
             const endX = polarity === "-" ? innerEndX : outerEndX
-            const endY = polarity === "-" ? innerEndY : outerEndY
+            const endZ = polarity === "-" ? innerEndZ : outerEndZ
 
             const points: [Vector3, Vector3, Vector3, Vector3] = [
-                new Vector3(startX, startY, bottomZ),
-                new Vector3(startX, startY, topZ),
-                new Vector3(endX, endY, topZ),
-                new Vector3(endX, endY, bottomZ),
+                new Vector3(startX, bottomY, startZ),
+                new Vector3(startX, topY, startZ),
+                new Vector3(endX, topY, endZ),
+                new Vector3(endX, bottomY, endZ),
             ]
             wireframe = points
             solid = makeRectGeometry(...points)
 
         } else if(coord === "phi") {
             const innerX = polarity === "-" ? innerStartX : innerEndX
-            const innerY = polarity === "-" ? innerStartY : innerEndY
+            const innerZ = polarity === "-" ? innerStartZ : innerEndZ
             const outerX = polarity === "-" ? outerStartX : outerEndX
-            const outerY = polarity === "-" ? outerStartY : outerEndY
+            const outerZ = polarity === "-" ? outerStartZ : outerEndZ
 
             const points: [Vector3, Vector3, Vector3, Vector3] = [
-                new Vector3(innerX, innerY, bottomZ),
-                new Vector3(innerX, innerY, topZ),
-                new Vector3(outerX, outerY, topZ),
-                new Vector3(outerX, outerY, bottomZ),
+                new Vector3(innerX, bottomY, innerZ),
+                new Vector3(innerX, topY, innerZ),
+                new Vector3(outerX, topY, outerZ),
+                new Vector3(outerX, bottomY, outerZ),
             ]
             wireframe = points
             solid = makeRectGeometry(...points)
 
         } else if(coord === "zed") {
-            const z = polarity === "-" ? bottomZ : topZ
+            const y = polarity === "-" ? bottomY : topY
 
-            const innerStart = new Vector3(innerStartX, innerStartY, z)
-            const innerEnd = new Vector3(innerEndX, innerEndY, z)
-            const outerStart = new Vector3(outerEndX, outerEndY, z)
-            const outerEnd = new Vector3(outerStartX, outerStartY, z)
+            const innerStart = new Vector3(innerStartX, y, innerStartZ)
+            const innerEnd = new Vector3(innerEndX, y, innerEndZ)
+            const outerStart = new Vector3(outerEndX, y, outerEndZ)
+            const outerEnd = new Vector3(outerStartX, y, outerStartZ)
             wireframe = [innerStart, innerEnd, outerStart, outerEnd]
 
+            // Shapes are drawn on the X-Y plane in threejs, but we we want it
+            // on the X-Z plane. We draw the shape, then do a matrix
+            // multiplication to switch the Y and Z coordinates.
             const shape = new Shape()
-            shape.moveTo(innerStartX, innerStartY)
-            shape.lineTo(innerEndX, innerEndY)
-            shape.lineTo(outerEndX, outerEndY)
-            shape.lineTo(outerStartX, outerStartY)
+            shape.moveTo(innerStartX, innerStartZ)
+            shape.lineTo(innerEndX, innerEndZ)
+            shape.lineTo(outerEndX, outerEndZ)
+            shape.lineTo(outerStartX, outerStartZ)
             solid = new ShapeGeometry(shape)
-            solid.translate(0, 0, z)
+            solid.applyMatrix4(new Matrix4(
+                1, 0, 0, 0,
+                0, 0, 1, 0,
+                0, 1, 0, 0,
+                0, 0, 0, 1,
+            ))
+            solid.translate(0, y, 0)
 
         } else {
             throw new Error(`Unrecognized direction "${direction}"`)
@@ -374,7 +385,7 @@ export class CylindricalGrid extends Grid {
             {
                 id: "+zed",
                 name: "Above",
-                forwardVector: new Vector3(0, 0, -1),
+                forwardVector: new Vector3(0, -1, 0),
                 xVector: new Vector3(1, 0, 0),
                 getNLayers(bounds: CylindricalBounds) { return bounds.zedSize },
                 isInLayer: (voxel, layerIndex) => this.voxelToCoordinate(voxel).zed == layerIndex,
