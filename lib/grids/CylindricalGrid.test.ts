@@ -172,6 +172,9 @@ describe("CylindricalGrid", () => {
         expect(grid.doTransform("t:0,1", ["0,0,0"])).toEqual(["0,0,1"])
         expect(grid.doTransform("t:0,3", ["0,0,4"])).toEqual(["0,0,7"])
 
+        // When modulous is done on phi, it must always be positive
+        expect(grid.doTransform("t:-7,0", ["0,0,0"])).toEqual(["0,1,0"])
+
         expect(grid.doTransform("flip", [
             "0,0,0",
             "1,0,0",

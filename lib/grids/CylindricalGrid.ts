@@ -326,7 +326,7 @@ export class CylindricalGrid extends Grid {
                 const coordinate = this.voxelToCoordinate(voxel)
                 return this.coordinateToVoxel({
                     rho: coordinate.rho,
-                    phi: (coordinate.phi + offsets[0]) % this.nDivisions,
+                    phi: positiveMod(coordinate.phi + offsets[0], this.nDivisions),
                     zed: coordinate.zed + offsets[1],
                 })
             })
@@ -338,7 +338,7 @@ export class CylindricalGrid extends Grid {
                 const coordinate = this.voxelToCoordinate(voxel)
                 return this.coordinateToVoxel({
                     rho: coordinate.rho,
-                    phi: (this.nDivisions - coordinate.phi) % this.nDivisions,
+                    phi: positiveMod(this.nDivisions - coordinate.phi, this.nDivisions),
                     zed: coordinate.zed * -1,
                 })
             })
@@ -439,4 +439,8 @@ function getPhiRange(allPhi: Set<number>, nDivisions: number) {
         phiStart: largestGapEnd,
         phiSize: largestGapSize === 0 ? 1 : nDivisions - largestGapSize + 1
     }
+}
+
+function positiveMod(x: number, divisor: number) {
+    return ((x % divisor) + divisor) % divisor
 }
