@@ -332,9 +332,27 @@ export class CylindricalGrid extends Grid {
             })
         }
 
-        // Flip about the zed=0 plane along the phi=0 line
-        if(transform === "flip") {
-            return voxels.map((voxel) => {
+        let flip = false
+        let mirror = false
+        switch(transform) {
+            case "flip":
+                flip = true
+                break
+            case "mirror":
+                mirror = true
+                break
+            case "mirror+flip":
+            case "flip+mirror":
+                flip = true
+                mirror = true
+                break
+            default:
+                throw new Error(`Transform in unknown format: ${transform}`)
+        }
+
+        // Rotate 180 degrees about the zed=0 phi=0 line
+        if(flip) {
+            voxels = voxels.map((voxel) => {
                 const coordinate = this.voxelToCoordinate(voxel)
                 return this.coordinateToVoxel({
                     rho: coordinate.rho,
@@ -344,7 +362,19 @@ export class CylindricalGrid extends Grid {
             })
         }
 
-        throw new Error(`Transform in unknown format: ${transform}`)
+        // Mirror about the zed=0 plane
+        if(mirror) {
+            voxels = voxels.map((voxel) => {
+                const coordinate = this.voxelToCoordinate(voxel)
+                return this.coordinateToVoxel({
+                    rho: coordinate.rho,
+                    phi: coordinate.phi,
+                    zed: coordinate.zed * -1,
+                })
+            })
+        }
+
+        return voxels
     }
 
     scaleTransform(transform: Transform, amount: number): Transform {
@@ -358,11 +388,15 @@ export class CylindricalGrid extends Grid {
         throw new Error(`Scaling not supported on transform: ${transform}`)
     }
 
-    getRotations(_includeMirrors: boolean): Transform[] {
+    getRotations(includeMirrors: boolean): Transform[] {
         // Note: We don't yet have a transform for mirroring. We could also in
         // the future add a flag "flippable" so pieces have an orientation and
         // can't be turned upside down.
-        return ["t:0,0", "flip"]
+        const rotations = ["t:0,0", "flip"]
+        if(includeMirrors) {
+            rotations.push("mirror", "mirror+flip")
+        }
+        return rotations
     }
 
     getTranslation(from: Voxel, to: Voxel) {

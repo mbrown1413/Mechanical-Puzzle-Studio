@@ -186,6 +186,33 @@ describe("CylindricalGrid", () => {
             "0,3,0",
             "0,0,-1",
         ])
+
+        expect(grid.doTransform("mirror", [
+            "0,0,0",
+            "1,0,0",
+            "0,1,0",
+            "0,0,1",
+            "1,2,3",
+        ])).toEqual([
+            "0,0,0",
+            "1,0,0",
+            "0,1,0",
+            "0,0,-1",
+            "1,2,-3",
+        ])
+
+        expect(grid.doTransform("flip+mirror", [
+            "0,0,0",
+            "1,0,0",
+            "0,1,0",
+            "0,0,1",
+        ])).toEqual([
+            "0,0,0",
+            "1,0,0",
+            "0,3,0",
+            "0,0,1",
+        ])
+
     })
 
     test("scaleTransform()", () => {
