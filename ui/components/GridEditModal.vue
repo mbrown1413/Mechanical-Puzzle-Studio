@@ -110,7 +110,7 @@ function onSubmit() {
         >
             Changing grid types and parameters may affect existing pieces in
             unexpected ways. Voxels which don't fit into the new grid's
-            coordinate system will be removed.
+            coordinate system, and all solutions will be removed.
         </VAlert>
     </Modal>
 </template>

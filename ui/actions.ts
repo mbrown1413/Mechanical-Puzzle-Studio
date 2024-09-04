@@ -239,6 +239,9 @@ export class GridSetAction extends Action {
                 voxel => puzzle.grid.validateVoxel(voxel)
             )
         }
+        for(const problem of puzzle.problems) {
+            problem.solutions = undefined
+        }
     }
 }
 
