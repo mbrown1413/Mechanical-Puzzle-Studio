@@ -46,7 +46,7 @@ const savePill = computed(() => {
     <VAppBar class="title-bar" :flat="flat">
         <div class="main-logo">
             <RouterLink to="/">
-                <img src="/logo/logo-98x50.png" :alt="appTitle" />
+                <img src="/logo/logo-101x50.png" :alt="appTitle" />
             </RouterLink>
         </div>
 

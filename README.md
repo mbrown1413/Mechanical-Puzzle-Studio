@@ -1,4 +1,4 @@
-# Mechanical Puzzle Studio
+# Puzzle Studio
 
 The Swiss Army knife of mechanical puzzle design.
 
