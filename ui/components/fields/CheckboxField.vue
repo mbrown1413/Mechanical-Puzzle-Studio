@@ -21,7 +21,8 @@ function setValue(value: boolean) {
     <VCheckbox
         :label="props.field.label || props.field.property"
         :model-value="(item as any)[field.property]"
+        :hide-details="field.description === undefined"
+        :messages="field.description"
         @update:model-value="setValue($event)"
-        hide-details
     />
 </template>

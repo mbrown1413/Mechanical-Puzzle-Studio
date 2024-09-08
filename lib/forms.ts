@@ -3,6 +3,7 @@ export type CheckboxField = {
     type: "checkbox"
     property: string
     label?: string
+    description?: string
 }
 
 export type IntegerField = {

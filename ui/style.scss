@@ -5,6 +5,15 @@ code {
     padding-left: 2em;
 }
 
+.v-checkbox .v-messages {
+    padding-inline: 16px;  /* Indent messages, same as v-select */
+}
+.v-checkbox .v-input__details, .v-checkbox .v-selection-control {
+    /* Move messages closer to checkbox */
+    padding-top: 0;
+    min-height: unset;
+}
+
 .v-data-table-header__content {
     font-weight: bolder;
 }

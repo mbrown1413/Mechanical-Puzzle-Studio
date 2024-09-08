@@ -22,6 +22,7 @@ export class SquareGrid extends CubicGrid {
                     type: "checkbox",
                     property: "flippable",
                     label: "Flippable",
+                    description: 'Whether pieces are "two-sided" and may be flipped in solutions',
                 },
             ]
         }

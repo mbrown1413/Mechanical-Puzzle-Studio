@@ -97,6 +97,7 @@ function onSubmit() {
             :hint="gridTypeDescription"
             persistent-hint
             @update:modelValue="changeGridType($event)"
+            class="mb-2"
         />
         <FormEditor
             :item="grid"
