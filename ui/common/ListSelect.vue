@@ -4,7 +4,7 @@
 -->
 
 <script setup lang="ts">
-import {ref, Ref, watch} from "vue"
+import {computed, ref, Ref, watch} from "vue"
 
 import UiButton from "~/ui/components/UiButton.vue"
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
@@ -12,23 +12,35 @@ import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 const el: Ref<HTMLSelectElement | null> = ref(null)
 
 type Item = {
-    id: number,
-    label?: string,
-    color?: string,
+    isGroup?: false
+    id: number
+    label?: string
+    color?: string
+}
+
+type Group = {
+    isGroup: true
+    id: number
+    label?: string
+    color?: string
+    items: Item[]
 }
 
 const props = withDefaults(
     defineProps<{
-        items: Item[],
-        selectedIds: number[],
+        items: (Item | Group)[],
+        selectedItems: number[],
+        selectedGroups?: number[],
         uiButtons?: UiButtonDefinition[],
     }>(), {
+        selectedGroups: () => [],
         uiButtons: () => [],
     }
 )
 
 const emit = defineEmits<{
-    "update:selectedIds": [ids: number[]],
+    "update:selectedItems": [ids: number[]],
+    "update:selectedGroups": [ids: number[]],
 }>()
 
 function arraysEqual<T>(array1: Array<T>, array2: Array<T>) {
@@ -36,10 +48,34 @@ function arraysEqual<T>(array1: Array<T>, array2: Array<T>) {
     return array1.every(x => array2.indexOf(x) !== -1)
 }
 
-let oldItems = [...props.items]
-watch(() => props.items, () => {
+const flatItems = computed(() => {
+    const flat: ((Item | Group) & {inGroup?: boolean})[] = []
+    for(const itemOrGroup of props.items) {
+        flat.push(itemOrGroup)
+        if(itemOrGroup.isGroup) {
+            for(const item of itemOrGroup.items) {
+                flat.push(Object.assign({inGroup: true}, item))
+            }
+        }
+    }
+    return flat
+})
+
+const flatSelectedIds = computed(() => {
+    const selected = []
+    for(const itemId of props.selectedItems) {
+        selected.push("item-"+itemId)
+    }
+    for(const groupId of props.selectedGroups) {
+        selected.push("group-"+groupId)
+    }
+    return selected
+})
+
+let oldItems = [...flatItems.value]
+watch(() => flatItems.value, () => {
     const oldSet = new Set(oldItems.map(item => item.id))
-    const newSet = new Set(props.items.map(item => item.id))
+    const newSet = new Set(flatItems.value.map(item => item.id))
     let newSelectedIds: number[]
 
     if(newSet.size === oldSet.size + 1) {
@@ -54,25 +90,37 @@ watch(() => props.items, () => {
             item => !newSet.has(item)
         )[0]
         const deletedItemIdx = oldItems.findIndex(item => item.id === deletedId)
-        const newSelectedIdx = Math.min(props.items.length-1, Math.max(0, deletedItemIdx))
-        const newSelectedItem = props.items[newSelectedIdx]
+        const newSelectedIdx = Math.min(flatItems.value.length-1, Math.max(0, deletedItemIdx))
+        const newSelectedItem = flatItems.value[newSelectedIdx]
         newSelectedIds = newSelectedItem ? [newSelectedItem.id] : []
 
     } else {
-        newSelectedIds = props.selectedIds
+        newSelectedIds = props.selectedItems
     }
 
     newSelectedIds = newSelectedIds.filter(id => newSet.has(id))
-    if(!arraysEqual(newSelectedIds, props.selectedIds)) {
-        emit("update:selectedIds", newSelectedIds)
+    if(!arraysEqual(newSelectedIds, props.selectedItems)) {
+        emit("update:selectedItems", newSelectedIds)
     }
-    oldItems = [...props.items]
+    oldItems = [...flatItems.value]
 })
 
 function onItemsSelect() {
     if(el.value === null) return
-    const selectedValues = Array.from(el.value.selectedOptions).map(option => Number(option.value))
-    emit('update:selectedIds', selectedValues)
+
+    const selectedItems = []
+    const selectedGroups = []
+    for(const option of el.value.selectedOptions) {
+        const [prefix, id] = option.value.split("-")
+        if(prefix === "item") {
+            selectedItems.push(Number(id))
+        } else if(prefix === "group") {
+            selectedGroups.push(Number(id))
+        }
+    }
+
+    emit('update:selectedItems', selectedItems)
+    emit('update:selectedGroups', selectedGroups)
 }
 </script>
 
@@ -87,22 +135,32 @@ function onItemsSelect() {
         <select
             ref="el"
             multiple
-            :value="selectedIds"
+            :value="flatSelectedIds"
             @change="onItemsSelect"
         >
-            <option
-                v-for="item in items"
-                :value="item.id"
-                :class="{'empty-label': !item.label}"
-                :style="'--data-color:' + (item.color || '#000000')"
-            >
-                {{ item.label }}
-                <span
-                    v-if="!item.label"
+
+            <template v-for="item in flatItems">
+
+                <option
+                    :value="(item.isGroup ? 'group-' : 'item-') + item.id"
+                    :style="'--data-color:' + (item.color || '#000000')"
+                    :class="[
+                        item.color ? 'colored' : 'uncolored',
+                        item.isGroup ? 'group' : 'item',
+                        item.inGroup ? 'inGroup' : '',
+                    ]"
                 >
-                    (empty name)
-                </span>
-            </option>
+                    {{ item.label }}
+                    <span
+                        v-if="!item.label"
+                        class="empty-label"
+                    >
+                        (empty name)
+                    </span>
+                </option>
+
+            </template>
+
         </select>
     </div>
 </template>
@@ -126,15 +184,13 @@ select {
     height: 100%;
     border: 0;
 }
-select .empty-label {
+.empty-label {
     color: #606060;
-}
-select .empty-label span {
     font-size: 75%;
 }
 
 /* Colored block showing the item color. */
-option::before {
+option.colored::before {
     content: "";
     display: inline-block;
     vertical-align: middle;
@@ -145,5 +201,15 @@ option::before {
     border: var(--bs-border-width) solid var(--bs-border-color);
     border-radius: 5px;
     background-color: var(--data-color); /* Var set by <option> */
+}
+option.uncolored {
+    padding-left: 0.75em;
+}
+
+.group {
+    font-weight: bold;
+}
+.inGroup {
+    margin-left: 1.5em;
 }
 </style>

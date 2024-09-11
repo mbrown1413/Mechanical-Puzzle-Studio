@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, inject, ref} from "vue"
+import {computed, inject, ref, Ref} from "vue"
 
 import {Puzzle, PieceId} from "~lib"
 
@@ -45,9 +45,9 @@ const uiButtons = computed(() => {
 
 <template>
     <ListSelect
-        :items="Array.from(puzzle.pieces.values())"
-        :selectedIds="selectedPieceIds"
+        :items="[...puzzle.pieces.values()]"
+        :selectedItems="selectedPieceIds"
         :uiButtons="uiButtons"
-        @update:selectedIds="emit('update:selectedPieceIds', $event)"
+        @update:selectedItems="emit('update:selectedPieceIds', $event)"
     />
 </template>

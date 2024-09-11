@@ -160,8 +160,8 @@ const actionCategories = [
         <ListSelect
             v-if="solutionItems.length"
             :items="solutionItems"
-            :selectedIds="selectedSolutionIds"
-            @update:selectedIds="selectedSolutionIds = $event.map(Number)"
+            :selectedItems="selectedSolutionIds"
+            @update:selectedItems="selectedSolutionIds = $event"
         />
 
         <div v-else class="no-solutions-message">

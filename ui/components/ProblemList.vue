@@ -46,8 +46,8 @@ const uiButtons = computed(() => {
 <template>
     <ListSelect
         :items="Array.from(puzzle.problems.values())"
-        :selectedIds="selectedProblemIds"
+        :selectedItems="selectedProblemIds"
         :uiButtons="uiButtons"
-        @update:selectedIds="emit('update:selectedProblemIds', $event)"
+        @update:selectedItems="emit('update:selectedProblemIds', $event)"
     />
 </template>
