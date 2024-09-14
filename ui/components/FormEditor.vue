@@ -7,6 +7,7 @@ import DynamicField from "~/ui/components/fields/DynamicField.vue"
 
 const props = defineProps<{
     item: FormEditable
+    title?: string
 }>()
 
 defineEmits<{
@@ -18,6 +19,7 @@ const form = computed(() => props.item.getForm())
 
 <template>
     <div>
+        <h4 v-if="title">{{ title }}</h4>
         <DynamicField
             v-for="field of form.fields"
             :field="field"
@@ -26,3 +28,9 @@ const form = computed(() => props.item.getForm())
         />
     </div>
 </template>
+
+<style scoped>
+h4 {
+    margin-bottom: 0.5em;
+}
+</style>
