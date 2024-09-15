@@ -1,6 +1,7 @@
 
-export type CheckboxField = {
-    type: "checkbox"
+
+export type StringField = {
+    type: "string"
     property: string
     label?: string
     description?: string
@@ -15,13 +16,20 @@ export type IntegerField = {
     max?: number
 }
 
+export type CheckboxField = {
+    type: "checkbox"
+    property: string
+    label?: string
+    description?: string
+}
+
 export type SectionField = {
     type: "section"
     label: string
     fields: Field[]
 }
 
-export type Field = CheckboxField | IntegerField | SectionField
+export type Field = StringField | IntegerField | CheckboxField | SectionField
 
 export type Form = {
     fields: Field[]
