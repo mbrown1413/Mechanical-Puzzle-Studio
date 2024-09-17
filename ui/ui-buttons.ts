@@ -7,7 +7,7 @@ import {ActionManager} from "~/ui/ActionManager.ts"
 import {
     NewPieceAction, DeletePiecesAction, DuplicatePieceAction,
     NewPieceGroupAction, NewProblemAction, DeleteProblemsAction,
-    DuplicateProblemAction
+    DuplicateProblemAction, DeletePieceGroupsAction
 } from "~/ui/actions.ts"
 import {downloadPuzzle} from "~/ui/utils/download.ts"
 import {PuzzleStorage} from "~/ui/storage.ts"
@@ -51,7 +51,38 @@ export function useUiButtonComposible(
         return undefined
     }
 
-    return {
+    function getCurrentItemType() {
+        if(!puzzleEditor.value) { return null }
+
+        switch(puzzleEditor.value.currentTabId) {
+            case "pieces":
+                if(puzzleEditor.value?.selectedPieceGroup) {
+                    return "piece-group"
+                } else {
+                    return "piece"
+                }
+            case "problems":
+            case "solutions":
+                return "problem"
+            default: return null
+        }
+    }
+
+    function getCurrentItemDeleteButton() {
+        const type = getCurrentItemType()
+        switch(type) {
+            case "piece":
+                return uiButtons.deletePiece
+            case "piece-group":
+                return uiButtons.deletePieceGroup
+            case "problem":
+                return uiButtons.deleteProblem
+            default:
+                return null
+        }
+    }
+
+    const uiButtons: Record<string, UiButtonDefinition> = {
 
         newPuzzle: {
             text: "New",
@@ -135,6 +166,25 @@ export function useUiButtonComposible(
             enabled: () => actionManager.canRedo(),
         },
 
+        deleteSelectedItem: {
+            text: () => {
+                const button = getCurrentItemDeleteButton()
+                if(!button) { return "Delete" }
+                return typeof button.text === "string" ? button.text : button.text()
+            },
+            icon: "mdi-minus",
+            perform: () => {
+                const button = getCurrentItemDeleteButton()
+                if(!button) { return }
+                button.perform()
+            },
+            enabled: () => {
+                const button = getCurrentItemDeleteButton()
+                if(!button) { return false }
+                return button.enabled === undefined ? true : button.enabled()
+            }
+        },
+
         newPiece: {
             text: "New Piece",
             icon: "mdi-plus",
@@ -174,6 +224,7 @@ export function useUiButtonComposible(
             text: "New Piece Assembly",
             icon: "mdi-plus",
             perform: () => {
+                puzzleEditor.value?.setUiFocus("pieces")
                 performAction(
                     new NewPieceGroupAction(new AssemblyPieceGroup())
                 )
@@ -196,6 +247,19 @@ export function useUiButtonComposible(
                 if(!group) return false
                 return group.canManuallyAddPieces
             }
+        },
+
+        deletePieceGroup: {
+            text: "Delete Piece Group",
+            icon: "mdi-minus",
+            perform: () => {
+                if(puzzleEditor.value?.selectedPieceGroupIds.length) {
+                    performAction(
+                        new DeletePieceGroupsAction(puzzleEditor.value.selectedPieceGroupIds)
+                    )
+                }
+            },
+            enabled: () => (puzzleEditor.value?.selectedPieceGroupIds.length || 0) > 0,
         },
 
         newProblem: {
@@ -260,4 +324,5 @@ export function useUiButtonComposible(
         },
 
     }
+    return uiButtons
 }

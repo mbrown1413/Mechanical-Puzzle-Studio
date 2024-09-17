@@ -39,7 +39,7 @@ const uiButtons = computed(() => {
 
     return [
         allUiButtons.duplicatePiece,
-        allUiButtons.deletePiece,
+        allUiButtons.deleteSelectedItem,
         newPieceButton,
     ]
 })

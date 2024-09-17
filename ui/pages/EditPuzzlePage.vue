@@ -200,13 +200,13 @@ const menus: ComputedRef<Menu[]> = computed(() => {
     if(puzzleEditor.value?.currentTabId === "pieces") {
         pieceOrProblemMenuItems = [
             uiButtons.newPiece,
-            uiButtons.deletePiece,
+            uiButtons.deleteSelectedItem,
             uiButtons.duplicatePiece,
         ]
     } else {
         pieceOrProblemMenuItems = [
             uiButtons.newProblem,
-            uiButtons.deleteProblem,
+            uiButtons.deleteSelectedItem,
             uiButtons.duplicateProblem,
         ]
     }

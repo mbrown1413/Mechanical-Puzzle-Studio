@@ -45,7 +45,7 @@ const problemList: Ref<InstanceType<typeof ProblemList> | null> = ref(null)
 const solutionList: Ref<InstanceType<typeof SolutionList> | null> = ref(null)
 const auxEditArea: Ref<HTMLElement | null> = ref(null)
 
-const currentTabId = ref("pieces")
+const currentTabId: Ref<"pieces" | "problems" | "solutions"> = ref("pieces")
 const sideTabs = [
     {id: "pieces", text: "Pieces"},
     {id: "problems", text: "Problems"},
@@ -86,7 +86,8 @@ defineExpose({
     selectedProblemIds,
     selectedPieceGroupIds,
     selectedPieceGroupId,
-    selectedPieceGroup
+    selectedPieceGroup,
+    setUiFocus,
 })
 
 const columnSlider: Ref<HTMLDivElement | null> = ref(null)

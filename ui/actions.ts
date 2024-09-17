@@ -119,7 +119,7 @@ export abstract class EditItemMetadataAction<T extends Item> extends Action {
 }
 
 abstract class DeleteItemsAction extends Action {
-    static itemName: "Piece" | "Problem"
+    static itemName: "Piece" | "Piece Group" | "Problem"
     itemIds: ItemId[]
 
     constructor(itemIds: ItemId[]) {
@@ -134,19 +134,26 @@ abstract class DeleteItemsAction extends Action {
 
     hasItem(puzzle: Puzzle, itemId: ItemId) {
         const constructor = <typeof DeleteItemsAction> this.constructor
-        if(constructor.itemName === "Piece") {
-            return puzzle.hasPiece(itemId as PieceId)
-        } else {
-            return puzzle.hasProblem(itemId)
+        switch(constructor.itemName) {
+            case "Piece":
+                return puzzle.hasPiece(itemId as PieceId)
+            case "Piece Group":
+                return itemId >= 0 && itemId < puzzle.pieceGroups.length
+            case "Problem":
+                return puzzle.hasProblem(itemId)
         }
     }
 
     deleteItem(puzzle: Puzzle, itemId: ItemId) {
         const constructor = <typeof DeleteItemsAction> this.constructor
-        if(constructor.itemName === "Piece") {
-            return puzzle.removePiece(itemId as PieceId)
-        } else {
-            return puzzle.removeProblem(itemId)
+        switch(constructor.itemName) {
+            case "Piece":
+                return puzzle.removePiece(itemId as PieceId)
+            case "Piece Group":
+                puzzle.pieceGroups.splice(itemId, 1)
+            break
+            case "Problem":
+                return puzzle.removeProblem(itemId)
         }
     }
 
@@ -448,6 +455,10 @@ export class EditPieceGroupMetadataAction extends Action {
             this.metadata
         )
     }
+}
+
+export class DeletePieceGroupsAction extends DeleteItemsAction {
+    static itemName = "Piece Group" as const
 }
 
 
