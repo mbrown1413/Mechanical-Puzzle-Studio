@@ -4,10 +4,13 @@ import {computed} from "vue"
 import {FormEditable} from "~lib"
 
 import DynamicField from "~/ui/components/fields/DynamicField.vue"
+import UiButton from "~/ui/components/UiButton.vue"
+import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 
 const props = defineProps<{
     item: FormEditable
     title?: string
+    floatingButton?: UiButtonDefinition
 }>()
 
 defineEmits<{
@@ -19,7 +22,14 @@ const form = computed(() => props.item.getForm())
 
 <template>
     <div>
-        <h4 v-if="title">{{ title }}</h4>
+        <div
+            v-if="title || floatingButton"
+            class="title-div"
+        >
+            <h4 v-if="title">{{ title }}</h4>
+            <UiButton v-if="floatingButton" :uiButton="floatingButton" />
+        </div>
+
         <DynamicField
             v-for="field of form.fields"
             :field="field"
@@ -30,7 +40,10 @@ const form = computed(() => props.item.getForm())
 </template>
 
 <style scoped>
-h4 {
+.title-div {
+    display: flex;
+    justify-content: space-between;
+
     margin-bottom: 0.5em;
 }
 </style>

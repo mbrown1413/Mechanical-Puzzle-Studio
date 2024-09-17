@@ -4,7 +4,11 @@ import {PuzzleFile} from "~lib"
 
 import {Action} from "~/ui/actions.ts"
 import {ActionManager} from "~/ui/ActionManager.ts"
-import {NewPieceAction, DeletePiecesAction, DuplicatePieceAction, NewProblemAction, DeleteProblemsAction, DuplicateProblemAction} from "~/ui/actions.ts"
+import {
+    NewPieceAction, DeletePiecesAction, DuplicatePieceAction,
+    NewPieceGroupAction, NewProblemAction, DeleteProblemsAction,
+    DuplicateProblemAction
+} from "~/ui/actions.ts"
 import {downloadPuzzle} from "~/ui/utils/download.ts"
 import {PuzzleStorage} from "~/ui/storage.ts"
 import {taskRunner} from "~/ui/globals.ts"
@@ -14,6 +18,7 @@ import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import GridEditModal from "~/ui/components/GridEditModal.vue"
+import {AssemblyPieceGroup} from "~/lib/PieceGroup"
 
 export type UiButtonDefinition = {
     text: string | (() => string),
@@ -34,6 +39,18 @@ export function useUiButtonComposible(
     rawDataModal: Ref<InstanceType<typeof RawDataModal> | null>,
     gridEditModal: Ref<InstanceType<typeof GridEditModal> | null>,
 ): Record<string, UiButtonDefinition> {
+
+    function getNewPieceBounds() {
+        if(puzzleEditor.value?.selectedPieceIds.length === 1) {
+            const id = puzzleEditor.value?.selectedPieceIds[0]
+            const piece = puzzleFile.value?.puzzle.getPiece(id)
+            if(piece && piece.bounds) {
+                return Object.assign({}, piece.bounds)
+            }
+        }
+        return undefined
+    }
+
     return {
 
         newPuzzle: {
@@ -122,14 +139,7 @@ export function useUiButtonComposible(
             text: "New Piece",
             icon: "mdi-plus",
             perform: () => {
-                let bounds = undefined
-                if(puzzleEditor.value?.selectedPieceIds.length === 1) {
-                    const id = puzzleEditor.value?.selectedPieceIds[0]
-                    const piece = puzzleFile.value?.puzzle.getPiece(id)
-                    if(piece && piece.bounds) {
-                        bounds = Object.assign({}, piece.bounds)
-                    }
-                }
+                const bounds = getNewPieceBounds()
                 performAction(new NewPieceAction(bounds))
             }
         },
@@ -158,6 +168,34 @@ export function useUiButtonComposible(
                 }
             },
             enabled: () => (puzzleEditor.value?.selectedPieceIds.length || 0) > 0,
+        },
+
+        newPieceAssembly: {
+            text: "New Piece Assembly",
+            icon: "mdi-plus",
+            perform: () => {
+                performAction(
+                    new NewPieceGroupAction(new AssemblyPieceGroup())
+                )
+            }
+        },
+
+        newPieceInPieceGroup: {
+            text: "Add Piece to Assembly",
+            icon: "mdi-plus",
+            perform: () => {
+                const bounds = getNewPieceBounds()
+                const group = puzzleEditor.value?.selectedPieceGroupId
+                if(group === null) return
+                performAction(
+                    new NewPieceAction(bounds, group)
+                )
+            },
+            enabled: () => {
+                const group = puzzleEditor.value?.selectedPieceGroup
+                if(!group) return false
+                return group.canManuallyAddPieces
+            }
         },
 
         newProblem: {

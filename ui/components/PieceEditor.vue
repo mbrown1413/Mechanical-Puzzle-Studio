@@ -10,6 +10,7 @@ const props = defineProps<{
     puzzle: Puzzle,
     pieceId: PieceId | null,
     auxEditArea: HTMLElement | null,
+    displayPieceIds?: PieceId[]  // Pieces to display but not edit
 }>()
 
 const emit = defineEmits<{
@@ -25,9 +26,17 @@ const piece = computed(() =>
     props.pieceId === null ? null : props.puzzle.getPiece(props.pieceId) || null
 )
 
-const pieces = computed(() =>
-    piece.value === null ? [] : [piece.value]
-)
+const pieces = computed(() => {
+    const pieces = piece.value === null ? [] : [piece.value]
+    for(const displayPieceId of props.displayPieceIds || []) {
+        if(displayPieceId === piece.value?.id) continue
+        const displayPiece = props.puzzle.getPiece(displayPieceId)
+        if(displayPiece) {
+            pieces.push(displayPiece)
+        }
+    }
+    return pieces
+})
 
 function voxelsClicked(event: MouseEvent, voxels: Voxel[]) {
     if(piece.value === null) { return }

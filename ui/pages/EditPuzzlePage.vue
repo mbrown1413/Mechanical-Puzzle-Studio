@@ -231,6 +231,12 @@ const menus: ComputedRef<Menu[]> = computed(() => {
                 ...pieceOrProblemMenuItems
             ],
         },
+        {
+            text: "Groups",
+            items: [
+                uiButtons.newPieceAssembly,
+            ],
+        },
     ]
 })
 

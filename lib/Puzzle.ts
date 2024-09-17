@@ -4,6 +4,7 @@ import {Problem} from "~/lib/Problem.ts"
 import {getNextColor} from "~/lib/colors.ts"
 
 import {Piece, PieceId} from "~/lib/Piece.ts"
+import {PieceGroup} from "~/lib/PieceGroup.ts"
 import {ProblemId} from "~/lib/Problem.ts"
 
 
@@ -16,6 +17,8 @@ export class Puzzle extends SerializableClass {
     grid: Grid
     pieces: Piece[]
     problems: Problem[]
+
+    pieceGroups: PieceGroup[]
 
     /**
      * Next ID number of the given type.
@@ -35,9 +38,16 @@ export class Puzzle extends SerializableClass {
         this.grid = grid
         this.pieces = []
         this.problems = []
+        this.pieceGroups = []
         this.idCounters = {
             piece: 0,
             problem: 0,
+        }
+    }
+
+    static preDeserialize(data: Puzzle) {
+        if(data.pieceGroups === undefined) {
+            data.pieceGroups = []
         }
     }
 
@@ -93,6 +103,15 @@ export class Puzzle extends SerializableClass {
 
     hasPiece(pieceOrId: Piece | PieceId): boolean {
         return Boolean(this.getPiece(pieceOrId))
+    }
+
+    getPieceGroupFromPiece(piece: Piece): PieceGroup | null {
+        for(const group of this.pieceGroups) {
+            if(group.pieceIds.includes(piece.id)) {
+                return group
+            }
+        }
+        return null
     }
 
     removePiece(pieceOrId: Piece | PieceId, throwErrors=true) {

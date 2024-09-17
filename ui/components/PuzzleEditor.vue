@@ -4,12 +4,13 @@
 -->
 
 <script setup lang="ts">
-import {ref, Ref, watch, watchEffect} from "vue"
+import {computed, inject, ref, Ref, watch, watchEffect} from "vue"
 import Split from "split-grid"
 
 import {Puzzle, PieceId, ProblemId, AssemblySolution} from "~lib"
 
-import {Action} from "~/ui/actions.ts"
+import {Action, EditPieceGroupMetadataAction} from "~/ui/actions.ts"
+import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 import TabLayout from "~/ui/common/TabLayout.vue"
 import PieceEditor from "~/ui/components/PieceEditor.vue"
 import SolutionDisplay from "~/ui/components/SolutionDisplay.vue"
@@ -18,6 +19,7 @@ import PieceList from "~/ui/components/PieceList.vue"
 import ProblemList from "~/ui/components/ProblemList.vue"
 import ProblemSolverForm from "~/ui/components/ProblemSolverForm.vue"
 import SolutionList from "~/ui/components/SolutionList.vue"
+import FormEditor from "~/ui/components/FormEditor.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
@@ -27,12 +29,15 @@ const emit = defineEmits<{
     action: [action: Action]
 }>()
 
+const uiButtons = inject("uiButtons") as Record<string, UiButtonDefinition>
+
 const selectedPieceIds: Ref<PieceId[]> = ref(
     props.puzzle.pieces.length ? [props.puzzle.pieces[0].id] : []
 )
 const selectedProblemIds: Ref<ProblemId[]> = ref(
     props.puzzle.problems.length ? [props.puzzle.problems[0].id] : []
 )
+const selectedPieceGroupIds: Ref<number[]> = ref([])
 
 const pieceEditor: Ref<InstanceType<typeof PieceEditor> | null> = ref(null)
 const pieceList: Ref<InstanceType<typeof PieceList> | null> = ref(null)
@@ -47,10 +52,41 @@ const sideTabs = [
     {id: "solutions", text: "Solutions", slot: "problems"},
 ]
 
+const selectedPieceId = computed(() => {
+    if(
+        selectedPieceIds.value.length === 1 &&
+        selectedPieceGroupIds.value.length === 0
+    ) {
+        return selectedPieceIds.value[0]
+    }
+    return null
+})
+const selectedPieceGroupId = computed(() => {
+    if(
+        selectedPieceIds.value.length === 0 &&
+        selectedPieceGroupIds.value.length === 1
+    ) {
+        return selectedPieceGroupIds.value[0]
+    }
+    return null
+})
+
+const selectedPiece = computed(() => {
+    if(selectedPieceId.value === null) { return null }
+    return props.puzzle.getPiece(selectedPieceId.value)
+})
+const selectedPieceGroup = computed(() => {
+    if(selectedPieceGroupId.value === null) { return null }
+    return props.puzzle.pieceGroups[selectedPieceGroupId.value]
+})
+
 defineExpose({
     currentTabId,
     selectedPieceIds,
     selectedProblemIds,
+    selectedPieceGroupIds,
+    selectedPieceGroupId,
+    selectedPieceGroup
 })
 
 const columnSlider: Ref<HTMLDivElement | null> = ref(null)
@@ -97,6 +133,11 @@ function setUiFocus(focus: "pieces" | "problems" | "solutions") {
     currentTabId.value = focus
 }
 
+function uiButtonIsEnabled(uiButton: UiButtonDefinition): boolean {
+    if(uiButton.enabled === undefined) { return true }
+    return uiButton.enabled()
+}
+
 // Set focus on pieces and problems list.
 // We unfocus immediately when tab changes, but don't re-focus until after a
 // delay because of the transition effect.
@@ -130,6 +171,7 @@ watch(currentTabId, (tabId) => {
                         ref="pieceList"
                         :puzzle="puzzle"
                         v-model:selectedPieceIds="selectedPieceIds"
+                        v-model:selectedPieceGroupIds="selectedPieceGroupIds"
                         @action="performAction"
                     />
                 </template>
@@ -148,14 +190,23 @@ watch(currentTabId, (tabId) => {
 
         <div class="grid-cell side-bot">
             <div
-                v-show="currentTabId === 'pieces' && selectedPieceIds.length"
+                v-show="currentTabId === 'pieces'"
                 style="height: 100%; display: flex; flex-direction: column;"
             >
                 <ItemMetadataEditor
+                    v-if="selectedPiece"
                     :puzzle="puzzle"
                     itemType="piece"
-                    :itemId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
+                    :itemId="selectedPiece.id"
                     @action="performAction"
+                />
+                <FormEditor
+                    v-if="selectedPieceGroup"
+                    :item="selectedPieceGroup"
+                    :floatingButton="uiButtonIsEnabled(uiButtons.newPieceInPieceGroup) ? uiButtons.newPieceInPieceGroup : undefined"
+                    @edit="performAction(new EditPieceGroupMetadataAction(selectedPieceGroupIds[0], $event))"
+                    title="Piece Group"
+                    style="margin: 1em;"
                 />
                 <div ref="auxEditArea" style="flex-grow: 1;"></div>
             </div>
@@ -182,6 +233,7 @@ watch(currentTabId, (tabId) => {
                 :puzzle="puzzle"
                 :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
                 :auxEditArea="auxEditArea"
+                :displayPieceIds="selectedPieceGroup?.displayCombined ? selectedPieceGroup.pieceIds : undefined"
                 @action="performAction"
             />
             <ItemMetadataEditor

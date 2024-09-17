@@ -1,6 +1,6 @@
 import {
     Voxel, Puzzle, Item, ItemId, Piece, PieceId, Problem, AssemblyProblem,
-    PuzzleFile, Bounds, ProblemId, AssemblySolution,
+    PuzzleFile, Bounds, ProblemId, AssemblySolution, PieceGroup,
     Grid, clone
 } from "~lib"
 
@@ -250,10 +250,12 @@ export class GridSetAction extends Action {
 
 export class NewPieceAction extends Action {
     bounds?: Bounds
+    pieceGroupId?: number
 
-    constructor(bounds?: Bounds) {
+    constructor(bounds?: Bounds, pieceGroupId?: number) {
         super()
         this.bounds = bounds
+        this.pieceGroupId = pieceGroupId
     }
 
     perform(puzzle: Puzzle) {
@@ -264,6 +266,11 @@ export class NewPieceAction extends Action {
         piece.color = puzzle.getNewPieceColor()
         piece.bounds = this.bounds || puzzle.grid.getDefaultPieceBounds()
         puzzle.addPiece(piece)
+
+        if(this.pieceGroupId !== undefined) {
+            const group = puzzle.pieceGroups[this.pieceGroupId]
+            group.pieceIds.push(piece.id)
+        }
     }
 
     toString() {
@@ -309,6 +316,7 @@ export class EditPieceAction extends Action {
     perform(puzzle: Puzzle) {
         const piece = this.getPiece(puzzle)
         this.performOnPiece(piece)
+        this.callPieceGroupHook(puzzle, piece)
     }
 
     performOnPiece(piece: Piece) {
@@ -320,6 +328,23 @@ export class EditPieceAction extends Action {
                 "optional",
                 voxel,
                 this.optionalVoxels ? true : undefined
+            )
+        }
+    }
+
+    callPieceGroupHook(puzzle: Puzzle, piece: Piece) {
+        const group = puzzle.getPieceGroupFromPiece(piece)
+        if(group !== null) {
+            const groupPieces = group.pieceIds.map(
+                id => puzzle.getPiece(id)
+            ).filter(
+                (piece): piece is Piece => piece !== null
+            )
+            group.onPieceEdit(
+                piece,
+                this.voxelsToAdd,
+                this.voxelsToRemove,
+                groupPieces
             )
         }
     }
@@ -378,6 +403,51 @@ export class DuplicatePieceAction extends DuplicateItemAction<Piece> {
         puzzle.addPiece(piece, index)
     }
 
+}
+
+
+////////// Piece Group Actions //////////
+
+export class NewPieceGroupAction extends Action {
+    pieceGroupInstance: PieceGroup
+
+    constructor(groupObject: PieceGroup) {
+        super()
+        this.pieceGroupInstance = groupObject
+    }
+
+    toString() {
+        return "New Piece Group"
+    }
+
+    perform(puzzle: Puzzle) {
+        puzzle.pieceGroups.push(this.pieceGroupInstance)
+    }
+}
+
+export class EditPieceGroupMetadataAction extends Action {
+    pieceGroupId: number
+    metadata: object
+
+    constructor(
+        pieceGroupId: number,
+        metadata: object,
+    ) {
+        super()
+        this.pieceGroupId = pieceGroupId
+        this.metadata = metadata
+    }
+
+    toString() {
+        return "Edit piece group metadata"
+    }
+
+    perform(puzzle: Puzzle) {
+        Object.assign(
+            puzzle.pieceGroups[this.pieceGroupId],
+            this.metadata
+        )
+    }
 }
 
 
