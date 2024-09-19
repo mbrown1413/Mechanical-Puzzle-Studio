@@ -13,6 +13,10 @@ import {ProblemId} from "~/lib/Problem.ts"
 export type Item = Piece | Problem
 export type ItemId = PieceId | ProblemId
 
+type PuzzleStoredData = {
+    pieceGroups?: PieceGroup[]
+}
+
 export class Puzzle extends SerializableClass {
     grid: Grid
     pieces: Piece[]
@@ -45,9 +49,15 @@ export class Puzzle extends SerializableClass {
         }
     }
 
-    static preDeserialize(data: Puzzle) {
+    static preDeserialize(data: PuzzleStoredData) {
         if(data.pieceGroups === undefined) {
             data.pieceGroups = []
+        }
+    }
+
+    static postSerialize(data: PuzzleStoredData) {
+        if(data.pieceGroups?.length === 0) {
+            delete data["pieceGroups"]
         }
     }
 
