@@ -1,6 +1,6 @@
 import {Ref} from "vue"
 
-import {PuzzleFile} from "~lib"
+import {PuzzleFile, AssemblyPieceGroup} from "~lib"
 
 import {Action} from "~/ui/actions.ts"
 import {ActionManager} from "~/ui/ActionManager.ts"
@@ -18,7 +18,6 @@ import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import GridEditModal from "~/ui/components/GridEditModal.vue"
-import {AssemblyPieceGroup} from "~/lib/PieceGroup"
 
 export type UiButtonDefinition = {
     text: string | (() => string),
