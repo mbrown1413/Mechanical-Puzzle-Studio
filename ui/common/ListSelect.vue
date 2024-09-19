@@ -32,10 +32,10 @@ type Group = {
 
 const props = withDefaults(
     defineProps<{
-        items: (Item | Group)[],
-        selectedItems: number[],
-        selectedGroups?: number[],
-        uiButtons?: UiButtonDefinition[],
+        items: (Item | Group)[]
+        selectedItems: number[]
+        selectedGroups?: number[]
+        uiButtons?: UiButtonDefinition[]
     }>(), {
         selectedGroups: () => [],
         uiButtons: () => [],
@@ -138,16 +138,29 @@ function onItemsSelect() {
     const selectedItems = []
     const selectedGroups = []
     for(const option of el.value.selectedOptions) {
-        const [prefix, id] = option.value.split("-")
-        if(prefix === "item") {
-            selectedItems.push(Number(id))
-        } else if(prefix === "group") {
+        const {isGroup, id} = splitCombinedId(option.value)
+        if(isGroup) {
             selectedGroups.push(Number(id))
+        } else {
+            selectedItems.push(Number(id))
         }
     }
 
     emit('update:selectedItems', selectedItems)
     emit('update:selectedGroups', selectedGroups)
+}
+
+/* Get an ID which is unique between both items and groups. */
+function getCombinedId(item: Item | Group): string {
+    return (item.isGroup ? 'group-' : 'item-') + item.id
+}
+
+function splitCombinedId(combinedId: string) {
+    const [prefix, id] = combinedId.split("-")
+    return {
+        id,
+        isGroup: prefix === "group",
+    }
 }
 
 function arraysEqual<T>(array1: Array<T>, array2: Array<T>) {
@@ -199,7 +212,7 @@ function getItemIdDelta<T extends Item | Group>(
             <template v-for="item in flatItems">
 
                 <option
-                    :value="(item.isGroup ? 'group-' : 'item-') + item.id"
+                    :value="getCombinedId(item)"
                     :style="'--data-color:' + (item.color || '#000000')"
                     :class="[
                         item.color ? 'colored' : 'uncolored',
