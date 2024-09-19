@@ -1,6 +1,10 @@
 <!--
     Displays a list of items which can be selected, with optional buttons for
     adding and removing items.
+
+    Groups can be given in the same flat list as the items. Groups are similar
+    to items, but they have a different ID namespace and they contain a nested
+    list of items. Groups may not contain other groups.
 -->
 
 <script setup lang="ts">
@@ -43,11 +47,6 @@ const emit = defineEmits<{
     "update:selectedGroups": [ids: number[]],
 }>()
 
-function arraysEqual<T>(array1: Array<T>, array2: Array<T>) {
-    if(array1.length !== array2.length) { return false }
-    return array1.every(x => array2.indexOf(x) !== -1)
-}
-
 const flatItems = computed(() => {
     const flat: ((Item | Group) & {inGroup?: boolean})[] = []
     for(const itemOrGroup of props.items) {
@@ -72,36 +71,64 @@ const flatSelectedIds = computed(() => {
     return selected
 })
 
+// Detect added/deleted items/groups and change selection accordingly
 let oldItems = [...flatItems.value]
 watch(() => flatItems.value, () => {
-    const oldSet = new Set(oldItems.map(item => item.id))
-    const newSet = new Set(flatItems.value.map(item => item.id))
-    let newSelectedIds: number[]
+    const itemDelta = getItemIdDelta(oldItems, flatItems.value, item => !(item.isGroup || false))
+    const groupDelta = getItemIdDelta(oldItems, flatItems.value, item => item.isGroup || false)
 
-    if(newSet.size === oldSet.size + 1) {
-        // Added item: Select item that was added
-        newSelectedIds = [...newSet].filter(
-            item => !oldSet.has(item)
+    let newSelectedItems: number[] = props.selectedItems
+    let newSelectedGroups: number[] = props.selectedGroups
+    if(
+        itemDelta.added.length === 1 &&
+        itemDelta.removed.length === 0 &&
+        groupDelta.added.length === 0 &&
+        groupDelta.removed.length === 0
+    ) {
+        // Added item
+        newSelectedItems = itemDelta.added
+        newSelectedGroups = []
+
+    } else if(
+        itemDelta.added.length === 0 &&
+        itemDelta.removed.length === 0 &&
+        groupDelta.added.length === 1 &&
+        groupDelta.removed.length === 0
+    ) {
+        // Added group
+        newSelectedItems = []
+        newSelectedGroups = groupDelta.added
+
+    } else if(
+        itemDelta.added.length + groupDelta.added.length === 0 &&
+        itemDelta.removed.length + groupDelta.removed.length === 1
+    ) {
+        // Deleted item or group
+        const deletedIsGroup = groupDelta.removed.length === 1
+        const deletedIndex = oldItems.findIndex(
+            item => (
+                (item.isGroup || false) === deletedIsGroup &&
+                item.id === itemDelta.removed[0]
+            )
         )
-
-    } else if(oldSet.size === newSet.size + 1) {
-        // Deleted item: Select item closest to it
-        const deletedId = [...oldSet].filter(
-            item => !newSet.has(item)
-        )[0]
-        const deletedItemIdx = oldItems.findIndex(item => item.id === deletedId)
-        const newSelectedIdx = Math.min(flatItems.value.length-1, Math.max(0, deletedItemIdx))
-        const newSelectedItem = flatItems.value[newSelectedIdx]
-        newSelectedIds = newSelectedItem ? [newSelectedItem.id] : []
-
-    } else {
-        newSelectedIds = props.selectedItems
+        const newSelectedIndex = Math.max(0, Math.min(deletedIndex, flatItems.value.length-1))
+        const newSelected = flatItems.value[newSelectedIndex]
+        if(newSelected) {
+            newSelectedItems = newSelected.isGroup ? [] : [newSelected.id]
+            newSelectedGroups = newSelected.isGroup ? [newSelected.id] : []
+        } else {
+            newSelectedItems = []
+            newSelectedGroups = []
+        }
     }
 
-    newSelectedIds = newSelectedIds.filter(id => newSet.has(id))
-    if(!arraysEqual(newSelectedIds, props.selectedItems)) {
-        emit("update:selectedItems", newSelectedIds)
+    if(newSelectedItems && !arraysEqual(newSelectedItems, props.selectedItems)) {
+        emit("update:selectedItems", newSelectedItems)
     }
+    if(newSelectedGroups && !arraysEqual(newSelectedGroups, props.selectedGroups)) {
+        emit("update:selectedGroups", newSelectedGroups)
+    }
+
     oldItems = [...flatItems.value]
 })
 
@@ -121,6 +148,36 @@ function onItemsSelect() {
 
     emit('update:selectedItems', selectedItems)
     emit('update:selectedGroups', selectedGroups)
+}
+
+function arraysEqual<T>(array1: Array<T>, array2: Array<T>) {
+    if(array1.length !== array2.length) { return false }
+    return array1.every(x => array2.indexOf(x) !== -1)
+}
+
+function getItemIdDelta<T extends Item | Group>(
+    oldItems: T[],
+    newItems: T[],
+    predicate: (item: T) => boolean
+){
+    oldItems = oldItems.filter(predicate)
+    newItems = newItems.filter(predicate)
+
+    const added = []
+    for(const newItem of newItems) {
+        if(!oldItems.find(oldItem => oldItem.id === newItem.id)) {
+            added.push(newItem.id)
+        }
+    }
+
+    const removed = []
+    for(const oldItem of oldItems) {
+        if(!newItems.find(newItem => newItem.id === oldItem.id)) {
+            removed.push(oldItem.id)
+        }
+    }
+
+    return {added, removed}
 }
 </script>
 
