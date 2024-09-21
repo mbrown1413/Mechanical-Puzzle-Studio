@@ -33,8 +33,8 @@ export class Puzzle extends SerializableClass {
      * next unused ID.
      */
     private idCounters: {
-        piece: number,
-        problem: number,
+        piece?: number,
+        problem?: number,
     }
 
     constructor(grid: Grid) {
@@ -43,10 +43,7 @@ export class Puzzle extends SerializableClass {
         this.pieces = []
         this.problems = []
         this.pieceGroups = []
-        this.idCounters = {
-            piece: 0,
-            problem: 0,
-        }
+        this.idCounters = {}
     }
 
     static preDeserialize(data: PuzzleStoredData) {
@@ -72,7 +69,9 @@ export class Puzzle extends SerializableClass {
     private generateNewId(
         type: "piece" | "problem"
     ): ItemId {
-        return this.idCounters[type]++
+        const id = this.idCounters[type] || 0
+        this.idCounters[type] = id + 1
+        return id
     }
 
     getNewPieceColor(): string {

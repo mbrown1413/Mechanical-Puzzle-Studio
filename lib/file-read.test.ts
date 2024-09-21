@@ -27,10 +27,7 @@ const emptyNativeFormat = `{
         },
         "pieces": [],
         "problems": [],
-        "idCounters": {
-            "piece": 0,
-            "problem": 0
-        }
+        "idCounters": {}
     }
 }`
 

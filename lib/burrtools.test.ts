@@ -55,10 +55,7 @@ describe("burrtools read", () => {
                 "grid": {
                   "type": "CubicGrid",
                 },
-                "idCounters": {
-                  "piece": 0,
-                  "problem": 0,
-                },
+                "idCounters": {},
                 "pieces": [],
                 "problems": [],
                 "type": "Puzzle",
@@ -123,7 +120,6 @@ describe("burrtools read", () => {
                 },
                 "idCounters": {
                   "piece": 1,
-                  "problem": 0,
                 },
                 "pieces": [
                   {
@@ -186,7 +182,6 @@ describe("burrtools read", () => {
                 },
                 "idCounters": {
                   "piece": 1,
-                  "problem": 0,
                 },
                 "pieces": [
                   {
@@ -231,7 +226,6 @@ describe("burrtools read", () => {
                 },
                 "idCounters": {
                   "piece": 1,
-                  "problem": 0,
                 },
                 "pieces": [
                   {
@@ -382,7 +376,6 @@ describe("burrtools read", () => {
                 },
                 "idCounters": {
                   "piece": 1,
-                  "problem": 0,
                 },
                 "pieces": [
                   {
@@ -426,10 +419,7 @@ describe("burrtools read", () => {
                 "grid": {
                   "type": "CubicGrid",
                 },
-                "idCounters": {
-                  "piece": 0,
-                  "problem": 0,
-                },
+                "idCounters": {},
                 "pieces": [],
                 "problems": [],
                 "type": "Puzzle",
@@ -467,7 +457,6 @@ describe("burrtools read", () => {
                 },
                 "idCounters": {
                   "piece": 1,
-                  "problem": 0,
                 },
                 "pieces": [
                   {
@@ -605,7 +594,6 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 0,
                   "problem": 1,
                 },
                 "pieces": [],
@@ -742,7 +730,6 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 0,
                   "problem": 1,
                 },
                 "pieces": [],
@@ -1089,10 +1076,7 @@ describe("burrtools read", () => {
                 "grid": {
                   "type": "CubicGrid",
                 },
-                "idCounters": {
-                  "piece": 0,
-                  "problem": 0,
-                },
+                "idCounters": {},
                 "pieces": [],
                 "problems": [],
                 "type": "Puzzle",
@@ -1124,10 +1108,7 @@ describe("burrtools read", () => {
                 "grid": {
                   "type": "CubicGrid",
                 },
-                "idCounters": {
-                  "piece": 0,
-                  "problem": 0,
-                },
+                "idCounters": {},
                 "pieces": [],
                 "problems": [],
                 "type": "Puzzle",
