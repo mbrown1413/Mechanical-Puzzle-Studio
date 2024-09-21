@@ -9,13 +9,13 @@ import ListSelect from "~/ui/common/ListSelect.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
-    selectedPieceIds: PieceId[],
-    selectedPieceGroupIds: PieceId[],
+    selectedPieceId: PieceId | null,
+    selectedPieceGroupId: PieceId | null,
 }>()
 
 const emit = defineEmits<{
-    "update:selectedPieceIds": [pieceIds: PieceId[]],
-    "update:selectedPieceGroupIds": [pieceGroupIds: number[]],
+    "update:selectedPieceId": [pieceId: PieceId | null],
+    "update:selectedPieceGroupId": [pieceGroupIdx: number | null],
     action: [action: Action]
 }>()
 
@@ -76,10 +76,10 @@ const items = computed(() => {
 <template>
     <ListSelect
         :items="items"
-        :selectedItems="selectedPieceIds"
-        :selectedGroups="selectedPieceGroupIds"
+        :selectedItemId="selectedPieceId"
+        :selectedGroupId="selectedPieceGroupId"
         :uiButtons="uiButtons"
-        @update:selectedItems="emit('update:selectedPieceIds', $event)"
-        @update:selectedGroups="emit('update:selectedPieceGroupIds', $event)"
+        @update:selectedItemId="emit('update:selectedPieceId', $event)"
+        @update:selectedGroupId="emit('update:selectedPieceGroupId', $event)"
     />
 </template>

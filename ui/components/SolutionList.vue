@@ -23,7 +23,7 @@ const problem = computed(() =>
     props.problemId === null ? null : props.puzzle.getProblem(props.problemId)
 )
 
-const selectedSolutionIds: Ref<number[]> = ref([])
+const selectedSolutionId: Ref<number | null> = ref(null)
 
 const solutionItems = computed(() => {
     if(!problem.value || problem.value.solutions === undefined) {
@@ -55,21 +55,21 @@ const solutionItems = computed(() => {
 // at a time.
 watch(solutionItems, (newItems, oldItems) => {
     if(
-        selectedSolutionIds.value.length === 0 &&
+        selectedSolutionId.value === null &&
         (oldItems === undefined || oldItems.length === 0) &&
         newItems.length > 0
     ) {
-        selectedSolutionIds.value = [newItems[0].id]
+        selectedSolutionId.value = newItems[0].id
     }
 }, {immediate: true})
 
-const selectedSolutions = computed(() => {
+const selectedSolution = computed(() => {
     if(!problem.value || problem.value.solutions === undefined) {
-        return []
+        return null
     }
 
-    return problem.value.solutions.filter((solution) =>
-        selectedSolutionIds.value.includes(solution.id)
+    return problem.value.solutions.find((solution) =>
+        selectedSolutionId.value === solution.id
     )
 })
 
@@ -92,7 +92,7 @@ const taskInfo = computed(() => {
 })
 
 defineExpose({
-    selectedSolutions
+    selectedSolution
 })
 
 const allUiButtons = inject("uiButtons") as Record<string, UiButtonDefinition>
@@ -160,8 +160,8 @@ const actionCategories = [
         <ListSelect
             v-if="solutionItems.length"
             :items="solutionItems"
-            :selectedItems="selectedSolutionIds"
-            @update:selectedItems="selectedSolutionIds = $event"
+            :selectedItemId="selectedSolutionId"
+            @update:selectedItemId="selectedSolutionId = $event"
         />
 
         <div v-else class="no-solutions-message">

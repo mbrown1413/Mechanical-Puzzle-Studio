@@ -31,13 +31,13 @@ const emit = defineEmits<{
 
 const uiButtons = inject("uiButtons") as Record<string, UiButtonDefinition>
 
-const selectedPieceIds: Ref<PieceId[]> = ref(
-    props.puzzle.pieces.length ? [props.puzzle.pieces[0].id] : []
+const selectedPieceId: Ref<PieceId | null> = ref(
+    props.puzzle.pieces.length ? props.puzzle.pieces[0].id : null
 )
-const selectedProblemIds: Ref<ProblemId[]> = ref(
-    props.puzzle.problems.length ? [props.puzzle.problems[0].id] : []
+const selectedPieceGroupId: Ref<number | null> = ref(null)
+const selectedProblemId: Ref<ProblemId | null> = ref(
+    props.puzzle.problems.length ? props.puzzle.problems[0].id : null
 )
-const selectedPieceGroupIds: Ref<number[]> = ref([])
 
 const pieceEditor: Ref<InstanceType<typeof PieceEditor> | null> = ref(null)
 const pieceList: Ref<InstanceType<typeof PieceList> | null> = ref(null)
@@ -52,25 +52,6 @@ const sideTabs = [
     {id: "solutions", text: "Solutions", slot: "problems"},
 ]
 
-const selectedPieceId = computed(() => {
-    if(
-        selectedPieceIds.value.length === 1 &&
-        selectedPieceGroupIds.value.length === 0
-    ) {
-        return selectedPieceIds.value[0]
-    }
-    return null
-})
-const selectedPieceGroupId = computed(() => {
-    if(
-        selectedPieceIds.value.length === 0 &&
-        selectedPieceGroupIds.value.length === 1
-    ) {
-        return selectedPieceGroupIds.value[0]
-    }
-    return null
-})
-
 const selectedPiece = computed(() => {
     if(selectedPieceId.value === null) { return null }
     return props.puzzle.getPiece(selectedPieceId.value)
@@ -79,14 +60,17 @@ const selectedPieceGroup = computed(() => {
     if(selectedPieceGroupId.value === null) { return null }
     return props.puzzle.pieceGroups[selectedPieceGroupId.value]
 })
+const selectedProblem = computed(() => {
+    if(selectedProblemId.value === null) { return null }
+    return props.puzzle.getProblem(selectedProblemId.value)
+})
 
 defineExpose({
     currentTabId,
-    selectedPieceIds,
-    selectedProblemIds,
-    selectedPieceGroupIds,
-    selectedPieceGroupId,
+    selectedPiece,
     selectedPieceGroup,
+    selectedPieceGroupId,
+    selectedProblem,
     setUiFocus,
 })
 
@@ -171,8 +155,8 @@ watch(currentTabId, (tabId) => {
                     <PieceList
                         ref="pieceList"
                         :puzzle="puzzle"
-                        v-model:selectedPieceIds="selectedPieceIds"
-                        v-model:selectedPieceGroupIds="selectedPieceGroupIds"
+                        v-model:selectedPieceId="selectedPieceId"
+                        v-model:selectedPieceGroupId="selectedPieceGroupId"
                         @action="performAction"
                     />
                 </template>
@@ -180,7 +164,7 @@ watch(currentTabId, (tabId) => {
                     <ProblemList
                         ref="problemList"
                         :puzzle="puzzle"
-                        v-model:selectedProblemIds="selectedProblemIds"
+                        v-model:selectedProblemId="selectedProblemId"
                         @action="performAction"
                     />
                 </template>
@@ -202,19 +186,19 @@ watch(currentTabId, (tabId) => {
                     @action="performAction"
                 />
                 <FormEditor
-                    v-if="selectedPieceGroup"
+                    v-if="selectedPieceGroup && selectedPieceGroupId !== null"
                     :item="selectedPieceGroup"
                     :floatingButton="uiButtonIsEnabled(uiButtons.newPieceInPieceGroup) ? uiButtons.newPieceInPieceGroup : undefined"
-                    @edit="performAction(new EditPieceGroupMetadataAction(selectedPieceGroupIds[0], $event))"
+                    @edit="performAction(new EditPieceGroupMetadataAction(selectedPieceGroupId, $event))"
                     title="Piece Group"
                     style="margin: 1em;"
                 />
                 <div ref="auxEditArea" style="flex-grow: 1;"></div>
             </div>
             <ProblemSolverForm
-                v-show="currentTabId === 'problems' && selectedProblemIds.length"
+                v-show="currentTabId === 'problems' && selectedProblemId !== null"
                 :puzzle="puzzle"
-                :problemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
+                :problemId="selectedProblemId"
                 @action="performAction"
                 @setUiFocus="setUiFocus"
             />
@@ -222,7 +206,7 @@ watch(currentTabId, (tabId) => {
                 ref="solutionList"
                 v-show="currentTabId === 'solutions'"
                 :puzzle="puzzle"
-                :problemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
+                :problemId="selectedProblemId"
                 @action="performAction"
             />
         </div>
@@ -232,7 +216,7 @@ watch(currentTabId, (tabId) => {
                 ref="pieceEditor"
                 v-show="currentTabId === 'pieces'"
                 :puzzle="puzzle"
-                :pieceId="selectedPieceIds.length === 1 ? selectedPieceIds[0] : null"
+                :pieceId="selectedPieceId"
                 :auxEditArea="auxEditArea"
                 :displayPieceIds="selectedPieceGroup?.displayCombined ? selectedPieceGroup.pieceIds : undefined"
                 @action="performAction"
@@ -241,13 +225,13 @@ watch(currentTabId, (tabId) => {
                 v-show="currentTabId === 'problems'"
                 :puzzle="puzzle"
                 itemType="problem"
-                :itemId="selectedProblemIds.length === 1 ? selectedProblemIds[0] : null"
+                :itemId="selectedProblemId"
                 @action="performAction"
             />
             <SolutionDisplay
-                v-show="currentTabId === 'solutions' && solutionList?.selectedSolutions.length === 1"
+                v-show="currentTabId === 'solutions' && solutionList?.selectedSolution"
                 :puzzle="puzzle"
-                :solution="solutionList?.selectedSolutions[0] as AssemblySolution || null"
+                :solution="solutionList?.selectedSolution as AssemblySolution || null"
             />
         </div>
     </VMain>

@@ -9,11 +9,11 @@ import ListSelect from "~/ui/common/ListSelect.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
-    selectedProblemIds: ProblemId[],
+    selectedProblemId: ProblemId | null,
 }>()
 
 const emit = defineEmits<{
-    "update:selectedProblemIds": [problemIds: ProblemId[]],
+    "update:selectedProblemId": [problemId: ProblemId | null],
     action: [action: Action]
 }>()
 
@@ -46,8 +46,8 @@ const uiButtons = computed(() => {
 <template>
     <ListSelect
         :items="Array.from(puzzle.problems.values())"
-        :selectedItems="selectedProblemIds"
+        :selectedItemId="selectedProblemId"
         :uiButtons="uiButtons"
-        @update:selectedItems="emit('update:selectedProblemIds', $event)"
+        @update:selectedItemId="emit('update:selectedProblemId', $event)"
     />
 </template>

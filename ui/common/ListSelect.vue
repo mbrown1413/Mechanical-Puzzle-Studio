@@ -33,18 +33,18 @@ type Group = {
 const props = withDefaults(
     defineProps<{
         items: (Item | Group)[]
-        selectedItems: number[]
-        selectedGroups?: number[]
+        selectedItemId: number | null
+        selectedGroupId?: number | null
         uiButtons?: UiButtonDefinition[]
     }>(), {
-        selectedGroups: () => [],
+        selectedGroupId: null,
         uiButtons: () => [],
     }
 )
 
 const emit = defineEmits<{
-    "update:selectedItems": [ids: number[]],
-    "update:selectedGroups": [ids: number[]],
+    "update:selectedItemId": [id: number | null],
+    "update:selectedGroupId": [id: number | null],
 }>()
 
 const flatItems = computed(() => {
@@ -60,15 +60,13 @@ const flatItems = computed(() => {
     return flat
 })
 
-const flatSelectedIds = computed(() => {
-    const selected = []
-    for(const itemId of props.selectedItems) {
-        selected.push("item-"+itemId)
+const selectedCombinedId = computed(() => {
+    if(props.selectedItemId !== null) {
+        return "item-" + props.selectedItemId
+    } else if(props.selectedGroupId !== null) {
+        return "group-" + props.selectedGroupId
     }
-    for(const groupId of props.selectedGroups) {
-        selected.push("group-"+groupId)
-    }
-    return selected
+    return null
 })
 
 // Detect added/deleted items/groups and change selection accordingly
@@ -77,8 +75,8 @@ watch(() => flatItems.value, () => {
     const itemDelta = getItemIdDelta(oldItems, flatItems.value, item => !(item.isGroup || false))
     const groupDelta = getItemIdDelta(oldItems, flatItems.value, item => item.isGroup || false)
 
-    let newSelectedItems: number[] = props.selectedItems
-    let newSelectedGroups: number[] = props.selectedGroups
+    let newSelectedItemId: number | null = props.selectedItemId
+    let newSelectedGroupId: number | null = props.selectedGroupId
     if(
         itemDelta.added.length === 1 &&
         itemDelta.removed.length === 0 &&
@@ -86,8 +84,8 @@ watch(() => flatItems.value, () => {
         groupDelta.removed.length === 0
     ) {
         // Added item
-        newSelectedItems = itemDelta.added
-        newSelectedGroups = []
+        newSelectedItemId = itemDelta.added[0]
+        newSelectedGroupId = null
 
     } else if(
         itemDelta.added.length === 0 &&
@@ -96,8 +94,8 @@ watch(() => flatItems.value, () => {
         groupDelta.removed.length === 0
     ) {
         // Added group
-        newSelectedItems = []
-        newSelectedGroups = groupDelta.added
+        newSelectedItemId = null
+        newSelectedGroupId = groupDelta.added[0]
 
     } else if(
         itemDelta.added.length + groupDelta.added.length === 0 &&
@@ -114,19 +112,19 @@ watch(() => flatItems.value, () => {
         const newSelectedIndex = Math.max(0, Math.min(deletedIndex, flatItems.value.length-1))
         const newSelected = flatItems.value[newSelectedIndex]
         if(newSelected) {
-            newSelectedItems = newSelected.isGroup ? [] : [newSelected.id]
-            newSelectedGroups = newSelected.isGroup ? [newSelected.id] : []
+            newSelectedItemId = newSelected.isGroup ? null : newSelected.id
+            newSelectedGroupId = newSelected.isGroup ? newSelected.id : null
         } else {
-            newSelectedItems = []
-            newSelectedGroups = []
+            newSelectedItemId = null
+            newSelectedGroupId = null
         }
     }
 
-    if(newSelectedItems && !arraysEqual(newSelectedItems, props.selectedItems)) {
-        emit("update:selectedItems", newSelectedItems)
+    if(newSelectedItemId !== props.selectedItemId) {
+        emit("update:selectedItemId", newSelectedItemId)
     }
-    if(newSelectedGroups && !arraysEqual(newSelectedGroups, props.selectedGroups)) {
-        emit("update:selectedGroups", newSelectedGroups)
+    if(newSelectedGroupId !== props.selectedGroupId) {
+        emit("update:selectedGroupId", newSelectedGroupId)
     }
 
     oldItems = [...flatItems.value]
@@ -135,19 +133,19 @@ watch(() => flatItems.value, () => {
 function onItemsSelect() {
     if(el.value === null) return
 
-    const selectedItems = []
-    const selectedGroups = []
-    for(const option of el.value.selectedOptions) {
-        const {isGroup, id} = splitCombinedId(option.value)
+    let newSelectedItemId: number | null = null
+    let newSelectedGroupId: number | null = null
+    if(el.value.selectedOptions.length === 1) {
+        const {isGroup, id} = splitCombinedId(el.value.selectedOptions[0].value)
         if(isGroup) {
-            selectedGroups.push(Number(id))
+            newSelectedGroupId = id
         } else {
-            selectedItems.push(Number(id))
+            newSelectedItemId = id
         }
     }
 
-    emit('update:selectedItems', selectedItems)
-    emit('update:selectedGroups', selectedGroups)
+    emit("update:selectedItemId", newSelectedItemId)
+    emit("update:selectedGroupId", newSelectedGroupId)
 }
 
 /* Get an ID which is unique between both items and groups. */
@@ -158,14 +156,9 @@ function getCombinedId(item: Item | Group): string {
 function splitCombinedId(combinedId: string) {
     const [prefix, id] = combinedId.split("-")
     return {
-        id,
+        id: Number(id),
         isGroup: prefix === "group",
     }
-}
-
-function arraysEqual<T>(array1: Array<T>, array2: Array<T>) {
-    if(array1.length !== array2.length) { return false }
-    return array1.every(x => array2.indexOf(x) !== -1)
 }
 
 function getItemIdDelta<T extends Item | Group>(
@@ -204,8 +197,8 @@ function getItemIdDelta<T extends Item | Group>(
         </div>
         <select
             ref="el"
-            multiple
-            :value="flatSelectedIds"
+            size="10"
+            :value="selectedCombinedId"
             @change="onItemsSelect"
         >
 

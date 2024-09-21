@@ -96,7 +96,7 @@ export abstract class EditItemMetadataAction<T extends Item> extends Action {
 
     getItem(puzzle: Puzzle, itemId: T["id"]): T | null {
         if(itemId === undefined) { return null }
-        const constructor = <typeof DeleteItemsAction> this.constructor
+        const constructor = <typeof DeleteItemAction> this.constructor
         if(constructor.itemName === "Piece") {
             return puzzle.getPiece(itemId as PieceId) as T
         } else {
@@ -118,22 +118,22 @@ export abstract class EditItemMetadataAction<T extends Item> extends Action {
     postEdit(_item: T, _puzzle: Puzzle) { }
 }
 
-abstract class DeleteItemsAction extends Action {
+abstract class DeleteItemAction extends Action {
     static itemName: "Piece" | "Piece Group" | "Problem"
-    itemIds: ItemId[]
+    itemId: ItemId
 
-    constructor(itemIds: ItemId[]) {
+    constructor(itemId: ItemId) {
         super()
-        this.itemIds = itemIds
+        this.itemId = itemId
     }
 
     toString() {
-        const constructor = <typeof DeleteItemsAction> this.constructor
+        const constructor = <typeof DeleteItemAction> this.constructor
         return `Delete ${constructor.itemName.toLowerCase()}`
     }
 
     hasItem(puzzle: Puzzle, itemId: ItemId) {
-        const constructor = <typeof DeleteItemsAction> this.constructor
+        const constructor = <typeof DeleteItemAction> this.constructor
         switch(constructor.itemName) {
             case "Piece":
                 return puzzle.hasPiece(itemId as PieceId)
@@ -145,7 +145,7 @@ abstract class DeleteItemsAction extends Action {
     }
 
     deleteItem(puzzle: Puzzle, itemId: ItemId) {
-        const constructor = <typeof DeleteItemsAction> this.constructor
+        const constructor = <typeof DeleteItemAction> this.constructor
         switch(constructor.itemName) {
             case "Piece":
                 return puzzle.removePiece(itemId as PieceId)
@@ -158,21 +158,11 @@ abstract class DeleteItemsAction extends Action {
     }
 
     perform(puzzle: Puzzle) {
-        const constructor = <typeof DeleteItemsAction> this.constructor
-
-        const missingIds = []
-        for(const id of this.itemIds) {
-            if(!this.hasItem(puzzle, id)) {
-                missingIds.push(id)
-            }
+        const constructor = <typeof DeleteItemAction> this.constructor
+        if(!this.hasItem(puzzle, this.itemId)) {
+            throw new Error(`${constructor.itemName} IDs not found: ${this.itemId}`)
         }
-        if(missingIds.length) {
-            throw new Error(`${constructor.itemName} IDs not found: ${missingIds}`)
-        }
-
-        for(const id of this.itemIds) {
-            this.deleteItem(puzzle, id)
-        }
+        this.deleteItem(puzzle, this.itemId)
     }
 
 }
@@ -285,7 +275,7 @@ export class NewPieceAction extends Action {
     }
 }
 
-export class DeletePiecesAction extends DeleteItemsAction {
+export class DeletePieceAction extends DeleteItemAction {
     static itemName = "Piece" as const
 }
 
@@ -457,7 +447,7 @@ export class EditPieceGroupMetadataAction extends Action {
     }
 }
 
-export class DeletePieceGroupsAction extends DeleteItemsAction {
+export class DeletePieceGroupAction extends DeleteItemAction {
     static itemName = "Piece Group" as const
 }
 
@@ -478,7 +468,7 @@ export class NewProblemAction extends Action {
     }
 }
 
-export class DeleteProblemsAction extends DeleteItemsAction {
+export class DeleteProblemAction extends DeleteItemAction {
     static itemName = "Problem" as const
 }
 

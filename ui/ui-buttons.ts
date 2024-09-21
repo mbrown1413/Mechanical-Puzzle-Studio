@@ -5,9 +5,9 @@ import {PuzzleFile, AssemblyPieceGroup} from "~lib"
 import {Action} from "~/ui/actions.ts"
 import {ActionManager} from "~/ui/ActionManager.ts"
 import {
-    NewPieceAction, DeletePiecesAction, DuplicatePieceAction,
-    NewPieceGroupAction, NewProblemAction, DeleteProblemsAction,
-    DuplicateProblemAction, DeletePieceGroupsAction
+    NewPieceAction, DeletePieceAction, DuplicatePieceAction,
+    NewPieceGroupAction, NewProblemAction, DeleteProblemAction,
+    DuplicateProblemAction, DeletePieceGroupAction
 } from "~/ui/actions.ts"
 import {downloadPuzzle} from "~/ui/utils/download.ts"
 import {PuzzleStorage} from "~/ui/storage.ts"
@@ -40,12 +40,9 @@ export function useUiButtonComposible(
 ): Record<string, UiButtonDefinition> {
 
     function getNewPieceBounds() {
-        if(puzzleEditor.value?.selectedPieceIds.length === 1) {
-            const id = puzzleEditor.value?.selectedPieceIds[0]
-            const piece = puzzleFile.value?.puzzle.getPiece(id)
-            if(piece && piece.bounds) {
-                return Object.assign({}, piece.bounds)
-            }
+        const piece = puzzleEditor.value?.selectedPiece
+        if(piece && piece.bounds) {
+            return Object.assign({}, piece.bounds)
         }
         return undefined
     }
@@ -197,26 +194,26 @@ export function useUiButtonComposible(
             text: "Delete Piece",
             icon: "mdi-minus",
             perform: () => {
-                if(puzzleEditor.value?.selectedPieceIds.length) {
+                if(puzzleEditor.value?.selectedPiece) {
                     performAction(
-                        new DeletePiecesAction(puzzleEditor.value.selectedPieceIds)
+                        new DeletePieceAction(puzzleEditor.value.selectedPiece.id)
                     )
                 }
             },
-            enabled: () => (puzzleEditor.value?.selectedPieceIds.length || 0) > 0,
+            enabled: () => Boolean(puzzleEditor.value?.selectedPiece),
         },
 
         duplicatePiece: {
             text: "Duplicate Piece",
             icon: "mdi-content-duplicate",
             perform: () => {
-                if(puzzleEditor.value?.selectedPieceIds.length) {
+                if(puzzleEditor.value?.selectedPiece) {
                     performAction(
-                        new DuplicatePieceAction(puzzleEditor.value.selectedPieceIds[0])
+                        new DuplicatePieceAction(puzzleEditor.value.selectedPiece.id)
                     )
                 }
             },
-            enabled: () => (puzzleEditor.value?.selectedPieceIds.length || 0) > 0,
+            enabled: () => Boolean(puzzleEditor.value?.selectedPiece),
         },
 
         newPieceAssembly: {
@@ -252,13 +249,13 @@ export function useUiButtonComposible(
             text: "Delete Piece Group",
             icon: "mdi-minus",
             perform: () => {
-                if(puzzleEditor.value?.selectedPieceGroupIds.length) {
+                if(puzzleEditor.value !== null && puzzleEditor.value.selectedPieceGroupId !== null) {
                     performAction(
-                        new DeletePieceGroupsAction(puzzleEditor.value.selectedPieceGroupIds)
+                        new DeletePieceGroupAction(puzzleEditor.value.selectedPieceGroupId)
                     )
                 }
             },
-            enabled: () => (puzzleEditor.value?.selectedPieceGroupIds.length || 0) > 0,
+            enabled: () => puzzleEditor.value !== null && puzzleEditor.value.selectedPieceGroupId !== null,
         },
 
         newProblem: {
@@ -273,46 +270,45 @@ export function useUiButtonComposible(
             text: "Delete Problem",
             icon: "mdi-minus",
             perform: () => {
-                if(puzzleEditor.value?.selectedProblemIds.length) {
+                if(puzzleEditor.value?.selectedProblem) {
                     performAction(
-                        new DeleteProblemsAction(puzzleEditor.value.selectedProblemIds)
+                        new DeleteProblemAction(puzzleEditor.value.selectedProblem.id)
                     )
                 }
             },
-            enabled: () => (puzzleEditor.value?.selectedProblemIds.length || 0) > 0,
+            enabled: () => Boolean(puzzleEditor.value?.selectedProblem),
         },
 
         duplicateProblem: {
             text: "Duplicate Problem",
             icon: "mdi-content-duplicate",
             perform: () => {
-                if(puzzleEditor.value?.selectedProblemIds.length) {
+                if(puzzleEditor.value?.selectedProblem) {
                     performAction(
-                        new DuplicateProblemAction(puzzleEditor.value.selectedProblemIds[0])
+                        new DuplicateProblemAction(puzzleEditor.value.selectedProblem.id)
                     )
                 }
             },
-            enabled: () => (puzzleEditor.value?.selectedProblemIds.length || 0) > 0,
+            enabled: () => Boolean(puzzleEditor.value?.selectedProblem),
         },
 
         startSolve: {
             text: "Solve",
             icon: "",
             perform: () => {
-                if(!puzzleFile.value) { return }
-                for(const problemId of puzzleEditor.value?.selectedProblemIds || []) {
+                if(puzzleFile.value && puzzleEditor.value?.selectedProblem) {
                     taskRunner.submitTask(
-                        new ProblemSolveTask(puzzleFile.value.puzzle, problemId)
+                        new ProblemSolveTask(puzzleFile.value.puzzle, puzzleEditor.value.selectedProblem.id)
                     )
                 }
             },
             enabled: () => {
-                const problemId = puzzleEditor.value?.selectedProblemIds[0]
+                const problemId = puzzleEditor.value?.selectedProblem?.id
                 if(problemId === undefined) { return false }
                 for(const taskInfo of taskRunner.getTasks()) {
                     if(
                         taskInfo.task instanceof ProblemSolveTask && 
-                        taskInfo.task.problemId === puzzleEditor.value?.selectedProblemIds[0] && 
+                        taskInfo.task.problemId === problemId && 
                         ["running", "queued"].includes(taskInfo.status)
                     ) {
                         return false

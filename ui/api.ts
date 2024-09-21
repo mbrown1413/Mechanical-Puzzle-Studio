@@ -1,6 +1,6 @@
 import {Ref, nextTick} from "vue"
 
-import {Piece, PieceId, Problem, ProblemId, Puzzle} from "~lib"
+import {Piece, Problem, Puzzle} from "~lib"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 import {saveCurrentPuzzle} from "~/ui/ActionManager.ts"
@@ -67,24 +67,8 @@ export class PuzzleStudioApi {
 
     ////////// Pieces //////////
 
-    get selectedPieceIds(): PieceId[] {
-        return this.puzzleEditor.selectedPieceIds
-    }
-
-    get selectedPieces(): Piece[] {
-        const ids = this.selectedPieceIds
-        const pieces = ids.map(
-            id => this.puzzle.getPiece(id)
-        ).filter(
-            (piece): piece is Piece => piece !== null
-        )
-        return pieces
-    }
-
     get selectedPiece(): Piece | null {
-        const pieces = this.selectedPieces
-        if(pieces.length === 0) { return null }
-        return pieces[0]
+        return this.puzzleEditor.selectedPiece
     }
 
     async newPiece(): Promise<Piece> {
@@ -100,24 +84,8 @@ export class PuzzleStudioApi {
 
     ////////// Problems //////////
 
-    get selectedProblemIds(): ProblemId[] {
-        return this.puzzleEditor.selectedProblemIds
-    }
-
-    get selectedProblems(): Problem[] {
-        const ids = this.selectedProblemIds
-        const problems = ids.map(
-            id => this.puzzle.getProblem(id)
-        ).filter(
-            (problem): problem is Problem => problem !== null
-        )
-        return problems
-    }
-
     get selectedProblem(): Problem | null {
-        const problems = this.selectedProblems
-        if(problems.length === 0) { return null }
-        return problems[0]
+        return this.puzzleEditor.selectedProblem
     }
 
     async newProblem(): Promise<Problem> {
