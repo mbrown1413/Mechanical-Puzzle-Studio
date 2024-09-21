@@ -3,12 +3,16 @@ import {Piece, PieceId} from "~/lib/Piece.ts"
 import {Form} from "~/lib/forms.ts"
 import {Voxel} from "~/lib/Grid.ts"
 
+export type PieceGroupId = number
+
 export abstract class PieceGroup extends SerializableClass {
+    id: PieceGroupId
     label: string
     pieceIds: PieceId[]
 
-    constructor() {
+    constructor(id: PieceGroupId) {
         super()
+        this.id = id
         this.label = "Piece Group"
         this.pieceIds = []
     }
@@ -40,8 +44,8 @@ export abstract class PieceGroup extends SerializableClass {
 }
 
 export class AssemblyPieceGroup extends PieceGroup {
-    constructor() {
-        super()
+    constructor(id: PieceGroupId) {
+        super(id)
         this.label = "Assembly"
     }
 

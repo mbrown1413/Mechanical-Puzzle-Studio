@@ -58,18 +58,30 @@ const selectedPiece = computed(() => {
 })
 const selectedPieceGroup = computed(() => {
     if(selectedPieceGroupId.value === null) { return null }
-    return props.puzzle.pieceGroups[selectedPieceGroupId.value]
+    return props.puzzle.getPieceGroup(selectedPieceGroupId.value)
 })
 const selectedProblem = computed(() => {
     if(selectedProblemId.value === null) { return null }
     return props.puzzle.getProblem(selectedProblemId.value)
 })
 
+/* Get currently selected piece group, or the piece group inside the selected
+ * piece if a piece group is not selected directly. */
+const activePieceGroup = computed(() => {
+    if(selectedPieceGroup.value) {
+        return selectedPieceGroup.value
+    }
+    if(selectedPiece.value) {
+        return props.puzzle.getPieceGroupFromPiece(selectedPiece.value)
+    }
+    return null
+})
+
 defineExpose({
     currentTabId,
     selectedPiece,
     selectedPieceGroup,
-    selectedPieceGroupId,
+    activePieceGroup,
     selectedProblem,
     setUiFocus,
 })

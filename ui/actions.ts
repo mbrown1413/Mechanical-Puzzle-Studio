@@ -1,7 +1,7 @@
 import {
     Voxel, Puzzle, Item, ItemId, Piece, PieceId, Problem, AssemblyProblem,
     PuzzleFile, Bounds, ProblemId, AssemblySolution, PieceGroup,
-    Grid, clone
+    Grid, clone, PieceGroupId
 } from "~lib"
 
 
@@ -96,9 +96,11 @@ export abstract class EditItemMetadataAction<T extends Item> extends Action {
 
     getItem(puzzle: Puzzle, itemId: T["id"]): T | null {
         if(itemId === undefined) { return null }
-        const constructor = <typeof DeleteItemAction> this.constructor
+        const constructor = <typeof EditItemMetadataAction> this.constructor
         if(constructor.itemName === "Piece") {
             return puzzle.getPiece(itemId as PieceId) as T
+        } else if(constructor.itemName === "Piece Group") {
+            return puzzle.getPieceGroup(itemId as PieceGroupId) as T
         } else {
             return puzzle.getProblem(itemId) as T
         }
@@ -138,7 +140,7 @@ abstract class DeleteItemAction extends Action {
             case "Piece":
                 return puzzle.hasPiece(itemId as PieceId)
             case "Piece Group":
-                return itemId >= 0 && itemId < puzzle.pieceGroups.length
+                return puzzle.hasPieceGroup(itemId as PieceGroupId)
             case "Problem":
                 return puzzle.hasProblem(itemId)
         }
@@ -150,7 +152,7 @@ abstract class DeleteItemAction extends Action {
             case "Piece":
                 return puzzle.removePiece(itemId as PieceId)
             case "Piece Group":
-                puzzle.pieceGroups.splice(itemId, 1)
+                return puzzle.removePieceGroup(itemId as PieceGroupId)
             break
             case "Problem":
                 return puzzle.removeProblem(itemId)
@@ -265,8 +267,12 @@ export class NewPieceAction extends Action {
         puzzle.addPiece(piece)
 
         if(this.pieceGroupId !== undefined) {
-            const group = puzzle.pieceGroups[this.pieceGroupId]
-            group.pieceIds.push(piece.id)
+            const group = puzzle.getPieceGroup(this.pieceGroupId)
+            if(group) {
+                group.pieceIds.push(piece.id)
+            } else {
+                throw new Error(`Piece group with ID ${this.pieceGroupId} not found`)
+            }
         }
     }
 
@@ -405,12 +411,13 @@ export class DuplicatePieceAction extends DuplicateItemAction<Piece> {
 
 ////////// Piece Group Actions //////////
 
+type PieceGroupClass = {new(id: PieceGroupId): PieceGroup}
 export class NewPieceGroupAction extends Action {
-    pieceGroupInstance: PieceGroup
+    pieceGroupClass: PieceGroupClass
 
-    constructor(groupObject: PieceGroup) {
+    constructor(pieceGroupClass: PieceGroupClass) {
         super()
-        this.pieceGroupInstance = groupObject
+        this.pieceGroupClass = pieceGroupClass
     }
 
     toString() {
@@ -418,32 +425,21 @@ export class NewPieceGroupAction extends Action {
     }
 
     perform(puzzle: Puzzle) {
-        puzzle.pieceGroups.push(this.pieceGroupInstance)
+        const group = new this.pieceGroupClass(
+            puzzle.generatePieceGroupId()
+        )
+        group.label = getNewItemLabel(
+            group.label + " ",
+            puzzle.pieceGroups.filter(group => group instanceof this.pieceGroupClass)
+        )
+        puzzle.addPieceGroup(group)
     }
 }
 
-export class EditPieceGroupMetadataAction extends Action {
-    pieceGroupId: number
-    metadata: object
-
-    constructor(
-        pieceGroupId: number,
-        metadata: object,
-    ) {
-        super()
-        this.pieceGroupId = pieceGroupId
-        this.metadata = metadata
-    }
-
-    toString() {
-        return "Edit piece group metadata"
-    }
-
-    perform(puzzle: Puzzle) {
-        Object.assign(
-            puzzle.pieceGroups[this.pieceGroupId],
-            this.metadata
-        )
+export class EditPieceGroupMetadataAction extends EditItemMetadataAction<PieceGroup> {
+    static itemName = "Piece Group" as const
+    static metadata: {
+        label?: string
     }
 }
 

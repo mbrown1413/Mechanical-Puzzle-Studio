@@ -51,7 +51,7 @@ const items = computed(() => {
     ))
 
     const groups = []
-    for(const [i, pieceGroup] of props.puzzle.pieceGroups.entries()) {
+    for(const pieceGroup of props.puzzle.pieceGroups) {
         const piecesInGroup = pieceGroup.pieceIds.map((id) => {
             const piece = pieceMap.get(id)
             pieceMap.delete(id)
@@ -62,7 +62,7 @@ const items = computed(() => {
 
         groups.push({
             isGroup: true,
-            id: i,
+            id: pieceGroup.id,
             label: pieceGroup.label,
             items: piecesInGroup,
         })

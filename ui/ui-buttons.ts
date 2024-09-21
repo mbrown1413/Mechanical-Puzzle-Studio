@@ -222,7 +222,7 @@ export function useUiButtonComposible(
             perform: () => {
                 puzzleEditor.value?.setUiFocus("pieces")
                 performAction(
-                    new NewPieceGroupAction(new AssemblyPieceGroup())
+                    new NewPieceGroupAction(AssemblyPieceGroup)
                 )
             }
         },
@@ -231,31 +231,29 @@ export function useUiButtonComposible(
             text: "Add Piece to Assembly",
             icon: "mdi-plus",
             perform: () => {
-                const bounds = getNewPieceBounds()
-                const group = puzzleEditor.value?.selectedPieceGroupId
-                if(group === null) return
-                performAction(
-                    new NewPieceAction(bounds, group)
-                )
+                if(puzzleEditor.value?.activePieceGroup?.canManuallyAddPieces) {
+                    const bounds = getNewPieceBounds()
+                    performAction(
+                        new NewPieceAction(bounds, puzzleEditor.value?.activePieceGroup.id)
+                    )
+                }
             },
-            enabled: () => {
-                const group = puzzleEditor.value?.selectedPieceGroup
-                if(!group) return false
-                return group.canManuallyAddPieces
-            }
+            enabled: () => Boolean(
+                puzzleEditor.value?.activePieceGroup?.canManuallyAddPieces
+            ),
         },
 
         deletePieceGroup: {
             text: "Delete Piece Group",
             icon: "mdi-minus",
             perform: () => {
-                if(puzzleEditor.value !== null && puzzleEditor.value.selectedPieceGroupId !== null) {
+                if(puzzleEditor.value?.selectedPieceGroup) {
                     performAction(
-                        new DeletePieceGroupAction(puzzleEditor.value.selectedPieceGroupId)
+                        new DeletePieceGroupAction(puzzleEditor.value.selectedPieceGroup.id)
                     )
                 }
             },
-            enabled: () => puzzleEditor.value !== null && puzzleEditor.value.selectedPieceGroupId !== null,
+            enabled: () => Boolean(puzzleEditor.value?.selectedPieceGroup),
         },
 
         newProblem: {

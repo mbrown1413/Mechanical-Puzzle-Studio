@@ -4,14 +4,14 @@ import {Problem} from "~/lib/Problem.ts"
 import {getNextColor} from "~/lib/colors.ts"
 
 import {Piece, PieceId} from "~/lib/Piece.ts"
-import {PieceGroup} from "~/lib/PieceGroup.ts"
+import {PieceGroup, PieceGroupId} from "~/lib/PieceGroup.ts"
 import {ProblemId} from "~/lib/Problem.ts"
 
 
 /** An item is one thing inside a puzzle collection attribute (e.g. a piece or
  * a problem). */
-export type Item = Piece | Problem
-export type ItemId = PieceId | ProblemId
+export type Item = Piece | PieceGroup | Problem
+export type ItemId = PieceId | PieceGroupId | ProblemId
 
 type PuzzleStoredData = {
     pieceGroups?: PieceGroup[]
@@ -34,6 +34,7 @@ export class Puzzle extends SerializableClass {
      */
     private idCounters: {
         piece?: number,
+        pieceGroup?: number,
         problem?: number,
     }
 
@@ -62,12 +63,16 @@ export class Puzzle extends SerializableClass {
         return this.generateNewId("piece")
     }
 
+    generatePieceGroupId(): PieceGroupId {
+        return this.generateNewId("pieceGroup")
+    }
+
     generateProblemId(): ProblemId {
         return this.generateNewId("problem")
     }
 
     private generateNewId(
-        type: "piece" | "problem"
+        type: "piece" | "pieceGroup" | "problem"
     ): ItemId {
         const id = this.idCounters[type] || 0
         this.idCounters[type] = id + 1
@@ -114,15 +119,6 @@ export class Puzzle extends SerializableClass {
         return Boolean(this.getPiece(pieceOrId))
     }
 
-    getPieceGroupFromPiece(piece: Piece): PieceGroup | null {
-        for(const group of this.pieceGroups) {
-            if(group.pieceIds.includes(piece.id)) {
-                return group
-            }
-        }
-        return null
-    }
-
     removePiece(pieceOrId: Piece | PieceId, throwErrors=true) {
         const id = typeof pieceOrId === "number" ? pieceOrId : pieceOrId.id
         if(id === undefined) {
@@ -137,6 +133,57 @@ export class Puzzle extends SerializableClass {
         }
         if(idx !== -1) {
             this.pieces.splice(idx, 1)
+        }
+    }
+
+    addPieceGroup(pieceGroup: PieceGroup, index?: number): PieceGroup {
+        if(this.hasPieceGroup(pieceGroup.id)) {
+            throw new Error(`Duplicate piece group ID: ${pieceGroup.id}`)
+        }
+        if(index === undefined) {
+            this.pieceGroups.push(pieceGroup)
+        } else {
+            this.pieceGroups.splice(index, 0, pieceGroup)
+        }
+        return pieceGroup
+    }
+
+    getPieceGroup(identifier: PieceGroupId | string | PieceGroup): PieceGroup | null {
+        if(typeof identifier === "string") {
+            return this.pieceGroups.find(group => group.label === identifier) || null
+        }
+        const groupId = typeof identifier === "number" ? identifier : identifier.id
+        if(groupId === undefined) return null
+        return this.pieceGroups.find(group => group.id === groupId) || null
+    }
+
+    getPieceGroupFromPiece(piece: Piece): PieceGroup | null {
+        for(const group of this.pieceGroups) {
+            if(group.pieceIds.includes(piece.id)) {
+                return group
+            }
+        }
+        return null
+    }
+
+    hasPieceGroup(pieceGroupOrId: PieceGroup | PieceGroupId) {
+        return Boolean(this.getPieceGroup(pieceGroupOrId))
+    }
+
+    removePieceGroup(pieceGroupOrId: PieceGroup | PieceGroupId, throwErrors=true) {
+        const id = typeof pieceGroupOrId === "number" ? pieceGroupOrId : pieceGroupOrId.id
+        if(id === undefined) {
+            if(throwErrors) {
+                throw new Error("Cannot remove piece group without ID")
+            }
+            return
+        }
+        const idx = this.pieceGroups.findIndex(group => group.id === id)
+        if(throwErrors && idx === -1) {
+            throw new Error(`Piece group ID not found: ${id}`)
+        }
+        if(idx !== -1) {
+            this.pieceGroups.splice(idx, 1)
         }
     }
 
