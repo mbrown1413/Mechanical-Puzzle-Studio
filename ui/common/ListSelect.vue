@@ -36,9 +36,11 @@ const props = withDefaults(
         selectedItemId: number | null
         selectedGroupId?: number | null
         uiButtons?: UiButtonDefinition[]
+        selectOnItemChange?: boolean
     }>(), {
         selectedGroupId: null,
         uiButtons: () => [],
+        selectOnItemChange: true,
     }
 )
 
@@ -72,6 +74,7 @@ const selectedCombinedId = computed(() => {
 // Detect added/deleted items/groups and change selection accordingly
 let oldItems = [...flatItems.value]
 watch(() => flatItems.value, () => {
+    if(!props.selectOnItemChange) { return }
     const itemDelta = getItemIdDelta(oldItems, flatItems.value, item => !(item.isGroup || false))
     const groupDelta = getItemIdDelta(oldItems, flatItems.value, item => item.isGroup || false)
 

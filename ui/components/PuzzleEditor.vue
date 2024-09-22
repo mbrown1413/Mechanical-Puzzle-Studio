@@ -38,6 +38,7 @@ const selectedPieceGroupId: Ref<number | null> = ref(null)
 const selectedProblemId: Ref<ProblemId | null> = ref(
     props.puzzle.problems.length ? props.puzzle.problems[0].id : null
 )
+const selectedSolutionId: Ref<number | null> = ref(null)
 
 const pieceEditor: Ref<InstanceType<typeof PieceEditor> | null> = ref(null)
 const pieceList: Ref<InstanceType<typeof PieceList> | null> = ref(null)
@@ -64,6 +65,11 @@ const selectedProblem = computed(() => {
     if(selectedProblemId.value === null) { return null }
     return props.puzzle.getProblem(selectedProblemId.value)
 })
+const selectedSolution = computed(() => {
+    return selectedProblem.value?.solutions?.find(
+        solution => solution.id === selectedSolutionId.value
+    ) || null
+})
 
 /* Get currently selected piece group, or the piece group inside the selected
  * piece if a piece group is not selected directly. */
@@ -83,6 +89,7 @@ defineExpose({
     selectedPieceGroup,
     activePieceGroup,
     selectedProblem,
+    selectedSolution,
     setUiFocus,
 })
 
@@ -219,6 +226,7 @@ watch(currentTabId, (tabId) => {
                 v-show="currentTabId === 'solutions'"
                 :puzzle="puzzle"
                 :problemId="selectedProblemId"
+                v-model:selectedSolutionId="selectedSolutionId"
                 @action="performAction"
             />
         </div>
@@ -241,9 +249,9 @@ watch(currentTabId, (tabId) => {
                 @action="performAction"
             />
             <SolutionDisplay
-                v-show="currentTabId === 'solutions' && solutionList?.selectedSolution"
+                v-show="currentTabId === 'solutions' && selectedSolution"
                 :puzzle="puzzle"
-                :solution="solutionList?.selectedSolution as AssemblySolution || null"
+                :solution="selectedSolution as AssemblySolution || null"
             />
         </div>
     </VMain>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, ref, Ref, watch, inject} from "vue"
+import {computed, watch, inject} from "vue"
 
 import {Puzzle, ProblemId, AssemblySolution} from "~lib"
 import {taskRunner} from "~/ui/globals.ts"
@@ -13,17 +13,17 @@ import UiButton from "~/ui/components/UiButton.vue"
 const props = defineProps<{
     puzzle: Puzzle,
     problemId: ProblemId | null,
+    selectedSolutionId: number | null,
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
+    "update:selectedSolutionId": [id: number | null]
     action: [action: SolutionListAction]
 }>()
 
 const problem = computed(() =>
     props.problemId === null ? null : props.puzzle.getProblem(props.problemId)
 )
-
-const selectedSolutionId: Ref<number | null> = ref(null)
 
 const solutionItems = computed(() => {
     if(!problem.value || problem.value.solutions === undefined) {
@@ -50,27 +50,28 @@ const solutionItems = computed(() => {
     })
 })
 
-// Auto-select first piece when solutions are added
-// ListSelect normally does this automatically, but only if items are added one
-// at a time.
+
+// Since solution IDs are only unique within a given problem, we don't want
+// ListSelect to treat them as such. We set the `ListSelect.selectOnItemChange`
+// prop to false so it never changes selection, and handle some cases here
+// instead.
 watch(solutionItems, (newItems, oldItems) => {
+    // Auto-select first piece when solutions are added
     if(
-        selectedSolutionId.value === null &&
+        props.selectedSolutionId === null &&
         (oldItems === undefined || oldItems.length === 0) &&
         newItems.length > 0
     ) {
-        selectedSolutionId.value = newItems[0].id
+        emit("update:selectedSolutionId", newItems[0].id)
+    }
+    // Clear selection when solutions are cleared
+    if(newItems.length === 0) {
+        emit("update:selectedSolutionId", null)
     }
 }, {immediate: true})
-
-const selectedSolution = computed(() => {
-    if(!problem.value || problem.value.solutions === undefined) {
-        return null
-    }
-
-    return problem.value.solutions.find((solution) =>
-        selectedSolutionId.value === solution.id
-    )
+watch(() => props.problemId, () => {
+    // Changing problems selects first solution
+    emit("update:selectedSolutionId", solutionItems.value[0]?.id || null)
 })
 
 function taskInfoMatchesProblem(taskInfo: TaskInfo): boolean {
@@ -89,10 +90,6 @@ const taskInfo = computed(() => {
         }
     }
     return null
-})
-
-defineExpose({
-    selectedSolution
 })
 
 const allUiButtons = inject("uiButtons") as Record<string, UiButtonDefinition>
@@ -161,7 +158,8 @@ const actionCategories = [
             v-if="solutionItems.length"
             :items="solutionItems"
             :selectedItemId="selectedSolutionId"
-            @update:selectedItemId="selectedSolutionId = $event"
+            :selectOnItemChange="false"
+            @update:selectedItemId="emit('update:selectedSolutionId', $event)"
         />
 
         <div v-else class="no-solutions-message">
