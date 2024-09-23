@@ -21,6 +21,14 @@ const emit = defineEmits<{
     action: [action: SolutionListAction]
 }>()
 
+/** Map a problem's ID to its last selected record. */
+const lastSelectedIdByProblem: Record<ProblemId, number | null> = {}
+watch(() => props.selectedSolutionId, () => {
+    if(props.problemId !== null) {
+        lastSelectedIdByProblem[props.problemId] = props.selectedSolutionId
+    }
+})
+
 const problem = computed(() =>
     props.problemId === null ? null : props.puzzle.getProblem(props.problemId)
 )
@@ -50,7 +58,6 @@ const solutionItems = computed(() => {
     })
 })
 
-
 // Since solution IDs are only unique within a given problem, we don't want
 // ListSelect to treat them as such. We set the `ListSelect.selectOnItemChange`
 // prop to false so it never changes selection, and handle some cases here
@@ -70,8 +77,15 @@ watch(solutionItems, (newItems, oldItems) => {
     }
 }, {immediate: true})
 watch(() => props.problemId, () => {
-    // Changing problems selects first solution
-    emit("update:selectedSolutionId", solutionItems.value[0]?.id || null)
+    // Select solution ID that was last selected for this problem, falling back
+    // to the first solution.
+    if(props.problemId === null) {
+        emit("update:selectedSolutionId", null)
+    } else if(Number.isInteger(lastSelectedIdByProblem[props.problemId])) {
+        emit("update:selectedSolutionId", lastSelectedIdByProblem[props.problemId])
+    } else {
+        emit("update:selectedSolutionId", solutionItems.value[0]?.id || null)
+    }
 })
 
 function taskInfoMatchesProblem(taskInfo: TaskInfo): boolean {
