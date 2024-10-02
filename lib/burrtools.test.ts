@@ -56,7 +56,7 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {},
-                "pieces": [],
+                "pieceTree": [],
                 "problems": [],
                 "type": "Puzzle",
               },
@@ -121,7 +121,7 @@ describe("burrtools read", () => {
                 "idCounters": {
                   "piece": 1,
                 },
-                "pieces": [
+                "pieceTree": [
                   {
                     "bounds": "xSize:2 ySize:3 zSize:4",
                     "color": "#0000FF",
@@ -183,7 +183,7 @@ describe("burrtools read", () => {
                 "idCounters": {
                   "piece": 1,
                 },
-                "pieces": [
+                "pieceTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
@@ -227,7 +227,7 @@ describe("burrtools read", () => {
                 "idCounters": {
                   "piece": 1,
                 },
-                "pieces": [
+                "pieceTree": [
                   {
                     "bounds": "xSize:5 ySize:4 zSize:3",
                     "color": "#0000FF",
@@ -377,7 +377,7 @@ describe("burrtools read", () => {
                 "idCounters": {
                   "piece": 1,
                 },
-                "pieces": [
+                "pieceTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
@@ -420,7 +420,7 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {},
-                "pieces": [],
+                "pieceTree": [],
                 "problems": [],
                 "type": "Puzzle",
               },
@@ -458,7 +458,7 @@ describe("burrtools read", () => {
                 "idCounters": {
                   "piece": 1,
                 },
-                "pieces": [
+                "pieceTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
@@ -517,7 +517,7 @@ describe("burrtools read", () => {
                   "piece": 3,
                   "problem": 1,
                 },
-                "pieces": [
+                "pieceTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
@@ -596,7 +596,7 @@ describe("burrtools read", () => {
                 "idCounters": {
                   "problem": 1,
                 },
-                "pieces": [],
+                "pieceTree": [],
                 "problems": [
                   {
                     "disassemble": false,
@@ -732,7 +732,7 @@ describe("burrtools read", () => {
                 "idCounters": {
                   "problem": 1,
                 },
-                "pieces": [],
+                "pieceTree": [],
                 "problems": [
                   {
                     "disassemble": false,
@@ -788,7 +788,7 @@ describe("burrtools read", () => {
                   "piece": 2,
                   "problem": 1,
                 },
-                "pieces": [
+                "pieceTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
@@ -866,7 +866,7 @@ describe("burrtools read", () => {
                   "piece": 1,
                   "problem": 1,
                 },
-                "pieces": [
+                "pieceTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
@@ -936,7 +936,7 @@ describe("burrtools read", () => {
                   "piece": 1,
                   "problem": 1,
                 },
-                "pieces": [
+                "pieceTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
@@ -1011,7 +1011,7 @@ describe("burrtools read", () => {
                   "piece": 2,
                   "problem": 1,
                 },
-                "pieces": [
+                "pieceTree": [
                   {
                     "bounds": "xSize:1 ySize:1 zSize:1",
                     "color": "#0000FF",
@@ -1077,7 +1077,7 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {},
-                "pieces": [],
+                "pieceTree": [],
                 "problems": [],
                 "type": "Puzzle",
               },
@@ -1109,7 +1109,7 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {},
-                "pieces": [],
+                "pieceTree": [],
                 "problems": [],
                 "type": "Puzzle",
               },

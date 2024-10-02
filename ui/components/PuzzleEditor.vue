@@ -4,13 +4,12 @@
 -->
 
 <script setup lang="ts">
-import {computed, inject, ref, Ref, watch, watchEffect} from "vue"
+import {computed, ref, Ref, watch, watchEffect} from "vue"
 import Split from "split-grid"
 
 import {Puzzle, PieceId, ProblemId, AssemblySolution} from "~lib"
 
 import {Action, EditPieceGroupMetadataAction} from "~/ui/actions.ts"
-import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 import TabLayout from "~/ui/common/TabLayout.vue"
 import PieceEditor from "~/ui/components/PieceEditor.vue"
 import SolutionDisplay from "~/ui/components/SolutionDisplay.vue"
@@ -28,8 +27,6 @@ const props = defineProps<{
 const emit = defineEmits<{
     action: [action: Action]
 }>()
-
-const uiButtons = inject("uiButtons") as Record<string, UiButtonDefinition>
 
 const selectedPieceId: Ref<PieceId | null> = ref(
     props.puzzle.pieces.length ? props.puzzle.pieces[0].id : null
@@ -137,11 +134,6 @@ function setUiFocus(focus: "pieces" | "problems" | "solutions") {
     currentTabId.value = focus
 }
 
-function uiButtonIsEnabled(uiButton: UiButtonDefinition): boolean {
-    if(uiButton.enabled === undefined) { return true }
-    return uiButton.enabled()
-}
-
 // Set focus on pieces and problems list.
 // We unfocus immediately when tab changes, but don't re-focus until after a
 // delay because of the transition effect.
@@ -207,7 +199,6 @@ watch(currentTabId, (tabId) => {
                 <FormEditor
                     v-if="selectedPieceGroup && selectedPieceGroupId !== null"
                     :item="selectedPieceGroup"
-                    :floatingButton="uiButtonIsEnabled(uiButtons.newPieceInPieceGroup) ? uiButtons.newPieceInPieceGroup : undefined"
                     @edit="performAction(new EditPieceGroupMetadataAction(selectedPieceGroupId, $event))"
                     title="Piece Group"
                     style="margin: 1em;"
@@ -238,7 +229,10 @@ watch(currentTabId, (tabId) => {
                 :puzzle="puzzle"
                 :pieceId="selectedPieceId"
                 :auxEditArea="auxEditArea"
-                :displayPieceIds="selectedPieceGroup?.displayCombined ? selectedPieceGroup.pieceIds : undefined"
+                :displayPieceIds="selectedPieceGroup?.displayCombined ?
+                        selectedPieceGroup.pieces.map(p => p.id) :
+                        undefined
+                "
                 @action="performAction"
             />
             <ItemMetadataEditor

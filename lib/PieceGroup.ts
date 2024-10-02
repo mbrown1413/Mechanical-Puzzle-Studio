@@ -1,5 +1,5 @@
 import {SerializableClass, registerClass} from "~/lib/serialize.ts"
-import {Piece, PieceId} from "~/lib/Piece.ts"
+import {Piece} from "~/lib/Piece.ts"
 import {Form} from "~/lib/forms.ts"
 import {Voxel} from "~/lib/Grid.ts"
 
@@ -8,13 +8,13 @@ export type PieceGroupId = number
 export abstract class PieceGroup extends SerializableClass {
     id: PieceGroupId
     label: string
-    pieceIds: PieceId[]
+    pieces: Piece[]
 
     constructor(id: PieceGroupId) {
         super()
         this.id = id
         this.label = "Piece Group"
-        this.pieceIds = []
+        this.pieces = []
     }
 
     getForm(): Form {
@@ -39,7 +39,6 @@ export abstract class PieceGroup extends SerializableClass {
         _piece: Piece,
         _addedVoxels: Voxel[],
         _removedVoxels: Voxel[],
-        _piecesInGroup: Piece[],
     ) {}
 }
 
@@ -53,9 +52,8 @@ export class AssemblyPieceGroup extends PieceGroup {
         piece: Piece,
         addedVoxels: Voxel[],
         _removedVoxels: Voxel[],
-        piecesInGroup: Piece[],
     ) {
-        for(const pieceInGroup of piecesInGroup) {
+        for(const pieceInGroup of this.pieces) {
             if(pieceInGroup.id === piece.id) { continue }
             pieceInGroup.removeVoxel(...addedVoxels)
         }

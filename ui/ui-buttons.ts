@@ -186,7 +186,8 @@ export function useUiButtonComposible(
             icon: "mdi-plus",
             perform: () => {
                 const bounds = getNewPieceBounds()
-                performAction(new NewPieceAction(bounds))
+                const selected = puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
+                performAction(new NewPieceAction(bounds, selected))
             }
         },
 
@@ -221,26 +222,11 @@ export function useUiButtonComposible(
             icon: "mdi-plus",
             perform: () => {
                 puzzleEditor.value?.setUiFocus("pieces")
+                const selected = puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
                 performAction(
-                    new NewPieceGroupAction(AssemblyPieceGroup)
+                    new NewPieceGroupAction(AssemblyPieceGroup, selected)
                 )
             }
-        },
-
-        newPieceInPieceGroup: {
-            text: "Add Piece to Assembly",
-            icon: "mdi-plus",
-            perform: () => {
-                if(puzzleEditor.value?.activePieceGroup?.canManuallyAddPieces) {
-                    const bounds = getNewPieceBounds()
-                    performAction(
-                        new NewPieceAction(bounds, puzzleEditor.value?.activePieceGroup.id)
-                    )
-                }
-            },
-            enabled: () => Boolean(
-                puzzleEditor.value?.activePieceGroup?.canManuallyAddPieces
-            ),
         },
 
         deletePieceGroup: {
@@ -260,7 +246,9 @@ export function useUiButtonComposible(
             text: "New Problem",
             icon: "mdi-plus",
             perform: () => {
-                performAction(new NewProblemAction())
+                performAction(
+                    new NewProblemAction(puzzleEditor.value?.selectedProblem)
+                )
             }
         },
 

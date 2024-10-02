@@ -14,15 +14,14 @@ export type Item = Piece | PieceGroup | Problem
 export type ItemId = PieceId | PieceGroupId | ProblemId
 
 type PuzzleStoredData = {
-    pieceGroups?: PieceGroup[]
+    pieces?: Piece[]
+    pieceTree: (Piece | PieceGroup)[]
 }
 
 export class Puzzle extends SerializableClass {
     grid: Grid
-    pieces: Piece[]
+    pieceTree: (Piece | PieceGroup)[]
     problems: Problem[]
-
-    pieceGroups: PieceGroup[]
 
     /**
      * Next ID number of the given type.
@@ -41,22 +40,40 @@ export class Puzzle extends SerializableClass {
     constructor(grid: Grid) {
         super()
         this.grid = grid
-        this.pieces = []
+        this.pieceTree = []
         this.problems = []
-        this.pieceGroups = []
         this.idCounters = {}
     }
 
     static preDeserialize(data: PuzzleStoredData) {
-        if(data.pieceGroups === undefined) {
-            data.pieceGroups = []
+        // Backwards compatibility: pieces used to be a flat list, now it's
+        // named pieceTree and includes groups in a tree structure.
+        if(data.pieces && data.pieceTree === undefined) {
+            data.pieceTree = data.pieces
+            delete data["pieces"]
         }
     }
 
-    static postSerialize(data: PuzzleStoredData) {
-        if(data.pieceGroups?.length === 0) {
-            delete data["pieceGroups"]
+    get pieces(): readonly Piece[] {
+        const pieces = []
+        for(const item of this.pieceTree) {
+            if(item instanceof Piece) {
+                pieces.push(item)
+            } else {
+                pieces.push(...item.pieces)
+            }
         }
+        return Object.freeze(pieces)
+    }
+
+    get pieceGroups(): readonly PieceGroup[] {
+        const groups = []
+        for(const item of this.pieceTree) {
+            if(item instanceof PieceGroup) {
+                groups.push(item)
+            }
+        }
+        return Object.freeze(groups)
     }
 
     generatePieceId(): PieceId {
@@ -89,14 +106,23 @@ export class Puzzle extends SerializableClass {
         return getNextColor(existingColors)
     }
 
-    addPiece(piece: Piece, index?: number): Piece {
+    addPiece(piece: Piece, after: Piece|PieceGroup|null = null): Piece {
         if(this.hasPiece(piece.id)) {
             throw new Error(`Duplicate piece ID: ${piece.id}`)
         }
-        if(index === undefined) {
-            this.pieces.push(piece)
+        if(after === null) {
+            this.pieceTree.push(piece)
+        } else if(after instanceof PieceGroup) {
+            after.pieces.unshift(piece)
         } else {
-            this.pieces.splice(index, 0, piece)
+            const group = this.getPieceGroupFromPiece(after)
+            if(group) {
+                const index = group.pieces.findIndex(p => p === after)
+                group.pieces.splice(index + 1, 0, piece)
+            } else {
+                const index = this.pieceTree.findIndex(p => p === after)
+                this.pieceTree.splice(index + 1, 0, piece)
+            }
         }
         return piece
     }
@@ -127,23 +153,45 @@ export class Puzzle extends SerializableClass {
             }
             return
         }
-        const idx = this.pieces.findIndex(piece => piece.id === id)
-        if(throwErrors && idx === -1) {
+
+        const group = this.getPieceGroupFromPiece(id)
+        let index
+        if(group) {
+            index = group.pieces.findIndex(p => p.id === id)
+        } else {
+            index = this.pieceTree.findIndex(p => p instanceof Piece && p.id === id)
+        }
+
+        if(throwErrors && index === -1) {
             throw new Error(`Piece ID not found: ${id}`)
         }
-        if(idx !== -1) {
-            this.pieces.splice(idx, 1)
+        if(index !== -1) {
+            if(group) {
+                group.pieces.splice(index, 1)
+            } else {
+                this.pieceTree.splice(index, 1)
+            }
         }
     }
 
-    addPieceGroup(pieceGroup: PieceGroup, index?: number): PieceGroup {
+    addPieceGroup(pieceGroup: PieceGroup, after: Piece|PieceGroup|null = null): PieceGroup {
         if(this.hasPieceGroup(pieceGroup.id)) {
             throw new Error(`Duplicate piece group ID: ${pieceGroup.id}`)
         }
-        if(index === undefined) {
-            this.pieceGroups.push(pieceGroup)
+        for(const piece of pieceGroup.pieces) {
+            if(this.hasPiece(piece)) {
+                throw new Error(`Duplicate piece ID: ${piece.id}`)
+            }
+        }
+
+        if(after === null) {
+            this.pieceTree.push(pieceGroup)
         } else {
-            this.pieceGroups.splice(index, 0, pieceGroup)
+            if(after instanceof Piece && this.getPieceGroupFromPiece(after)) {
+                after = this.getPieceGroupFromPiece(after)
+            }
+            const index = this.pieceTree.findIndex(p => p === after)
+            this.pieceTree.splice(index + 1, 0, pieceGroup)
         }
         return pieceGroup
     }
@@ -157,9 +205,14 @@ export class Puzzle extends SerializableClass {
         return this.pieceGroups.find(group => group.id === groupId) || null
     }
 
-    getPieceGroupFromPiece(piece: Piece): PieceGroup | null {
+    getPieceGroupFromPiece(pieceOrId: Piece|PieceId): PieceGroup | null {
+        const id = typeof pieceOrId === "number" ? pieceOrId : pieceOrId.id
+        if(id === undefined) {
+            throw new Error("Cannot remove piece without ID")
+        }
+
         for(const group of this.pieceGroups) {
-            if(group.pieceIds.includes(piece.id)) {
+            if(group.pieces.find(p => p.id === id)) {
                 return group
             }
         }
@@ -178,23 +231,26 @@ export class Puzzle extends SerializableClass {
             }
             return
         }
-        const idx = this.pieceGroups.findIndex(group => group.id === id)
-        if(throwErrors && idx === -1) {
+        const index = this.pieceTree.findIndex(
+            item => item instanceof PieceGroup && item.id === id
+        )
+        if(throwErrors && index === -1) {
             throw new Error(`Piece group ID not found: ${id}`)
         }
-        if(idx !== -1) {
-            this.pieceGroups.splice(idx, 1)
+        if(index !== -1) {
+            this.pieceTree.splice(index, 1)
         }
     }
 
-    addProblem(problem: Problem, index?: number): Problem {
+    addProblem(problem: Problem, after: Problem|null = null): Problem {
         if(this.hasProblem(problem.id)) {
             throw new Error(`Duplicate problem ID: ${problem.id}`)
         }
-        if(index === undefined) {
+        if(after === null) {
             this.problems.push(problem)
         } else {
-            this.problems.splice(index, 0, problem)
+            const index = this.problems.findIndex(p => p === after)
+            this.problems.splice(index + 1, 0, problem)
         }
         return problem
     }

@@ -45,31 +45,18 @@ const uiButtons = computed(() => {
 })
 
 const items = computed(() => {
-
-    const pieceMap = new Map(props.puzzle.pieces.map(
-        (piece) => [piece.id, piece]
-    ))
-
-    const groups = []
-    for(const pieceGroup of props.puzzle.pieceGroups) {
-        const piecesInGroup = pieceGroup.pieceIds.map((id) => {
-            const piece = pieceMap.get(id)
-            pieceMap.delete(id)
-            return piece
-        }).filter(
-            (piece): piece is Piece => piece !== undefined
-        )
-
-        groups.push({
-            isGroup: true,
-            id: pieceGroup.id,
-            label: pieceGroup.label,
-            items: piecesInGroup,
-        })
-    }
-
-    const piecesNotInGroups = pieceMap.values()
-    return [...piecesNotInGroups, ...groups]
+    return props.puzzle.pieceTree.map((item) => {
+        if(item instanceof Piece) {
+            return item
+        } else {
+            return {
+                isGroup: true,
+                id: item.id,
+                label: item.label,
+                items: item.pieces,
+            }
+        }
+    })
 })
 </script>
 

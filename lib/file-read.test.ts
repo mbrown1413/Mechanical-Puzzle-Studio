@@ -25,7 +25,7 @@ const emptyNativeFormat = `{
         "grid": {
             "type": "CubicGrid"
         },
-        "pieces": [],
+        "pieceTree": [],
         "problems": [],
         "idCounters": {}
     }

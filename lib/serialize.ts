@@ -145,7 +145,7 @@ export type SerializedData = string | number | boolean | null |
 export type Serializable = number | string | boolean | null |
     SerializableObject |
     SerializableClass |
-    Serializable[]
+    Serializable[] | readonly Serializable[]
 
 type SerializableObject = {
     [key: string]: Serializable | undefined

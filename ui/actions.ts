@@ -7,7 +7,7 @@ import {
 
 function getNewItemLabel(
     prefix: string,
-    existingItems: {label?: string}[]
+    existingItems: readonly {label?: string}[]
 ): string {
     const existingLabels = new Set(
         existingItems.map(item => item.label)
@@ -169,31 +169,6 @@ abstract class DeleteItemAction extends Action {
 
 }
 
-abstract class DuplicateItemAction<T extends Piece | Problem> extends Action {
-    itemId: ItemId
-
-    constructor(itemId: ItemId) {
-        super()
-        this.itemId = itemId
-    }
-
-    perform(puzzle: Puzzle) {
-        const itemList = this.getItemList(puzzle)
-        const idx = itemList.findIndex(item => item.id === this.itemId)
-        const item = itemList[idx]
-        if(idx === undefined || item === undefined) { return }
-
-        const newItem = this.copyItem(puzzle, item)
-        this.addItem(puzzle, newItem, idx+1)
-    }
-
-    abstract getItemList(puzzle: Puzzle): T[]
-
-    abstract copyItem(puzzle: Puzzle, item: T): T
-
-    abstract addItem(puzzle: Puzzle, item: T, index: number): void
-}
-
 
 ////////// Puzzle Actions //////////
 
@@ -249,12 +224,16 @@ export class GridSetAction extends Action {
 
 export class NewPieceAction extends Action {
     bounds?: Bounds
-    pieceGroupId?: number
+    afterType?: "piece" | "pieceGroup"
+    afterId?: number
 
-    constructor(bounds?: Bounds, pieceGroupId?: number) {
+    constructor(bounds?: Bounds, after: Piece|PieceGroup|null = null) {
         super()
         this.bounds = bounds
-        this.pieceGroupId = pieceGroupId
+        if(after) {
+            this.afterType = after instanceof Piece ? "piece" : "pieceGroup"
+            this.afterId = after.id
+        }
     }
 
     perform(puzzle: Puzzle) {
@@ -264,16 +243,17 @@ export class NewPieceAction extends Action {
         piece.label = getNewItemLabel("Piece ", puzzle.pieces)
         piece.color = puzzle.getNewPieceColor()
         piece.bounds = this.bounds || puzzle.grid.getDefaultPieceBounds()
-        puzzle.addPiece(piece)
 
-        if(this.pieceGroupId !== undefined) {
-            const group = puzzle.getPieceGroup(this.pieceGroupId)
-            if(group) {
-                group.pieceIds.push(piece.id)
-            } else {
-                throw new Error(`Piece group with ID ${this.pieceGroupId} not found`)
+        let after
+        if(this.afterId !== undefined) {
+            if(this.afterType === "piece") {
+                after = puzzle.getPiece(this.afterId)
+            } else if(this.afterType === "pieceGroup") {
+                after = puzzle.getPieceGroup(this.afterId)
             }
         }
+
+        puzzle.addPiece(piece, after)
     }
 
     toString() {
@@ -338,16 +318,10 @@ export class EditPieceAction extends Action {
     callPieceGroupHook(puzzle: Puzzle, piece: Piece) {
         const group = puzzle.getPieceGroupFromPiece(piece)
         if(group !== null) {
-            const groupPieces = group.pieceIds.map(
-                id => puzzle.getPiece(id)
-            ).filter(
-                (piece): piece is Piece => piece !== null
-            )
             group.onPieceEdit(
                 piece,
                 this.voxelsToAdd,
                 this.voxelsToRemove,
-                groupPieces
             )
         }
     }
@@ -381,17 +355,26 @@ export class EditPieceMetadataAction extends EditItemMetadataAction<Piece> {
     }
 }
 
-export class DuplicatePieceAction extends DuplicateItemAction<Piece> {
+export class DuplicatePieceAction extends Action {
+    pieceId: PieceId
+
+    constructor(pieceId: PieceId) {
+        super()
+        this.pieceId = pieceId
+    }
 
     toString() {
         return "Duplicate Piece"
     }
 
-    getItemList(puzzle: Puzzle) {
-        return puzzle.pieces
-    }
+    perform(puzzle: Puzzle) {
+        const piece = puzzle.getPiece(this.pieceId)
+        if(!piece) {
+            throw new Error(
+                `Could not find piece with ID ${this.pieceId} to duplicate`
+            )
+        }
 
-    copyItem(puzzle: Puzzle, piece: Piece) {
         const newPiece = piece.copy()
         newPiece.id = puzzle.generatePieceId()
         newPiece.label = getDuplicateItemLabel(
@@ -399,13 +382,9 @@ export class DuplicatePieceAction extends DuplicateItemAction<Piece> {
             puzzle.pieces.map(p => p.label)
         )
         newPiece.color = puzzle.getNewPieceColor()
-        return newPiece
-    }
 
-    addItem(puzzle: Puzzle, piece: Piece, index: number) {
-        puzzle.addPiece(piece, index)
+        puzzle.addPiece(newPiece, piece)
     }
-
 }
 
 
@@ -414,10 +393,16 @@ export class DuplicatePieceAction extends DuplicateItemAction<Piece> {
 type PieceGroupClass = {new(id: PieceGroupId): PieceGroup}
 export class NewPieceGroupAction extends Action {
     pieceGroupClass: PieceGroupClass
+    afterType?: "piece" | "pieceGroup"
+    afterId?: number
 
-    constructor(pieceGroupClass: PieceGroupClass) {
+    constructor(pieceGroupClass: PieceGroupClass, after: Piece|PieceGroup|null = null) {
         super()
         this.pieceGroupClass = pieceGroupClass
+        if(after) {
+            this.afterType = after instanceof Piece ? "piece" : "pieceGroup"
+            this.afterId = after.id
+        }
     }
 
     toString() {
@@ -432,7 +417,17 @@ export class NewPieceGroupAction extends Action {
             group.label + " ",
             puzzle.pieceGroups.filter(group => group instanceof this.pieceGroupClass)
         )
-        puzzle.addPieceGroup(group)
+
+        let after
+        if(this.afterId !== undefined) {
+            if(this.afterType === "piece") {
+                after = puzzle.getPiece(this.afterId)
+            } else if(this.afterType === "pieceGroup") {
+                after = puzzle.getPieceGroup(this.afterId)
+            }
+        }
+
+        puzzle.addPieceGroup(group, after)
     }
 }
 
@@ -451,12 +446,22 @@ export class DeletePieceGroupAction extends DeleteItemAction {
 ////////// Problem Actions //////////
 
 export class NewProblemAction extends Action {
+    afterProblemId?: ProblemId
+
+    constructor(after: Problem|null = null) {
+        super()
+        if(after) {
+            this.afterProblemId = after.id
+        }
+    }
+
     perform(puzzle: Puzzle) {
         const problem = new AssemblyProblem(
             puzzle.generateProblemId()
         )
         problem.label = getNewItemLabel("Problem ", puzzle.problems)
-        puzzle.addProblem(problem)
+        const after = this.afterProblemId === undefined ? null : puzzle.getProblem(this.afterProblemId)
+        puzzle.addProblem(problem, after)
     }
 
     toString() {
@@ -475,30 +480,35 @@ export class EditProblemMetadataAction extends EditItemMetadataAction<Problem> {
     }
 }
 
-export class DuplicateProblemAction extends DuplicateItemAction<Problem> {
+export class DuplicateProblemAction extends Action {
+    problemId: ProblemId
+
+    constructor(problemId: ProblemId) {
+        super()
+        this.problemId = problemId
+    }
 
     toString() {
         return "Duplicate Problem"
     }
 
-    getItemList(puzzle: Puzzle) {
-        return puzzle.problems
-    }
+    perform(puzzle: Puzzle) {
+        const problem = puzzle.getProblem(this.problemId)
+        if(!problem) {
+            throw new Error(
+                `Could not find problem with ID ${this.problemId} to duplicate`
+            )
+        }
 
-    copyItem(puzzle: Puzzle, problem: Problem) {
         const newProblem = problem.copy()
         newProblem.id = puzzle.generateProblemId()
         newProblem.label = getDuplicateItemLabel(
             newProblem.label,
             puzzle.problems.map(p => p.label)
         )
-        return newProblem
-    }
 
-    addItem(puzzle: Puzzle, problem: Problem, index: number) {
-        puzzle.addProblem(problem, index)
+        puzzle.addProblem(newProblem, problem)
     }
-
 }
 
 
