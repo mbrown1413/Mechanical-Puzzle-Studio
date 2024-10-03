@@ -387,6 +387,38 @@ export class DuplicatePieceAction extends Action {
     }
 }
 
+export class PieceListMoveAction extends Action {
+    direction: "up" | "down"
+    itemType: "piece" | "pieceGroup"
+    itemId: number
+
+    constructor(direction: "up"|"down", item: Piece|PieceGroup) {
+        super()
+        this.direction = direction
+        this.itemType = item instanceof Piece ? "piece" : "pieceGroup"
+        this.itemId = item.id
+    }
+
+    toString() {
+        return `Move ${this.itemType === "piece" ? "piece" : "piece group"} ${this.direction}`
+    }
+
+    perform(puzzle: Puzzle) {
+        let item
+        if(this.itemType === "piece") {
+            item = puzzle.getPiece(this.itemId)
+        } else {
+            item = puzzle.getPieceGroup(this.itemId)
+        }
+        if(!item) {
+            throw new Error(
+                `Could not find ${this.itemType === "piece" ? "piece" : "piece group"} to move with ID ${this.itemId}`
+            )
+        }
+        puzzle.movePieceListItem(this.direction, item)
+    }
+}
+
 
 ////////// Piece Group Actions //////////
 

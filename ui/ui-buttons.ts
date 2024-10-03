@@ -7,7 +7,7 @@ import {ActionManager} from "~/ui/ActionManager.ts"
 import {
     NewPieceAction, DeletePieceAction, DuplicatePieceAction,
     NewPieceGroupAction, NewProblemAction, DeleteProblemAction,
-    DuplicateProblemAction, DeletePieceGroupAction
+    DuplicateProblemAction, DeletePieceGroupAction, PieceListMoveAction
 } from "~/ui/actions.ts"
 import {downloadPuzzle} from "~/ui/utils/download.ts"
 import {PuzzleStorage} from "~/ui/storage.ts"
@@ -240,6 +240,36 @@ export function useUiButtonComposible(
                 }
             },
             enabled: () => Boolean(puzzleEditor.value?.selectedPieceGroup),
+        },
+
+        pieceListMoveUp: {
+            text: () => puzzleEditor.value?.selectedPieceGroup ? "Move piece group up" : "Move piece up",
+            icon: "mdi-menu-up-outline",
+            perform: () => {
+                const selected = puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
+                if(!selected) { return }
+                performAction(
+                    new PieceListMoveAction("up", selected)
+                )
+            },
+            enabled: () => Boolean(
+                puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
+            ),
+        },
+
+        pieceListMoveDown: {
+            text: () => puzzleEditor.value?.selectedPieceGroup ? "Move piece group down" : "Move piece down",
+            icon: "mdi-menu-down-outline",
+            perform: () => {
+                const selected = puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
+                if(!selected) { return }
+                performAction(
+                    new PieceListMoveAction("down", selected)
+                )
+            },
+            enabled: () => Boolean(
+                puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
+            ),
         },
 
         newProblem: {

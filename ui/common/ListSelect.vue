@@ -36,10 +36,14 @@ const props = withDefaults(
         selectedItemId: number | null
         selectedGroupId?: number | null
         uiButtons?: UiButtonDefinition[]
+        upButton?: UiButtonDefinition | null
+        downButton?: UiButtonDefinition | null
         selectOnItemChange?: boolean
     }>(), {
         selectedGroupId: null,
         uiButtons: () => [],
+        upButton: null,
+        downButton: null,
         selectOnItemChange: true,
     }
 )
@@ -193,10 +197,24 @@ function getItemIdDelta<T extends Item | Group>(
 <template>
     <div class="list-container">
         <div class="buttons" v-if="uiButtons.length">
+            <VDivider role="presentation" opacity="0" />
             <UiButton
                 v-for="uiButton in uiButtons"
                 :uiButton="uiButton"
             />
+            <VDivider role="presentation" opacity="0" />
+            <div>
+                <UiButton
+                    v-if="upButton"
+                    :uiButton="upButton"
+                    vBtnDensity="compact"
+                />
+                <UiButton
+                    v-if="downButton"
+                    :uiButton="downButton"
+                    vBtnDensity="compact"
+                />
+            </div>
         </div>
         <select
             ref="el"
@@ -235,6 +253,7 @@ function getItemIdDelta<T extends Item | Group>(
 .buttons {
     display: flex;
     justify-content: center;
+    align-items: center;
     padding-top: 0.5em;
     padding-bottom: 0.5em;
 }

@@ -66,6 +66,8 @@ const items = computed(() => {
         :selectedItemId="selectedPieceId"
         :selectedGroupId="selectedPieceGroupId"
         :uiButtons="uiButtons"
+        :upButton="allUiButtons.pieceListMoveUp"
+        :downButton="allUiButtons.pieceListMoveDown"
         @update:selectedItemId="emit('update:selectedPieceId', $event)"
         @update:selectedGroupId="emit('update:selectedPieceGroupId', $event)"
     />

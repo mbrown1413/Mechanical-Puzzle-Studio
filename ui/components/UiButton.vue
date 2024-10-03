@@ -10,10 +10,12 @@ const props = withDefaults(
         disabled?: boolean,
         variant?: "icon" | "text",
         vBtnVariant?: VBtn["$props"]["variant"]
+        vBtnDensity?: VBtn["$props"]["density"]
     }>(), {
         disabled: false,
         variant: "icon",
         vBtnVariant: undefined,
+        vBtnDensity: undefined,
     }
 )
 
@@ -50,6 +52,7 @@ const text = computed(() =>
                     :disabled="disabled"
                     @click="$emit('click'); uiButton.perform()"
                     :variant="vBtnVariant"
+                    :density="vBtnDensity"
                 >
                     <VIcon
                         v-if="variant === 'icon' && uiButton.icon"

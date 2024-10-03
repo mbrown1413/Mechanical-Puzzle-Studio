@@ -242,6 +242,56 @@ export class Puzzle extends SerializableClass {
         }
     }
 
+    movePieceListItem(direction: "up"|"down", item: Piece|PieceGroup) {
+        const delta = direction === "up" ? -1 : 1
+
+        if(item instanceof PieceGroup) {
+            moveInList(this.pieceTree, item, delta)
+            return
+        }
+
+        const group = this.getPieceGroupFromPiece(item)
+        if(group) {
+
+            // Moving a piece in a group. We may move it out of the group
+            const index = group.pieces.indexOf(item)
+            if(direction === "up" && index === 0) {
+                // Move piece out of group and above it
+                const groupIndex = this.pieceTree.indexOf(group)
+                group.pieces.splice(index, 1)
+                this.pieceTree.splice(groupIndex, 0, item)
+            } else if(direction === "down" && index === group.pieces.length - 1) {
+                // Move piece out of group and below it
+                const groupIndex = this.pieceTree.indexOf(group)
+                group.pieces.splice(index, 1)
+                this.pieceTree.splice(groupIndex + 1, 0, item)
+            } else {
+                // Move piece within group
+                moveInList(group.pieces, item, delta)
+            }
+
+        } else {
+
+            // Moving a piece outside a group. We may move it into a group
+            const index = this.pieceTree.indexOf(item)
+            const intoGroup = this.pieceTree[index + delta]
+            if(intoGroup instanceof PieceGroup) {
+                // Move piece from pieceTree into a group
+                const index = this.pieceTree.indexOf(item)
+                this.pieceTree.splice(index, 1)
+                if(direction === "up") {
+                    intoGroup.pieces.push(item)
+                } else {
+                    intoGroup.pieces.unshift(item)
+                }
+            } else {
+                // Move piece within pieceTree
+                moveInList(this.pieceTree, item, delta)
+            }
+
+        }
+    }
+
     addProblem(problem: Problem, after: Problem|null = null): Problem {
         if(this.hasProblem(problem.id)) {
             throw new Error(`Duplicate problem ID: ${problem.id}`)
@@ -285,3 +335,10 @@ export class Puzzle extends SerializableClass {
 }
 
 registerClass(Puzzle)
+
+
+function moveInList<T>(list: T[], item: T, delta: number) {
+    const index = list.indexOf(item)
+    list.splice(index, 1)
+    list.splice(Math.max(0, index + delta), 0, item)
+}
