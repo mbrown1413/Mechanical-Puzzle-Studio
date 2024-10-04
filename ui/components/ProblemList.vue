@@ -48,6 +48,8 @@ const uiButtons = computed(() => {
         :items="Array.from(puzzle.problems.values())"
         :selectedItemId="selectedProblemId"
         :uiButtons="uiButtons"
+        :upButton="allUiButtons.problemListMoveUp"
+        :downButton="allUiButtons.problemListMoveDown"
         @update:selectedItemId="emit('update:selectedProblemId', $event)"
     />
 </template>

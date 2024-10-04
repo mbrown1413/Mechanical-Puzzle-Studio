@@ -543,6 +543,31 @@ export class DuplicateProblemAction extends Action {
     }
 }
 
+export class ProblemListMoveAction extends Action {
+    direction: "up" | "down"
+    problemId: number
+
+    constructor(direction: "up"|"down", problem: Problem) {
+        super()
+        this.direction = direction
+        this.problemId = problem.id
+    }
+
+    toString() {
+        return `Move problem ${this.direction}`
+    }
+
+    perform(puzzle: Puzzle) {
+        const problem = puzzle.getProblem(this.problemId)
+        if(!problem) {
+            throw new Error(
+                `Could not find problem to move with ID ${this.problemId}`
+            )
+        }
+        puzzle.moveProblemListItem(this.direction, problem)
+    }
+}
+
 
 ////////// Solution Actions //////////
 

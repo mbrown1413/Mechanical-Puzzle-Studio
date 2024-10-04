@@ -332,6 +332,11 @@ export class Puzzle extends SerializableClass {
             this.problems.splice(idx, 1)
         }
     }
+
+    moveProblemListItem(direction: "up"|"down", item: Problem) {
+        const delta = direction === "up" ? -1 : 1
+        moveInList(this.problems, item, delta)
+    }
 }
 
 registerClass(Puzzle)

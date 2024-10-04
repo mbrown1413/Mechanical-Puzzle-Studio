@@ -2,7 +2,7 @@ import {Ref} from "vue"
 
 import {PuzzleFile, AssemblyPieceGroup} from "~lib"
 
-import {Action} from "~/ui/actions.ts"
+import {Action, ProblemListMoveAction} from "~/ui/actions.ts"
 import {ActionManager} from "~/ui/ActionManager.ts"
 import {
     NewPieceAction, DeletePieceAction, DuplicatePieceAction,
@@ -304,6 +304,32 @@ export function useUiButtonComposible(
                         new DuplicateProblemAction(puzzleEditor.value.selectedProblem.id)
                     )
                 }
+            },
+            enabled: () => Boolean(puzzleEditor.value?.selectedProblem),
+        },
+
+        problemListMoveUp: {
+            text: () => "Move problem up",
+            icon: "mdi-menu-up-outline",
+            perform: () => {
+                const selected = puzzleEditor.value?.selectedProblem
+                if(!selected) { return }
+                performAction(
+                    new ProblemListMoveAction("up", selected)
+                )
+            },
+            enabled: () => Boolean(puzzleEditor.value?.selectedProblem),
+        },
+
+        problemListMoveDown: {
+            text: () => "Move problem down",
+            icon: "mdi-menu-down-outline",
+            perform: () => {
+                const selected = puzzleEditor.value?.selectedProblem
+                if(!selected) { return }
+                performAction(
+                    new ProblemListMoveAction("down", selected)
+                )
             },
             enabled: () => Boolean(puzzleEditor.value?.selectedProblem),
         },
