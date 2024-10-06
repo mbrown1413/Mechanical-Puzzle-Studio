@@ -8,11 +8,13 @@ const props = withDefaults(
     defineProps<{
         uiButton: UiButtonDefinition,
         disabled?: boolean,
+        btnClass?: string,
         variant?: "icon" | "text",
         vBtnVariant?: VBtn["$props"]["variant"]
         vBtnDensity?: VBtn["$props"]["density"]
     }>(), {
         disabled: false,
+        btnClass: undefined,
         variant: "icon",
         vBtnVariant: undefined,
         vBtnDensity: undefined,
@@ -50,6 +52,7 @@ const text = computed(() =>
                 <VBtn
                     rounded
                     :disabled="disabled"
+                    :class="btnClass"
                     @click="$emit('click'); uiButton.perform()"
                     :variant="vBtnVariant"
                     :density="vBtnDensity"

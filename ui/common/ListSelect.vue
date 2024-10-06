@@ -208,11 +208,13 @@ function getItemIdDelta<T extends Item | Group>(
                     v-if="upButton"
                     :uiButton="upButton"
                     vBtnDensity="compact"
+                    btnClass="up"
                 />
                 <UiButton
                     v-if="downButton"
                     :uiButton="downButton"
                     vBtnDensity="compact"
+                    btnClass="down"
                 />
             </div>
         </div>
@@ -296,5 +298,12 @@ option.uncolored {
 }
 .inGroup {
     margin-left: 1.5em;
+}
+
+:deep(.up) {
+    border-radius: 16px 16px 0 0;
+}
+:deep(.down) {
+    border-radius: 0 0 16px 16px;
 }
 </style>
