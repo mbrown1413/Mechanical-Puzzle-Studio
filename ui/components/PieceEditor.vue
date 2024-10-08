@@ -26,6 +26,11 @@ const piece = computed(() =>
     props.pieceId === null ? null : props.puzzle.getPiece(props.pieceId) || null
 )
 
+const group = computed(() => {
+    if(!piece.value) { return null }
+    return props.puzzle.getPieceGroupFromPiece(piece.value)
+})
+
 const pieces = computed(() => {
     const pieces = piece.value === null ? [] : [piece.value]
     for(const displayPieceId of props.displayPieceIds || []) {
@@ -35,6 +40,11 @@ const pieces = computed(() => {
             pieces.push(displayPiece)
         }
     }
+
+    if(togglePressed(groupVisibilityToggle.value) && group.value?.displayCombined) {
+        pieces.push(...group.value.pieces)
+    }
+
     return pieces
 })
 
@@ -56,20 +66,57 @@ function voxelsClicked(event: MouseEvent, voxels: Voxel[]) {
         piece.value.id,
         toAdd,
         toRemove,
-        toggles.value.includes("optional"),
+        togglePressed(optionalVoxelToggle.value),
     )
     if(action.wouldModify(props.puzzle)) {
         emit("action", action)
     }
 }
 
-const mainCameraSchemeName = computed(() =>
-    toggles.value.includes("twoDimensional") ? "2D" : "3D"
+const optionalVoxelToggle = computed(() => {
+    return {
+        value: "optional",
+        visible: true,
+        icon: "mdi-checkerboard",
+        text: "Optional voxel draw",
+    }
+})
+
+const cameraSchemeToggle = computed(() => {
+    const pressed = toggles.value.includes("2d")
+    return {
+        value: "2d",
+        visible: true,
+        icon: pressed ? "mdi-cube-off-outline" : "mdi-cube-outline",
+        text: pressed ? "2D" : "3D"
+    }
+})
+
+const groupVisibilityToggle = computed(() => {
+    const pressed = toggles.value.includes("groupVisible")
+    return {
+        value: "groupVisible",
+        visible: Boolean(group.value?.displayCombined),
+        icon: pressed ? "mdi-vector-combine" : "mdi-vector-difference-ba",
+        text: "Combined view",
+    }
+})
+
+const toggleButtons = computed(() =>
+    [
+        groupVisibilityToggle,
+        optionalVoxelToggle,
+        cameraSchemeToggle,
+    ].filter(
+        button => button.value.visible
+    ).map(
+        button => button.value
+    )
 )
 
-const mainCameraSchemeIcon = computed(() =>
-    toggles.value.includes("twoDimensional") ? "mdi-cube-off-outline" : "mdi-cube-outline"
-)
+function togglePressed(toggle: {value: string}): boolean {
+    return toggles.value.includes(toggle.value)
+}
 
 const gridDisplayProps = computed(() => {
     const common = {
@@ -90,12 +137,12 @@ const gridDisplayProps = computed(() => {
     return {
         main: {
             ...common,
-            ...(mainCameraSchemeName.value === "3D" ? threeD : twoD),
+            ...(togglePressed(cameraSchemeToggle.value) ? twoD : threeD),
             showTools: true,
         },
         aux: {
             ...common,
-            ...(mainCameraSchemeName.value === "3D" ? twoD : threeD),
+            ...(togglePressed(cameraSchemeToggle.value) ? threeD : twoD),
             showLayerSlider: false,
         },
     }
@@ -119,7 +166,8 @@ const gridDisplayProps = computed(() => {
                 >
 
                     <VTooltip
-                        text="Optional voxel draw"
+                        v-for="toggle of toggleButtons"
+                        :text="toggle.text"
                         location="bottom"
                         contentClass="tooltip-arrow-up"
                     >
@@ -127,35 +175,13 @@ const gridDisplayProps = computed(() => {
                             <VBtn
                                 rounded
                                 @click=""
-                                value="optional"
+                                :value="toggle.value"
                                 v-bind="props"
                             >
                                 <VIcon
-                                    icon="mdi-checkerboard"
+                                    :icon="toggle.icon"
                                     size="x-large"
-                                    aria-label="Optional voxel draw"
-                                    aria-hidden="false"
-                                />
-                            </VBtn>
-                        </template>
-                    </VTooltip>
-
-                    <VTooltip
-                        :text="mainCameraSchemeName"
-                        location="bottom"
-                        contentClass="tooltip-arrow-up"
-                    >
-                        <template v-slot:activator="{props}">
-                            <VBtn
-                                rounded
-                                @click=""
-                                value="twoDimensional"
-                                v-bind="props"
-                            >
-                                <VIcon
-                                    :icon="mainCameraSchemeIcon"
-                                    size="x-large"
-                                    :aria-label="mainCameraSchemeName"
+                                    :aria-label="toggle.text"
                                     aria-hidden="false"
                                 />
                             </VBtn>
