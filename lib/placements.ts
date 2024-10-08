@@ -35,6 +35,9 @@ export function getPieceTranslations(
     piece: Piece,
     availableVoxels: Voxel[],
 ): Piece[] {
+    if(piece.voxels.length === 0) {
+        throw new Error(`Piece has no voxels: ${piece.label}`)
+    }
     const translations = []
     availableVoxels = [...new Set(availableVoxels)]
     for(const toVoxel of availableVoxels) {

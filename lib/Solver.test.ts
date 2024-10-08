@@ -285,6 +285,15 @@ describe("AssemblySolver", () => {
         }).toThrowErrorMatchingInlineSnapshot(`[Error: No pieces in problem]`)
     })
 
+    test("empty piece", () => {
+        const solver = new AssemblySolver("rotation", false, false)
+        const problem = problem0.copy()
+        problem.usedPieceCounts[empty2.id] = 1
+        expect(() => {
+            solver.solve(puzzle, problem)
+        }).toThrowErrorMatchingInlineSnapshot(`[Error: Piece has no voxels: empty2]`)
+    })
+
     test("empty goal piece", () => {
         const solver = new AssemblySolver("rotation", false, false)
         const problem = new AssemblyProblem(1)
