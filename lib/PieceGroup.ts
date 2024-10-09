@@ -22,7 +22,7 @@ export abstract class PieceGroup extends SerializableClass {
             {
                 type: "string",
                 property: "label",
-                label: "Label",
+                label: "Name",
             },
         ]}
     }
