@@ -42,7 +42,7 @@ export abstract class PieceGroup extends SerializableClass {
     ) {}
 }
 
-export class AssemblyPieceGroup extends PieceGroup {
+export class PieceAssembly extends PieceGroup {
     constructor(id: PieceGroupId) {
         super(id)
         this.label = "Assembly"
@@ -59,4 +59,4 @@ export class AssemblyPieceGroup extends PieceGroup {
         }
     }
 }
-registerClass(AssemblyPieceGroup)
+registerClass(PieceAssembly)

@@ -1,6 +1,6 @@
 import {Ref} from "vue"
 
-import {PuzzleFile, AssemblyPieceGroup} from "~lib"
+import {PuzzleFile, PieceAssembly} from "~lib"
 
 import {Action, ProblemListMoveAction} from "~/ui/actions.ts"
 import {ActionManager} from "~/ui/ActionManager.ts"
@@ -224,7 +224,7 @@ export function useUiButtonComposible(
                 puzzleEditor.value?.setUiFocus("pieces")
                 const selected = puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
                 performAction(
-                    new NewPieceGroupAction(AssemblyPieceGroup, selected)
+                    new NewPieceGroupAction(PieceAssembly, selected)
                 )
             }
         },
