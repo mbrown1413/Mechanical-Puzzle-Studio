@@ -53,7 +53,7 @@ export class CubicGrid extends Grid {
     static gridTypeName = "Cubic"
     static gridTypeDescription = "Regularly tiled cubes in three dimensions"
 
-    protected voxelToCoordinate(voxel: Voxel): Coordinate3d {
+    voxelToCoordinate(voxel: Voxel): Coordinate3d {
         const coord = voxel.split(",", 3)
         if(coord.length !== 3) {
             throw new Error(`Invalid cubic coordinate: ${voxel}`)
@@ -65,7 +65,7 @@ export class CubicGrid extends Grid {
         }
     }
 
-    protected coordinateToVoxel(coordinate: Coordinate3d): Voxel {
+    coordinateToVoxel(coordinate: Coordinate3d): Voxel {
         return `${coordinate.x},${coordinate.y},${coordinate.z}`
     }
 
