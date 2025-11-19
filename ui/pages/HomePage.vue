@@ -3,7 +3,7 @@ import {ref, Ref, reactive, provide} from "vue"
 import {VDataTable} from "vuetify/components"
 
 import {title} from "~/ui/globals.ts"
-import {downloadFromStorage} from "~/ui/utils/download.ts"
+import {downloadPuzzleFromStorage} from "~/ui/utils/download.ts"
 import {clearStorageCache, getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
@@ -157,7 +157,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                 <template v-slot:item.actions="{item}">
 
                     <VBtn
-                        @click="downloadFromStorage(storage, item.name)"
+                        @click="downloadPuzzleFromStorage(storage, item.name)"
                         v-tooltip.top="'Download'"
                     >
                         <VIcon icon="mdi-download" aria-label="Download" aria-hidden="false" />

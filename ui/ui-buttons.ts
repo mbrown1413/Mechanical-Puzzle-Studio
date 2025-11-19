@@ -9,15 +9,17 @@ import {
     NewPieceGroupAction, NewProblemAction, DeleteProblemAction,
     DuplicateProblemAction, DeletePieceGroupAction, PieceListMoveAction
 } from "~/ui/actions.ts"
-import {downloadPuzzle} from "~/ui/utils/download.ts"
+import {downloadPuzzle, downloadString} from "~/ui/utils/download.ts"
 import {PuzzleStorage} from "~/ui/storage.ts"
 import {taskRunner} from "~/ui/globals.ts"
 import {ProblemSolveTask} from "~/ui/tasks.ts"
 import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
 import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
+import ExportModal from "~/ui/components/ExportModal.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import GridEditModal from "~/ui/components/GridEditModal.vue"
+import {convertToPuzzlecad} from "~/lib/puzzlecad"
 
 export type UiButtonDefinition = {
     text: string | (() => string),
@@ -36,6 +38,7 @@ export function useUiButtonComposible(
     saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null>,
     metadataModal: Ref<InstanceType<typeof PuzzleMetadataModal> | null>,
     rawDataModal: Ref<InstanceType<typeof RawDataModal> | null>,
+    exportModal: Ref<InstanceType<typeof ExportModal> | null>,
     gridEditModal: Ref<InstanceType<typeof GridEditModal> | null>,
 ): Record<string, UiButtonDefinition> {
 
@@ -138,6 +141,34 @@ export function useUiButtonComposible(
                 }
             },
             enabled: () => Boolean(puzzleFile.value)
+        },
+
+        export: {
+            text: "Export",
+            icon: "mdi-export",
+            perform() {
+                if(exportModal.value) {
+                    exportModal.value.open()
+                }
+            },
+        },
+
+        exportPuzzlecad: {
+            text: "Puzzlecad",
+            icon: "mdi-export",
+            perform() {
+                if(puzzleFile.value) {
+                    const puzzlecadString = convertToPuzzlecad(puzzleFile.value)
+                    downloadString(
+                        puzzlecadString,
+                        (puzzleFile.value.name || "puzzle") + ".scad",
+                        "application/x-openscad"
+                    )
+                }
+            },
+            enabled: () => ["CubicGrid", "SquareGrid"].includes(
+                puzzleFile.value?.puzzle.grid.constructor.name || ""
+            )
         },
 
         undo: {

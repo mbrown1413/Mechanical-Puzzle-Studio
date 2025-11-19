@@ -33,9 +33,17 @@ const disabled = computed(() => {
     }
 })
 
+const enabled = computed(() => !disabled.value)
+
 const text = computed(() =>
     typeof props.uiButton.text === 'string' ? props.uiButton.text : props.uiButton.text()
 )
+
+defineExpose({
+    enabled,
+    disabled,
+})
+
 </script>
 
 <template>

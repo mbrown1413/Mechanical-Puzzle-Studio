@@ -14,6 +14,7 @@ import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import Modal from "~/ui/common/Modal.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
 import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
+import ExportModal from "~/ui/components/ExportModal.vue"
 import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
 import GridEditModal from "~/ui/components/GridEditModal.vue"
 import UiButton from "~/ui/components/UiButton.vue"
@@ -54,6 +55,7 @@ const puzzleErrorModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 const puzzleEditor: Ref<InstanceType<typeof PuzzleEditor> | null> = ref(null)
 const metadataModal: Ref<InstanceType<typeof PuzzleMetadataModal> | null> = ref(null)
 const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
+const exportModal: Ref<InstanceType<typeof ExportModal> | null> = ref(null)
 const saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null> = ref(null)
 const gridEditModal: Ref<InstanceType<typeof GridEditModal> | null> = ref(null)
 
@@ -82,6 +84,7 @@ const uiButtons = useUiButtonComposible(
     saveModal,
     metadataModal,
     rawDataModal,
+    exportModal,
     gridEditModal,
 )
 
@@ -220,6 +223,7 @@ const menus: ComputedRef<Menu[]> = computed(() => {
                 uiButtons.gridEdit,
                 uiButtons.puzzleRawData,
                 uiButtons.downloadPuzzle,
+                uiButtons.export,
                 uiButtons.saveAs,
             ],
         },
@@ -336,6 +340,11 @@ const toolbarButtons: UiButtonDefinition[] = [
         :puzzle="puzzleFile.puzzle"
         :initialConfig="puzzleFile.needsInitialConfigure || false"
         @action="performAction($event)"
+    />
+    <ExportModal
+        v-if="puzzleFile"
+        ref="exportModal"
+        :puzzleFile="puzzleFile"
     />
 </template>
 
