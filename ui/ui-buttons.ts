@@ -1,6 +1,6 @@
 import {Ref} from "vue"
 
-import {PuzzleFile, PieceAssembly} from "~lib"
+import {PuzzleFile, PieceAssembly, convertToPuzzlecad} from "~lib"
 
 import {Action, ProblemListMoveAction} from "~/ui/actions.ts"
 import {ActionManager} from "~/ui/ActionManager.ts"
@@ -19,7 +19,6 @@ import RawDataModal from "~/ui/components/RawDataModal.vue"
 import ExportModal from "~/ui/components/ExportModal.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import GridEditModal from "~/ui/components/GridEditModal.vue"
-import {convertToPuzzlecad} from "~/lib/puzzlecad"
 
 export type UiButtonDefinition = {
     text: string | (() => string),
