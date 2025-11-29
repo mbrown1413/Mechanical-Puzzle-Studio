@@ -196,6 +196,26 @@ describe("class registration", () => {
             registerClass(A)
         }).toThrowError('Class "A" is already registered')
     })
+
+    test("alternate name", () => {
+        expect(() => {
+            registerClass(Unregistered, "Z")
+        }).toThrowError(`Class "Unregistered" must be registered before registering an alternate name`)
+
+        registerClass(A, "Z")
+        expect(getRegisteredClass(A, "Z")).toEqual(A)
+        serializeMatches(
+            new A("foo"),
+            {
+                type: "A",
+                name: "foo",
+            },
+            "A"
+        )
+        expect(
+            deserialize({type: "Z", name:"bar"}, "A")
+        ).toEqual(new A("bar"))
+    })
 })
 
 describe("error on serialization", () => {

@@ -47,7 +47,7 @@ const gridTypeDescription = computed(() => {
 })
 
 const showWarning = computed(() =>
-    props.puzzle.pieces.filter(piece => piece.voxels.length > 0).length > 0
+    props.puzzle.shapes.filter(shape => shape.voxels.length > 0).length > 0
 )
 
 function changeGridType(gridClassName: string) {
@@ -109,7 +109,7 @@ function onSubmit() {
             title="Warning!"
             class="mt-4"
         >
-            Changing grid types and parameters may affect existing pieces in
+            Changing grid types and parameters may affect existing shapes in
             unexpected ways. Voxels which don't fit into the new grid's
             coordinate system, and all solutions will be removed.
         </VAlert>

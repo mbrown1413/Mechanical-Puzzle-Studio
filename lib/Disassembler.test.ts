@@ -8,19 +8,19 @@ describe("Disassembler", () => {
     const grid = new SquareGrid()
 
     test("Disassembles in one move", () => {
-        const pieces = grid.piecesFromString(`
+        const shapes = grid.shapesFromString(`
             00
             01
             00
         `)
-        const disassembler = new SimpleDisassembler(grid, pieces)
+        const disassembler = new SimpleDisassembler(grid, shapes)
         const disassemblies = disassembler.disassemble()
         expect(serialize(disassembler.nodes)).toMatchInlineSnapshot(`
           [
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                   ],
                   "parts": [
@@ -41,7 +41,7 @@ describe("Disassembler", () => {
           [
             {
               "steps": [
-                "pieces=1 transform=t:1,0,0 separates",
+                "shapes=1 transform=t:1,0,0 separates",
               ],
               "type": "Disassembly",
             },
@@ -51,19 +51,19 @@ describe("Disassembler", () => {
 
 
     test("Disassembles in two moves", () => {
-        const pieces = grid.piecesFromString(`
+        const shapes = grid.shapesFromString(`
             00
              10
             00
         `)
-        const disassembler = new SimpleDisassembler(grid, pieces)
+        const disassembler = new SimpleDisassembler(grid, shapes)
         const disassemblies = disassembler.disassemble()
         expect(serialize(disassembler.nodes)).toMatchInlineSnapshot(`
           [
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                   ],
                   "parts": [
@@ -84,7 +84,7 @@ describe("Disassembler", () => {
           [
             {
               "steps": [
-                "pieces=1 transform=t:-1,0,0 repeat=2 separates",
+                "shapes=1 transform=t:-1,0,0 repeat=2 separates",
               ],
               "type": "Disassembly",
             },
@@ -94,19 +94,19 @@ describe("Disassembler", () => {
 
 
     test("Not disassemblable", () => {
-        const pieces = grid.piecesFromString(`
+        const shapes = grid.shapesFromString(`
             0000
             01 0
             0000
         `)
-        const disassembler = new SimpleDisassembler(grid, pieces)
+        const disassembler = new SimpleDisassembler(grid, shapes)
         const disassemblies = disassembler.disassemble()
         expect(serialize(disassembler.nodes)).toMatchInlineSnapshot(`
           [
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                   ],
                   "parts": [
@@ -129,18 +129,18 @@ describe("Disassembler", () => {
     })
 
 
-    test("Disassemble 3 pieces", () => {
-        const pieces = grid.piecesFromString(`
+    test("Disassemble 3 shapes", () => {
+        const shapes = grid.shapesFromString(`
             012
         `)
-        const disassembler = new SimpleDisassembler(grid, pieces)
+        const disassembler = new SimpleDisassembler(grid, shapes)
         const disassemblies = disassembler.disassemble()
         expect(serialize(disassembler.nodes)).toMatchInlineSnapshot(`
           [
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                   ],
                   "parts": [
@@ -157,7 +157,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "1",
                   ],
                   "parts": [
@@ -178,8 +178,8 @@ describe("Disassembler", () => {
           [
             {
               "steps": [
-                "pieces=0 transform=t:-1,0,0 separates",
-                "pieces=1 transform=t:-1,0,0 separates",
+                "shapes=0 transform=t:-1,0,0 separates",
+                "shapes=1 transform=t:-1,0,0 separates",
               ],
               "type": "Disassembly",
             },
@@ -189,7 +189,7 @@ describe("Disassembler", () => {
 
 
     test("Complex disassembly 1", () => {
-        const pieces = grid.piecesFromString(`
+        const shapes = grid.shapesFromString(`
             00000
             02320
             02321
@@ -197,7 +197,7 @@ describe("Disassembler", () => {
             01111
             00000
         `)
-        const disassembler = new SimpleDisassembler(grid, pieces)
+        const disassembler = new SimpleDisassembler(grid, shapes)
         disassembler.findAll = true
         const disassemblies = disassembler.disassemble()
         expect(serialize(disassembler.nodes)).toMatchInlineSnapshot(`
@@ -205,7 +205,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "1",
                   ],
                   "parts": [
@@ -222,7 +222,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                   ],
                   "parts": [
@@ -232,7 +232,7 @@ describe("Disassembler", () => {
                   "transform": "t:0,1,0",
                 },
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "2",
                   ],
                   "parts": [
@@ -248,7 +248,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                   ],
                   "parts": [
@@ -265,7 +265,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                   ],
                   "parts": [
@@ -280,7 +280,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "2",
                   ],
                   "parts": [
@@ -297,7 +297,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                     "2",
                   ],
@@ -321,10 +321,10 @@ describe("Disassembler", () => {
           [
             {
               "steps": [
-                "pieces=1 transform=t:1,0,0 repeat=4 separates",
-                "pieces=2,3 transform=t:0,-1,0",
-                "pieces=2,3 transform=t:1,0,0 repeat=4 separates",
-                "pieces=3 transform=t:0,1,0 repeat=2 separates",
+                "shapes=1 transform=t:1,0,0 repeat=4 separates",
+                "shapes=2,3 transform=t:0,-1,0",
+                "shapes=2,3 transform=t:1,0,0 repeat=4 separates",
+                "shapes=3 transform=t:0,1,0 repeat=2 separates",
               ],
               "type": "Disassembly",
             },
@@ -334,14 +334,14 @@ describe("Disassembler", () => {
 
 
     test("Complex disassembly 2", () => {
-        const pieces = grid.piecesFromString(`
+        const shapes = grid.shapesFromString(`
             0000
             0111
             0121
             0330
             0000
         `)
-        const disassembler = new SimpleDisassembler(grid, pieces)
+        const disassembler = new SimpleDisassembler(grid, shapes)
         disassembler.findAll = true
         const disassemblies = disassembler.disassemble()
         expect(serialize(disassembler.nodes)).toMatchInlineSnapshot(`
@@ -349,7 +349,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "3",
                     "0",
                   ],
@@ -367,7 +367,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                   ],
                   "parts": [
@@ -377,7 +377,7 @@ describe("Disassembler", () => {
                   "transform": "t:0,-1,0",
                 },
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                   ],
                   "parts": [
@@ -393,7 +393,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "1",
                   ],
                   "parts": [
@@ -410,7 +410,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                   ],
                   "parts": [
@@ -427,7 +427,7 @@ describe("Disassembler", () => {
             {
               "children": [
                 {
-                  "movedPieces": [
+                  "movedShapes": [
                     "0",
                   ],
                   "parts": [
@@ -448,19 +448,19 @@ describe("Disassembler", () => {
           [
             {
               "steps": [
-                "pieces=1,2 transform=t:1,0,0 repeat=3 separates",
-                "pieces=2 transform=t:0,-1,0 separates",
-                "pieces=3 transform=t:0,1,0 repeat=2",
-                "pieces=3 transform=t:1,0,0 repeat=3 separates",
+                "shapes=1,2 transform=t:1,0,0 repeat=3 separates",
+                "shapes=2 transform=t:0,-1,0 separates",
+                "shapes=3 transform=t:0,1,0 repeat=2",
+                "shapes=3 transform=t:1,0,0 repeat=3 separates",
               ],
               "type": "Disassembly",
             },
             {
               "steps": [
-                "pieces=1,2 transform=t:1,0,0 repeat=3 separates",
-                "pieces=2 transform=t:0,-1,0 separates",
-                "pieces=3 transform=t:0,1,0",
-                "pieces=3 transform=t:1,0,0 repeat=3 separates",
+                "shapes=1,2 transform=t:1,0,0 repeat=3 separates",
+                "shapes=2 transform=t:0,-1,0 separates",
+                "shapes=3 transform=t:0,1,0",
+                "shapes=3 transform=t:1,0,0 repeat=3 separates",
               ],
               "type": "Disassembly",
             },

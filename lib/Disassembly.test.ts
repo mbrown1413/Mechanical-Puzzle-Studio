@@ -9,25 +9,25 @@ describe("Disassembly", () => {
 
     const disassembly = new Disassembly([
         {
-            movedPieces: ["0-0", "0-1", "2"],
+            movedShapes: ["0-0", "0-1", "2"],
             transform: "t:0,0,1",
             repeat: 3,
             separates: true
         },
         {
-            movedPieces: ["3"],
+            movedShapes: ["3"],
             transform: "t:-1,0,0",
             repeat: 1,
             separates: true
         },
         {
-            movedPieces: ["0-0", "0-1", "2"],
+            movedShapes: ["0-0", "0-1", "2"],
             transform: "t:0,0,1",
             repeat: 3,
             separates: false
         },
         {
-            movedPieces: ["3"],
+            movedShapes: ["3"],
             transform: "t:-1,0,0",
             repeat: 1,
             separates: false
@@ -38,10 +38,10 @@ describe("Disassembly", () => {
         expect(serialize(disassembly)).toMatchInlineSnapshot(`
           {
             "steps": [
-              "pieces=0-0,0-1,2 transform=t:0,0,1 repeat=3 separates",
-              "pieces=3 transform=t:-1,0,0 separates",
-              "pieces=0-0,0-1,2 transform=t:0,0,1 repeat=3",
-              "pieces=3 transform=t:-1,0,0",
+              "shapes=0-0,0-1,2 transform=t:0,0,1 repeat=3 separates",
+              "shapes=3 transform=t:-1,0,0 separates",
+              "shapes=0-0,0-1,2 transform=t:0,0,1 repeat=3",
+              "shapes=3 transform=t:-1,0,0",
             ],
             "type": "Disassembly",
           }
@@ -54,25 +54,25 @@ describe("Disassembly", () => {
             type: "Disassembly",
             steps: [
                 {
-                    movedPieces: ["0-0", "0-1", "2"],
+                    movedShapes: ["0-0", "0-1", "2"],
                     repeat: 3,
                     transform: "t:0,0,1",
                     separates: true
                 },
                 {
-                    movedPieces: ["3"],
+                    movedShapes: ["3"],
                     repeat: 1,
                     transform: "t:-1,0,0",
                     separates: true
                 },
                 {
-                    movedPieces: ["0-0", "0-1", "2"],
+                    movedShapes: ["0-0", "0-1", "2"],
                     repeat: 3,
                     transform: "t:0,0,1",
                     separates: false
                 },
                 {
-                    movedPieces: ["3"],
+                    movedShapes: ["3"],
                     repeat: 1,
                     transform: "t:-1,0,0",
                     separates: false
@@ -86,26 +86,26 @@ describe("Disassembly", () => {
         const disassembly = deserialize(JSON.parse(`
           {
             "steps": [
-              "pieces=0,5 transform=t:1,0,0",
-              "pieces=0,1,2 transform=t:1,0,0 separates",
-              "pieces=0 transform=t:1,0,0",
-              "pieces=1 transform=t:1,0,0",
-              "pieces=2 transform=t:1,0,0",
-              "pieces=3 transform=t:1,0,0",
-              "pieces=4 transform=t:1,0,0",
-              "pieces=0 transform=t:1,0,0 separates",
-              "pieces=1 transform=t:1,0,0",
-              "pieces=2 transform=t:1,0,0",
-              "pieces=3 transform=t:1,0,0",
-              "pieces=4 transform=t:1,0,0",
-              "pieces=4,5 transform=t:1,0,0 separates",
-              "pieces=1 transform=t:1,0,0",
-              "pieces=2 transform=t:1,0,0",
-              "pieces=3 transform=t:1,0,0",
-              "pieces=4 transform=t:1,0,0",
-              "pieces=5 transform=t:1,0,0",
-              "pieces=1 transform=t:1,0,0 separates",
-              "pieces=4 transform=t:1,0,0 separates"
+              "shapes=0,5 transform=t:1,0,0",
+              "shapes=0,1,2 transform=t:1,0,0 separates",
+              "shapes=0 transform=t:1,0,0",
+              "shapes=1 transform=t:1,0,0",
+              "shapes=2 transform=t:1,0,0",
+              "shapes=3 transform=t:1,0,0",
+              "shapes=4 transform=t:1,0,0",
+              "shapes=0 transform=t:1,0,0 separates",
+              "shapes=1 transform=t:1,0,0",
+              "shapes=2 transform=t:1,0,0",
+              "shapes=3 transform=t:1,0,0",
+              "shapes=4 transform=t:1,0,0",
+              "shapes=4,5 transform=t:1,0,0 separates",
+              "shapes=1 transform=t:1,0,0",
+              "shapes=2 transform=t:1,0,0",
+              "shapes=3 transform=t:1,0,0",
+              "shapes=4 transform=t:1,0,0",
+              "shapes=5 transform=t:1,0,0",
+              "shapes=1 transform=t:1,0,0 separates",
+              "shapes=4 transform=t:1,0,0 separates"
             ],
             "type": "Disassembly"
           }
@@ -114,26 +114,26 @@ describe("Disassembly", () => {
         expect(serialize(disassembly)).toMatchInlineSnapshot(`
           {
             "steps": [
-              "pieces=0,5 transform=t:1,0,0",
-              "pieces=0,1,2 transform=t:1,0,0 separates",
-              "pieces=0 transform=t:1,0,0",
-              "pieces=1 transform=t:1,0,0",
-              "pieces=2 transform=t:1,0,0",
-              "pieces=0 transform=t:1,0,0 separates",
-              "pieces=1 transform=t:1,0,0",
-              "pieces=2 transform=t:1,0,0",
-              "pieces=1 transform=t:1,0,0",
-              "pieces=2 transform=t:1,0,0",
-              "pieces=1 transform=t:1,0,0 separates",
-              "pieces=3 transform=t:1,0,0",
-              "pieces=4 transform=t:1,0,0",
-              "pieces=3 transform=t:1,0,0",
-              "pieces=4 transform=t:1,0,0",
-              "pieces=4,5 transform=t:1,0,0 separates",
-              "pieces=4 transform=t:1,0,0",
-              "pieces=5 transform=t:1,0,0",
-              "pieces=4 transform=t:1,0,0 separates",
-              "pieces=3 transform=t:1,0,0",
+              "shapes=0,5 transform=t:1,0,0",
+              "shapes=0,1,2 transform=t:1,0,0 separates",
+              "shapes=0 transform=t:1,0,0",
+              "shapes=1 transform=t:1,0,0",
+              "shapes=2 transform=t:1,0,0",
+              "shapes=0 transform=t:1,0,0 separates",
+              "shapes=1 transform=t:1,0,0",
+              "shapes=2 transform=t:1,0,0",
+              "shapes=1 transform=t:1,0,0",
+              "shapes=2 transform=t:1,0,0",
+              "shapes=1 transform=t:1,0,0 separates",
+              "shapes=3 transform=t:1,0,0",
+              "shapes=4 transform=t:1,0,0",
+              "shapes=3 transform=t:1,0,0",
+              "shapes=4 transform=t:1,0,0",
+              "shapes=4,5 transform=t:1,0,0 separates",
+              "shapes=4 transform=t:1,0,0",
+              "shapes=5 transform=t:1,0,0",
+              "shapes=4 transform=t:1,0,0 separates",
+              "shapes=3 transform=t:1,0,0",
             ],
             "type": "Disassembly",
           }
@@ -141,7 +141,7 @@ describe("Disassembly", () => {
     })
 
     test("spaceSeparatedParts with one separation", () => {
-        const pieces = grid.piecesFromString(`
+        const shapes = grid.shapesFromString(`
             0000
             0111
             0000
@@ -149,16 +149,16 @@ describe("Disassembly", () => {
         const disassembly = deserialize(JSON.parse(`
         {
             "steps": [
-                "pieces=1 transform=t:1,0,0 repeat=3 separates"
+                "shapes=1 transform=t:1,0,0 repeat=3 separates"
             ],
             "type": "Disassembly"
         }
         `)) as Disassembly
-        disassembly.spaceSepratedParts(grid, pieces)
+        disassembly.spaceSepratedParts(grid, shapes)
         expect(serialize(disassembly)).toMatchInlineSnapshot(`
           {
             "steps": [
-              "pieces=1 transform=t:1,0,0 repeat=4 separates",
+              "shapes=1 transform=t:1,0,0 repeat=4 separates",
             ],
             "type": "Disassembly",
           }
@@ -166,7 +166,7 @@ describe("Disassembly", () => {
     })
 
     test("spaceSeparatedParts with two separations", () => {
-        const pieces = grid.piecesFromString(`
+        const shapes = grid.shapesFromString(`
             0000
             0111
             0221
@@ -176,18 +176,18 @@ describe("Disassembly", () => {
         const disassembly = deserialize(JSON.parse(`
         {
             "steps": [
-                "pieces=0 transform=t:-1,0,0 repeat=3 separates",
-                "pieces=2 transform=t:-1,0,0 repeat=2 separates"
+                "shapes=0 transform=t:-1,0,0 repeat=3 separates",
+                "shapes=2 transform=t:-1,0,0 repeat=2 separates"
             ],
             "type": "Disassembly"
         }
         `)) as Disassembly
-        disassembly.spaceSepratedParts(grid, pieces)
+        disassembly.spaceSepratedParts(grid, shapes)
         expect(serialize(disassembly)).toMatchInlineSnapshot(`
           {
             "steps": [
-              "pieces=0 transform=t:-1,0,0 repeat=7 separates",
-              "pieces=2 transform=t:-1,0,0 repeat=3 separates",
+              "shapes=0 transform=t:-1,0,0 repeat=7 separates",
+              "shapes=2 transform=t:-1,0,0 repeat=3 separates",
             ],
             "type": "Disassembly",
           }
@@ -195,7 +195,7 @@ describe("Disassembly", () => {
     })
 
     test("spaceSeparatedParts with an intersection in the orthogonal direction thep parts separated", () => {
-        const pieces = grid.piecesFromString(`
+        const shapes = grid.shapesFromString(`
             0000
             0333
             0343
@@ -208,22 +208,22 @@ describe("Disassembly", () => {
         const disassembly = deserialize(JSON.parse(`
         {
             "steps": [
-            "pieces=1,2 transform=t:1,0,0 repeat=3 separates",
-            "pieces=3,4 transform=t:1,0,0 repeat=3 separates",
-            "pieces=2 transform=t:0,1,0 repeat=2 separates",
-            "pieces=4 transform=t:0,-1,0 repeat=2 separates"
+            "shapes=1,2 transform=t:1,0,0 repeat=3 separates",
+            "shapes=3,4 transform=t:1,0,0 repeat=3 separates",
+            "shapes=2 transform=t:0,1,0 repeat=2 separates",
+            "shapes=4 transform=t:0,-1,0 repeat=2 separates"
             ],
             "type": "Disassembly"
         }
         `)) as Disassembly
-        disassembly.spaceSepratedParts(grid, pieces)
+        disassembly.spaceSepratedParts(grid, shapes)
         expect(serialize(disassembly)).toMatchInlineSnapshot(`
           {
             "steps": [
-              "pieces=1,2 transform=t:1,0,0 repeat=8 separates",
-              "pieces=3,4 transform=t:1,0,0 repeat=4 separates",
-              "pieces=2 transform=t:0,1,0 repeat=3 separates",
-              "pieces=4 transform=t:0,-1,0 repeat=3 separates",
+              "shapes=1,2 transform=t:1,0,0 repeat=8 separates",
+              "shapes=3,4 transform=t:1,0,0 repeat=4 separates",
+              "shapes=2 transform=t:0,1,0 repeat=3 separates",
+              "shapes=4 transform=t:0,-1,0 repeat=3 separates",
             ],
             "type": "Disassembly",
           }
@@ -231,24 +231,24 @@ describe("Disassembly", () => {
     })
 
     test("spaceSeparatedParts with an intersection that happens during a separation but not after the separation", () => {
-        const pieces = grid.piecesFromString(`
+        const shapes = grid.shapesFromString(`
             012
         `)
         const disassembly = deserialize(JSON.parse(`
         {
           "steps": [
-            "pieces=2 transform=t:1,0,0 separates",
-            "pieces=1 transform=t:1,0,0 repeat=4 separates"
+            "shapes=2 transform=t:1,0,0 separates",
+            "shapes=1 transform=t:1,0,0 repeat=4 separates"
           ],
           "type": "Disassembly"
         }
         `)) as Disassembly
-        disassembly.spaceSepratedParts(grid, pieces)
+        disassembly.spaceSepratedParts(grid, shapes)
         expect(serialize(disassembly)).toMatchInlineSnapshot(`
           {
             "steps": [
-              "pieces=2 transform=t:1,0,0 repeat=5 separates",
-              "pieces=1 transform=t:1,0,0 repeat=4 separates",
+              "shapes=2 transform=t:1,0,0 repeat=5 separates",
+              "shapes=1 transform=t:1,0,0 repeat=4 separates",
             ],
             "type": "Disassembly",
           }
@@ -256,7 +256,7 @@ describe("Disassembly", () => {
     })
 
     test("spaceSeparatedParts with malformed disassembly", () => {
-        const pieces = grid.piecesFromString(`
+        const shapes = grid.shapesFromString(`
             0000
             01 0
             0000
@@ -264,16 +264,16 @@ describe("Disassembly", () => {
         const disassembly = deserialize(JSON.parse(`
         {
           "steps": [
-            "pieces=1 transform=t:1,0,0 separates"
+            "shapes=1 transform=t:1,0,0 separates"
           ],
           "type": "Disassembly"
         }
         `)) as Disassembly
-        disassembly.spaceSepratedParts(grid, pieces)
+        disassembly.spaceSepratedParts(grid, shapes)
         expect(serialize(disassembly)).toMatchInlineSnapshot(`
           {
             "steps": [
-              "pieces=1 transform=t:1,0,0 repeat=4 separates",
+              "shapes=1 transform=t:1,0,0 repeat=4 separates",
             ],
             "type": "Disassembly",
           }
@@ -281,20 +281,20 @@ describe("Disassembly", () => {
     })
 
     test("applyWeights", () => {
-        let pieces = grid.piecesFromString(`
+        let shapes = grid.shapesFromString(`
             00001
         `)
         let disassembly = deserialize({
             "type": "Disassembly",
             "steps": [
-                "pieces=0 transform=t:1,0,0 repeat=3 separates"
+                "shapes=0 transform=t:1,0,0 repeat=3 separates"
             ]
         }) as Disassembly
-        disassembly.applyWeights(grid, pieces)
+        disassembly.applyWeights(grid, shapes)
         expect(serialize(disassembly)).toEqual({
             "type": "Disassembly",
             "steps": [
-                "pieces=1 transform=t:-1,0,0 repeat=3 separates"
+                "shapes=1 transform=t:-1,0,0 repeat=3 separates"
             ]
         })
 
@@ -302,32 +302,32 @@ describe("Disassembly", () => {
         disassembly = deserialize({
             "type": "Disassembly",
             "steps": [
-                "pieces=1 transform=t:-1,0,0 repeat=3 separates"
+                "shapes=1 transform=t:-1,0,0 repeat=3 separates"
             ]
         }) as Disassembly
-        disassembly.applyWeights(grid, pieces)
+        disassembly.applyWeights(grid, shapes)
         expect(serialize(disassembly)).toEqual({
             "type": "Disassembly",
             "steps": [
-                "pieces=1 transform=t:-1,0,0 repeat=3 separates"
+                "shapes=1 transform=t:-1,0,0 repeat=3 separates"
             ]
         })
 
-        // Individual pieces add their voxels to be "heavier"
-        pieces = grid.piecesFromString(`
+        // Individual shapes add their voxels to be "heavier"
+        shapes = grid.shapesFromString(`
             0123444
         `)
         disassembly = deserialize({
             "type": "Disassembly",
             "steps": [
-                "pieces=0,1,2,3 transform=t:1,0,0"
+                "shapes=0,1,2,3 transform=t:1,0,0"
             ]
         }) as Disassembly
-        disassembly.applyWeights(grid, pieces)
+        disassembly.applyWeights(grid, shapes)
         expect(serialize(disassembly)).toEqual({
             "type": "Disassembly",
             "steps": [
-                "pieces=4 transform=t:-1,0,0"
+                "shapes=4 transform=t:-1,0,0"
             ]
         })
     })

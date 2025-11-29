@@ -56,8 +56,8 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {},
-                "pieceTree": [],
                 "problems": [],
+                "shapeTree": [],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",
@@ -96,7 +96,7 @@ describe("burrtools read", () => {
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Unsupported BurrTools grid type: A]`)
     })
 
-    test("piece voxels", async () => {
+    test("shape voxels", async () => {
         const xml = await readXmlForBurrTools(`
             <?xml version="1.0"?>
             <puzzle version="2">
@@ -119,19 +119,19 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 1,
+                  "shape": 1,
                 },
-                "pieceTree": [
+                "problems": [],
+                "shapeTree": [
                   {
                     "bounds": "xSize:2 ySize:3 zSize:4",
                     "color": "#0000FF",
                     "id": 0,
-                    "label": "Piece 1",
-                    "type": "Piece",
+                    "label": "Shape 1",
+                    "type": "Shape",
                     "voxels": "0,0,0; 1,1,0; 1,2,1; 1,2,3",
                   },
                 ],
-                "problems": [],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",
@@ -158,14 +158,14 @@ describe("burrtools read", () => {
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Unsupported BurrTools voxel type: 1]`)
     })
 
-    test("piece label", async () => {
+    test("shape label", async () => {
         const xml = await readXmlForBurrTools(`
             <?xml version="1.0"?>
             <puzzle version="2">
                 <gridType type="0"/>
                 <colors/>
                 <shapes>
-                    <voxel x="2" y="2" z="2" name="This is a piece label!" type="0">________</voxel>
+                    <voxel x="2" y="2" z="2" name="This is a shape label!" type="0">________</voxel>
                 </shapes>
                 <problems/>
                 <comment/>
@@ -181,19 +181,19 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 1,
+                  "shape": 1,
                 },
-                "pieceTree": [
+                "problems": [],
+                "shapeTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
                     "id": 0,
-                    "label": "This is a piece label!",
-                    "type": "Piece",
+                    "label": "This is a shape label!",
+                    "type": "Shape",
                     "voxels": "",
                   },
                 ],
-                "problems": [],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",
@@ -202,7 +202,7 @@ describe("burrtools read", () => {
         `)
     })
 
-    test("pieces with optional voxels", async () => {
+    test("shapes with optional voxels", async () => {
         const xml = await readXmlForBurrTools(`
             <?xml version="1.0"?>
             <puzzle version="2">
@@ -225,15 +225,16 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 1,
+                  "shape": 1,
                 },
-                "pieceTree": [
+                "problems": [],
+                "shapeTree": [
                   {
                     "bounds": "xSize:5 ySize:4 zSize:3",
                     "color": "#0000FF",
                     "id": 0,
-                    "label": "Piece 1",
-                    "type": "Piece",
+                    "label": "Shape 1",
+                    "type": "Shape",
                     "voxelAttributes": {
                       "optional": {
                         "0,0,1": true,
@@ -245,7 +246,6 @@ describe("burrtools read", () => {
                     "voxels": "0,0,0; 1,0,0; 0,1,0; 1,1,0; 0,0,1; 1,0,1; 0,1,1; 1,1,1",
                   },
                 ],
-                "problems": [],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",
@@ -254,7 +254,7 @@ describe("burrtools read", () => {
         `)
     })
 
-    test("malformed pieces", async () => {
+    test("malformed shapes", async () => {
         let xml = await readXmlForBurrTools(`
             <?xml version="1.0"?>
             <puzzle version="2">
@@ -375,19 +375,19 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 1,
+                  "shape": 1,
                 },
-                "pieceTree": [
+                "problems": [],
+                "shapeTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
                     "id": 0,
-                    "label": "Piece 1",
-                    "type": "Piece",
+                    "label": "Shape 1",
+                    "type": "Shape",
                     "voxels": "0,0,1",
                   },
                 ],
-                "problems": [],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",
@@ -420,8 +420,8 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {},
-                "pieceTree": [],
                 "problems": [],
+                "shapeTree": [],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",
@@ -433,7 +433,7 @@ describe("burrtools read", () => {
         `)
     })
 
-    test("piece weights unsupported", async () => {
+    test("shape weights unsupported", async () => {
         const xml = await readXmlForBurrTools(`
             <?xml version="1.0"?>
             <puzzle version="2">
@@ -456,25 +456,25 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 1,
+                  "shape": 1,
                 },
-                "pieceTree": [
+                "problems": [],
+                "shapeTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
                     "id": 0,
-                    "label": "Piece 1",
-                    "type": "Piece",
+                    "label": "Shape 1",
+                    "type": "Shape",
                     "voxels": "0,0,1",
                   },
                 ],
-                "problems": [],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",
             },
             "unsupportedFeatures": [
-              "Piece weights",
+              "Shape weights",
             ],
           }
         `)
@@ -514,49 +514,49 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 3,
                   "problem": 1,
+                  "shape": 3,
                 },
-                "pieceTree": [
+                "problems": [
+                  {
+                    "disassemble": false,
+                    "goalShapeId": 0,
+                    "id": 0,
+                    "label": "Problem 1",
+                    "removeNoDisassembly": true,
+                    "shapeCounts": {
+                      "1": 1,
+                      "2": 2,
+                    },
+                    "solverId": "assembly",
+                    "symmetryReduction": "rotation+mirror",
+                    "type": "AssemblyProblem",
+                  },
+                ],
+                "shapeTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
                     "id": 0,
-                    "label": "Piece 1",
-                    "type": "Piece",
+                    "label": "Shape 1",
+                    "type": "Shape",
                     "voxels": "",
                   },
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#00FF00",
                     "id": 1,
-                    "label": "Piece 2",
-                    "type": "Piece",
+                    "label": "Shape 2",
+                    "type": "Shape",
                     "voxels": "",
                   },
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#FF0000",
                     "id": 2,
-                    "label": "Piece 3",
-                    "type": "Piece",
+                    "label": "Shape 3",
+                    "type": "Shape",
                     "voxels": "",
-                  },
-                ],
-                "problems": [
-                  {
-                    "disassemble": false,
-                    "goalPieceId": 0,
-                    "id": 0,
-                    "label": "Problem 1",
-                    "removeNoDisassembly": true,
-                    "solverId": "assembly",
-                    "symmetryReduction": "rotation+mirror",
-                    "type": "AssemblyProblem",
-                    "usedPieceCounts": {
-                      "1": 1,
-                      "2": 2,
-                    },
                   },
                 ],
                 "type": "Puzzle",
@@ -596,19 +596,19 @@ describe("burrtools read", () => {
                 "idCounters": {
                   "problem": 1,
                 },
-                "pieceTree": [],
                 "problems": [
                   {
                     "disassemble": false,
                     "id": 0,
                     "label": "Problem 1",
                     "removeNoDisassembly": true,
+                    "shapeCounts": {},
                     "solverId": "assembly",
                     "symmetryReduction": "rotation+mirror",
                     "type": "AssemblyProblem",
-                    "usedPieceCounts": {},
                   },
                 ],
+                "shapeTree": [],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",
@@ -732,19 +732,19 @@ describe("burrtools read", () => {
                 "idCounters": {
                   "problem": 1,
                 },
-                "pieceTree": [],
                 "problems": [
                   {
                     "disassemble": false,
                     "id": 0,
                     "label": "Problem 1 label!",
                     "removeNoDisassembly": true,
+                    "shapeCounts": {},
                     "solverId": "assembly",
                     "symmetryReduction": "rotation+mirror",
                     "type": "AssemblyProblem",
-                    "usedPieceCounts": {},
                   },
                 ],
+                "shapeTree": [],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",
@@ -753,7 +753,7 @@ describe("burrtools read", () => {
         `)
     })
 
-    test("piece min/max", async () => {
+    test("shape min/max", async () => {
         const xml = await readXmlForBurrTools(`
             <?xml version="1.0"?>
             <puzzle version="2">
@@ -785,43 +785,43 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 2,
                   "problem": 1,
+                  "shape": 2,
                 },
-                "pieceTree": [
+                "problems": [
+                  {
+                    "disassemble": false,
+                    "goalShapeId": 0,
+                    "id": 0,
+                    "label": "Problem 1",
+                    "removeNoDisassembly": true,
+                    "shapeCounts": {
+                      "1": {
+                        "max": 5,
+                        "min": 4,
+                      },
+                    },
+                    "solverId": "assembly",
+                    "symmetryReduction": "rotation+mirror",
+                    "type": "AssemblyProblem",
+                  },
+                ],
+                "shapeTree": [
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#0000FF",
                     "id": 0,
-                    "label": "Piece 1",
-                    "type": "Piece",
+                    "label": "Shape 1",
+                    "type": "Shape",
                     "voxels": "",
                   },
                   {
                     "bounds": "xSize:2 ySize:2 zSize:2",
                     "color": "#00FF00",
                     "id": 1,
-                    "label": "Piece 2",
-                    "type": "Piece",
+                    "label": "Shape 2",
+                    "type": "Shape",
                     "voxels": "",
-                  },
-                ],
-                "problems": [
-                  {
-                    "disassemble": false,
-                    "goalPieceId": 0,
-                    "id": 0,
-                    "label": "Problem 1",
-                    "removeNoDisassembly": true,
-                    "solverId": "assembly",
-                    "symmetryReduction": "rotation+mirror",
-                    "type": "AssemblyProblem",
-                    "usedPieceCounts": {
-                      "1": {
-                        "max": 5,
-                        "min": 4,
-                      },
-                    },
                   },
                 ],
                 "type": "Puzzle",
@@ -832,7 +832,7 @@ describe("burrtools read", () => {
         `)
     })
 
-    test("piece group unsupported", async () => {
+    test("shape group unsupported", async () => {
         let xml = await readXmlForBurrTools(`
             <?xml version="1.0"?>
             <puzzle version="2">
@@ -863,31 +863,31 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 1,
                   "problem": 1,
+                  "shape": 1,
                 },
-                "pieceTree": [
-                  {
-                    "bounds": "xSize:2 ySize:2 zSize:2",
-                    "color": "#0000FF",
-                    "id": 0,
-                    "label": "Piece 1",
-                    "type": "Piece",
-                    "voxels": "",
-                  },
-                ],
                 "problems": [
                   {
                     "disassemble": false,
                     "id": 0,
                     "label": "Problem 1",
                     "removeNoDisassembly": true,
+                    "shapeCounts": {
+                      "0": 1,
+                    },
                     "solverId": "assembly",
                     "symmetryReduction": "rotation+mirror",
                     "type": "AssemblyProblem",
-                    "usedPieceCounts": {
-                      "0": 1,
-                    },
+                  },
+                ],
+                "shapeTree": [
+                  {
+                    "bounds": "xSize:2 ySize:2 zSize:2",
+                    "color": "#0000FF",
+                    "id": 0,
+                    "label": "Shape 1",
+                    "type": "Shape",
+                    "voxels": "",
                   },
                 ],
                 "type": "Puzzle",
@@ -895,7 +895,7 @@ describe("burrtools read", () => {
               "type": "PuzzleFile",
             },
             "unsupportedFeatures": [
-              "Piece groups",
+              "Shape groups",
             ],
           }
         `)
@@ -933,31 +933,31 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 1,
                   "problem": 1,
+                  "shape": 1,
                 },
-                "pieceTree": [
-                  {
-                    "bounds": "xSize:2 ySize:2 zSize:2",
-                    "color": "#0000FF",
-                    "id": 0,
-                    "label": "Piece 1",
-                    "type": "Piece",
-                    "voxels": "",
-                  },
-                ],
                 "problems": [
                   {
                     "disassemble": false,
                     "id": 0,
                     "label": "Problem 1",
                     "removeNoDisassembly": true,
+                    "shapeCounts": {
+                      "0": 1,
+                    },
                     "solverId": "assembly",
                     "symmetryReduction": "rotation+mirror",
                     "type": "AssemblyProblem",
-                    "usedPieceCounts": {
-                      "0": 1,
-                    },
+                  },
+                ],
+                "shapeTree": [
+                  {
+                    "bounds": "xSize:2 ySize:2 zSize:2",
+                    "color": "#0000FF",
+                    "id": 0,
+                    "label": "Shape 1",
+                    "type": "Shape",
+                    "voxels": "",
                   },
                 ],
                 "type": "Puzzle",
@@ -965,7 +965,7 @@ describe("burrtools read", () => {
               "type": "PuzzleFile",
             },
             "unsupportedFeatures": [
-              "Piece groups",
+              "Shape groups",
             ],
           }
         `)
@@ -1008,40 +1008,40 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {
-                  "piece": 2,
                   "problem": 1,
+                  "shape": 2,
                 },
-                "pieceTree": [
+                "problems": [
+                  {
+                    "disassemble": false,
+                    "goalShapeId": 0,
+                    "id": 0,
+                    "label": "Problem 1",
+                    "removeNoDisassembly": true,
+                    "shapeCounts": {
+                      "1": 1,
+                    },
+                    "solverId": "assembly",
+                    "symmetryReduction": "rotation+mirror",
+                    "type": "AssemblyProblem",
+                  },
+                ],
+                "shapeTree": [
                   {
                     "bounds": "xSize:1 ySize:1 zSize:1",
                     "color": "#0000FF",
                     "id": 0,
-                    "label": "Piece 1",
-                    "type": "Piece",
+                    "label": "Shape 1",
+                    "type": "Shape",
                     "voxels": "0,0,0",
                   },
                   {
                     "bounds": "xSize:1 ySize:1 zSize:1",
                     "color": "#00FF00",
                     "id": 1,
-                    "label": "Piece 2",
-                    "type": "Piece",
+                    "label": "Shape 2",
+                    "type": "Shape",
                     "voxels": "0,0,0",
-                  },
-                ],
-                "problems": [
-                  {
-                    "disassemble": false,
-                    "goalPieceId": 0,
-                    "id": 0,
-                    "label": "Problem 1",
-                    "removeNoDisassembly": true,
-                    "solverId": "assembly",
-                    "symmetryReduction": "rotation+mirror",
-                    "type": "AssemblyProblem",
-                    "usedPieceCounts": {
-                      "1": 1,
-                    },
                   },
                 ],
                 "type": "Puzzle",
@@ -1077,8 +1077,8 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {},
-                "pieceTree": [],
                 "problems": [],
+                "shapeTree": [],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",
@@ -1109,8 +1109,8 @@ describe("burrtools read", () => {
                   "type": "CubicGrid",
                 },
                 "idCounters": {},
-                "pieceTree": [],
                 "problems": [],
+                "shapeTree": [],
                 "type": "Puzzle",
               },
               "type": "PuzzleFile",

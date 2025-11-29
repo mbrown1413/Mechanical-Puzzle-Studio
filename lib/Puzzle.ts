@@ -3,24 +3,33 @@ import {Grid} from "~/lib/Grid.ts"
 import {Problem} from "~/lib/Problem.ts"
 import {getNextColor} from "~/lib/colors.ts"
 
-import {Piece, PieceId} from "~/lib/Piece.ts"
-import {PieceGroup, PieceGroupId} from "~/lib/PieceGroup.ts"
+import {Shape, ShapeId} from "~/lib/Shape.ts"
+import {ShapeGroup, ShapeGroupId} from "~/lib/ShapeGroup.ts"
 import {ProblemId} from "~/lib/Problem.ts"
 
 
-/** An item is one thing inside a puzzle collection attribute (e.g. a piece or
+/** An item is one thing inside a puzzle collection attribute (e.g. a shape or
  * a problem). */
-export type Item = Piece | PieceGroup | Problem
-export type ItemId = PieceId | PieceGroupId | ProblemId
+export type Item = Shape | ShapeGroup | Problem
+export type ItemId = ShapeId | ShapeGroupId | ProblemId
 
 type PuzzleStoredData = {
-    pieces?: Piece[]
-    pieceTree: (Piece | PieceGroup)[]
+    shapeTree: (Shape | ShapeGroup)[]
+    idCounters: {
+        shape: number,
+        piece?: number,  // Old name for "shape"
+        shapeGroup: number,
+        pieceGroup?: number,  // Old name for "shapeGroup"
+    }
+
+    // Old names for `shapeTree`
+    pieces?: Shape[]
+    pieceTree?: (Shape | ShapeGroup)[]
 }
 
 export class Puzzle extends SerializableClass {
     grid: Grid
-    pieceTree: (Piece | PieceGroup)[]
+    shapeTree: (Shape | ShapeGroup)[]
     problems: Problem[]
 
     /**
@@ -32,56 +41,67 @@ export class Puzzle extends SerializableClass {
      * next unused ID.
      */
     private idCounters: {
-        piece?: number,
-        pieceGroup?: number,
+        shape?: number,
+        shapeGroup?: number,
         problem?: number,
     }
 
     constructor(grid: Grid) {
         super()
         this.grid = grid
-        this.pieceTree = []
+        this.shapeTree = []
         this.problems = []
         this.idCounters = {}
     }
 
     static preDeserialize(data: PuzzleStoredData) {
-        // Backwards compatibility: pieces used to be a flat list, now it's
-        // named pieceTree and includes groups in a tree structure.
-        if(data.pieces && data.pieceTree === undefined) {
-            data.pieceTree = data.pieces
+        // Backwards compatibility: convert old names for shapeTree
+        if(data.pieces && data.shapeTree === undefined) {
+            data.shapeTree = data.pieces
             delete data["pieces"]
+        } else if(data.pieceTree && data.shapeTree === undefined) {
+            data.shapeTree = data.pieceTree
+            delete data["pieceTree"]
+        }
+        // Backwards compatibility: old id counter names
+        if(data.idCounters.piece !== undefined && data.idCounters.shape === undefined) {
+            data.idCounters.shape = data.idCounters.piece
+            delete data.idCounters["piece"]
+        }
+        if(data.idCounters.pieceGroup !== undefined && data.idCounters.shapeGroup === undefined) {
+            data.idCounters.shapeGroup = data.idCounters.pieceGroup
+            delete data.idCounters["pieceGroup"]
         }
     }
 
-    get pieces(): readonly Piece[] {
-        const pieces = []
-        for(const item of this.pieceTree) {
-            if(item instanceof Piece) {
-                pieces.push(item)
+    get shapes(): readonly Shape[] {
+        const shapes = []
+        for(const item of this.shapeTree) {
+            if(item instanceof Shape) {
+                shapes.push(item)
             } else {
-                pieces.push(...item.pieces)
+                shapes.push(...item.shapes)
             }
         }
-        return Object.freeze(pieces)
+        return Object.freeze(shapes)
     }
 
-    get pieceGroups(): readonly PieceGroup[] {
+    get shapeGroups(): readonly ShapeGroup[] {
         const groups = []
-        for(const item of this.pieceTree) {
-            if(item instanceof PieceGroup) {
+        for(const item of this.shapeTree) {
+            if(item instanceof ShapeGroup) {
                 groups.push(item)
             }
         }
         return Object.freeze(groups)
     }
 
-    generatePieceId(): PieceId {
-        return this.generateNewId("piece")
+    generateShapeId(): ShapeId {
+        return this.generateNewId("shape")
     }
 
-    generatePieceGroupId(): PieceGroupId {
-        return this.generateNewId("pieceGroup")
+    generateShapeGroupId(): ShapeGroupId {
+        return this.generateNewId("shapeGroup")
     }
 
     generateProblemId(): ProblemId {
@@ -89,204 +109,204 @@ export class Puzzle extends SerializableClass {
     }
 
     private generateNewId(
-        type: "piece" | "pieceGroup" | "problem"
+        type: "shape" | "shapeGroup" | "problem"
     ): ItemId {
         const id = this.idCounters[type] || 0
         this.idCounters[type] = id + 1
         return id
     }
 
-    getNewPieceColor(): string {
-        const piecesList = Array.from(this.pieces.values())
-        const existingColors = piecesList.map(
-            (piece) => piece.color
+    getNewShapeColor(): string {
+        const shapeList = Array.from(this.shapes.values())
+        const existingColors = shapeList.map(
+            (shape) => shape.color
         ).filter(
             (color): color is string => typeof color === "string"
         )
         return getNextColor(existingColors)
     }
 
-    addPiece(piece: Piece, after: Piece|PieceGroup|null = null): Piece {
-        if(this.hasPiece(piece.id)) {
-            throw new Error(`Duplicate piece ID: ${piece.id}`)
+    addShape(shape: Shape, after: Shape|ShapeGroup|null = null): Shape {
+        if(this.hasShape(shape.id)) {
+            throw new Error(`Duplicate shape ID: ${shape.id}`)
         }
         if(after === null) {
-            this.pieceTree.push(piece)
-        } else if(after instanceof PieceGroup) {
-            after.pieces.unshift(piece)
+            this.shapeTree.push(shape)
+        } else if(after instanceof ShapeGroup) {
+            after.shapes.unshift(shape)
         } else {
-            const group = this.getPieceGroupFromPiece(after)
+            const group = this.getShapeGroupFromShape(after)
             if(group) {
-                const index = group.pieces.findIndex(p => p === after)
-                group.pieces.splice(index + 1, 0, piece)
+                const index = group.shapes.findIndex(p => p === after)
+                group.shapes.splice(index + 1, 0, shape)
             } else {
-                const index = this.pieceTree.findIndex(p => p === after)
-                this.pieceTree.splice(index + 1, 0, piece)
+                const index = this.shapeTree.findIndex(p => p === after)
+                this.shapeTree.splice(index + 1, 0, shape)
             }
         }
-        return piece
+        return shape
     }
 
     /**
-     * Gets a Piece object from the puzzle, given a PieceId, piece label, or an
-     * existing Piece object. `null` is returned if there is no matching piece
+     * Gets a Shape object from the puzzle, given a ShapeId, shape label, or an
+     * existing Shape object. `null` is returned if there is no matching shape
      * in the puzzle.
      */
-    getPiece(identifier: PieceId | string | Piece): Piece | null {
+    getShape(identifier: ShapeId | string | Shape): Shape | null {
         if(typeof identifier === "string") {
-            return this.pieces.find(piece => piece.label === identifier) || null
+            return this.shapes.find(shape => shape.label === identifier) || null
         }
-        const pieceId = typeof identifier === "number" ? identifier : identifier.id
-        if(pieceId === undefined) return null
-        return this.pieces.find(piece => piece.id === pieceId) || null
+        const shapeId = typeof identifier === "number" ? identifier : identifier.id
+        if(shapeId === undefined) return null
+        return this.shapes.find(shape => shape.id === shapeId) || null
     }
 
-    hasPiece(pieceOrId: Piece | PieceId): boolean {
-        return Boolean(this.getPiece(pieceOrId))
+    hasShape(shapeOrId: Shape | ShapeId): boolean {
+        return Boolean(this.getShape(shapeOrId))
     }
 
-    removePiece(pieceOrId: Piece | PieceId, throwErrors=true) {
-        const id = typeof pieceOrId === "number" ? pieceOrId : pieceOrId.id
+    removeShape(shapeOrId: Shape | ShapeId, throwErrors=true) {
+        const id = typeof shapeOrId === "number" ? shapeOrId : shapeOrId.id
         if(id === undefined) {
             if(throwErrors) {
-                throw new Error("Cannot remove piece without ID")
+                throw new Error("Cannot remove shape without ID")
             }
             return
         }
 
-        const group = this.getPieceGroupFromPiece(id)
+        const group = this.getShapeGroupFromShape(id)
         let index
         if(group) {
-            index = group.pieces.findIndex(p => p.id === id)
+            index = group.shapes.findIndex(p => p.id === id)
         } else {
-            index = this.pieceTree.findIndex(p => p instanceof Piece && p.id === id)
+            index = this.shapeTree.findIndex(p => p instanceof Shape && p.id === id)
         }
 
         if(throwErrors && index === -1) {
-            throw new Error(`Piece ID not found: ${id}`)
+            throw new Error(`Shape ID not found: ${id}`)
         }
         if(index !== -1) {
             if(group) {
-                group.pieces.splice(index, 1)
+                group.shapes.splice(index, 1)
             } else {
-                this.pieceTree.splice(index, 1)
+                this.shapeTree.splice(index, 1)
             }
         }
     }
 
-    addPieceGroup(pieceGroup: PieceGroup, after: Piece|PieceGroup|null = null): PieceGroup {
-        if(this.hasPieceGroup(pieceGroup.id)) {
-            throw new Error(`Duplicate piece group ID: ${pieceGroup.id}`)
+    addShapeGroup(shapeGroup: ShapeGroup, after: Shape|ShapeGroup|null = null): ShapeGroup {
+        if(this.hasShapeGroup(shapeGroup.id)) {
+            throw new Error(`Duplicate shape group ID: ${shapeGroup.id}`)
         }
-        for(const piece of pieceGroup.pieces) {
-            if(this.hasPiece(piece)) {
-                throw new Error(`Duplicate piece ID: ${piece.id}`)
+        for(const shape of shapeGroup.shapes) {
+            if(this.hasShape(shape)) {
+                throw new Error(`Duplicate shape ID: ${shape.id}`)
             }
         }
 
         if(after === null) {
-            this.pieceTree.push(pieceGroup)
+            this.shapeTree.push(shapeGroup)
         } else {
-            if(after instanceof Piece && this.getPieceGroupFromPiece(after)) {
-                after = this.getPieceGroupFromPiece(after)
+            if(after instanceof Shape && this.getShapeGroupFromShape(after)) {
+                after = this.getShapeGroupFromShape(after)
             }
-            const index = this.pieceTree.findIndex(p => p === after)
-            this.pieceTree.splice(index + 1, 0, pieceGroup)
+            const index = this.shapeTree.findIndex(p => p === after)
+            this.shapeTree.splice(index + 1, 0, shapeGroup)
         }
-        return pieceGroup
+        return shapeGroup
     }
 
-    getPieceGroup(identifier: PieceGroupId | string | PieceGroup): PieceGroup | null {
+    getShapeGroup(identifier: ShapeGroupId | string | ShapeGroup): ShapeGroup | null {
         if(typeof identifier === "string") {
-            return this.pieceGroups.find(group => group.label === identifier) || null
+            return this.shapeGroups.find(group => group.label === identifier) || null
         }
         const groupId = typeof identifier === "number" ? identifier : identifier.id
         if(groupId === undefined) return null
-        return this.pieceGroups.find(group => group.id === groupId) || null
+        return this.shapeGroups.find(group => group.id === groupId) || null
     }
 
-    getPieceGroupFromPiece(pieceOrId: Piece|PieceId): PieceGroup | null {
-        const id = typeof pieceOrId === "number" ? pieceOrId : pieceOrId.id
+    getShapeGroupFromShape(shapeOrId: Shape|ShapeId): ShapeGroup | null {
+        const id = typeof shapeOrId === "number" ? shapeOrId : shapeOrId.id
         if(id === undefined) {
-            throw new Error("Cannot remove piece without ID")
+            throw new Error("Cannot remove shape without ID")
         }
 
-        for(const group of this.pieceGroups) {
-            if(group.pieces.find(p => p.id === id)) {
+        for(const group of this.shapeGroups) {
+            if(group.shapes.find(p => p.id === id)) {
                 return group
             }
         }
         return null
     }
 
-    hasPieceGroup(pieceGroupOrId: PieceGroup | PieceGroupId) {
-        return Boolean(this.getPieceGroup(pieceGroupOrId))
+    hasShapeGroup(shapeGroupOrId: ShapeGroup | ShapeGroupId) {
+        return Boolean(this.getShapeGroup(shapeGroupOrId))
     }
 
-    removePieceGroup(pieceGroupOrId: PieceGroup | PieceGroupId, throwErrors=true) {
-        const id = typeof pieceGroupOrId === "number" ? pieceGroupOrId : pieceGroupOrId.id
+    removeShapeGroup(shapeGroupOrId: ShapeGroup | ShapeGroupId, throwErrors=true) {
+        const id = typeof shapeGroupOrId === "number" ? shapeGroupOrId : shapeGroupOrId.id
         if(id === undefined) {
             if(throwErrors) {
-                throw new Error("Cannot remove piece group without ID")
+                throw new Error("Cannot remove shape group without ID")
             }
             return
         }
-        const index = this.pieceTree.findIndex(
-            item => item instanceof PieceGroup && item.id === id
+        const index = this.shapeTree.findIndex(
+            item => item instanceof ShapeGroup && item.id === id
         )
         if(throwErrors && index === -1) {
-            throw new Error(`Piece group ID not found: ${id}`)
+            throw new Error(`Shape group ID not found: ${id}`)
         }
         if(index !== -1) {
-            this.pieceTree.splice(index, 1)
+            this.shapeTree.splice(index, 1)
         }
     }
 
-    movePieceListItem(direction: "up"|"down", item: Piece|PieceGroup) {
+    moveShapeListItem(direction: "up"|"down", item: Shape|ShapeGroup) {
         const delta = direction === "up" ? -1 : 1
 
-        if(item instanceof PieceGroup) {
-            moveInList(this.pieceTree, item, delta)
+        if(item instanceof ShapeGroup) {
+            moveInList(this.shapeTree, item, delta)
             return
         }
 
-        const group = this.getPieceGroupFromPiece(item)
+        const group = this.getShapeGroupFromShape(item)
         if(group) {
 
-            // Moving a piece in a group. We may move it out of the group
-            const index = group.pieces.indexOf(item)
+            // Moving a shape in a group. We may move it out of the group
+            const index = group.shapes.indexOf(item)
             if(direction === "up" && index === 0) {
-                // Move piece out of group and above it
-                const groupIndex = this.pieceTree.indexOf(group)
-                group.pieces.splice(index, 1)
-                this.pieceTree.splice(groupIndex, 0, item)
-            } else if(direction === "down" && index === group.pieces.length - 1) {
-                // Move piece out of group and below it
-                const groupIndex = this.pieceTree.indexOf(group)
-                group.pieces.splice(index, 1)
-                this.pieceTree.splice(groupIndex + 1, 0, item)
+                // Move shape out of group and above it
+                const groupIndex = this.shapeTree.indexOf(group)
+                group.shapes.splice(index, 1)
+                this.shapeTree.splice(groupIndex, 0, item)
+            } else if(direction === "down" && index === group.shapes.length - 1) {
+                // Move shape out of group and below it
+                const groupIndex = this.shapeTree.indexOf(group)
+                group.shapes.splice(index, 1)
+                this.shapeTree.splice(groupIndex + 1, 0, item)
             } else {
-                // Move piece within group
-                moveInList(group.pieces, item, delta)
+                // Move shape within group
+                moveInList(group.shapes, item, delta)
             }
 
         } else {
 
-            // Moving a piece outside a group. We may move it into a group
-            const index = this.pieceTree.indexOf(item)
-            const intoGroup = this.pieceTree[index + delta]
-            if(intoGroup instanceof PieceGroup) {
-                // Move piece from pieceTree into a group
-                const index = this.pieceTree.indexOf(item)
-                this.pieceTree.splice(index, 1)
+            // Moving a shape outside a group. We may move it into a group
+            const index = this.shapeTree.indexOf(item)
+            const intoGroup = this.shapeTree[index + delta]
+            if(intoGroup instanceof ShapeGroup) {
+                // Move shape from shapeTree into a group
+                const index = this.shapeTree.indexOf(item)
+                this.shapeTree.splice(index, 1)
                 if(direction === "up") {
-                    intoGroup.pieces.push(item)
+                    intoGroup.shapes.push(item)
                 } else {
-                    intoGroup.pieces.unshift(item)
+                    intoGroup.shapes.unshift(item)
                 }
             } else {
-                // Move piece within pieceTree
-                moveInList(this.pieceTree, item, delta)
+                // Move shape within shapeTree
+                moveInList(this.shapeTree, item, delta)
             }
 
         }

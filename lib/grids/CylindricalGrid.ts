@@ -80,7 +80,7 @@ export class CylindricalGrid extends Grid {
         return zed + 1
     }
 
-    getDefaultPieceBounds(): CylindricalBounds {
+    getDefaultShapeBounds(): CylindricalBounds {
         return {
             rhoSize: 3,
             zedSize: 3,
@@ -130,7 +130,7 @@ export class CylindricalGrid extends Grid {
 
     getVoxelBounds(voxels: Voxel[]): CylindricalBounds {
         if(voxels.length === 0) {
-            return this.getDefaultPieceBounds()
+            return this.getDefaultShapeBounds()
         }
         const min = this.voxelToCoordinate(voxels[0])
         const max = this.voxelToCoordinate(voxels[0])
@@ -168,7 +168,7 @@ export class CylindricalGrid extends Grid {
 
     getBoundsMax(...bounds: CylindricalBounds[]): CylindricalBounds {
         if(bounds.length === 0) {
-            return this.getDefaultPieceBounds()
+            return this.getDefaultShapeBounds()
         }
 
         let rhoMin = bounds[0].rho || 0
@@ -390,7 +390,7 @@ export class CylindricalGrid extends Grid {
 
     getRotations(includeMirrors: boolean): Transform[] {
         // Note: We don't yet have a transform for mirroring. We could also in
-        // the future add a flag "flippable" so pieces have an orientation and
+        // the future add a flag "flippable" so shapes have an orientation and
         // can't be turned upside down.
         const rotations = ["t:0,0", "flip"]
         if(includeMirrors) {

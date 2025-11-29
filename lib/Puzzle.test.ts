@@ -1,38 +1,38 @@
 import {test, expect, describe} from "vitest"
 
 import {Puzzle} from "~/lib/Puzzle.ts"
-import {Piece} from "~/lib/Piece.ts"
+import {Shape} from "~/lib/Shape.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 
 const grid = new CubicGrid()
 
 describe("Puzzle", () => {
-    test("pieces", () => {
+    test("shapes", () => {
         const puzzle = new Puzzle(grid)
 
-        const pieceWithId = new Piece(0)
-        expect(puzzle.hasPiece(0)).toBeFalsy()
-        expect(puzzle.hasPiece(pieceWithId)).toBeFalsy()
-        puzzle.addPiece(pieceWithId)
-        expect(puzzle.hasPiece(0)).toBeTruthy()
-        expect(puzzle.hasPiece(pieceWithId)).toBeTruthy()
+        const shapeWithId = new Shape(0)
+        expect(puzzle.hasShape(0)).toBeFalsy()
+        expect(puzzle.hasShape(shapeWithId)).toBeFalsy()
+        puzzle.addShape(shapeWithId)
+        expect(puzzle.hasShape(0)).toBeTruthy()
+        expect(puzzle.hasShape(shapeWithId)).toBeTruthy()
 
-        const pieceWithSameId = new Piece(0)
+        const shapeWithSameId = new Shape(0)
         expect(() => {
-            puzzle.addPiece(pieceWithSameId)
-        }).toThrow("Duplicate piece ID: 0")
+            puzzle.addShape(shapeWithSameId)
+        }).toThrow("Duplicate shape ID: 0")
 
-        expect(puzzle.hasPiece(pieceWithId)).toBeTruthy()
-        puzzle.removePiece(pieceWithId)
-        expect(puzzle.hasPiece(pieceWithId)).toBeFalsy()
-        puzzle.removePiece(pieceWithId, false)
+        expect(puzzle.hasShape(shapeWithId)).toBeTruthy()
+        puzzle.removeShape(shapeWithId)
+        expect(puzzle.hasShape(shapeWithId)).toBeFalsy()
+        puzzle.removeShape(shapeWithId, false)
         expect(() => {
-            puzzle.removePiece(pieceWithId)
-        }).toThrow("Piece ID not found: 0")
+            puzzle.removeShape(shapeWithId)
+        }).toThrow("Shape ID not found: 0")
 
-        puzzle.addPiece(pieceWithId)
-        expect(puzzle.hasPiece(0)).toBeTruthy()
-        puzzle.removePiece(0)
-        expect(puzzle.hasPiece(0)).toBeFalsy()
+        puzzle.addShape(shapeWithId)
+        expect(puzzle.hasShape(0)).toBeTruthy()
+        puzzle.removeShape(0)
+        expect(puzzle.hasShape(0)).toBeFalsy()
     })
 })

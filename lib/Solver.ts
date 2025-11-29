@@ -1,6 +1,6 @@
 import {AssemblyProblem, Problem, ProblemConstraint} from "~/lib/Problem.ts"
 import {Puzzle} from "~/lib/Puzzle.ts"
-import {Piece, PieceId, PieceInstanceId} from "~/lib/Piece.ts"
+import {Shape, ShapeId, ShapeInstanceId} from "~/lib/Shape.ts"
 import {getPlacements} from "~/lib/placements.ts"
 import {AssemblySolution, Solution} from "~/lib/Solution.ts"
 import {TaskCallbacks, voidTaskCallbacks} from "~/lib/types.ts"
@@ -88,32 +88,32 @@ export class AssemblySolver extends Solver {
         if(!(problem instanceof AssemblyProblem)) {
             throw new Error("Assembly Solver can only solve Assembly Problems")
         }
-        if(problem.goalPieceId === null) {
-            throw new Error("Goal piece is not set")
+        if(problem.goalShapeId === null) {
+            throw new Error("Goal shape is not set")
         }
         let goal = null
-        if(problem.goalPieceId !== undefined) {
-            goal = puzzle.getPiece(problem.goalPieceId)
+        if(problem.goalShapeId !== undefined) {
+            goal = puzzle.getShape(problem.goalShapeId)
         }
         if(goal === null) {
-            throw new Error("Goal piece is not set")
+            throw new Error("Goal shape is not set")
         }
         if(goal === undefined) {
-            throw new Error(`Goal piece ID ${problem.goalPieceId} not found`)
+            throw new Error(`Goal shape ID ${problem.goalShapeId} not found`)
         }
 
-        const pieces = problem.getUsedPieces(puzzle)
+        const shapes = problem.getUsedShapes(puzzle)
 
-        if(pieces.length === 0) {
+        if(shapes.length === 0) {
             throw new Error("No pieces in problem")
         }
 
-        for(const piece of pieces) {
-            for(const voxel of piece.voxels) {
-                if(piece.getVoxelAttribute("optional", voxel) === true) {
+        for(const shape of shapes) {
+            for(const voxel of shape.voxels) {
+                if(shape.getVoxelAttribute("optional", voxel) === true) {
                     throw new Error(
-                        `The piece "${piece.label}" has optional voxels, but ` +
-                        "currently only the goal piece may contain optional voxels."
+                        `The shape "${shape.label}" has optional voxels, but ` +
+                        "currently only the goal shape may contain optional voxels."
                     )
                 }
             }
@@ -124,24 +124,24 @@ export class AssemblySolver extends Solver {
             throw new Error(voxelCounts.warning)
         }
 
-        let symmetryBreakerCandidates: Piece[] = []
+        let symmetryBreakerCandidates: Shape[] = []
         if(this.symmetryReduction) {
-            symmetryBreakerCandidates = pieces.filter(
-                piece => problem.usedPieceCounts[piece.id] === 1
+            symmetryBreakerCandidates = shapes.filter(
+                shape => problem.shapeCounts[shape.id] === 1
             )
         }
 
         const placementResults = getPlacements(
             puzzle.grid,
             goal,
-            pieces,
+            shapes,
             symmetryBreakerCandidates
         )
 
         if(this.symmetryReduction && placementResults.symmetryInfo) {
             const symInfo = placementResults.symmetryInfo
             logCallback(
-                `Symmetry breaking piece: ${symInfo.piece.label}`
+                `Symmetry breaking piece: ${symInfo.shape.label}`
             )
             logCallback(
                 `Symmetry reduced the problem by ${symInfo.reduction} times`
@@ -157,16 +157,16 @@ export class AssemblySolver extends Solver {
             if(constraint.type !== "piece-group") {
                 throw new Error(`Unhandled constraint type "${constraint.type}"`)
             }
-            if(constraint.pieceIds.length === 0) { continue }
+            if(constraint.shapeIds.length === 0) { continue }
             pieceGroups.push(constraint)
         }
 
-        const coverSolver = new CoverSolver([...pieces, ...goalVoxels, ...pieceGroups])
-        const voxelColumnStart = pieces.length
+        const coverSolver = new CoverSolver([...shapes, ...goalVoxels, ...pieceGroups])
+        const voxelColumnStart = shapes.length
         const pieceGroupColumnStart = voxelColumnStart + goalVoxels.length
 
-        for(const [i, piece] of pieces.entries()) {
-            const range = problem.getPieceRange(piece.id)
+        for(const [i, shape] of shapes.entries()) {
+            const range = problem.getPieceRange(shape.id)
             coverSolver.setColumnRange(i, range.min, range.max)
         }
         for(const [i, voxel] of goalVoxels.entries()) {
@@ -186,35 +186,35 @@ export class AssemblySolver extends Solver {
             coverSolver.setColumnRange(columnIndex, range.min, range.max)
         }
 
-        for(const [i, piece] of pieces.entries()) {
-            const placements = placementResults.placementsByPiece[piece.id]
-            const minPlacements = problem.getPieceRange(piece.id).min
+        for(const [i, shape] of shapes.entries()) {
+            const placements = placementResults.placementsByShape[shape.id]
+            const minPlacements = problem.getPieceRange(shape.id).min
             if(placements.length === 0 && minPlacements > 0) {
                 throw new Error(
                     "No solutions because piece cannot be placed anywhere in goal.\n\n" +
-                    `Piece label: ${piece.label}`
+                    `Shape label: ${shape.label}`
                 )
             }
             if(placements.length < minPlacements) {
                 throw new Error(
                     `No solutions because piece cannot be placed its minimum count of ${minPlacements} times in goal.\n\n` +
-                    `Piece label: ${piece.label}`
+                    `Shape label: ${shape.label}`
                 )
             }
 
             for(const placement of placements) {
-                const pieceColumns = new Array(pieces.length).fill(false)
-                pieceColumns[i] = true
+                const shapeColumns = new Array(shapes.length).fill(false)
+                shapeColumns[i] = true
 
                 const voxelColumns = goalVoxels.map((voxel) =>
                     placement.voxels.includes(voxel)
                 )
 
                 const pieceGroupColumns = pieceGroups.map((pieceGroup) =>
-                    pieceGroup.pieceIds.includes(piece.id)
+                    pieceGroup.shapeIds.includes(shape.id)
                 )
 
-                coverSolver.addRow([...pieceColumns, ...voxelColumns, ...pieceGroupColumns])
+                coverSolver.addRow([...shapeColumns, ...voxelColumns, ...pieceGroupColumns])
             }
         }
 
@@ -225,32 +225,32 @@ export class AssemblySolver extends Solver {
 
 function getAssemblyFromCoverSolution(
     problem: AssemblyProblem,
-    coverSolution: CoverSolution<Voxel | Piece | ProblemConstraint>
-): Piece[] {
+    coverSolution: CoverSolution<Voxel | Shape | ProblemConstraint>
+): Shape[] {
 
-    // Instance ID of the next instance, for pieces with duplicates
-    const instanceCounters: Record<PieceId, PieceInstanceId> = {}
+    // Instance ID of the next instance, for shapes with duplicates
+    const instanceCounters: Record<ShapeId, ShapeInstanceId> = {}
 
     const placements = []
     for(const row of coverSolution) {
 
-        let piece: Piece | null = null
+        let shape: Shape | null = null
         const voxels = []
 
-        // Each cover solution row has a piece ID and all of the voxels
+        // Each cover solution row has a shape ID and all of the voxels
         // that the piece fills. We collect them here and create a
         // placement after we've processed this row.
         for(const item of row) {
             if(typeof item === "string") {
                 voxels.push(item)
-            } else if(item instanceof Piece) {
-                if(piece !== null) {
+            } else if(item instanceof Shape) {
+                if(shape !== null) {
                     throw new Error("Multiple pieces found in cover solution row")
                 }
-                piece = item.copy()
-                if(problem.getPieceRange(piece.id).max > 1) {
-                    piece.instance = instanceCounters[piece.id] || 0
-                    instanceCounters[piece.id] = piece.instance + 1
+                shape = item.copy()
+                if(problem.getPieceRange(shape.id).max > 1) {
+                    shape.instance = instanceCounters[shape.id] || 0
+                    instanceCounters[shape.id] = shape.instance + 1
                 }
             } else if(typeof item === "object") {
                 // This is a constraint. Make sure it's actually one that's
@@ -262,11 +262,11 @@ function getAssemblyFromCoverSolution(
                 throw new Error("Unexpected return type from cover solution")
             }
         }
-        if(piece === null) {
+        if(shape === null) {
             throw new Error("No piece found in cover solution")
         }
-        piece.voxels = voxels
-        placements.push(piece)
+        shape.voxels = voxels
+        placements.push(shape)
     }
 
     return placements

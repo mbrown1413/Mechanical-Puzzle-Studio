@@ -2,7 +2,7 @@ import {test, expect, describe} from "vitest"
 
 import {convertToPuzzlecad} from "~/lib/puzzlecad.ts"
 import {Puzzle} from "~/lib/Puzzle.ts"
-import {Piece} from "~/lib/Piece.ts"
+import {Shape} from "~/lib/Shape.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 import {SquareGrid} from "~/lib/grids/SquareGrid.ts"
 import {CylindricalGrid} from "~/lib/grids/CylindricalGrid.ts"
@@ -15,12 +15,12 @@ describe("puzzlecad export", () => {
         const puzzle = new Puzzle(new CubicGrid())
         const puzzleFile = new PuzzleFile(puzzle, "Test Puzzle")
 
-        const goal = puzzle.addPiece(new Piece(
+        const goal = puzzle.addShape(new Shape(
             3,
             ["0,0,0", "0,1,0", "1,1,0", "2,1,0", "2,0,0"]
         ))
 
-        const piece0 = puzzle.addPiece(new Piece(
+        const shape0 = puzzle.addShape(new Shape(
             4,
             [
                 "0,0,0", "1,0,0", "1,1,0",
@@ -28,15 +28,15 @@ describe("puzzlecad export", () => {
             ]
         ))
 
-        const piece1 = puzzle.addPiece(new Piece(
+        const shape1 = puzzle.addShape(new Shape(
             5,
             ["0,0,0", "0,1,0"]
         ))
-        piece1.label = "Piece 1"
+        shape1.label = "Shape 1"
         const problem0 = new AssemblyProblem(0)
-        problem0.goalPieceId = goal.id
-        problem0.usedPieceCounts[piece0.id] = 1
-        problem0.usedPieceCounts[piece1.id] = 1
+        problem0.goalShapeId = goal.id
+        problem0.shapeCounts[shape0.id] = 1
+        problem0.shapeCounts[shape1.id] = 1
 
         expect(convertToPuzzlecad(puzzleFile)).toMatchInlineSnapshot(`
           "/**
@@ -57,7 +57,7 @@ describe("puzzlecad export", () => {
                   "xx|.x",
                   "xx|..",
               ],
-              [  // Piece 1
+              [  // Shape 1
                   "x|x",
               ],
           ], $auto_layout=true);"
@@ -68,25 +68,25 @@ describe("puzzlecad export", () => {
         const puzzle = new Puzzle(new SquareGrid())
         const puzzleFile = new PuzzleFile(puzzle, "Test Puzzle")
 
-        const goal = puzzle.addPiece(new Piece(
+        const goal = puzzle.addShape(new Shape(
             3,
             ["0,0,0", "0,1,0", "1,1,0", "2,1,0", "2,0,0"]
         ))
 
-        const piece0 = puzzle.addPiece(new Piece(
+        const shape0 = puzzle.addShape(new Shape(
             4,
             ["0,0,0", "1,0,0", "1,1,0"]
         ))
 
-        const piece1 = puzzle.addPiece(new Piece(
+        const shape1 = puzzle.addShape(new Shape(
             5,
             ["0,0,0", "0,1,0"]
         ))
-        piece1.label = "Piece 1"
+        shape1.label = "Shape 1"
         const problem0 = new AssemblyProblem(0)
-        problem0.goalPieceId = goal.id
-        problem0.usedPieceCounts[piece0.id] = 1
-        problem0.usedPieceCounts[piece1.id] = 1
+        problem0.goalShapeId = goal.id
+        problem0.shapeCounts[shape0.id] = 1
+        problem0.shapeCounts[shape1.id] = 1
 
         expect(convertToPuzzlecad(puzzleFile)).toMatchInlineSnapshot(`
           "/**
@@ -106,7 +106,7 @@ describe("puzzlecad export", () => {
               [
                   "xx|.x",
               ],
-              [  // Piece 1
+              [  // Shape 1
                   "x|x",
               ],
           ], $auto_layout=true);"

@@ -57,7 +57,7 @@ function addConstraint() {
     const constraints = clone(props.problem.constraints || [])
     constraints.push({
         type: "piece-group",
-        pieceIds: [],
+        shapeIds: [],
         count: 1
     })
     const action = new EditProblemMetadataAction(
@@ -139,7 +139,7 @@ function deleteConstraint(constraint: ProblemConstraint) {
     >
         <p>
             Constraints add a limit to the returned solutions, in addition to
-            the problem's used pieces.
+            the problem's piece ranges.
         </p>
         <VTable>
             <tbody>

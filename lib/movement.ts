@@ -1,74 +1,74 @@
 import {Grid} from "~/lib/Grid.ts"
-import {Piece, PieceCompleteId} from "~/lib/Piece.ts"
+import {Shape, ShapeCompleteId} from "~/lib/Shape.ts"
 import {Transform} from "~/lib/Grid.ts"
 
 export type Movement = {
-    movedPieces: PieceCompleteId[]
+    movedShapes: ShapeCompleteId[]
     transform: Transform
-    placements: Piece[]
+    placements: Shape[]
     repeat: number
     separates: boolean
 }
 
 /**
- * List the ways any single movement can be applied to the given pieces.
+ * List the ways any single movement can be applied to the given shapes.
  */
-export function getMovements(grid: Grid, pieces: Piece[]): Movement[] {
+export function getMovements(grid: Grid, shapes: Shape[]): Movement[] {
     const availableTransforms = grid.getDisassemblyTransforms()
 
-    // If we're moving more than this many pieces as a group, it's the same as
-    // moving the inverse set of pieces in the inverse transform.
-    const maxGroupSize = Math.ceil(pieces.length / 2)
+    // If we're moving more than this many shapes as a group, it's the same as
+    // moving the inverse set of shapes in the inverse transform.
+    const maxGroupSize = Math.ceil(shapes.length / 2)
 
     const movements: Movement[] = []
-    for(let pieceIdx=0; pieceIdx<pieces.length; pieceIdx++) {
+    for(let shapeIdx=0; shapeIdx<shapes.length; shapeIdx++) {
         transformLoop:
         for(const transform of availableTransforms) {
-            const piecesCopy = pieces.map(p => p.copy())
+            const shapesCopy = shapes.map(p => p.copy())
 
-            // Indexes of the pieces which are moving together.
-            // Although we'll add these pieces when needed, they'll all have
+            // Indexes of the shapes which are moving together.
+            // Although we'll add these shapes when needed, they'll all have
             // the same number of repeat transforms applied.
-            const groupedIndexes = [pieceIdx]
+            const groupedIndexes = [shapeIdx]
 
             for(let repeat=1; ; repeat++) {
 
-                // Move all pieces currently grouped together
+                // Move all shapes currently grouped together
                 for(const i of groupedIndexes) {
-                    piecesCopy[i].doTransform(grid, transform)
+                    shapesCopy[i].doTransform(grid, transform)
                 }
 
                 while(true) {  // eslint-disable-line no-constant-condition
 
-                    // If transformed piece overlaps other pieces, grab any pieces
+                    // If transformed shape overlaps other shapes, grab any shapes
                     // which need to move together.
-                    const overlappingPieceIndexes = getOverlapping(piecesCopy, groupedIndexes)
-                    if(overlappingPieceIndexes.length === 0) {
-                        // No overlapping pieces means this piece group is valid for this movement!
+                    const overlappingShapeIndexes = getOverlapping(shapesCopy, groupedIndexes)
+                    if(overlappingShapeIndexes.length === 0) {
+                        // No overlapping shapes means this shape group is valid for this movement!
                         break
                     } else if(repeat > 1) {
-                        // Later we'll have to move the overlapping pieces to
+                        // Later we'll have to move the overlapping shapes to
                         // have the same transform repeated the same number of
                         // steps. We could either check each step if the
-                        // overlapping piece itself overlaps another, but
+                        // overlapping shape itself overlaps another, but
                         // instead we just limit ourselves to grouping on
                         // repeat=1. This makes the moves returned slightly
                         // different but still ultimately the same except some
                         // things will take more moves.
                         continue transformLoop
                     }
-                    groupedIndexes.push(...overlappingPieceIndexes)
+                    groupedIndexes.push(...overlappingShapeIndexes)
 
                     if(groupedIndexes.length > maxGroupSize) {
                         continue transformLoop
                     }
 
-                    // Transform newly grouped pieces by the number of repeats
-                    // that all the other pieces have already been transformed
+                    // Transform newly grouped shapes by the number of repeats
+                    // that all the other shapes have already been transformed
                     // by.
-                    for(const overlappingIndex of overlappingPieceIndexes) {
+                    for(const overlappingIndex of overlappingShapeIndexes) {
                         for(let i=0; i<repeat; i++) {
-                            piecesCopy[overlappingIndex].doTransform(grid, transform)
+                            shapesCopy[overlappingIndex].doTransform(grid, transform)
                         }
                     }
 
@@ -76,19 +76,19 @@ export function getMovements(grid: Grid, pieces: Piece[]): Movement[] {
 
                 const groupVoxels = []
                 const otherVoxels = []
-                for(let i=0; i<pieces.length; i++) {
+                for(let i=0; i<shapes.length; i++) {
                     if(groupedIndexes.includes(i)) {
-                        groupVoxels.push(...piecesCopy[i].voxels)
+                        groupVoxels.push(...shapesCopy[i].voxels)
                     } else {
-                        otherVoxels.push(...piecesCopy[i].voxels)
+                        otherVoxels.push(...shapesCopy[i].voxels)
                     }
                 }
                 const separates = grid.isSeparate(groupVoxels, otherVoxels)
 
                 movements.push({
-                    movedPieces: groupedIndexes.map(i => pieces[i].completeId),
+                    movedShapes: groupedIndexes.map(i => shapes[i].completeId),
                     transform,
-                    placements: piecesCopy.map(p => p.copy()),
+                    placements: shapesCopy.map(p => p.copy()),
                     repeat,
                     separates,
                 })
@@ -104,24 +104,24 @@ export function getMovements(grid: Grid, pieces: Piece[]): Movement[] {
     return movements
 }
 
-function getOverlapping(pieces: Piece[], movedIndexes: number[]): number[] {
+function getOverlapping(shapes: Shape[], movedIndexes: number[]): number[] {
     const overlappingIndexes: number[] = []
 
-    const movedPieces = pieces.filter(
+    const movedShapes = shapes.filter(
         (_, i) => movedIndexes.includes(i)
     )
-    const unmovedPieces = pieces.filter(
+    const unmovedShapes = shapes.filter(
         (_, i) => !movedIndexes.includes(i)
     )
 
-    unmovedPieceLoop:
-    for(const unmovedPiece of unmovedPieces) {
-        for(const movedPiece of movedPieces) {
+    unmovedShapeLoop:
+    for(const unmovedShape of unmovedShapes) {
+        for(const movedShape of movedShapes) {
 
-            for(const movedVoxel of movedPiece.voxels) {
-                if(unmovedPiece.voxels.includes(movedVoxel)) {
-                    overlappingIndexes.push(pieces.indexOf(unmovedPiece))
-                    continue unmovedPieceLoop
+            for(const movedVoxel of movedShape.voxels) {
+                if(unmovedShape.voxels.includes(movedVoxel)) {
+                    overlappingIndexes.push(shapes.indexOf(unmovedShape))
+                    continue unmovedShapeLoop
                 }
             }
 

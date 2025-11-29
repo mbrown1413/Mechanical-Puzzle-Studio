@@ -2,10 +2,25 @@ import {serialize, deserialize, SerializableClass, registerClass} from "~/lib/se
 import {BoolWithReason, Range} from "~/lib/types.ts"
 import {Solver, AssemblySolver, SymmetryReduction} from "~/lib/Solver.ts"
 import {Solution} from "~/lib/Solution.ts"
-import {Piece, PieceId} from "~/lib/Piece.ts"
+import {Shape, ShapeId} from "~/lib/Shape.ts"
 import {Puzzle} from "~/lib/Puzzle.ts"
 
 export type ProblemId = number
+
+type AssemblyProblemStoredData = {
+    shapeCounts: {
+        [shapeId: ShapeId]: Range
+    }
+    goalShapeId: ShapeId
+
+    // Old names for `shapeCounts`
+    usedPieceCounts?: {
+        [shapeId: ShapeId]: Range
+    }
+
+    // Old names for `goalShapeId`
+    goalPieceId?: ShapeId
+}
 
 type SolverInfo = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,7 +31,7 @@ type SolverInfo = {
 
 export type ProblemConstraint = {
     type: "piece-group"
-    pieceIds: PieceId[]
+    shapeIds: ShapeId[]
     count: Range
 }
 
@@ -48,22 +63,23 @@ export abstract class Problem extends SerializableClass {
 
 /**
  * A problem where the objective is to take a number of pieces and fit them
- * together into into the shape of a goal piece.
+ * together into into the shape of a goal shape.
  */
 export class AssemblyProblem extends Problem {
-    goalPieceId?: PieceId
+    goalShapeId?: ShapeId
     symmetryReduction: SymmetryReduction
     disassemble: boolean
     removeNoDisassembly: boolean
 
     /**
-     * Maps piece ID to how many of that piece are used in this problem.
+     * Defines the pieces of the problem in a map from shape ID to how many of
+     * that shape are used as pieces.
      *
      * Value can either be a number indicating an exact amount, or min/max
      * range.
      */
-    usedPieceCounts: {
-        [pieceId: PieceId]: Range
+    shapeCounts: {
+        [shapeId: ShapeId]: Range
     }
 
     constraints: ProblemConstraint[] | undefined
@@ -71,33 +87,46 @@ export class AssemblyProblem extends Problem {
     constructor(id: ProblemId) {
         super(id)
         this.symmetryReduction = "rotation+mirror"
-        this.usedPieceCounts = {}
+        this.shapeCounts = {}
         this.disassemble = false
         this.removeNoDisassembly = true
     }
 
-    static postSerialize(problem: AssemblyProblem) {
-        const pieceIds = Object.keys(problem.usedPieceCounts).map(Number)
-        for(const pieceId of pieceIds) {
+    static preDeserialize(data: AssemblyProblemStoredData) {
+        // Backwards compatibility: convert old names for shapeCounts
+        if(data.usedPieceCounts && data.shapeCounts === undefined) {
+            data.shapeCounts = data.usedPieceCounts
+            delete data["usedPieceCounts"]
+        }
+        // Backwards compatibility: convert old names for goalShapeId
+        if(data.goalPieceId !== undefined && data.goalShapeId === undefined) {
+            data.goalShapeId = data.goalPieceId
+            delete data["goalPieceId"]
+        }
+    }
 
-            // Convert piece count to number if min === max
-            const value = problem.usedPieceCounts[pieceId]
+    static postSerialize(problem: AssemblyProblem) {
+        const shapeIds = Object.keys(problem.shapeCounts).map(Number)
+        for(const shapeId of shapeIds) {
+
+            // Convert shape range to number if min === max
+            const value = problem.shapeCounts[shapeId]
             if(
                 typeof value === "object" &&
                 value.min === value.max
             ) {
-                problem.usedPieceCounts[pieceId] = value.min
+                problem.shapeCounts[shapeId] = value.min
             }
 
-            // Remove used piece entries with "0" count
-            if(problem.usedPieceCounts[pieceId] === 0) {
-                delete problem.usedPieceCounts[pieceId]
+            // Remove used shape entries with "0" count
+            if(problem.shapeCounts[shapeId] === 0) {
+                delete problem.shapeCounts[shapeId]
             }
         }
 
-        // Remove "goal" piece from used pieces
-        if(problem.goalPieceId !== undefined) {
-            delete problem.usedPieceCounts[problem.goalPieceId]
+        // Remove "goal" shape from used shapes
+        if(problem.goalShapeId !== undefined) {
+            delete problem.shapeCounts[problem.goalShapeId]
         }
     }
 
@@ -116,51 +145,51 @@ export class AssemblyProblem extends Problem {
         }
     }
 
-    get usedPieceIds(): PieceId[] {
-        return Object.keys(this.usedPieceCounts).map(Number)
+    get usedShapeIds(): ShapeId[] {
+        return Object.keys(this.shapeCounts).map(Number)
     }
 
-    getUsedPieces(puzzle: Puzzle): Piece[] {
-        const pieces = []
-        for(const pieceId of this.usedPieceIds) {
-            if(pieceId === this.goalPieceId) { continue }
-            const piece = puzzle.getPiece(pieceId)
-            if(!piece) { continue }  // Ignore references to deleted pieces
-            pieces.push(piece)
+    getUsedShapes(puzzle: Puzzle): Shape[] {
+        const shapes = []
+        for(const shapeId of this.usedShapeIds) {
+            if(shapeId === this.goalShapeId) { continue }
+            const shape = puzzle.getShape(shapeId)
+            if(!shape) { continue }  // Ignore references to deleted shapes
+            shapes.push(shape)
         }
-        return pieces
+        return shapes
     }
 
-    getGoalPiece(puzzle: Puzzle): Piece | null {
-        if(this.goalPieceId === undefined) { return null }
-        return puzzle.getPiece(this.goalPieceId)
+    getGoalShape(puzzle: Puzzle): Shape | null {
+        if(this.goalShapeId === undefined) { return null }
+        return puzzle.getShape(this.goalShapeId)
     }
 
-    getPieceRange(pieceId: PieceId): {min: number, max: number} {
-        const count = this.usedPieceCounts[pieceId]
+    getPieceRange(shapeId: ShapeId): {min: number, max: number} {
+        const count = this.shapeCounts[shapeId]
         if(count === undefined) return {min: 0, max: 0}
         if(typeof count === "number") return {min: count, max: count}
         return count
     }
 
     countVoxels(puzzle: Puzzle) {
-        const countVoxels = (p: Piece) => new Set(p.voxels).size
-        const countOptionalVoxels = (p: Piece) => {
+        const countVoxels = (p: Shape) => new Set(p.voxels).size
+        const countOptionalVoxels = (p: Shape) => {
             const optionalAttr = (p.voxelAttributes || {})["optional"] || {}
             const variable = p.voxels.filter(v => optionalAttr[v] === true)
             return new Set(variable).size
         }
 
-        const pieces = this.getUsedPieces(puzzle)
-        const piecesMin = pieces.map(
+        const shapes = this.getUsedShapes(puzzle)
+        const piecesMin = shapes.map(
             piece => countVoxels(piece) * this.getPieceRange(piece.id).min
         ).reduce((a, b) => a + b, 0)
-        const piecesMax = pieces.map(
+        const piecesMax = shapes.map(
             piece => countVoxels(piece) * this.getPieceRange(piece.id).max
         ).reduce((a, b) => a + b, 0)
         const piecesRange = {min: piecesMin, max: piecesMax}
 
-        const goal = this.getGoalPiece(puzzle)
+        const goal = this.getGoalShape(puzzle)
         let goalRange = null
         if(goal) {
             const goalMax = countVoxels(goal)
@@ -170,19 +199,19 @@ export class AssemblyProblem extends Problem {
         }
 
         const goalString = goalRange === null ? "-" : rangeToString(goalRange)
-        const piecesString = pieces.length === 0 ? "-" : rangeToString(piecesRange)
+        const piecesString = shapes.length === 0 ? "-" : rangeToString(piecesRange)
 
         let warning: string | null = null
 
         if(goalRange === null) {
-            warning = "Goal piece is not set"
+            warning = "Goal shape is not set"
         } else if(goalRange.max <= 0) {
-            warning = "Goal piece is empty"
+            warning = "Goal shape is empty"
         } else if(piecesRange.max <= 0) {
-            warning = "No voxels are present in used pieces"
+            warning = "No voxels are present in used shapes"
         } else if(!rangesOverlap(goalRange, piecesRange)) {
             warning = (
-                "Number of voxels in pieces don't add up to the voxels in the goal piece.\n\n" +
+                "Number of voxels in pieces don't add up to the voxels in the goal shape.\n\n" +
                 `Voxels in goal: ${goalString}\n` +
                 `Voxels in pieces: ${piecesString}`
             )

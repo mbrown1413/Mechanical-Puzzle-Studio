@@ -1,13 +1,13 @@
 import * as THREE from "three"
 import {mergeGeometries} from "three/addons/utils/BufferGeometryUtils.js"
 
-import {Voxel, Piece, SideInfo, tweakColor} from "~lib"
+import {Voxel, Shape, SideInfo, tweakColor} from "~lib"
 import {makeCylinderTransform} from "~/ui/utils/threejs-objects.ts"
 
 type VoxelVisitData = {
     voxel: Voxel,
     sides: SideInfo[],
-    piece: Piece | null,
+    shape: Shape | null,
     inLayer: boolean,
 }
 
@@ -112,36 +112,36 @@ export class GridPainter extends VoxelPainter {
     }
 }
 
-export class PieceVoxelPainter extends VoxelPainter {
+export class ShapeVoxelPainter extends VoxelPainter {
     geometries: {
         default: THREE.BufferGeometry[]
         optional: THREE.BufferGeometry[]
     }
-    highlightedPieces: Piece[]
+    highlightedShapes: Shape[]
 
-    constructor(highlightPieces: Piece[]) {
+    constructor(highlightedShapes: Shape[]) {
         super(() => true)
         this.geometries = {
             default: [],
             optional: [],
         }
-        this.highlightedPieces = highlightPieces
+        this.highlightedShapes = highlightedShapes
     }
 
     visitVoxel(
-        {voxel, piece, sides}: VoxelVisitData
+        {voxel, shape: shape, sides}: VoxelVisitData
     ) {
-        if(!piece) { return }
+        if(!shape) { return }
 
-        let color = piece && piece.color ? piece.color : "rgb(0,0,0)"
-        if(this.highlightedPieces.includes(piece)) {
-            // Discolor whole highlighted piece
+        let color = shape && shape.color ? shape.color : "rgb(0,0,0)"
+        if(this.highlightedShapes.includes(shape)) {
+            // Discolor whole highlighted shape
             color = tweakColor(color)
         }
         const colorTuple = new THREE.Color(color).toArray()
 
         const optionalVoxel = Boolean(
-            piece?.getVoxelAttribute("optional", voxel)
+            shape?.getVoxelAttribute("optional", voxel)
         )
 
         for(const side of sides) {

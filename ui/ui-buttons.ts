@@ -1,13 +1,13 @@
 import {Ref} from "vue"
 
-import {PuzzleFile, PieceAssembly, convertToPuzzlecad} from "~lib"
+import {PuzzleFile, ShapeAssembly, convertToPuzzlecad} from "~lib"
 
 import {Action, ProblemListMoveAction} from "~/ui/actions.ts"
 import {ActionManager} from "~/ui/ActionManager.ts"
 import {
-    NewPieceAction, DeletePieceAction, DuplicatePieceAction,
-    NewPieceGroupAction, NewProblemAction, DeleteProblemAction,
-    DuplicateProblemAction, DeletePieceGroupAction, PieceListMoveAction
+    NewShapeAction, DeleteShapeAction, DuplicateShapeAction,
+    NewShapeGroupAction, NewProblemAction, DeleteProblemAction,
+    DuplicateProblemAction, DeleteShapeGroupAction, ShapeListMoveAction
 } from "~/ui/actions.ts"
 import {downloadPuzzle, downloadString} from "~/ui/utils/download.ts"
 import {PuzzleStorage} from "~/ui/storage.ts"
@@ -41,10 +41,10 @@ export function useUiButtonComposible(
     gridEditModal: Ref<InstanceType<typeof GridEditModal> | null>,
 ): Record<string, UiButtonDefinition> {
 
-    function getNewPieceBounds() {
-        const piece = puzzleEditor.value?.selectedPiece
-        if(piece && piece.bounds) {
-            return Object.assign({}, piece.bounds)
+    function getNewShapeBounds() {
+        const shape = puzzleEditor.value?.selectedShape
+        if(shape && shape.bounds) {
+            return Object.assign({}, shape.bounds)
         }
         return undefined
     }
@@ -53,11 +53,11 @@ export function useUiButtonComposible(
         if(!puzzleEditor.value) { return null }
 
         switch(puzzleEditor.value.currentTabId) {
-            case "pieces":
-                if(puzzleEditor.value?.selectedPieceGroup) {
-                    return "piece-group"
+            case "shapes":
+                if(puzzleEditor.value?.selectedShapeGroup) {
+                    return "shape-group"
                 } else {
-                    return "piece"
+                    return "shape"
                 }
             case "problems":
             case "solutions":
@@ -69,10 +69,10 @@ export function useUiButtonComposible(
     function getCurrentItemDeleteButton() {
         const type = getCurrentItemType()
         switch(type) {
-            case "piece":
-                return uiButtons.deletePiece
-            case "piece-group":
-                return uiButtons.deletePieceGroup
+            case "shape":
+                return uiButtons.deleteShape
+            case "shape-group":
+                return uiButtons.deleteShapeGroup
             case "problem":
                 return uiButtons.deleteProblem
             default:
@@ -211,94 +211,94 @@ export function useUiButtonComposible(
             }
         },
 
-        newPiece: {
-            text: "New Piece",
+        newShape: {
+            text: "New Shape",
             icon: "mdi-plus",
             perform: () => {
-                const bounds = getNewPieceBounds()
-                const selected = puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
-                performAction(new NewPieceAction(bounds, selected))
+                const bounds = getNewShapeBounds()
+                const selected = puzzleEditor.value?.selectedShape || puzzleEditor.value?.selectedShapeGroup
+                performAction(new NewShapeAction(bounds, selected))
             }
         },
 
-        deletePiece: {
-            text: "Delete Piece",
+        deleteShape: {
+            text: "Delete Shape",
             icon: "mdi-minus",
             perform: () => {
-                if(puzzleEditor.value?.selectedPiece) {
+                if(puzzleEditor.value?.selectedShape) {
                     performAction(
-                        new DeletePieceAction(puzzleEditor.value.selectedPiece.id)
+                        new DeleteShapeAction(puzzleEditor.value.selectedShape.id)
                     )
                 }
             },
-            enabled: () => Boolean(puzzleEditor.value?.selectedPiece),
+            enabled: () => Boolean(puzzleEditor.value?.selectedShape),
         },
 
-        duplicatePiece: {
-            text: "Duplicate Piece",
+        duplicateShape: {
+            text: "Duplicate Shape",
             icon: "mdi-content-duplicate",
             perform: () => {
-                if(puzzleEditor.value?.selectedPiece) {
+                if(puzzleEditor.value?.selectedShape) {
                     performAction(
-                        new DuplicatePieceAction(puzzleEditor.value.selectedPiece.id)
+                        new DuplicateShapeAction(puzzleEditor.value.selectedShape.id)
                     )
                 }
             },
-            enabled: () => Boolean(puzzleEditor.value?.selectedPiece),
+            enabled: () => Boolean(puzzleEditor.value?.selectedShape),
         },
 
-        newPieceAssembly: {
-            text: "New Piece Assembly",
+        newShapeAssembly: {
+            text: "New Shape Assembly",
             icon: "mdi-plus",
             perform: () => {
-                puzzleEditor.value?.setUiFocus("pieces")
-                const selected = puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
+                puzzleEditor.value?.setUiFocus("shapes")
+                const selected = puzzleEditor.value?.selectedShape || puzzleEditor.value?.selectedShapeGroup
                 performAction(
-                    new NewPieceGroupAction(PieceAssembly, selected)
+                    new NewShapeGroupAction(ShapeAssembly, selected)
                 )
             }
         },
 
-        deletePieceGroup: {
-            text: "Delete Piece Group",
+        deleteShapeGroup: {
+            text: "Delete Shape Group",
             icon: "mdi-minus",
             perform: () => {
-                if(puzzleEditor.value?.selectedPieceGroup) {
+                if(puzzleEditor.value?.selectedShapeGroup) {
                     performAction(
-                        new DeletePieceGroupAction(puzzleEditor.value.selectedPieceGroup.id)
+                        new DeleteShapeGroupAction(puzzleEditor.value.selectedShapeGroup.id)
                     )
                 }
             },
-            enabled: () => Boolean(puzzleEditor.value?.selectedPieceGroup),
+            enabled: () => Boolean(puzzleEditor.value?.selectedShapeGroup),
         },
 
-        pieceListMoveUp: {
-            text: () => puzzleEditor.value?.selectedPieceGroup ? "Move piece group up" : "Move piece up",
+        shapeListMoveUp: {
+            text: () => puzzleEditor.value?.selectedShapeGroup ? "Move shape group up" : "Move shape up",
             icon: "mdi-menu-up-outline",
             perform: () => {
-                const selected = puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
+                const selected = puzzleEditor.value?.selectedShape || puzzleEditor.value?.selectedShapeGroup
                 if(!selected) { return }
                 performAction(
-                    new PieceListMoveAction("up", selected)
+                    new ShapeListMoveAction("up", selected)
                 )
             },
             enabled: () => Boolean(
-                puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
+                puzzleEditor.value?.selectedShape || puzzleEditor.value?.selectedShapeGroup
             ),
         },
 
-        pieceListMoveDown: {
-            text: () => puzzleEditor.value?.selectedPieceGroup ? "Move piece group down" : "Move piece down",
+        shapeListMoveDown: {
+            text: () => puzzleEditor.value?.selectedShapeGroup ? "Move shape group down" : "Move shape down",
             icon: "mdi-menu-down-outline",
             perform: () => {
-                const selected = puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
+                const selected = puzzleEditor.value?.selectedShape || puzzleEditor.value?.selectedShapeGroup
                 if(!selected) { return }
                 performAction(
-                    new PieceListMoveAction("down", selected)
+                    new ShapeListMoveAction("down", selected)
                 )
             },
             enabled: () => Boolean(
-                puzzleEditor.value?.selectedPiece || puzzleEditor.value?.selectedPieceGroup
+                puzzleEditor.value?.selectedShape || puzzleEditor.value?.selectedShapeGroup
             ),
         },
 

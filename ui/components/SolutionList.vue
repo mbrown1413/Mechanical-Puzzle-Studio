@@ -63,7 +63,7 @@ const solutionItems = computed(() => {
 // prop to false so it never changes selection, and handle some cases here
 // instead.
 watch(solutionItems, (newItems, oldItems) => {
-    // Auto-select first piece when solutions are added
+    // Auto-select first solution when solutions are added
     if(
         props.selectedSolutionId === null &&
         (oldItems === undefined || oldItems.length === 0) &&

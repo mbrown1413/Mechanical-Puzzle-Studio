@@ -7,14 +7,14 @@
 import {computed, ref, Ref, watch, watchEffect} from "vue"
 import Split from "split-grid"
 
-import {Puzzle, PieceId, ProblemId, AssemblySolution} from "~lib"
+import {Puzzle, ShapeId, ProblemId, AssemblySolution} from "~lib"
 
-import {Action, EditPieceGroupMetadataAction} from "~/ui/actions.ts"
+import {Action, EditShapeGroupMetadataAction} from "~/ui/actions.ts"
 import TabLayout from "~/ui/common/TabLayout.vue"
-import PieceEditor from "~/ui/components/PieceEditor.vue"
+import ShapeEditor from "~/ui/components/ShapeEditor.vue"
 import SolutionDisplay from "~/ui/components/SolutionDisplay.vue"
 import ItemMetadataEditor from "~/ui/components/ItemMetadataEditor.vue"
-import PieceList from "~/ui/components/PieceList.vue"
+import ShapeList from "~/ui/components/ShapeList.vue"
 import ProblemList from "~/ui/components/ProblemList.vue"
 import ProblemSolverForm from "~/ui/components/ProblemSolverForm.vue"
 import SolutionList from "~/ui/components/SolutionList.vue"
@@ -28,35 +28,35 @@ const emit = defineEmits<{
     action: [action: Action]
 }>()
 
-const selectedPieceId: Ref<PieceId | null> = ref(
-    props.puzzle.pieces.length ? props.puzzle.pieces[0].id : null
+const selectedShapeId: Ref<ShapeId | null> = ref(
+    props.puzzle.shapes.length ? props.puzzle.shapes[0].id : null
 )
-const selectedPieceGroupId: Ref<number | null> = ref(null)
+const selectedShapeGroupId: Ref<number | null> = ref(null)
 const selectedProblemId: Ref<ProblemId | null> = ref(
     props.puzzle.problems.length ? props.puzzle.problems[0].id : null
 )
 const selectedSolutionId: Ref<number | null> = ref(null)
 
-const pieceEditor: Ref<InstanceType<typeof PieceEditor> | null> = ref(null)
-const pieceList: Ref<InstanceType<typeof PieceList> | null> = ref(null)
+const shapeEditor: Ref<InstanceType<typeof ShapeEditor> | null> = ref(null)
+const shapeList: Ref<InstanceType<typeof ShapeList> | null> = ref(null)
 const problemList: Ref<InstanceType<typeof ProblemList> | null> = ref(null)
 const solutionList: Ref<InstanceType<typeof SolutionList> | null> = ref(null)
 const auxEditArea: Ref<HTMLElement | null> = ref(null)
 
-const currentTabId: Ref<"pieces" | "problems" | "solutions"> = ref("pieces")
+const currentTabId: Ref<"shapes" | "problems" | "solutions"> = ref("shapes")
 const sideTabs = [
-    {id: "pieces", text: "Pieces"},
+    {id: "shapes", text: "Shapes"},
     {id: "problems", text: "Problems"},
     {id: "solutions", text: "Solutions", slot: "problems"},
 ]
 
-const selectedPiece = computed(() => {
-    if(selectedPieceId.value === null) { return null }
-    return props.puzzle.getPiece(selectedPieceId.value)
+const selectedShape = computed(() => {
+    if(selectedShapeId.value === null) { return null }
+    return props.puzzle.getShape(selectedShapeId.value)
 })
-const selectedPieceGroup = computed(() => {
-    if(selectedPieceGroupId.value === null) { return null }
-    return props.puzzle.getPieceGroup(selectedPieceGroupId.value)
+const selectedShapeGroup = computed(() => {
+    if(selectedShapeGroupId.value === null) { return null }
+    return props.puzzle.getShapeGroup(selectedShapeGroupId.value)
 })
 const selectedProblem = computed(() => {
     if(selectedProblemId.value === null) { return null }
@@ -68,23 +68,23 @@ const selectedSolution = computed(() => {
     ) || null
 })
 
-/* Get currently selected piece group, or the piece group inside the selected
- * piece if a piece group is not selected directly. */
-const activePieceGroup = computed(() => {
-    if(selectedPieceGroup.value) {
-        return selectedPieceGroup.value
+/* Get currently selected shape group, or the shape group inside the selected
+ * shape if a shape group is not selected directly. */
+const activeShapeGroup = computed(() => {
+    if(selectedShapeGroup.value) {
+        return selectedShapeGroup.value
     }
-    if(selectedPiece.value) {
-        return props.puzzle.getPieceGroupFromPiece(selectedPiece.value)
+    if(selectedShape.value) {
+        return props.puzzle.getShapeGroupFromShape(selectedShape.value)
     }
     return null
 })
 
 defineExpose({
     currentTabId,
-    selectedPiece,
-    selectedPieceGroup,
-    activePieceGroup,
+    selectedShape: selectedShape,
+    selectedShapeGroup: selectedShapeGroup,
+    activeShapeGroup: activeShapeGroup,
     selectedProblem,
     selectedSolution,
     setUiFocus,
@@ -130,22 +130,22 @@ function performAction(action: Action) {
     emit("action", action)
 }
 
-function setUiFocus(focus: "pieces" | "problems" | "solutions") {
+function setUiFocus(focus: "shapes" | "problems" | "solutions") {
     currentTabId.value = focus
 }
 
-// Set focus on pieces and problems list.
+// Set focus on shapes and problems list.
 // We unfocus immediately when tab changes, but don't re-focus until after a
 // delay because of the transition effect.
 watch(currentTabId, (tabId) => {
-    pieceList.value?.setFocus(false)
+    shapeList.value?.setFocus(false)
     problemList.value?.setFocus(false)
 
     setTimeout(() => {
         if(tabId !== currentTabId.value) {
             return
         }
-        if(tabId === "pieces") { pieceList.value?.setFocus(true) }
+        if(tabId === "shapes") { shapeList.value?.setFocus(true) }
         if(tabId === "problems") { problemList.value?.setFocus(true) }
     }, 500)
 }, {immediate: true})
@@ -162,12 +162,12 @@ watch(currentTabId, (tabId) => {
                 v-model:currentTabId="currentTabId"
                 :contentStyle="{'flex-grow': 1}"
             >
-                <template v-slot:pieces>
-                    <PieceList
-                        ref="pieceList"
+                <template v-slot:shapes>
+                    <ShapeList
+                        ref="shapeList"
                         :puzzle="puzzle"
-                        v-model:selectedPieceId="selectedPieceId"
-                        v-model:selectedPieceGroupId="selectedPieceGroupId"
+                        v-model:selectedShapeId="selectedShapeId"
+                        v-model:selectedShapeGroupId="selectedShapeGroupId"
                         @action="performAction"
                     />
                 </template>
@@ -186,21 +186,21 @@ watch(currentTabId, (tabId) => {
 
         <div class="grid-cell side-bot">
             <div
-                v-show="currentTabId === 'pieces'"
+                v-show="currentTabId === 'shapes'"
                 style="height: 100%; display: flex; flex-direction: column;"
             >
                 <ItemMetadataEditor
-                    v-if="selectedPiece"
+                    v-if="selectedShape"
                     :puzzle="puzzle"
-                    itemType="piece"
-                    :itemId="selectedPiece.id"
+                    itemType="shape"
+                    :itemId="selectedShape.id"
                     @action="performAction"
                 />
                 <FormEditor
-                    v-if="selectedPieceGroup && selectedPieceGroupId !== null"
-                    :item="selectedPieceGroup"
-                    @edit="performAction(new EditPieceGroupMetadataAction(selectedPieceGroupId, $event))"
-                    title="Piece Group"
+                    v-if="selectedShapeGroup && selectedShapeGroupId !== null"
+                    :item="selectedShapeGroup"
+                    @edit="performAction(new EditShapeGroupMetadataAction(selectedShapeGroupId, $event))"
+                    title="Shape Group"
                     style="margin: 1em;"
                 />
                 <div ref="auxEditArea" style="flex-grow: 1;"></div>
@@ -223,14 +223,14 @@ watch(currentTabId, (tabId) => {
         </div>
 
         <div class="grid-cell main">
-            <PieceEditor
-                ref="pieceEditor"
-                v-show="currentTabId === 'pieces'"
+            <ShapeEditor
+                ref="shapeEditor"
+                v-show="currentTabId === 'shapes'"
                 :puzzle="puzzle"
-                :pieceId="selectedPieceId"
+                :shapeId="selectedShapeId"
                 :auxEditArea="auxEditArea"
-                :displayPieceIds="selectedPieceGroup?.displayCombined ?
-                        selectedPieceGroup.pieces.map(p => p.id) :
+                :displayShapeIds="selectedShapeGroup?.displayCombined ?
+                        selectedShapeGroup.shapes.map(p => p.id) :
                         undefined
                 "
                 @action="performAction"

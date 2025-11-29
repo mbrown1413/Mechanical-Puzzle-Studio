@@ -4,8 +4,8 @@ import * as THREE from "three"
 import {Vector3} from "three"
 import {mergeGeometries} from "three/addons/utils/BufferGeometryUtils.js"
 
-import {Voxel, SideInfo, Viewpoint, Grid, Piece, Bounds, isColorSimilar} from "~lib"
-import {VoxelPainter, GridPainter, PieceVoxelPainter} from "./GridDisplay_voxel-painters.ts"
+import {Voxel, SideInfo, Viewpoint, Grid, Shape, Bounds, isColorSimilar} from "~lib"
+import {VoxelPainter, GridPainter, ShapeVoxelPainter} from "./GridDisplay_voxel-painters.ts"
 import {CameraScheme, CameraSchemeName, ThreeDimensionalCameraScheme, TwoDimensionalCameraScheme} from "./GridDisplay_camera.ts"
 import {ThreeJsResourceTracker} from "~/ui/utils/ThreeJsResourceTracker.ts"
 import {multiRenderer} from "~/ui/utils/MultiRenderer.ts"
@@ -13,13 +13,13 @@ import {multiRenderer} from "~/ui/utils/MultiRenderer.ts"
 export function useGridDisplayRenderComposible(
     element: Ref<HTMLElement>,
     grid: Ref<Grid>,
-    pieces: Ref<Piece[]>,
+    shapes: Ref<Shape[]>,
     bounds: Ref<Bounds>,
     displayOnly: boolean,
     layerN: Ref<number>,
     viewpoint: Ref<Viewpoint>,
     highlightedVoxels: Ref<Voxel[]>,
-    highlightBy: "voxel" | "piece",
+    highlightBy: "voxel" | "shape",
     cameraSchemeName: Ref<CameraSchemeName>,
 ) {
     const scene = new THREE.Scene()
@@ -62,18 +62,18 @@ export function useGridDisplayRenderComposible(
         }
     })
 
-    const voxelPieceMap = computed(() => {
+    const voxelShapeMap = computed(() => {
         const map = new Map()
-        for(const piece of pieces.value) {
-            for(const voxel of piece.voxels) {
-                map.set(voxel, piece)
+        for(const shape of shapes.value) {
+            for(const voxel of shape.voxels) {
+                map.set(voxel, shape)
             }
         }
         return map
     })
-    function getPieceAtVoxel(voxel: Voxel): Piece | null {
-        const piece = voxelPieceMap.value.get(voxel)
-        return piece === undefined ? null : piece
+    function getShapeAtVoxel(voxel: Voxel): Shape | null {
+        const shape = voxelShapeMap.value.get(voxel)
+        return shape === undefined ? null : shape
     }
 
     function makeCameraScheme(schemeName: CameraSchemeName): CameraScheme {
@@ -108,29 +108,29 @@ export function useGridDisplayRenderComposible(
 
         cameraScheme.value.addObjects(scene)
 
-        let highlightedPieces: Piece[]
-        if(highlightBy === "piece" && highlightedVoxels.value.length) {
-            highlightedPieces = [...new Set(
+        let highlightedShapes: Shape[]
+        if(highlightBy === "shape" && highlightedVoxels.value.length) {
+            highlightedShapes = [...new Set(
                 highlightedVoxels.value.map(
-                    voxel => getPieceAtVoxel(voxel)
+                    voxel => getShapeAtVoxel(voxel)
                 ).filter(
-                    (piece): piece is Piece => piece !== null
+                    (shape): shape is Shape => shape !== null
                 )
             )]
         } else {
-            highlightedPieces = []
+            highlightedShapes = []
         }
         const highlightColor = new THREE.Color(
-            getVoxelHighlightColor(highlightedPieces[0] || null)
+            getVoxelHighlightColor(highlightedShapes[0] || null)
         )
 
         // Voxel Painters accumulate data as we visit each voxel and at the
         // end they emit objects to add to the scene.
         const voxelPainters: VoxelPainter[] = [
 
-            // Outline voxels in pieces with the grid wireframe
+            // Outline voxels in shapes with the grid wireframe
             new GridPainter(
-                ({inLayer, piece}) => !inLayer && piece !== null,
+                ({inLayer, shape}) => !inLayer && shape !== null,
                 new THREE.MeshBasicMaterial({color: 0xcccccc}),
                 0.015
             ),
@@ -142,8 +142,8 @@ export function useGridDisplayRenderComposible(
                 0.015
             ),
 
-            // Draw solids for voxels with pieces
-            new PieceVoxelPainter(highlightedPieces),
+            // Draw solids for voxels with shapes
+            new ShapeVoxelPainter(highlightedShapes),
 
             // Different colored grid on highlighted voxel
             new GridPainter(
@@ -154,8 +154,8 @@ export function useGridDisplayRenderComposible(
 
         ]
 
-        // Hide layer grid when no piece is selected
-        if(pieces.value.length === 0) {
+        // Hide layer grid when no shape is selected
+        if(shapes.value.length === 0) {
             voxelPainters.length = 0
         }
 
@@ -163,14 +163,14 @@ export function useGridDisplayRenderComposible(
         for(const voxel of cameraScheme.value.iterVoxels(grid.value)) {
             const voxelInfo = grid.value.getVoxelInfo(voxel)
             const inLayer = displayOnly ? false : viewpoint.value.isInLayer(voxel, layerN.value)
-            const pieceAtVoxel = getPieceAtVoxel(voxel)
+            const shapeAtVoxel = getShapeAtVoxel(voxel)
             const sides = voxelInfo.sides.map(side => grid.value.getSideInfo(voxel, side))
 
             for(const voxelPainter of voxelPainters) {
                 const args = {
                     voxel,
                     sides,
-                    piece: pieceAtVoxel,
+                    shape: shapeAtVoxel,
                     inLayer,
                 }
                 if(!voxelPainter.shouldVisit(args)) { continue }
@@ -179,7 +179,7 @@ export function useGridDisplayRenderComposible(
 
             // Populate hitTestObjects and save what voxel the object was drawn
             // for so we can pull it out later after a raycast intersects it.
-            if(displayOnly ? pieceAtVoxel : (inLayer || pieceAtVoxel)) {
+            if(displayOnly ? shapeAtVoxel : (inLayer || shapeAtVoxel)) {
                 const object = getVoxelHitTestObject(sides)
                 // Only add the voxel userData if we want this to be
                 // highlighted. Otherwise it will occlude other voxels but not
@@ -236,10 +236,10 @@ function getAllGridVertices(grid: Grid, bounds: Bounds): Vector3[] {
     return points
 }
 
-function getVoxelHighlightColor(piece: Piece | null) {
+function getVoxelHighlightColor(shape: Shape | null) {
     const defaultColor = "#00ff00"
     const alternateColor = "#0000ff"
-    if(piece === null || piece.color === undefined || !isColorSimilar(piece.color, defaultColor)) {
+    if(shape === null || shape.color === undefined || !isColorSimilar(shape.color, defaultColor)) {
         return defaultColor
     } else {
         return alternateColor

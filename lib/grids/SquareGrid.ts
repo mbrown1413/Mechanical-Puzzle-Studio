@@ -1,6 +1,6 @@
 import {registerClass} from "~/lib/serialize.ts"
 import {Voxel} from "~/lib/Grid.ts"
-import {Piece} from "~/lib/Piece.ts"
+import {Shape} from "~/lib/Shape.ts"
 import {CubicBounds, CubicGrid} from "~/lib/grids/CubicGrid.ts"
 import {Form} from "~/lib/forms.ts"
 
@@ -22,7 +22,7 @@ export class SquareGrid extends CubicGrid {
                     type: "checkbox",
                     property: "flippable",
                     label: "Flippable",
-                    description: 'Whether pieces are "two-sided" and may be flipped in solutions',
+                    description: 'Whether shapes are "two-sided" and may be flipped in solutions',
                 },
             ]
         }
@@ -102,22 +102,22 @@ export class SquareGrid extends CubicGrid {
     }
 
     /**
-     * Produce a set of pieces from a string representation.
+     * Produce a set of shapes from a string representation.
      * 
-     * Each character represents a voxel. A number 0-9 is an ID of the piece in
-     * that voxel. The following characters represent a voxel without a piece:
+     * Each character represents a voxel. A number 0-9 is an ID of the shape in
+     * that voxel. The following characters represent a voxel without a shape:
      * ".", "-", " "
      *
      * For example:
      *
-     *     grid.piecesFromString(`
+     *     grid.shapesFromString(`
      *         000
      *         1.0
      *         111
      *     `)
      */
-    piecesFromString(layoutString: string): Piece[] {
-        const pieces: {[id: number]: Piece} = {}
+    shapesFromString(layoutString: string): Shape[] {
+        const shapes: {[id: number]: Shape} = {}
         for(const [y, line] of layoutString.split("\n").entries()) {
             for(let x=0; x<line.length; x++) {
                 const char = line[x]
@@ -130,15 +130,15 @@ export class SquareGrid extends CubicGrid {
                     throw new Error(`Unexpected non-number ID: ${line[x]}`)
                 }
 
-                const piece = pieces[id] || new Piece(id)
-                pieces[id] = piece
-                piece.addVoxel(`${x},-${y},0`)
+                const shape = shapes[id] || new Shape(id)
+                shapes[id] = shape
+                shape.addVoxel(`${x},-${y},0`)
             }
         }
 
-        // Translate all pieces so the bounds is 0,0
+        // Translate all shapes so the bounds is 0,0
         const bounds = this.getBoundsMax(
-            ...Object.values(pieces).map(
+            ...Object.values(shapes).map(
                 p => this.getVoxelBounds(p.voxels)
             )
         )
@@ -148,11 +148,11 @@ export class SquareGrid extends CubicGrid {
             ), 
             "0,0,0"
         )
-        for(const piece of Object.values(pieces)) {
-            piece.doTransform(this, translation)
+        for(const shape of Object.values(shapes)) {
+            shape.doTransform(this, translation)
         }
 
-        return Object.values(pieces)
+        return Object.values(shapes)
     }
 }
 

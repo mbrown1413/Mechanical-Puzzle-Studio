@@ -1,10 +1,10 @@
 import {SerializableClass, registerClass} from "~/lib/serialize.ts"
-import {Piece, PieceCompleteId} from "~/lib/Piece.ts"
+import {Shape, ShapeCompleteId} from "~/lib/Shape.ts"
 import {Grid, Transform, Bounds, Voxel} from "~/lib/Grid.ts"
 import {clone} from "~/lib/serialize.ts"
 
 export type DisassemblyStep = {
-    movedPieces: PieceCompleteId[]
+    movedShapes: ShapeCompleteId[]
     transform: Transform
     repeat: number  // Number of times `transform` is repeated
     separates: boolean
@@ -15,7 +15,7 @@ type StoredDisassemblyData = {
 }
 
 /**
- * A single way to completely disassemble a set of pieces.
+ * A single way to completely disassemble a set of shapes.
  */
 export class Disassembly extends SerializableClass {
     steps: DisassemblyStep[]
@@ -33,7 +33,7 @@ export class Disassembly extends SerializableClass {
      * Perform non-functional edits to make the disassembly read more
      * logically.
      */
-    prepareForStorage(grid: Grid, start: Piece[]) {
+    prepareForStorage(grid: Grid, start: Shape[]) {
         this.applyWeights(grid, start)
         this.reorder()
     }
@@ -43,7 +43,7 @@ export class Disassembly extends SerializableClass {
      * `prepareForStorage()` to make the disassembly make more sense for
      * display purposes.
      */
-    prepareForDisplay(grid: Grid, start: Piece[]) {
+    prepareForDisplay(grid: Grid, start: Shape[]) {
         this.spaceSepratedParts(grid, start)
     }
 
@@ -53,7 +53,7 @@ export class Disassembly extends SerializableClass {
         stored.steps = disassembly.steps.map(s => {
             const repeatStr = s.repeat !== 1 ? ` repeat=${s.repeat}` : ""
             const separatesStr = s.separates ? " separates" : ""
-            return `pieces=${s.movedPieces.join(",")} transform=${s.transform}${repeatStr}${separatesStr}`
+            return `shapes=${s.movedShapes.join(",")} transform=${s.transform}${repeatStr}${separatesStr}`
         })
     }
 
@@ -71,8 +71,14 @@ export class Disassembly extends SerializableClass {
                 dict[key] = value
             }
 
+            // Backwards compatibility: old name for "shapes"
+            if(dict.pieces !== undefined && dict.shapes === undefined) {
+                dict.shapes = dict.pieces
+                delete dict["pieces"]
+            }
+
             disassemblyData.steps[i] = {
-                movedPieces: dict.pieces.split(",") as PieceCompleteId[],
+                movedShapes: dict.shapes.split(",") as ShapeCompleteId[],
                 transform: dict.transform,
                 repeat: dict.repeat === undefined ? 1 : Number(dict.repeat),
                 separates: "separates" in dict && dict.separates !== "false",
@@ -112,30 +118,30 @@ export class Disassembly extends SerializableClass {
     }
 
     /**
-     * Get each intermediate placement of pieces between the start and
+     * Get each intermediate placement of shapes between the start and
      * disassembly.
      */
-    getState(grid: Grid, start: Piece[], stateNumber: number): Piece[] {
-        const state = start.map(piece => piece.copy())
+    getState(grid: Grid, start: Shape[], stateNumber: number): Shape[] {
+        const state = start.map(shape => shape.copy())
         for(const step of this.steps.slice(0, stateNumber)) {
             performStep(grid, state, step)
         }
         return state
     }
 
-    *getAllStates(grid: Grid, start: Piece[]): Iterable<Piece[]> {
+    *getAllStates(grid: Grid, start: Shape[]): Iterable<Shape[]> {
         for(let i=0; i<this.nStates; i++) {
             yield this.getState(grid, start, i)
         }
     }
 
-    getBounds(grid: Grid, start: Piece[]): Bounds {
-        const allPieces: Piece[] = []
+    getBounds(grid: Grid, start: Shape[]): Bounds {
+        const allShapes: Shape[] = []
         for(const state of this.getAllStates(grid, start)) {
-            allPieces.push(...state)
+            allShapes.push(...state)
         }
-        const allPieceBounds = allPieces.map(piece => grid.getVoxelBounds(piece.voxels))
-        return grid.getBoundsMax(...allPieceBounds)
+        const allShapeBounds = allShapes.map(shape => grid.getVoxelBounds(shape.voxels))
+        return grid.getBoundsMax(...allShapeBounds)
     }
 
     /**
@@ -154,15 +160,15 @@ export class Disassembly extends SerializableClass {
 
             // Separate steps into 3 groups:
             //   1. up to and including the first separation
-            //   2. group 1: after the first separation, with pieces moved in the separating step
-            //   3. group 2: after the first separation, with pieces not moved in the separating step
-            const group1Pieces = steps[separatingIndex].movedPieces
+            //   2. group 1: after the first separation, with shapes moved in the separating step
+            //   3. group 2: after the first separation, with shapes not moved in the separating step
+            const group1Shapes = steps[separatingIndex].movedShapes
             const group1 = []
             const group2 = []
             for(let i=separatingIndex+1; i<steps.length; i++) {
                 const step = steps[i]
-                const inGroup1 = group1Pieces.some(
-                    idInGroup1 => step.movedPieces.includes(idInGroup1)
+                const inGroup1 = group1Shapes.some(
+                    idInGroup1 => step.movedShapes.includes(idInGroup1)
                 )
                 if(inGroup1) {
                     group1.push(step)
@@ -193,46 +199,46 @@ export class Disassembly extends SerializableClass {
      * separation between separate parts so they can be placed on the same grid
      * and viewed proprely.
      */
-    spaceSepratedParts(grid: Grid, start: Piece[]) {
+    spaceSepratedParts(grid: Grid, start: Shape[]) {
 
         type SeparationEvent = {
             step: DisassemblyStep
-            pieceIds1: PieceCompleteId[]
-            pieceIds2: PieceCompleteId[]
+            shapeIds1: ShapeCompleteId[]
+            shapeIds2: ShapeCompleteId[]
             partIndexes: [number, number]
         }
 
-        let state: Piece[]
-        let parts: PieceCompleteId[][]
+        let state: Shape[]
+        let parts: ShapeCompleteId[][]
         let separations: SeparationEvent[]
 
         function splitParts(step: DisassemblyStep, movedPartIdx: number) {
             parts.push(parts[movedPartIdx].filter(
-                pieceId => !step.movedPieces.includes(pieceId)
+                shapeId => !step.movedShapes.includes(shapeId)
             ))
-            parts[movedPartIdx] = [...step.movedPieces]
+            parts[movedPartIdx] = [...step.movedShapes]
             separations.push({
                 step,
-                pieceIds1: [...parts[movedPartIdx]],
-                pieceIds2: [...parts[parts.length-1]],
+                shapeIds1: [...parts[movedPartIdx]],
+                shapeIds2: [...parts[parts.length-1]],
                 partIndexes: [movedPartIdx, parts.length-1]
             })
         }
 
-        /** Return the latest separation event in which the two given pieces
+        /** Return the latest separation event in which the two given shapes
          * separated. */
         function findSeparationEvent(
-            pieceId1: PieceCompleteId,
-            pieceId2: PieceCompleteId
+            shapeId1: ShapeCompleteId,
+            shapeId2: ShapeCompleteId
         ): SeparationEvent | null {
             return separations.findLast((separation) => {
-                if(separation.pieceIds1.includes(pieceId1)) {
-                    if(separation.pieceIds2.includes(pieceId2)) {
+                if(separation.shapeIds1.includes(shapeId1)) {
+                    if(separation.shapeIds2.includes(shapeId2)) {
                         return true
                     }
                 }
-                if(separation.pieceIds2.includes(pieceId1)) {
-                    if(separation.pieceIds1.includes(pieceId2)) {
+                if(separation.shapeIds2.includes(shapeId1)) {
+                    if(separation.shapeIds1.includes(shapeId2)) {
                         return true
                     }
                 }
@@ -240,20 +246,20 @@ export class Disassembly extends SerializableClass {
         }
 
         /** Get all voxels in the given part. */
-        function getPartVoxels(part: PieceCompleteId[]): Voxel[] {
+        function getPartVoxels(part: ShapeCompleteId[]): Voxel[] {
             const voxels = []
-            for(const piece of state) {
-                if(part.includes(piece.completeId)) {
-                    voxels.push(...piece.voxels)
+            for(const shape of state) {
+                if(part.includes(shape.completeId)) {
+                    voxels.push(...shape.voxels)
                 }
             }
             return voxels
         }
 
         function findCollidingPart(
-            movedPart: PieceCompleteId[],
+            movedPart: ShapeCompleteId[],
             ignoreLatestSeparation: boolean,
-        ): PieceCompleteId[] | null {
+        ): ShapeCompleteId[] | null {
             let partsForConsideration = parts
             if(ignoreLatestSeparation) {
                 const separation = separations[separations.length-1]
@@ -285,24 +291,24 @@ export class Disassembly extends SerializableClass {
         // Establish an upper bound for how many iterations we may need. This
         // protects against bugs and possibly malformed disassemblies from
         // making an infinite loop
-        const nPieces = start.length
+        const nShapes = start.length
         const nTotalVoxels = start.map(
-            piece => piece.voxels.length
+            shape => shape.voxels.length
         ).reduce(
             (a, b) => a+b
         )
-        // Each piece will at most have to move nTotalVoxels plus a spacing of
-        // 2 to keep each piece separated on both sides by 1.
-        const iterationUpperBound = nPieces * (nTotalVoxels + 2*nPieces)
+        // Each shape will at most have to move nTotalVoxels plus a spacing of
+        // 2 to keep each shape separated on both sides by 1.
+        const iterationUpperBound = nShapes * (nTotalVoxels + 2*nShapes)
 
         iteration: for(let iteration=0; iteration<iterationUpperBound; iteration++) {
-            state = start.map(piece => piece.copy())
-            parts = [start.map(piece => piece.completeId)]
+            state = start.map(shape => shape.copy())
+            parts = [start.map(shape => shape.completeId)]
             separations = []
 
             for(const step of this.steps) {
                 const movedPartIdx = parts.findIndex(
-                    part => part.includes(step.movedPieces[0])
+                    part => part.includes(step.movedShapes[0])
                 )
 
                 if(step.separates) {
@@ -340,44 +346,44 @@ export class Disassembly extends SerializableClass {
 
     /**
      * Flips the movements so each individual step will tend to move lower
-     * weighted pieces, rather than move the inverse set of pieces in the
+     * weighted shapes, rather than move the inverse set of shapes in the
      * opposite direction.
      */
-    applyWeights(grid: Grid, pieces: Piece[]) {
+    applyWeights(grid: Grid, shapes: Shape[]) {
 
-        const getPieceFromId = (pieceId: PieceCompleteId) => {
-            const piece = pieces.find(piece => piece.completeId === pieceId)
-            if(!piece) {
-                throw new Error(`Could not find piece id "${pieceId}" referenced in disassembly`)
+        const getShapeFromId = (shapeId: ShapeCompleteId) => {
+            const shape = shapes.find(shape => shape.completeId === shapeId)
+            if(!shape) {
+                throw new Error(`Could not find shape id "${shapeId}" referenced in disassembly`)
             }
-            return piece
+            return shape
         }
 
-        const parts = [pieces.map(piece => piece.completeId)]
+        const parts = [shapes.map(shape => shape.completeId)]
         for(const step of this.steps) {
 
             // Find part that this step acts on
             const movedPartIdx = parts.findIndex(
-                part => part.includes(step.movedPieces[0])
+                part => part.includes(step.movedShapes[0])
             )
             const movedPart = parts[movedPartIdx]
 
             // Consider inverting this step
-            const movedPieceIds = movedPart.filter(pieceId => step.movedPieces.includes(pieceId))
-            const stationaryPieceIds = movedPart.filter(pieceId => !step.movedPieces.includes(pieceId))
-            const movedPieces = movedPieceIds.map(getPieceFromId)
-            const stationaryPieces = stationaryPieceIds.map(getPieceFromId)
-            if(stepNeedsInverting(movedPieces, stationaryPieces)) {
+            const movedShapeIds = movedPart.filter(shapeId => step.movedShapes.includes(shapeId))
+            const stationaryShapeIds = movedPart.filter(shapeId => !step.movedShapes.includes(shapeId))
+            const movedShapes = movedShapeIds.map(getShapeFromId)
+            const stationaryShapes = stationaryShapeIds.map(getShapeFromId)
+            if(stepNeedsInverting(movedShapes, stationaryShapes)) {
                 step.transform = grid.scaleTransform(step.transform, -1)
-                step.movedPieces = stationaryPieceIds
+                step.movedShapes = stationaryShapeIds
             }
 
             // Split parts
             if(step.separates) {
                 parts.push(parts[movedPartIdx].filter(
-                    pieceId => !step.movedPieces.includes(pieceId)
+                    shapeId => !step.movedShapes.includes(shapeId)
                 ))
-                parts[movedPartIdx] = [...step.movedPieces]
+                parts[movedPartIdx] = [...step.movedShapes]
             }
 
         }
@@ -389,29 +395,29 @@ registerClass(Disassembly)
 
 function performStep(
     grid: Grid,
-    state: Piece[],
+    state: Shape[],
     step: DisassemblyStep,
     ignoreRepeat=false
 ) {
     const repeat = ignoreRepeat ? 1 : step.repeat || 1
-    for(const piece of state) {
-        if(step.movedPieces.includes(piece.completeId)) {
+    for(const shape of state) {
+        if(step.movedShapes.includes(shape.completeId)) {
             for(let i=0; i<repeat; i++) {
-                piece.doTransform(grid, step.transform)
+                shape.doTransform(grid, step.transform)
             }
         }
     }
 }
 
-function stepNeedsInverting(movedPieces: Piece[], stationaryPieces: Piece[]): boolean {
+function stepNeedsInverting(movedShapes: Shape[], stationaryShapes: Shape[]): boolean {
 
-    function countVoxels(pieces: Piece[]) {
+    function countVoxels(shapes: Shape[]) {
         let nVoxels = 0
-        for(const piece of pieces) {
-            nVoxels += piece.voxels.length
+        for(const shape of shapes) {
+            nVoxels += shape.voxels.length
         }
         return nVoxels
     }
 
-    return countVoxels(movedPieces) > countVoxels(stationaryPieces)
+    return countVoxels(movedShapes) > countVoxels(stationaryShapes)
 }

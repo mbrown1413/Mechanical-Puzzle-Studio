@@ -3,7 +3,7 @@ import {parseStringPromise as parseXml} from "xml2js"
 import {PuzzleFile} from "~/lib/PuzzleFile.ts"
 import {Puzzle} from "~/lib/Puzzle.ts"
 import {Problem, AssemblyProblem} from "~/lib/Problem.ts"
-import {Piece} from "~/lib/Piece.ts"
+import {Shape} from "~/lib/Shape.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 
 const KNOWN_GRIDTYPES: {[typeNum: string]: string} = {
@@ -95,9 +95,9 @@ export async function readBurrTools(
         throw new Error(`Expected one gridType definition, found ${xml.puzzle.shapes.length}`)
     }
     const shapes = xml.puzzle.shapes[0].voxel || []
-    for(const shape of shapes) {
-        const piece = readBtShape(puzzleFile.puzzle, shape, unsupportedFeatures)
-        puzzleFile.puzzle.addPiece(piece)
+    for(const btShape of shapes) {
+        const shape = readBtShape(puzzleFile.puzzle, btShape, unsupportedFeatures)
+        puzzleFile.puzzle.addShape(shape)
     }
 
     if(xml.puzzle.problems.length !== 1) {
@@ -157,16 +157,16 @@ function readGrid(xml: XmlRoot) {
     return new CubicGrid()
 }
 
-function readBtShape(puzzle: Puzzle, shape: XmlNode, unsupportedFeatures: Set<string>): Piece {
-    const piece = new Piece(puzzle.generatePieceId())
+function readBtShape(puzzle: Puzzle, btShape: XmlNode, unsupportedFeatures: Set<string>): Shape {
+    const shape = new Shape(puzzle.generateShapeId())
 
-    if((shape.$?.type || "0") !== "0") {
-        throw new Error(`Unsupported BurrTools voxel type: ${shape.$?.type}`)
+    if((btShape.$?.type || "0") !== "0") {
+        throw new Error(`Unsupported BurrTools voxel type: ${btShape.$?.type}`)
     }
 
-    const xSize = Number(shape.$?.x) || 0
-    const ySize = Number(shape.$?.y) || 0
-    const zSize = Number(shape.$?.z) || 0
+    const xSize = Number(btShape.$?.x) || 0
+    const ySize = Number(btShape.$?.y) || 0
+    const zSize = Number(btShape.$?.z) || 0
     if(
         typeof xSize !== "number" || xSize < 1 ||
         typeof ySize !== "number" || ySize < 1 ||
@@ -174,40 +174,40 @@ function readBtShape(puzzle: Puzzle, shape: XmlNode, unsupportedFeatures: Set<st
     ) {
         throw new Error("Malformed BurrTools file: voxel tag must have x, y, and z attributes as positive integers")
     }
-    piece.bounds = {xSize, ySize, zSize}
+    shape.bounds = {xSize, ySize, zSize}
 
-    if(shape.$?.name) {
-        piece.label = shape.$.name
+    if(btShape.$?.name) {
+        shape.label = btShape.$.name
     } else {
-        piece.label = `Piece ${puzzle.pieces.length + 1}`
+        shape.label = `Shape ${puzzle.shapes.length + 1}`
     }
 
-    let color = BURRTOOLS_COLORS[puzzle.pieces.length]
+    let color = BURRTOOLS_COLORS[puzzle.shapes.length]
     if(color === undefined) {
-        color = puzzle.getNewPieceColor()
+        color = puzzle.getNewShapeColor()
     }
-    piece.color = color
+    shape.color = color
 
-    if(shape.$?.weight) {
-        unsupportedFeatures.add("Piece weights")
+    if(btShape.$?.weight) {
+        unsupportedFeatures.add("Shape weights")
     }
 
     readVoxelString(
-        shape._ || "",
-        piece,
+        btShape._ || "",
+        shape,
         xSize, ySize, zSize,
         unsupportedFeatures,
     )
 
-    return piece
+    return shape
 }
 
 /**
- * Read a shape's voxels into the piece from the contents of the <voxel> tag.
+ * Read a shape's voxels into the shape from the contents of the <voxel> tag.
  */
 function readVoxelString(
     s: string,
-    piece: Piece,
+    shape: Shape,
     xSize: number,
     ySize: number,
     zSize: number,
@@ -247,13 +247,13 @@ function readVoxelString(
         const voxel = `${x},${y},${z}`
         switch(char) {
             case "#":
-                piece.voxels.push(voxel)
+                shape.voxels.push(voxel)
                 nextVoxel()
             break
             case "+":
-                piece.voxels.push(voxel)
+                shape.voxels.push(voxel)
                 if(char === "+") {
-                    piece.setVoxelAttribute("optional", voxel, true)
+                    shape.setVoxelAttribute("optional", voxel, true)
                 }
                 nextVoxel()
             break
@@ -301,10 +301,10 @@ function readBtProblem(puzzle: Puzzle, btProblem: XmlNode, unsupportedFeatures: 
         if(Number.isNaN(shapeId) || shapeId < 0) {
             throw new Error(`Malformed BurrTools file: Problem shape id must be a positive integer, not "${shape.$?.id}"`)
         }
-        if(!puzzle.getPiece(shapeId)) {
-            throw new Error(`Malformed BurrTools file: Problem uses piece id ${shapeId} which does not exist`)
+        if(!puzzle.getShape(shapeId)) {
+            throw new Error(`Malformed BurrTools file: Problem uses shape id ${shapeId} which does not exist`)
         }
-        if(shapeId in problem.usedPieceCounts) {
+        if(shapeId in problem.shapeCounts) {
             throw new Error(`Malformed BurrTools file: Repeat shape in problem`)
         }
 
@@ -327,10 +327,10 @@ function readBtProblem(puzzle: Puzzle, btProblem: XmlNode, unsupportedFeatures: 
         }
 
         if(shape.$?.group !== undefined || "group" in shape) {
-            unsupportedFeatures.add("Piece groups")
+            unsupportedFeatures.add("Shape groups")
         }
 
-        problem.usedPieceCounts[shapeId] = shapeCount
+        problem.shapeCounts[shapeId] = shapeCount
     }
 
     if(btProblem.result?.length !== 1) {
@@ -345,21 +345,21 @@ function readBtProblem(puzzle: Puzzle, btProblem: XmlNode, unsupportedFeatures: 
     if(Number.isNaN(resultId) || resultId < 0) {
         throw new Error(`Malformed BurrTools file: Problem result id must be a positive integer, not "${resultIdString}"`)
     }
-    if(resultId in problem.usedPieceCounts) {
-        throw new Error(`Malformed BurrTools file: Problem result cannot also be a used piece`)
+    if(resultId in problem.shapeCounts) {
+        throw new Error(`Malformed BurrTools file: Problem result cannot also be a used shape`)
     }
     if(resultId === 0xffffffff) {
         // Value for "no result is set"
     } else {
-        const resultPiece = puzzle.getPiece(resultId)
-        if(resultPiece) {
-            problem.goalPieceId = resultPiece.id
+        const resultShape = puzzle.getShape(resultId)
+        if(resultShape) {
+            problem.goalShapeId = resultShape.id
         } else {
-            throw new Error(`Malformed BurrTools file: Problem uses piece id ${resultId} which does not exist`)
+            throw new Error(`Malformed BurrTools file: Problem uses shape id ${resultId} which does not exist`)
         }
     }
 
-    // <bitmap> is unsupported, but we check if colors are used in pieces so we
+    // <bitmap> is unsupported, but we check if colors are used in shapes so we
     // don't need to do it here.
 
     emptyOrUnsupported(btProblem, "solutions", "Solutions", unsupportedFeatures)

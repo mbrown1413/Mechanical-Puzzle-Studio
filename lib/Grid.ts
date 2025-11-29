@@ -37,7 +37,7 @@ export type SideInfo = {
     wireframe: Vector3[],  // List of points in a line-loop
 }
 
-export type PieceBoundsEditInfo = {
+export type ShapeBoundsEditInfo = {
     dimensions: {
         /** Name to show in UI for this dimension. */
         name: string,
@@ -54,7 +54,7 @@ export type Bounds = {[key: string]: number}
 /**
  * A UI construct representing a useful perspective from which to view the
  * grid. Each viewpoint also breaks the grid into layers, generally orthogonal
- * to the camera, to easily view and edit pieces.
+ * to the camera, to easily view and edit shapes.
  */
 export type Viewpoint = {
     id: string,
@@ -85,7 +85,7 @@ export type Transform = string
 
 /**
  * Defines a set of voxels and the relation between them. This is the foundation
- * on which pieces are placed. Grid instances don't store data at each voxel,
+ * on which shapes are placed. Grid instances don't store data at each voxel,
  * they just define the information about the voxels themselves and the
  * relation between them.
  *
@@ -122,11 +122,11 @@ export abstract class Grid extends SerializableClass implements FormEditable {
     /** User-facing description for this type of grid. */
     static get gridTypeDescription() { return "" }
 
-    /** Return a reasonable bounds size to use for a piece. */
-    abstract getDefaultPieceBounds(): Bounds
+    /** Return a reasonable bounds size to use for a shape. */
+    abstract getDefaultShapeBounds(): Bounds
 
-    /** Information about how to edit the bounds for a piece. */
-    abstract get boundsEditInfo(): PieceBoundsEditInfo
+    /** Information about how to edit the bounds for a shape. */
+    abstract get boundsEditInfo(): ShapeBoundsEditInfo
 
     /** Is the given voxel inside the bounds? */
     abstract isInBounds(voxel: Voxel, bounds: Bounds): boolean
@@ -162,8 +162,8 @@ export abstract class Grid extends SerializableClass implements FormEditable {
      * always rotate about the same axis without normalizing the result to be
      * centered around an origin.
      * 
-     * Note that this just transforms the voxels. To transform a whole piece
-     * and account for things like voxel attributes, use `Piece.transform()`.
+     * Note that this just transforms the voxels. To transform a whole shape
+     * and account for things like voxel attributes, use `Shape.transform()`.
      */
     abstract doTransform(transform: Transform, voxels: Voxel[]): Voxel[]
 

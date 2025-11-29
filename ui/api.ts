@@ -1,6 +1,6 @@
 import {Ref, nextTick} from "vue"
 
-import {Piece, Problem, Puzzle} from "~lib"
+import {Shape, Problem, Puzzle} from "~lib"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 import {saveCurrentPuzzle} from "~/ui/ActionManager.ts"
@@ -25,10 +25,10 @@ import {saveCurrentPuzzle} from "~/ui/ActionManager.ts"
  *     data to have unexpected types or inconsistent data.
  *
  * Examples:
- *   * `api.puzzle.getPiece("Piece 1")` - Get piece with label "Piece 1".
+ *   * `api.puzzle.getShape("Shape 1")` - Get shape with label "Shape 1".
  *   * `api.selectedProblem` - A reference to the currently selected problem (or null).
- *   * `piece = await api.newPiece()` - Creates a new piece and gets a reference to it.
- *   * `api.selectedPiece.color = "orange"` - Sets current piece's color to orange.
+ *   * `shape = await api.newShape()` - Creates a new shape and gets a reference to it.
+ *   * `api.selectedShape.color = "orange"` - Sets current shape's color to orange.
  *   * `api.save()` - Saves the puzzle (if it isn't read-only).
  */
 export class PuzzleStudioApi {
@@ -65,19 +65,19 @@ export class PuzzleStudioApi {
         saveCurrentPuzzle()
     }
 
-    ////////// Pieces //////////
+    ////////// Shapes //////////
 
-    get selectedPiece(): Piece | null {
-        return this.puzzleEditor.selectedPiece
+    get selectedShape(): Shape | null {
+        return this.puzzleEditor.selectedShape
     }
 
-    async newPiece(): Promise<Piece> {
-        this.uiActions.newPiece()
+    async newShape(): Promise<Shape> {
+        this.uiActions.newShape()
         return new Promise((resolve, reject) => {
             nextTick(() => {
-                const piece = this.selectedPiece
-                if(!piece) { reject(); return }
-                resolve(piece)
+                const shape = this.selectedShape
+                if(!shape) { reject(); return }
+                resolve(shape)
             })
         })
     }

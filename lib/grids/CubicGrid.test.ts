@@ -8,7 +8,7 @@ export function makePlacementSet(voxelLists: Voxel[][]): Set<string> {
 }
 
 export const rotationTestData = {
-    originalPiece: ["0,0,0", "1,0,0", "1,1,0"],
+    originalShape: ["0,0,0", "1,0,0", "1,1,0"],
     allOrientations: [
         // Original +X facing in +X
         ["0,0,0", "1,0,0", "1,1,0"],
@@ -139,7 +139,7 @@ describe("Cubic grid", () => {
         const rotations = grid.getRotations(false)
         const actualOrientations = makePlacementSet(
             rotations.map(
-                (orientation) => grid.doTransform(orientation, rotationTestData.originalPiece)
+                (orientation) => grid.doTransform(orientation, rotationTestData.originalShape)
             )
         )
         const expectedOrientations = makePlacementSet(

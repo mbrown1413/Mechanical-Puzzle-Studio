@@ -12,9 +12,9 @@
         "grid": {
             "type": "CubicGrid"
         },
-        "pieces": [
+        "shapeTree": [
             {
-                "type": "Piece",
+                "type": "Shape",
                 "id": 0,
                 "bounds": "xSize:3 ySize:3 zSize:3",
                 "voxels": "2,1,0; 1,1,0; 0,1,0; 0,0,0; 1,0,0; 2,0,0; 0,2,1; 1,2,1; 2,2,1; 2,1,1; 1,1,1; 0,1,1; 0,0,1; 1,0,1; 2,0,1; 0,2,2; 1,2,2; 2,2,2; 2,1,2; 1,1,2; 0,1,2; 0,0,2; 1,0,2; 2,0,2; 1,1,1; 1,2,1; 0,2,1; 2,2,1; 2,1,1; 2,0,1; 1,0,1; 0,0,1; 0,1,1; 1,1,1; 0,1,0; 0,1,0; 1,1,0; 0,1,0; 0,1,0; 1,2,0; 2,2,0; 0,2,0",
@@ -22,7 +22,7 @@
                 "color": "#023eff"
             },
             {
-                "type": "Piece",
+                "type": "Shape",
                 "id": 8,
                 "bounds": "xSize:5 ySize:3 zSize:3",
                 "voxels": "0,0,0; 1,0,0; 2,0,0; 3,0,0; 4,0,0; 0,0,1; 1,0,1; 2,0,1; 3,0,1; 4,0,1; 0,0,2; 1,0,2; 2,0,2; 3,0,2; 3,0,2; 4,0,2; 0,1,1; 0,1,0; 0,1,2; 4,1,0; 4,1,1; 4,1,2; 3,1,0; 2,1,0; 1,1,0; 1,2,0; 2,2,0; 3,2,0",
@@ -30,7 +30,7 @@
                 "color": "#00d7ff"
             },
             {
-                "type": "Piece",
+                "type": "Shape",
                 "id": 1,
                 "bounds": "xSize:3 ySize:3 zSize:1",
                 "voxels": "0,0,0; 0,1,0; 1,1,0",
@@ -38,7 +38,7 @@
                 "color": "#ff7c00"
             },
             {
-                "type": "Piece",
+                "type": "Shape",
                 "id": 2,
                 "bounds": "xSize:3 ySize:3 zSize:1",
                 "voxels": "0,0,0; 0,1,0; 1,1,0; 2,1,0",
@@ -46,7 +46,7 @@
                 "color": "#1ac938"
             },
             {
-                "type": "Piece",
+                "type": "Shape",
                 "id": 3,
                 "bounds": "xSize:3 ySize:3 zSize:1",
                 "voxels": "1,1,0; 1,0,0; 2,1,0; 0,1,0",
@@ -54,7 +54,7 @@
                 "color": "#e8000b"
             },
             {
-                "type": "Piece",
+                "type": "Shape",
                 "id": 4,
                 "bounds": "xSize:3 ySize:3 zSize:1",
                 "voxels": "0,0,0; 1,0,0; 1,1,0; 2,1,0",
@@ -62,7 +62,7 @@
                 "color": "#8b2be2"
             },
             {
-                "type": "Piece",
+                "type": "Shape",
                 "id": 5,
                 "bounds": "xSize:3 ySize:3 zSize:2",
                 "voxels": "0,0,0; 1,0,0; 1,1,0; 1,1,1",
@@ -70,7 +70,7 @@
                 "color": "#9f4800"
             },
             {
-                "type": "Piece",
+                "type": "Shape",
                 "id": 6,
                 "bounds": "xSize:3 ySize:3 zSize:2",
                 "voxels": "0,0,1; 1,0,1; 1,1,1; 1,1,0",
@@ -78,7 +78,7 @@
                 "color": "#f14cc1"
             },
             {
-                "type": "Piece",
+                "type": "Shape",
                 "id": 7,
                 "bounds": "xSize:3 ySize:3 zSize:2",
                 "voxels": "0,1,0; 0,0,0; 1,0,0; 0,0,1",
@@ -92,8 +92,8 @@
                 "id": 0,
                 "label": "Cube",
                 "solverId": "assembly",
-                "goalPieceId": 0,
-                "usedPieceCounts": {
+                "goalShapeId": 0,
+                "shapeCounts": {
                     "1": 1,
                     "2": 1,
                     "3": 1,
@@ -109,8 +109,8 @@
                 "id": 1,
                 "label": "Sofa",
                 "solverId": "assembly",
-                "goalPieceId": 8,
-                "usedPieceCounts": {
+                "goalShapeId": 8,
+                "shapeCounts": {
                     "1": 1,
                     "2": 1,
                     "3": 1,

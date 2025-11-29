@@ -1,76 +1,76 @@
-import {Piece, PieceId} from "~/lib/Piece.ts"
+import {Shape, ShapeId} from "~/lib/Shape.ts"
 import {Grid, Voxel, Transform} from "~/lib/Grid.ts"
-import {findSymmetryPiece, SymmetryPieceInfo} from "~/lib/symmetry.ts"
+import {findSymmetryShape, SymmetryShapeInfo} from "~/lib/symmetry.ts"
 
-type PlacementsByPiece = {[pieceId: PieceId]: Piece[]}
+type PlacementsByShape = {[shapeId: ShapeId]: Shape[]}
 
 /**
- * Get all possible orientations a piece may be in.
+ * Get all possible orientations a shape may be in.
  */
-export function getPieceOrientations(
+export function getShapeOrientations(
     grid: Grid,
-    piece: Piece,
+    shape: Shape,
     allowedRotations: Transform[] | null = null
-): Piece[] {
+): Shape[] {
     if(allowedRotations === null) {
         allowedRotations = grid.getRotations(false)
     }
 
-    const placements: Piece[] = []
+    const placements: Shape[] = []
     for(const rotation of allowedRotations) {
-        const transformedPiece = piece.copy().doTransform(grid, rotation)
+        const transformedShape = shape.copy().doTransform(grid, rotation)
 
-        placements.push(transformedPiece)
+        placements.push(transformedShape)
     }
     return placements
 }
 
 /**
- * Get all possible translations for a piece (without changing
+ * Get all possible translations for a shape (without changing
  * orientations), given that the voxels in the resulting placement must be
  * in `availableVoxels`.
  */
-export function getPieceTranslations(
+export function getShapeTranslations(
     grid: Grid,
-    piece: Piece,
+    shape: Shape,
     availableVoxels: Voxel[],
-): Piece[] {
-    if(piece.voxels.length === 0) {
-        throw new Error(`Piece has no voxels: ${piece.label}`)
+): Shape[] {
+    if(shape.voxels.length === 0) {
+        throw new Error(`Shape has no voxels: ${shape.label}`)
     }
     const translations = []
     availableVoxels = [...new Set(availableVoxels)]
     for(const toVoxel of availableVoxels) {
-        const translation = grid.getTranslation(piece.voxels[0], toVoxel)
+        const translation = grid.getTranslation(shape.voxels[0], toVoxel)
         if(translation === null) { continue }
-        const newPiece = piece.copy().doTransform(grid, translation)
-        if(newPiece.voxels.every(v => availableVoxels.includes(v))) {
-            translations.push(newPiece)
+        const newShape = shape.copy().doTransform(grid, translation)
+        if(newShape.voxels.every(v => availableVoxels.includes(v))) {
+            translations.push(newShape)
         }
     }
     return translations
 }
 
 /**
- * Get all possible placements for a single piece, given that all of the
- * transformed piece's voxels must be in `availableVoxels`.
+ * Get all possible placements for a single shape, given that all of the
+ * transformed shape's voxels must be in `availableVoxels`.
  */
-export function getPiecePlacements(
+export function getShapePlacements(
     grid: Grid,
-    piece: Piece,
+    shape: Shape,
     availableVoxels: Voxel[],
     allowedRotations: Transform[] | null = null
-): Piece[] {
+): Shape[] {
     const placements = []
 
     const orientationPlacements = filterTranslationCongruentPlacements(
         grid,
-        getPieceOrientations(grid, piece, allowedRotations)
+        getShapeOrientations(grid, shape, allowedRotations)
     )
-    for(const pieceOrientation of orientationPlacements) {
-        placements.push(...getPieceTranslations(
+    for(const shapeOrientation of orientationPlacements) {
+        placements.push(...getShapeTranslations(
             grid,
-            pieceOrientation,
+            shapeOrientation,
             availableVoxels
         ))
     }
@@ -78,34 +78,34 @@ export function getPiecePlacements(
 }
 
 /**
- * For each piece given, return the valid placements of that piece given that
- * it must fit into the goal piece.
+ * For each shape given, return the valid placements of that shape given that
+ * it must fit into the goal shape.
  */
 export function getPlacements(
     grid: Grid,
-    goal: Piece,
-    pieces: Piece[],
-    symmetryReductionCandidates?: Piece[],
+    goal: Shape,
+    shapes: Shape[],
+    symmetryReductionCandidates?: Shape[],
 ): {
-    placementsByPiece: PlacementsByPiece,
-    symmetryInfo: SymmetryPieceInfo | null,
+    placementsByShape: PlacementsByShape,
+    symmetryInfo: SymmetryShapeInfo | null,
 } {
     const rotations = grid.getRotations(false)
 
     let symmetryInfo = null
     if(symmetryReductionCandidates) {
-        symmetryInfo = findSymmetryPiece(grid, goal, symmetryReductionCandidates, rotations)
+        symmetryInfo = findSymmetryShape(grid, goal, symmetryReductionCandidates, rotations)
     }
 
-    // Enumerate piece placements
-    const placementsByPiece: PlacementsByPiece = {}
+    // Enumerate shape placements
+    const placementsByShape: PlacementsByShape = {}
     let symmetryBroken = false
-    for(const piece of pieces) {
+    for(const shape of shapes) {
         let allowedRotations: Transform[] | null
         if(
             !symmetryBroken &&
-            symmetryInfo?.piece &&
-            piece.id === symmetryInfo.piece.id
+            symmetryInfo?.shape &&
+            shape.id === symmetryInfo.shape.id
         ) {
             allowedRotations = symmetryInfo.allowedRotations
             symmetryBroken = true
@@ -113,16 +113,16 @@ export function getPlacements(
             allowedRotations = null
         }
 
-        placementsByPiece[piece.id] = getPiecePlacements(
+        placementsByShape[shape.id] = getShapePlacements(
             grid,
-            piece,
+            shape,
             goal.voxels,
             allowedRotations
         )
     }
 
     return {
-        placementsByPiece,
+        placementsByShape: placementsByShape,
         symmetryInfo,
     }
 }
@@ -130,9 +130,9 @@ export function getPlacements(
 /** Filter out placements which are congruent via translation. */
 function filterTranslationCongruentPlacements(
     grid: Grid,
-    placements: Piece[]
-): Piece[] {
-    const newPlacements: Piece[] = []
+    placements: Shape[]
+): Shape[] {
+    const newPlacements: Shape[] = []
     for(const placement of placements) {
         const existingCongruent = newPlacements.some(
             p => isTranslationCongruent(grid, p, placement)
@@ -144,11 +144,11 @@ function filterTranslationCongruentPlacements(
     return newPlacements
 }
 
-/** Can one of the pieces be translated to match the other exactly? */
-export function isTranslationCongruent(grid: Grid, piece1: Piece, piece2: Piece): boolean {
-    const translation1 = grid.getOriginTranslation(piece1.voxels)
-    const translation2 = grid.getOriginTranslation(piece2.voxels)
-    const piece1Translated = piece1.copy().doTransform(grid, translation1)
-    const piece2Translated = piece2.copy().doTransform(grid, translation2)
-    return piece1Translated.equals(piece2Translated)
+/** Can one of the shapes be translated to match the other exactly? */
+export function isTranslationCongruent(grid: Grid, shape1: Shape, shape2: Shape): boolean {
+    const translation1 = grid.getOriginTranslation(shape1.voxels)
+    const translation2 = grid.getOriginTranslation(shape2.voxels)
+    const shape1Translated = shape1.copy().doTransform(grid, translation1)
+    const shape2Translated = shape2.copy().doTransform(grid, translation2)
+    return shape1Translated.equals(shape2Translated)
 }

@@ -1,4 +1,4 @@
-import {Piece, PieceCompleteId} from "~/lib/Piece.ts"
+import {Shape, ShapeCompleteId} from "~/lib/Shape.ts"
 import {TaskCallbacks} from "~/lib/types.ts"
 import {Grid, Transform} from "~/lib/Grid.ts"
 import {getMovements, Movement} from "~/lib/movement.ts"
@@ -7,11 +7,11 @@ import {clone} from "~/lib/serialize.ts"
 
 /**
  * The movement defined in the DisassemblyStep properties define how to
- * move the pieces to get from parent to child. This structure is stored in
+ * move the shapes to get from parent to child. This structure is stored in
  * the parent and provides indexes into `nodes` of the children.
  */
 type Child = {
-    movedPieces: PieceCompleteId[]
+    movedShapes: ShapeCompleteId[]
     transform: Transform
     repeat: number  // Number of times `transform` is repeated
 
@@ -22,7 +22,7 @@ type Child = {
      * two if the movement creates two sub-assemblies that are separate. A
      * value of -1 for a part means that the part doesn't need to be
      * disassembled any further, usually when it only consists of a single
-     * piece.
+     * shape.
      */
     parts: number[]
 }
@@ -38,14 +38,14 @@ type PlacementHash = string
 type QueueItem = {
     node: Node,
     path: number[]
-    placements: Piece[]
+    placements: Shape[]
 }
 
 export abstract class Disassembler {
     grid: Grid
-    start: Piece[]
+    start: Shape[]
 
-    constructor(grid: Grid, start: Piece[]) {
+    constructor(grid: Grid, start: Shape[]) {
         this.grid = grid
         this.start = start
     }
@@ -63,7 +63,7 @@ export class SimpleDisassembler extends Disassembler {
     // found.
     findAll: boolean
 
-    constructor(grid: Grid, start: Piece[]) {
+    constructor(grid: Grid, start: Shape[]) {
         super(grid, start)
         this.nodes = []
         this.nodeIndexesByHash = new Map()
@@ -100,17 +100,17 @@ export class SimpleDisassembler extends Disassembler {
             // If any move separates, only keep one. This works since
             // separating never hinders other moves from happening afterwards.
             // That is, separation will always increase the freedom of
-            // movement. We prefer removing single pieces at a time to keep
+            // movement. We prefer removing single shapes at a time to keep
             // disassemblies simple when possible.
             //
             // This is an optimization, but it also prevents us from getting
-            // stuck in pathological loops where a piece is stationary off to
+            // stuck in pathological loops where a shape is stationary off to
             // one side of the rest of the assembly, while the assembly walks
             // infinitely in one direction.
             let separatingMove = null
             for(const movement of movements) {
                 if(!movement.separates) { continue }
-                if(movement.movedPieces.length === 1) {
+                if(movement.movedShapes.length === 1) {
                     separatingMove = movement
                     break
                 }
@@ -162,7 +162,7 @@ export class SimpleDisassembler extends Disassembler {
                 }
 
                 current.node.children.push({
-                    movedPieces: movement.movedPieces,
+                    movedShapes: movement.movedShapes,
                     transform: movement.transform,
                     repeat: movement.repeat,
                     parts: childIndexes,
@@ -196,11 +196,11 @@ export class SimpleDisassembler extends Disassembler {
     }
 
     private getOrCreateNode(
-        placements: Piece[],
+        placements: Shape[],
         depth: number
     ): [node: Node | null, nodeIndex: number, isNew: boolean] {
         if(placements.length <= 1) {
-            // This is a leaf (completely separated piece on its own) so we
+            // This is a leaf (completely separated shape on its own) so we
             // don't create an explicit node for it.
             return [null, -1, false]
         }
@@ -226,15 +226,15 @@ export class SimpleDisassembler extends Disassembler {
 
     /** Split the movement's resulting placements into two if it separates into
      * two parts. */
-    private getChildParts(movement: Movement): Piece[][] {
-        let childPlacements: Piece[][]
+    private getChildParts(movement: Movement): Shape[][] {
+        let childPlacements: Shape[][]
         if(movement.separates) {
             childPlacements = [[], []]
-            for(const piece of movement.placements) {
-                if(movement.movedPieces.includes(piece.completeId)) {
-                    childPlacements[0].push(piece)
+            for(const shape of movement.placements) {
+                if(movement.movedShapes.includes(shape.completeId)) {
+                    childPlacements[0].push(shape)
                 } else {
-                    childPlacements[1].push(piece)
+                    childPlacements[1].push(shape)
                 }
             }
         } else {
@@ -243,7 +243,7 @@ export class SimpleDisassembler extends Disassembler {
         return childPlacements
     }
 
-    private hashPlacements(placements: Piece[]): PlacementHash {
+    private hashPlacements(placements: Shape[]): PlacementHash {
         placements = placements.toSorted((a, b) => {
             if(a.completeId < b.completeId) {
                 return -1
@@ -270,7 +270,7 @@ export class SimpleDisassembler extends Disassembler {
         // nodes, one for each part our starting assembly has split into. We
         // recursively call iterate for every possible set of child nodes.
         const iterate = (
-            placements: Piece[],
+            placements: Shape[],
             nodes: Node[],
             steps: DisassemblyStep[],
         ) => {
@@ -292,10 +292,10 @@ export class SimpleDisassembler extends Disassembler {
                 for(const child of children) {
 
                     // Make movements indicated in the children we chose
-                    for(const piece of newPlacements) {
-                        if(child.movedPieces.includes(piece.completeId)) {
+                    for(const shape of newPlacements) {
+                        if(child.movedShapes.includes(shape.completeId)) {
                             for(let i=0; i<(child.repeat || 1); i++) {
-                                piece.doTransform(this.grid, child.transform)
+                                shape.doTransform(this.grid, child.transform)
                             }
                         }
                     }
@@ -310,7 +310,7 @@ export class SimpleDisassembler extends Disassembler {
                 const newSteps = [...steps]
                 newSteps.push(...children.map(child => {
                     return {
-                        movedPieces: child.movedPieces,
+                        movedShapes: child.movedShapes,
                         transform: child.transform,
                         repeat: child.repeat,
                         separates: child.parts.length > 1,

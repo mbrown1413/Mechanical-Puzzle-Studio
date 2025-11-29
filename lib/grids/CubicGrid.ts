@@ -69,7 +69,7 @@ export class CubicGrid extends Grid {
         return `${coordinate.x},${coordinate.y},${coordinate.z}`
     }
 
-    getDefaultPieceBounds(): CubicBounds {
+    getDefaultShapeBounds(): CubicBounds {
         return {xSize: 5, ySize: 5, zSize: 5}
     }
 
@@ -101,7 +101,7 @@ export class CubicGrid extends Grid {
 
     getVoxelBounds(voxels: Voxel[]): CubicBounds {
         if(voxels.length === 0) {
-            return this.getDefaultPieceBounds()
+            return this.getDefaultShapeBounds()
         }
         const min = this.voxelToCoordinate(voxels[0])
         const max = this.voxelToCoordinate(voxels[0])
@@ -124,7 +124,7 @@ export class CubicGrid extends Grid {
 
     getBoundsMax(...bounds: CubicBounds[]): CubicBounds {
         if(bounds.length === 0) {
-            return this.getDefaultPieceBounds()
+            return this.getDefaultShapeBounds()
         }
         const min = {
             x: bounds[0].x || 0,

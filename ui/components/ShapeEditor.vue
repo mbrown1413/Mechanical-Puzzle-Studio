@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import {computed, ref, Ref} from "vue"
 
-import {Puzzle, PieceId, Voxel, Viewpoint} from  "~lib"
+import {Puzzle, ShapeId, Voxel, Viewpoint} from  "~lib"
 
-import {Action, EditPieceAction} from "~/ui/actions.ts"
+import {Action, EditShapeAction} from "~/ui/actions.ts"
 import GridDisplay from "~/ui/components/GridDisplay.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
-    pieceId: PieceId | null,
+    shapeId: ShapeId | null,
     auxEditArea: HTMLElement | null,
-    displayPieceIds?: PieceId[]  // Pieces to display but not edit
+    displayShapeIds?: ShapeId[]  // Shapes to display but not edit
 }>()
 
 const emit = defineEmits<{
@@ -22,34 +22,34 @@ const highlightedVoxels: Ref<Voxel[]> = ref([])
 const viewpoint: Ref<Viewpoint | undefined> = ref()
 const layerN: Ref<number | undefined> = ref()
 
-const piece = computed(() =>
-    props.pieceId === null ? null : props.puzzle.getPiece(props.pieceId) || null
+const shape = computed(() =>
+    props.shapeId === null ? null : props.puzzle.getShape(props.shapeId) || null
 )
 
 const group = computed(() => {
-    if(!piece.value) { return null }
-    return props.puzzle.getPieceGroupFromPiece(piece.value)
+    if(!shape.value) { return null }
+    return props.puzzle.getShapeGroupFromShape(shape.value)
 })
 
-const pieces = computed(() => {
-    const pieces = piece.value === null ? [] : [piece.value]
-    for(const displayPieceId of props.displayPieceIds || []) {
-        if(displayPieceId === piece.value?.id) continue
-        const displayPiece = props.puzzle.getPiece(displayPieceId)
-        if(displayPiece) {
-            pieces.push(displayPiece)
+const shapes = computed(() => {
+    const shapes = shape.value === null ? [] : [shape.value]
+    for(const displayShapeId of props.displayShapeIds || []) {
+        if(displayShapeId === shape.value?.id) continue
+        const displayShape = props.puzzle.getShape(displayShapeId)
+        if(displayShape) {
+            shapes.push(displayShape)
         }
     }
 
     if(togglePressed(groupVisibilityToggle.value) && group.value?.displayCombined) {
-        pieces.push(...group.value.pieces)
+        shapes.push(...group.value.shapes)
     }
 
-    return pieces
+    return shapes
 })
 
 function voxelsClicked(event: MouseEvent, voxels: Voxel[]) {
-    if(piece.value === null) { return }
+    if(shape.value === null) { return }
 
     let toAdd: Voxel[] = []
     let toRemove: Voxel[] = []
@@ -58,12 +58,12 @@ function voxelsClicked(event: MouseEvent, voxels: Voxel[]) {
     } else {
         toAdd = voxels
     }
-    if(piece.value.id === null) {
-        throw new Error("Cannot edit piece with no ID")
+    if(shape.value.id === null) {
+        throw new Error("Cannot edit shape with no ID")
     }
 
-    const action = new EditPieceAction(
-        piece.value.id,
+    const action = new EditShapeAction(
+        shape.value.id,
         toAdd,
         toRemove,
         togglePressed(optionalVoxelToggle.value),
@@ -121,11 +121,11 @@ function togglePressed(toggle: {value: string}): boolean {
 const gridDisplayProps = computed(() => {
     const common = {
         grid: props.puzzle.grid,
-        pieces: pieces.value,
+        shapes: shapes.value,
         highlightedVoxels: highlightedVoxels.value,
         viewpoint: viewpoint.value,
         layerN: layerN.value,
-        boundsSizing: "pieceBounds" as const,
+        boundsSizing: "shapeBounds" as const,
     }
     const threeD = {
         cameraScheme: "3D" as const,

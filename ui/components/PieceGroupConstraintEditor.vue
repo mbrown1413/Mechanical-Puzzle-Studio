@@ -4,7 +4,7 @@ import {VDataTable} from "vuetify/components/VDataTable"
 
 import RangeEditor from "~/ui/common/RangeEditor.vue"
 
-import {Puzzle, PieceId, AssemblyProblem, ProblemConstraint, Range, clone} from "~lib"
+import {Puzzle, ShapeId, AssemblyProblem, ProblemConstraint, Range, clone} from "~lib"
 import UiButton from "~/ui/components/UiButton.vue"
 import Modal from "~/ui/common/Modal.vue"
 
@@ -22,9 +22,9 @@ const editPiecesModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 
 const pieces = computed(() => {
     const pieces = []
-    for(const id of props.constraint.pieceIds) {
-        const piece = props.puzzle.getPiece(id)
-        if(piece?.id === props.problem.goalPieceId) { continue }
+    for(const id of props.constraint.shapeIds) {
+        const piece = props.puzzle.getShape(id)
+        if(piece?.id === props.problem.goalShapeId) { continue }
         if(piece) { pieces.push(piece) }
     }
     return pieces
@@ -43,7 +43,7 @@ const piecesTableHeader: VDataTable["$props"]["headers"] = [
     {title: "Piece", key: "label"}
 ]
 
-const tempPieceIds: Ref<PieceId[]> = ref([])
+const tempPieceIds: Ref<ShapeId[]> = ref([])
 
 function updateRange(range: Range) {
     const newConstraint = clone(props.constraint)
@@ -51,9 +51,9 @@ function updateRange(range: Range) {
     emit("update:constraint", newConstraint)
 }
 
-function updatePieces(pieceIds: PieceId[]) {
+function updatePieces(pieceIds: ShapeId[]) {
     const newConstraint = clone(props.constraint)
-    newConstraint.pieceIds = pieceIds
+    newConstraint.shapeIds = pieceIds
     emit("update:constraint", newConstraint)
     editPiecesModal.value?.close()
 }
@@ -84,7 +84,7 @@ function updatePieces(pieceIds: PieceId[]) {
     >
         <VDataTable
             :headers="piecesTableHeader"
-            :items="puzzle.pieces.filter(piece => piece.id !== problem.goalPieceId)"
+            :items="puzzle.shapes.filter(piece => piece.id !== problem.goalShapeId)"
             v-model="tempPieceIds"
             show-select
             no-data-text="No pieces in puzzle!"
@@ -94,7 +94,7 @@ function updatePieces(pieceIds: PieceId[]) {
             <template v-slot:bottom />
 
             <template v-slot:item.label="{item}">
-                <template v-if="item.id !== problem.goalPieceId">
+                <template v-if="item.id !== problem.goalShapeId">
                     {{ item.label }}
                 </template>
                 <template v-else>

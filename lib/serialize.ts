@@ -455,14 +455,25 @@ type _SerializableClass = {
 const registeredClasses: {[name: string]: ClassInfo} = {}
 
 /* Register a class, required before a `serialize` or `deserialize` call is
- * made containing a class instance of a given type. */
+ * made containing a class instance of a given type.
+ * 
+ * If a class is already registered, this function may be called again with
+ * `alternateName` to register the same class under a different name. This can
+ * be used for backwards compatibility purposes, so this alternate name in
+ * serialized data will deserialize to the same class.
+ */
 export function registerClass(
     cls: _SerializableClass,
+    alternateName?: string
 ): void {
-    if(registeredClasses[cls.name] !== undefined) {
-        throw new Error(`Class "${cls.name}" is already registered`)
+    if(alternateName && registeredClasses[cls.name] === undefined) {
+        throw new Error(`Class "${cls.name}" must be registered before registering an alternate name`)
     }
-    registeredClasses[cls.name] = {cls}
+    const name = alternateName || cls.name
+    if(registeredClasses[name] !== undefined) {
+        throw new Error(`Class "${name}" is already registered`)
+    }
+    registeredClasses[name] = {cls}
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

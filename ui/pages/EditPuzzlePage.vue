@@ -199,15 +199,15 @@ type Menu = {
 }
 
 const menus: ComputedRef<Menu[]> = computed(() => {
-    let pieceOrProblemMenuItems: UiButtonDefinition[]
-    if(puzzleEditor.value?.currentTabId === "pieces") {
-        pieceOrProblemMenuItems = [
-            uiButtons.newPiece,
+    let shapeOrProblemMenuItems: UiButtonDefinition[]
+    if(puzzleEditor.value?.currentTabId === "shapes") {
+        shapeOrProblemMenuItems = [
+            uiButtons.newShape,
             uiButtons.deleteSelectedItem,
-            uiButtons.duplicatePiece,
+            uiButtons.duplicateShape,
         ]
     } else {
-        pieceOrProblemMenuItems = [
+        shapeOrProblemMenuItems = [
             uiButtons.newProblem,
             uiButtons.deleteSelectedItem,
             uiButtons.duplicateProblem,
@@ -232,13 +232,13 @@ const menus: ComputedRef<Menu[]> = computed(() => {
             items: [
                 uiButtons.undo,
                 uiButtons.redo,
-                ...pieceOrProblemMenuItems
+                ...shapeOrProblemMenuItems
             ],
         },
         {
             text: "Groups",
             items: [
-                uiButtons.newPieceAssembly,
+                uiButtons.newShapeAssembly,
             ],
         },
     ]

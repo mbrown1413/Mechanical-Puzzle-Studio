@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, inject, ref} from "vue"
 
-import {Puzzle, Piece, PieceId} from "~lib"
+import {Puzzle, Shape, ShapeId} from "~lib"
 
 import {Action} from "~/ui/actions.ts"
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
@@ -9,13 +9,13 @@ import ListSelect from "~/ui/common/ListSelect.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
-    selectedPieceId: PieceId | null,
-    selectedPieceGroupId: PieceId | null,
+    selectedShapeId: ShapeId | null,
+    selectedShapeGroupId: ShapeId | null,
 }>()
 
 const emit = defineEmits<{
-    "update:selectedPieceId": [pieceId: PieceId | null],
-    "update:selectedPieceGroupId": [pieceGroupIdx: number | null],
+    "update:selectedShapeId": [shapeId: ShapeId | null],
+    "update:selectedShapeGroupId": [shapeGroupIdx: number | null],
     action: [action: Action]
 }>()
 
@@ -29,31 +29,31 @@ defineExpose({
 
 const allUiButtons = inject("uiButtons") as Record<string, UiButtonDefinition>
 const uiButtons = computed(() => {
-    const newPieceButton = {...allUiButtons.newPiece}
+    const newShapeButton = {...allUiButtons.newShape}
     if(
         focused.value &&
-        props.puzzle.pieces.length === 0
+        props.puzzle.shapes.length === 0
     ) {
-        newPieceButton.alwaysShowTooltip = true
+        newShapeButton.alwaysShowTooltip = true
     }
 
     return [
-        allUiButtons.duplicatePiece,
+        allUiButtons.duplicateShape,
         allUiButtons.deleteSelectedItem,
-        newPieceButton,
+        newShapeButton,
     ]
 })
 
 const items = computed(() => {
-    return props.puzzle.pieceTree.map((item) => {
-        if(item instanceof Piece) {
+    return props.puzzle.shapeTree.map((item) => {
+        if(item instanceof Shape) {
             return item
         } else {
             return {
                 isGroup: true,
                 id: item.id,
                 label: item.label,
-                items: item.pieces,
+                items: item.shapes,
             }
         }
     })
@@ -63,12 +63,12 @@ const items = computed(() => {
 <template>
     <ListSelect
         :items="items"
-        :selectedItemId="selectedPieceId"
-        :selectedGroupId="selectedPieceGroupId"
+        :selectedItemId="selectedShapeId"
+        :selectedGroupId="selectedShapeGroupId"
         :uiButtons="uiButtons"
-        :upButton="allUiButtons.pieceListMoveUp"
-        :downButton="allUiButtons.pieceListMoveDown"
-        @update:selectedItemId="emit('update:selectedPieceId', $event)"
-        @update:selectedGroupId="emit('update:selectedPieceGroupId', $event)"
+        :upButton="allUiButtons.shapeListMoveUp"
+        :downButton="allUiButtons.shapeListMoveDown"
+        @update:selectedItemId="emit('update:selectedShapeId', $event)"
+        @update:selectedGroupId="emit('update:selectedShapeGroupId', $event)"
     />
 </template>

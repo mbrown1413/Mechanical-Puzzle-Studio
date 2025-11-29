@@ -67,26 +67,26 @@ describe("Square grid", () => {
         ]))
     })
 
-    test("piecesFromString()", () => {
-        const pieces = grid.piecesFromString(`
+    test("shapesFromString()", () => {
+        const shapes = grid.shapesFromString(`
             112
             233
         `)
-        expect(serialize(pieces)).toMatchInlineSnapshot(`
+        expect(serialize(shapes)).toMatchInlineSnapshot(`
           [
             {
               "id": 1,
-              "type": "Piece",
+              "type": "Shape",
               "voxels": "0,1,0; 1,1,0",
             },
             {
               "id": 2,
-              "type": "Piece",
+              "type": "Shape",
               "voxels": "2,1,0; 0,0,0",
             },
             {
               "id": 3,
-              "type": "Piece",
+              "type": "Shape",
               "voxels": "1,0,0; 2,0,0",
             },
           ]

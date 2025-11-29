@@ -2,7 +2,7 @@ import {PuzzleFile} from "~/lib/PuzzleFile.ts"
 import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 
 /**
- * Converts all pieces in the puzzle file to Puzzlecad.
+ * Converts all shapes in the puzzle file to Puzzlecad.
  */
 export function convertToPuzzlecad(puzzleFile: PuzzleFile): string {
     const grid = puzzleFile.puzzle.grid
@@ -20,10 +20,10 @@ export function convertToPuzzlecad(puzzleFile: PuzzleFile): string {
     result += "include <puzzlecad.scad>\n\n"
     result += "burr_plate([\n"
 
-    for(const piece of puzzleFile.puzzle.pieces) {
-        const bounds = grid.getVoxelBounds(piece.voxels)
-        if(piece.label) {
-            result += `    [  // ${piece.label}\n`
+    for(const shape of puzzleFile.puzzle.shapes) {
+        const bounds = grid.getVoxelBounds(shape.voxels)
+        if(shape.label) {
+            result += `    [  // ${shape.label}\n`
         } else {
             result += `    [\n`
         }
@@ -33,7 +33,7 @@ export function convertToPuzzlecad(puzzleFile: PuzzleFile): string {
             for(let y = 0; y < bounds.ySize; y++) {
                 for(let x = 0; x < bounds.xSize; x++) {
                     const voxel = grid.coordinateToVoxel({x, y, z})
-                    if(piece.voxels.includes(voxel)) {
+                    if(shape.voxels.includes(voxel)) {
                         result += "x"
                     } else {
                         result += "."

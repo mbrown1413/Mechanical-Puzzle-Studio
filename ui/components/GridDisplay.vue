@@ -1,12 +1,12 @@
 <!--
     Main component for displaying a WebGL canvas of the puzzle grid including
-    pieces placed on that grid.
+    shapes placed on that grid.
 -->
 
 <script setup lang="ts">
 import {ref, Ref, toRef, computed, watch, watchEffect} from "vue"
 
-import {Grid, Piece, Voxel, Bounds, Viewpoint} from "~lib"
+import {Grid, Shape, Voxel, Bounds, Viewpoint} from "~lib"
 
 import {useGridDisplayRenderComposible} from "./GridDisplay_render.ts"
 import {useGridDisplayMouseComposible} from "./GridDisplay_mouse.ts"
@@ -15,12 +15,12 @@ import {CameraSchemeName} from "./GridDisplay_camera.ts"
 const props = withDefaults(
     defineProps<{
         grid: Grid,
-        pieces: Piece[],
+        shapes: Shape[],
         displayOnly?: boolean,
         noLayers?: boolean,
-        boundsSizing: "voxels" | "pieceBounds" | Bounds,
+        boundsSizing: "voxels" | "shapeBounds" | Bounds,
         size?: "fill" | number,
-        highlightBy?: "voxel" | "piece",
+        highlightBy?: "voxel" | "shape",
         showTools?: boolean,
         showLayerSlider?: boolean,
         cameraScheme?: CameraSchemeName,
@@ -47,7 +47,7 @@ const emit = defineEmits<{
     "update:layerN": [number]
 }>()
 
-const pieceDisplayStyle = computed(() => {
+const shapeDisplayStyle = computed(() => {
     return {
         width: props.size === "fill" ? "100%" : props.size+"px",
         height: props.size === "fill" ? "100%" : props.size+"px",
@@ -95,23 +95,23 @@ const viewpointOptions = computed(() =>
     })
 )
 
-const pieces = computed(() => props.pieces)
+const shapes = computed(() => props.shapes)
 
 const bounds = computed(() => {
     if(props.boundsSizing === "voxels") {
         const allVoxels = []
-        for(const piece of pieces.value) {
-            allVoxels.push(...piece.voxels)
+        for(const shape of shapes.value) {
+            allVoxels.push(...shape.voxels)
         }
         if(allVoxels.length === 0) {
-            return props.grid.getDefaultPieceBounds()
+            return props.grid.getDefaultShapeBounds()
         }
         return props.grid.getVoxelBounds(allVoxels)
 
-    } else if(props.boundsSizing === "pieceBounds") {
+    } else if(props.boundsSizing === "shapeBounds") {
         return props.grid.getBoundsMax(
-            ...pieces.value.map(
-                (piece) => piece.bounds
+            ...shapes.value.map(
+                (shape) => shape.bounds
             ).filter(
                 (bounds): bounds is Bounds => typeof bounds !== "undefined"
             )
@@ -135,7 +135,7 @@ const {
 } = useGridDisplayRenderComposible(
     drawElement,
     toRef(props, "grid"),
-    pieces,
+    shapes,
     bounds,
     props.displayOnly,
     layerN,
@@ -157,7 +157,7 @@ useGridDisplayMouseComposible(
 </script>
 
 <template>
-    <div class="grid-display" :style="pieceDisplayStyle">
+    <div class="grid-display" :style="shapeDisplayStyle">
         <div class="draw-element" ref="drawElement"></div>
         <div class="overlay controls" v-if="!displayOnly && showLayerSlider">
             <VSelect

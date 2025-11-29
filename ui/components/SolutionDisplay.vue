@@ -13,7 +13,7 @@ const props = defineProps<{
 const disassemblyNumber = ref(0)
 const disassemblyStep = ref(0)
 
-const pieces = computed(() => {
+const shapes = computed(() => {
     if(props.solution === null) {
         return []
     }
@@ -40,10 +40,10 @@ const disassembly = computed(() => {
 <template>
     <GridDisplay
             :grid="puzzle.grid"
-            :pieces="pieces"
+            :shapes="shapes"
             displayOnly
             :boundsSizing="solution && disassembly ? disassembly.getBounds(puzzle.grid, solution.placements) : 'voxels'"
-            highlightBy="piece"
+            highlightBy="shape"
             :showTools="disassemblies !== undefined"
     >
 

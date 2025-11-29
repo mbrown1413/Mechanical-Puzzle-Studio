@@ -2,16 +2,16 @@
 import {computed, ComputedRef} from "vue"
 import {VNumberInput} from "vuetify/labs/VNumberInput"
 
-import {Bounds, Piece, Puzzle, Problem, AssemblyProblem, ItemId, PieceId} from  "~lib"
+import {Bounds, Shape, Puzzle, Problem, AssemblyProblem, ItemId, ShapeId} from  "~lib"
 
-import {Action, EditPieceMetadataAction, EditProblemMetadataAction} from "~/ui/actions.ts"
+import {Action, EditShapeMetadataAction, EditProblemMetadataAction} from "~/ui/actions.ts"
 import ProblemPiecesEditor from "~/ui/components/ProblemPiecesEditor.vue"
 import ProblemConstraintEditor from "~/ui/components/ProblemConstraintEditor.vue"
 import ColorInput from "~/ui/common/ColorInput.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
-    itemType: "piece" | "problem",
+    itemType: "shape" | "problem",
     itemId: ItemId | null,
 }>()
 
@@ -22,24 +22,24 @@ const emit = defineEmits<{
 type Field = {
     property: string,
     label: string,
-    type: "string" | "color" | "piece" | "pieces" | "bounds" | "constraints",
+    type: "string" | "color" | "shape" | "pieces" | "bounds" | "constraints",
     required?: boolean,
 
     //TODO: Field-specific stuff that should be factored out when a proper form
     //system is written.
-    getDisabledPieceIds?: (problem: AssemblyProblem) => PieceId[]
+    getDisabledShapeIds?: (problem: AssemblyProblem) => ShapeId[]
 }
 
 let title: string
-let puzzleProperty: "pieces" | "problems"
+let puzzleProperty: "shapes" | "problems"
 let actionClass: {new(itemId: ItemId, metadata: any): Action}
 let fields: Field[]
 switch(props.itemType) {
 
-    case "piece":
-        title = "Piece Data"
-        puzzleProperty = "pieces"
-        actionClass = EditPieceMetadataAction
+    case "shape":
+        title = "Shape Data"
+        puzzleProperty = "shapes"
+        actionClass = EditShapeMetadataAction
         fields = [
             {
                 property: "label",
@@ -71,10 +71,10 @@ switch(props.itemType) {
                 label: "Constraints",
                 type: "constraints",
             }, {
-                property: "piecesId",
-                label: "Pieces Used",
+                property: "",
+                label: "Pieces",
                 type: "pieces",
-                getDisabledPieceIds: (item: AssemblyProblem) => item.goalPieceId !== undefined ? [item.goalPieceId] : []
+                getDisabledShapeIds: (item: AssemblyProblem) => item.goalShapeId !== undefined ? [item.goalShapeId] : []
             }
         ]
         break;
@@ -83,12 +83,12 @@ switch(props.itemType) {
         throw new Error("Invalid itemType")
 }
 
-const item: ComputedRef<Piece | Problem | null> = computed(() => {
+const item: ComputedRef<Shape | Problem | null> = computed(() => {
     if(props.itemId === null) {
         return null
     }
-    if(puzzleProperty === "pieces") {
-        return props.puzzle.getPiece(props.itemId as PieceId)
+    if(puzzleProperty === "shapes") {
+        return props.puzzle.getShape(props.itemId as ShapeId)
     } else {
         return props.puzzle.getProblem(props.itemId)
     }
@@ -99,12 +99,12 @@ const item: ComputedRef<Piece | Problem | null> = computed(() => {
  * base class for objects enforce the type safety. */
 const typeUnsafeItem = item as ComputedRef<any>
 
-const pieceItems = computed(() => {
-    const pieces = Array.from(props.puzzle.pieces.values())
-    return pieces.map((piece) => {
+const shapeItems = computed(() => {
+    const shapes = Array.from(props.puzzle.shapes.values())
+    return shapes.map((shape) => {
         return {
-            title: piece.label,
-            value: piece,
+            title: shape.label,
+            value: shape,
         }
     })
 })
@@ -117,10 +117,10 @@ function handleTextInput(field: Field, value: string) {
     emit("action", action)
 }
 
-function handlePieceInput(field: Field, piece: Piece) {
+function handleShapeInput(field: Field, shape: Shape) {
     if(props.itemId === null) return
     const metadata: any = {}
-    metadata[field.property] = piece.id
+    metadata[field.property] = shape.id
     const action = new actionClass(props.itemId, metadata)
     emit("action", action)
 }
@@ -158,13 +158,13 @@ function handleBoundsInput(field: Field, boundsProperty: string, value?: number)
             />
 
             <VSelect
-                    v-if="item && field.type === 'piece'"
+                    v-if="item && field.type === 'shape'"
                     :label="field.label"
                     :required="field.required !== false"
-                    :items="pieceItems"
-                    :modelValue="puzzle.getPiece(typeUnsafeItem[field.property])"
-                    no-data-text="No pieces in puzzle!"
-                    @update:modelValue="handlePieceInput(field, $event as Piece)"
+                    :items="shapeItems"
+                    :modelValue="puzzle.getShape(typeUnsafeItem[field.property])"
+                    no-data-text="No shapes in puzzle!"
+                    @update:modelValue="handleShapeInput(field, $event as Shape)"
             />
 
             <ProblemConstraintEditor
@@ -177,7 +177,7 @@ function handleBoundsInput(field: Field, boundsProperty: string, value?: number)
 
             <!--
                 Note: This must render when item is null, since if there are
-                many pieces, this would have to initialize many grid displays
+                many shapes, this would have to initialize many grid displays
                 at once when item is set. We just hide it instead if item isn't
                 set.
             -->
@@ -192,7 +192,7 @@ function handleBoundsInput(field: Field, boundsProperty: string, value?: number)
             />
 
             <VContainer
-                    v-if="item && field.type === 'bounds' && puzzle !== null && item instanceof Piece"
+                    v-if="item && field.type === 'bounds' && puzzle !== null && item instanceof Shape"
             >
                 <VRow>
                     <VCol

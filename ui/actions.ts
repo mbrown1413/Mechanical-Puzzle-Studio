@@ -1,7 +1,7 @@
 import {
-    Voxel, Puzzle, Item, ItemId, Piece, PieceId, Problem, AssemblyProblem,
-    PuzzleFile, Bounds, ProblemId, AssemblySolution, PieceGroup,
-    Grid, clone, PieceGroupId
+    Voxel, Puzzle, Item, ItemId, Shape, ShapeId, Problem, AssemblyProblem,
+    PuzzleFile, Bounds, ProblemId, AssemblySolution, ShapeGroup,
+    Grid, clone, ShapeGroupId
 } from "~lib"
 
 
@@ -28,7 +28,7 @@ function getDuplicateItemLabel(
 ) {
     let i: number, prefix: string
     if(labelToDuplicate === undefined) {
-        labelToDuplicate = "Piece"
+        labelToDuplicate = "Shape"
     }
 
     // Detect "<name> (copy)" or "<name> (copy <i>)" format and use that as a
@@ -97,10 +97,10 @@ export abstract class EditItemMetadataAction<T extends Item> extends Action {
     getItem(puzzle: Puzzle, itemId: T["id"]): T | null {
         if(itemId === undefined) { return null }
         const constructor = <typeof EditItemMetadataAction> this.constructor
-        if(constructor.itemName === "Piece") {
-            return puzzle.getPiece(itemId as PieceId) as T
-        } else if(constructor.itemName === "Piece Group") {
-            return puzzle.getPieceGroup(itemId as PieceGroupId) as T
+        if(constructor.itemName === "Shape") {
+            return puzzle.getShape(itemId as ShapeId) as T
+        } else if(constructor.itemName === "Shape Group") {
+            return puzzle.getShapeGroup(itemId as ShapeGroupId) as T
         } else {
             return puzzle.getProblem(itemId) as T
         }
@@ -121,7 +121,7 @@ export abstract class EditItemMetadataAction<T extends Item> extends Action {
 }
 
 abstract class DeleteItemAction extends Action {
-    static itemName: "Piece" | "Piece Group" | "Problem"
+    static itemName: "Shape" | "Shape Group" | "Problem"
     itemId: ItemId
 
     constructor(itemId: ItemId) {
@@ -137,10 +137,10 @@ abstract class DeleteItemAction extends Action {
     hasItem(puzzle: Puzzle, itemId: ItemId) {
         const constructor = <typeof DeleteItemAction> this.constructor
         switch(constructor.itemName) {
-            case "Piece":
-                return puzzle.hasPiece(itemId as PieceId)
-            case "Piece Group":
-                return puzzle.hasPieceGroup(itemId as PieceGroupId)
+            case "Shape":
+                return puzzle.hasShape(itemId as ShapeId)
+            case "Shape Group":
+                return puzzle.hasShapeGroup(itemId as ShapeGroupId)
             case "Problem":
                 return puzzle.hasProblem(itemId)
         }
@@ -149,10 +149,10 @@ abstract class DeleteItemAction extends Action {
     deleteItem(puzzle: Puzzle, itemId: ItemId) {
         const constructor = <typeof DeleteItemAction> this.constructor
         switch(constructor.itemName) {
-            case "Piece":
-                return puzzle.removePiece(itemId as PieceId)
-            case "Piece Group":
-                return puzzle.removePieceGroup(itemId as PieceGroupId)
+            case "Shape":
+                return puzzle.removeShape(itemId as ShapeId)
+            case "Shape Group":
+                return puzzle.removeShapeGroup(itemId as ShapeGroupId)
             break
             case "Problem":
                 return puzzle.removeProblem(itemId)
@@ -205,11 +205,11 @@ export class GridSetAction extends Action {
 
     perform(puzzle: Puzzle, _puzzleFile: PuzzleFile) {
         puzzle.grid = clone(this.grid)
-        for(const piece of puzzle.pieces) {
-            if(piece.bounds && !puzzle.grid.validateBounds(piece.bounds)) {
-                piece.bounds = puzzle.grid.getDefaultPieceBounds()
+        for(const shape of puzzle.shapes) {
+            if(shape.bounds && !puzzle.grid.validateBounds(shape.bounds)) {
+                shape.bounds = puzzle.grid.getDefaultShapeBounds()
             }
-            piece.voxels = piece.voxels.filter(
+            shape.voxels = shape.voxels.filter(
                 voxel => puzzle.grid.validateVoxel(voxel)
             )
         }
@@ -220,94 +220,94 @@ export class GridSetAction extends Action {
 }
 
 
-////////// Piece Actions //////////
+////////// Shape Actions //////////
 
-export class NewPieceAction extends Action {
+export class NewShapeAction extends Action {
     bounds?: Bounds
-    afterType?: "piece" | "pieceGroup"
+    afterType?: "shape" | "shapeGroup"
     afterId?: number
 
-    constructor(bounds?: Bounds, after: Piece|PieceGroup|null = null) {
+    constructor(bounds?: Bounds, after: Shape|ShapeGroup|null = null) {
         super()
         this.bounds = bounds
         if(after) {
-            this.afterType = after instanceof Piece ? "piece" : "pieceGroup"
+            this.afterType = after instanceof Shape ? "shape" : "shapeGroup"
             this.afterId = after.id
         }
     }
 
     perform(puzzle: Puzzle) {
-        const piece = new Piece(
-            puzzle.generatePieceId(),
+        const shape = new Shape(
+            puzzle.generateShapeId(),
         )
-        piece.label = getNewItemLabel("Piece ", puzzle.pieces)
-        piece.color = puzzle.getNewPieceColor()
-        piece.bounds = this.bounds || puzzle.grid.getDefaultPieceBounds()
+        shape.label = getNewItemLabel("Shape ", puzzle.shapes)
+        shape.color = puzzle.getNewShapeColor()
+        shape.bounds = this.bounds || puzzle.grid.getDefaultShapeBounds()
 
         let after
         if(this.afterId !== undefined) {
-            if(this.afterType === "piece") {
-                after = puzzle.getPiece(this.afterId)
-            } else if(this.afterType === "pieceGroup") {
-                after = puzzle.getPieceGroup(this.afterId)
+            if(this.afterType === "shape") {
+                after = puzzle.getShape(this.afterId)
+            } else if(this.afterType === "shapeGroup") {
+                after = puzzle.getShapeGroup(this.afterId)
             }
         }
 
-        puzzle.addPiece(piece, after)
+        puzzle.addShape(shape, after)
     }
 
     toString() {
-        return "Create new piece"
+        return "Create new shape"
     }
 }
 
-export class DeletePieceAction extends DeleteItemAction {
-    static itemName = "Piece" as const
+export class DeleteShapeAction extends DeleteItemAction {
+    static itemName = "Shape" as const
 }
 
-export class EditPieceAction extends Action {
-    pieceId: PieceId
+export class EditShapeAction extends Action {
+    shapeId: ShapeId
     voxelsToAdd: Voxel[]
     voxelsToRemove: Voxel[]
     optionalVoxels: boolean
 
     constructor(
-        pieceId: PieceId,
+        shapeId: ShapeId,
         addVoxels: Voxel[],
         removeVoxels: Voxel[],
         optionalVoxels=false,
     ) {
         super()
-        this.pieceId = pieceId
+        this.shapeId = shapeId
         this.voxelsToAdd = addVoxels
         this.voxelsToRemove = removeVoxels
         this.optionalVoxels = optionalVoxels
     }
 
     toString() {
-        return "Edit piece"
+        return "Edit shape"
     }
 
-    getPiece(puzzle: Puzzle): Piece {
-        const piece = puzzle.getPiece(this.pieceId)
-        if(piece === null) {
-            throw new Error(`Piece with ID ${this.pieceId} not found`)
+    getShape(puzzle: Puzzle): Shape {
+        const shape = puzzle.getShape(this.shapeId)
+        if(shape === null) {
+            throw new Error(`Shape with ID ${this.shapeId} not found`)
         }
-        return piece
+        return shape
     }
 
     perform(puzzle: Puzzle) {
-        const piece = this.getPiece(puzzle)
-        this.performOnPiece(piece)
-        this.callPieceGroupHook(puzzle, piece)
+        const shape = this.getShape(puzzle)
+        this.performOnShape(shape)
+        this.callShapeGroupHook(puzzle, shape)
     }
 
-    performOnPiece(piece: Piece) {
-        piece.addVoxel(...this.voxelsToAdd)
-        piece.removeVoxel(...this.voxelsToRemove)
+    performOnShape(shape: Shape) {
+        shape.addVoxel(...this.voxelsToAdd)
+        shape.removeVoxel(...this.voxelsToRemove)
 
         for(const voxel of this.voxelsToAdd) {
-            piece.setVoxelAttribute(
+            shape.setVoxelAttribute(
                 "optional",
                 voxel,
                 this.optionalVoxels ? true : undefined
@@ -315,163 +315,163 @@ export class EditPieceAction extends Action {
         }
     }
 
-    callPieceGroupHook(puzzle: Puzzle, piece: Piece) {
-        const group = puzzle.getPieceGroupFromPiece(piece)
+    callShapeGroupHook(puzzle: Puzzle, shape: Shape) {
+        const group = puzzle.getShapeGroupFromShape(shape)
         if(group !== null) {
-            group.onPieceEdit(
-                piece,
+            group.onShapeEdit(
+                shape,
                 this.voxelsToAdd,
                 this.voxelsToRemove,
             )
         }
     }
 
-    /** Would this action actually modify the piece? */
+    /** Would this action actually modify the shape? */
     wouldModify(puzzle: Puzzle): boolean {
-        const piece = this.getPiece(puzzle)
+        const shape = this.getShape(puzzle)
 
-        const modifiedPiece = piece.copy()
-        this.performOnPiece(modifiedPiece)
+        const modifiedShape = shape.copy()
+        this.performOnShape(modifiedShape)
 
-        return !piece.equals(modifiedPiece)
+        return !shape.equals(modifiedShape)
     }
 }
 
-export class EditPieceMetadataAction extends EditItemMetadataAction<Piece> {
-    static itemName = "Piece" as const
+export class EditShapeMetadataAction extends EditItemMetadataAction<Shape> {
+    static itemName = "Shape" as const
     static metadata: {
         label?: string
         color?: string
     }
 
-    postEdit(piece: Piece, puzzle: Puzzle) {
-        // Remove voxels out of piece's bounds
-        const bounds = piece.bounds
+    postEdit(shape: Shape, puzzle: Puzzle) {
+        // Remove voxels out of shape's bounds
+        const bounds = shape.bounds
         if(bounds !== undefined) { 
-            piece.voxels = piece.voxels.filter((voxel) =>
+            shape.voxels = shape.voxels.filter((voxel) =>
                 puzzle.grid.isInBounds(voxel, bounds)
             )
         }
     }
 }
 
-export class DuplicatePieceAction extends Action {
-    pieceId: PieceId
+export class DuplicateShapeAction extends Action {
+    shapeId: ShapeId
 
-    constructor(pieceId: PieceId) {
+    constructor(shapeId: ShapeId) {
         super()
-        this.pieceId = pieceId
+        this.shapeId = shapeId
     }
 
     toString() {
-        return "Duplicate Piece"
+        return "Duplicate Shape"
     }
 
     perform(puzzle: Puzzle) {
-        const piece = puzzle.getPiece(this.pieceId)
-        if(!piece) {
+        const shape = puzzle.getShape(this.shapeId)
+        if(!shape) {
             throw new Error(
-                `Could not find piece with ID ${this.pieceId} to duplicate`
+                `Could not find shape with ID ${this.shapeId} to duplicate`
             )
         }
 
-        const newPiece = piece.copy()
-        newPiece.id = puzzle.generatePieceId()
-        newPiece.label = getDuplicateItemLabel(
-            newPiece.label,
-            puzzle.pieces.map(p => p.label)
+        const newShape = shape.copy()
+        newShape.id = puzzle.generateShapeId()
+        newShape.label = getDuplicateItemLabel(
+            newShape.label,
+            puzzle.shapes.map(p => p.label)
         )
-        newPiece.color = puzzle.getNewPieceColor()
+        newShape.color = puzzle.getNewShapeColor()
 
-        puzzle.addPiece(newPiece, piece)
+        puzzle.addShape(newShape, shape)
     }
 }
 
-export class PieceListMoveAction extends Action {
+export class ShapeListMoveAction extends Action {
     direction: "up" | "down"
-    itemType: "piece" | "pieceGroup"
+    itemType: "shape" | "shapeGroup"
     itemId: number
 
-    constructor(direction: "up"|"down", item: Piece|PieceGroup) {
+    constructor(direction: "up"|"down", item: Shape|ShapeGroup) {
         super()
         this.direction = direction
-        this.itemType = item instanceof Piece ? "piece" : "pieceGroup"
+        this.itemType = item instanceof Shape ? "shape" : "shapeGroup"
         this.itemId = item.id
     }
 
     toString() {
-        return `Move ${this.itemType === "piece" ? "piece" : "piece group"} ${this.direction}`
+        return `Move ${this.itemType === "shape" ? "shape" : "shape group"} ${this.direction}`
     }
 
     perform(puzzle: Puzzle) {
         let item
-        if(this.itemType === "piece") {
-            item = puzzle.getPiece(this.itemId)
+        if(this.itemType === "shape") {
+            item = puzzle.getShape(this.itemId)
         } else {
-            item = puzzle.getPieceGroup(this.itemId)
+            item = puzzle.getShapeGroup(this.itemId)
         }
         if(!item) {
             throw new Error(
-                `Could not find ${this.itemType === "piece" ? "piece" : "piece group"} to move with ID ${this.itemId}`
+                `Could not find ${this.itemType === "shape" ? "shape" : "shape group"} to move with ID ${this.itemId}`
             )
         }
-        puzzle.movePieceListItem(this.direction, item)
+        puzzle.moveShapeListItem(this.direction, item)
     }
 }
 
 
-////////// Piece Group Actions //////////
+////////// Shape Group Actions //////////
 
-type PieceGroupClass = {new(id: PieceGroupId): PieceGroup}
-export class NewPieceGroupAction extends Action {
-    pieceGroupClass: PieceGroupClass
-    afterType?: "piece" | "pieceGroup"
+type ShapeGroupClass = {new(id: ShapeGroupId): ShapeGroup}
+export class NewShapeGroupAction extends Action {
+    shapeGroupClass: ShapeGroupClass
+    afterType?: "shape" | "shapeGroup"
     afterId?: number
 
-    constructor(pieceGroupClass: PieceGroupClass, after: Piece|PieceGroup|null = null) {
+    constructor(shapeGroupClass: ShapeGroupClass, after: Shape|ShapeGroup|null = null) {
         super()
-        this.pieceGroupClass = pieceGroupClass
+        this.shapeGroupClass = shapeGroupClass
         if(after) {
-            this.afterType = after instanceof Piece ? "piece" : "pieceGroup"
+            this.afterType = after instanceof Shape ? "shape" : "shapeGroup"
             this.afterId = after.id
         }
     }
 
     toString() {
-        return "New Piece Group"
+        return "New Shape Group"
     }
 
     perform(puzzle: Puzzle) {
-        const group = new this.pieceGroupClass(
-            puzzle.generatePieceGroupId()
+        const group = new this.shapeGroupClass(
+            puzzle.generateShapeGroupId()
         )
         group.label = getNewItemLabel(
             group.label + " ",
-            puzzle.pieceGroups.filter(group => group instanceof this.pieceGroupClass)
+            puzzle.shapeGroups.filter(group => group instanceof this.shapeGroupClass)
         )
 
         let after
         if(this.afterId !== undefined) {
-            if(this.afterType === "piece") {
-                after = puzzle.getPiece(this.afterId)
-            } else if(this.afterType === "pieceGroup") {
-                after = puzzle.getPieceGroup(this.afterId)
+            if(this.afterType === "shape") {
+                after = puzzle.getShape(this.afterId)
+            } else if(this.afterType === "shapeGroup") {
+                after = puzzle.getShapeGroup(this.afterId)
             }
         }
 
-        puzzle.addPieceGroup(group, after)
+        puzzle.addShapeGroup(group, after)
     }
 }
 
-export class EditPieceGroupMetadataAction extends EditItemMetadataAction<PieceGroup> {
-    static itemName = "Piece Group" as const
+export class EditShapeGroupMetadataAction extends EditItemMetadataAction<ShapeGroup> {
+    static itemName = "Shape Group" as const
     static metadata: {
         label?: string
     }
 }
 
-export class DeletePieceGroupAction extends DeleteItemAction {
-    static itemName = "Piece Group" as const
+export class DeleteShapeGroupAction extends DeleteItemAction {
+    static itemName = "Shape Group" as const
 }
 
 

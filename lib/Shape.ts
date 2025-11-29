@@ -1,31 +1,39 @@
 import {SerializableClass, clone, registerClass} from "~/lib/serialize.ts"
 import {Grid, Bounds, Voxel, Transform} from "~/lib/Grid.ts"
 
-export type PieceId = number
-export type PieceInstanceId = number
-export type PieceCompleteId = `${PieceId}` | `${PieceId}-${PieceInstanceId}`
+export type ShapeId = number
+export type ShapeInstanceId = number
+export type ShapeCompleteId = `${ShapeId}` | `${ShapeId}-${ShapeInstanceId}`
 
 /**
- * This type is just a list of pieces, but it conveys the intention of a set of
- * non-overlapping pieces placed in the same space, aka an assembly.
+ * This type is just a list of shapes, but it conveys the intention of a set of
+ * non-overlapping shapes placed in the same space, aka an assembly.
  */
-export type Assembly = Piece[]
+export type Assembly = Shape[]
 
 type AttributeValue = boolean
 
 /**
- * Data as we store it when serialized. We'll read the types of Piece if
+ * Data as we store it when serialized. We'll read the types of Shape if
  * needed, but alternatively we turn some long lists into strings for more
  * efficient storage and better readability of the file format.
  */
-type PieceStoredData = {
+type ShapeStoredData = {
     voxels: Voxel[] | string
     bounds?: Bounds | string
 }
 
-export class Piece extends SerializableClass {
-    id: PieceId
-    instance?: PieceInstanceId
+/**
+ * A shape is a set of voxels on a grid, plus other metadata. Each voxel may
+ * also have arbitrary attributes.
+ *
+ * When used in a problem, each shape may have multiple instances. In this
+ * case, the term "piece" may be used and the `instance` attribute will be set
+ * to distinguish multiple uses of the same shape.
+ */
+export class Shape extends SerializableClass {
+    id: ShapeId
+    instance?: ShapeInstanceId
     voxels: Voxel[]
     voxelAttributes?: {
         [attribute: string]: {
@@ -37,41 +45,41 @@ export class Piece extends SerializableClass {
     label?: string
     color?: string
 
-    constructor(id: PieceId, voxels: Voxel[]=[]) {
+    constructor(id: ShapeId, voxels: Voxel[]=[]) {
         super()
         this.id = id
         this.voxels = voxels
     }
 
-    static postSerialize(piece: Piece) {
-        const stored = piece as unknown as PieceStoredData
+    static postSerialize(shape: Shape) {
+        const stored = shape as unknown as ShapeStoredData
 
-        stored.voxels = piece.voxels.join("; ")
-        if(piece.bounds) {
-            stored.bounds = serializeBounds(piece.bounds)
+        stored.voxels = shape.voxels.join("; ")
+        if(shape.bounds) {
+            stored.bounds = serializeBounds(shape.bounds)
         }
     }
 
-    static preDeserialize(stored: PieceStoredData) {
-        const pieceData: Piece = stored as unknown as Piece
+    static preDeserialize(stored: ShapeStoredData) {
+        const shapeData: Shape = stored as unknown as Shape
 
         if(typeof stored.voxels === "string") {
             if(stored.voxels === "") {
-                pieceData.voxels = []
+                shapeData.voxels = []
             } else {
-                pieceData.voxels = stored.voxels.split("; ")
+                shapeData.voxels = stored.voxels.split("; ")
             }
         }
         if(typeof stored.bounds !== "undefined") {
-            pieceData.bounds = deserializeBounds(stored.bounds)
+            shapeData.bounds = deserializeBounds(stored.bounds)
         }
     }
 
     /**
-     * Complete ID is unique not only to this piece, but to this instance of
-     * the piece. It includes the piece ID and the piece instance number.
+     * Complete ID is unique not only to this shape, but to this instance of
+     * the shape. It includes the shape ID and the shape instance number.
      */
-    get completeId(): PieceCompleteId {
+    get completeId(): ShapeCompleteId {
         if(typeof this.instance === "number") {
             return `${this.id}-${this.instance}`
         } else {
@@ -79,11 +87,11 @@ export class Piece extends SerializableClass {
         }
     }
 
-    copy(): Piece {
+    copy(): Shape {
         return clone(this)
     }
 
-    equals(other: Piece): boolean {
+    equals(other: Shape): boolean {
         // Use sets so duplicate voxels don't affect equality
         const thisVoxels = new Set(this.voxels)
         const otherVoxels = new Set(other.voxels)
@@ -142,34 +150,34 @@ export class Piece extends SerializableClass {
         }
     }
 
-    /** Mutates the piece by the given transform. */
+    /** Mutates the shape by the given transform. */
     doTransform(grid: Grid, transform: Transform): this {
         const newVoxels = grid.doTransform(transform, this.voxels)
-        const newPiece = new Piece(this.id, newVoxels)
+        const newShape = new Shape(this.id, newVoxels)
 
         // Map old voxel attributes to their new voxels
         const attributes = this.listVoxelAttributes()
         for(let i=0; i<this.voxels.length; i++) {
             for(const attribute of attributes) {
                 const value = this.getVoxelAttribute(attribute, this.voxels[i])
-                newPiece.setVoxelAttribute(attribute, newPiece.voxels[i], value)
+                newShape.setVoxelAttribute(attribute, newShape.voxels[i], value)
             }
         }
 
-        this.voxels = newPiece.voxels
-        this.voxelAttributes = newPiece.voxelAttributes
+        this.voxels = newShape.voxels
+        this.voxelAttributes = newShape.voxelAttributes
         return this
     }
 
     /**
-     * Mutates the piece list by the given transform.
+     * Mutates the shape list by the given transform.
      */
     static transformAssembly(
         grid: Grid,
-        pieces: Piece[],
+        shapes: Shape[],
         transform: Transform
-    ): Piece[] {
-        return pieces.map(piece => piece.doTransform(grid, transform))
+    ): Shape[] {
+        return shapes.map(shape => shape.doTransform(grid, transform))
     }
 
     getVoxelAttribute(attribute: string, voxel: Voxel): AttributeValue | undefined {
@@ -216,7 +224,8 @@ export class Piece extends SerializableClass {
         return Object.keys(this.voxelAttributes || {})
     }
 }
-registerClass(Piece)
+registerClass(Shape)
+registerClass(Shape, "Piece")  // Backwards compatibility
 
 
 function serializeBounds(bounds: Bounds): string {
