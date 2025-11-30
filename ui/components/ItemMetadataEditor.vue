@@ -1,17 +1,15 @@
 <script setup lang="ts">
 import {computed, ComputedRef} from "vue"
-import {VNumberInput} from "vuetify/labs/VNumberInput"
 
-import {Bounds, Shape, Puzzle, Problem, AssemblyProblem, ItemId, ShapeId} from  "~lib"
+import {Puzzle, Problem, AssemblyProblem, ItemId, ShapeId} from  "~lib"
 
-import {Action, EditShapeMetadataAction, EditProblemMetadataAction} from "~/ui/actions.ts"
+import {Action, EditProblemMetadataAction} from "~/ui/actions.ts"
 import ProblemPiecesEditor from "~/ui/components/ProblemPiecesEditor.vue"
 import ProblemConstraintEditor from "~/ui/components/ProblemConstraintEditor.vue"
-import ColorInput from "~/ui/common/ColorInput.vue"
 
 const props = defineProps<{
     puzzle: Puzzle,
-    itemType: "shape" | "problem",
+    itemType: "problem",
     itemId: ItemId | null,
 }>()
 
@@ -22,8 +20,7 @@ const emit = defineEmits<{
 type Field = {
     property: string,
     label: string,
-    type: "string" | "color" | "shape" | "pieces" | "bounds" | "constraints",
-    required?: boolean,
+    type: "string" | "pieces" | "constraints",
 
     //TODO: Field-specific stuff that should be factored out when a proper form
     //system is written.
@@ -31,35 +28,12 @@ type Field = {
 }
 
 let title: string
-let puzzleProperty: "shapes" | "problems"
 let actionClass: {new(itemId: ItemId, metadata: any): Action}
 let fields: Field[]
 switch(props.itemType) {
 
-    case "shape":
-        title = "Shape Data"
-        puzzleProperty = "shapes"
-        actionClass = EditShapeMetadataAction
-        fields = [
-            {
-                property: "label",
-                label: "Name",
-                type: "string",
-            }, {
-                property: "bounds",
-                label: "Size",
-                type: "bounds",
-            }, {
-                property: "color",
-                label: "Color",
-                type: "color",
-            }
-        ]
-        break;
-
     case "problem":
         title = "Problem Data"
-        puzzleProperty = "problems"
         actionClass = EditProblemMetadataAction
         fields = [
             {
@@ -83,15 +57,11 @@ switch(props.itemType) {
         throw new Error("Invalid itemType")
 }
 
-const item: ComputedRef<Shape | Problem | null> = computed(() => {
+const item: ComputedRef<Problem | null> = computed(() => {
     if(props.itemId === null) {
         return null
     }
-    if(puzzleProperty === "shapes") {
-        return props.puzzle.getShape(props.itemId as ShapeId)
-    } else {
-        return props.puzzle.getProblem(props.itemId)
-    }
+    return props.puzzle.getProblem(props.itemId)
 })
 
 /* Until we get a proper form system, there's not really a way to make this
@@ -99,41 +69,12 @@ const item: ComputedRef<Shape | Problem | null> = computed(() => {
  * base class for objects enforce the type safety. */
 const typeUnsafeItem = item as ComputedRef<any>
 
-const shapeItems = computed(() => {
-    const shapes = Array.from(props.puzzle.shapes.values())
-    return shapes.map((shape) => {
-        return {
-            title: shape.label,
-            value: shape,
-        }
-    })
-})
-
 function handleTextInput(field: Field, value: string) {
     if(props.itemId === null) return
     const metadata: any = {}
     metadata[field.property] = value
     const action = new actionClass(props.itemId, metadata)
     emit("action", action)
-}
-
-function handleShapeInput(field: Field, shape: Shape) {
-    if(props.itemId === null) return
-    const metadata: any = {}
-    metadata[field.property] = shape.id
-    const action = new actionClass(props.itemId, metadata)
-    emit("action", action)
-}
-
-function handleBoundsInput(field: Field, boundsProperty: string, value?: number) {
-    if(!value) return
-    if(props.itemId === null || item.value === null) return
-    const metadata: any = {}
-    metadata[field.property] = Object.assign({}, typeUnsafeItem.value[field.property])
-    metadata[field.property][boundsProperty] = value
-    const action = new actionClass(props.itemId, metadata)
-    emit("action", action)
-
 }
 </script>
 
@@ -146,25 +87,8 @@ function handleBoundsInput(field: Field, boundsProperty: string, value?: number)
             <VTextField
                     v-if="item && field.type === 'string'"
                     :label="field.label"
-                    :required="field.required === true"
                     :model-value="typeUnsafeItem[field.property]"
                     @input="handleTextInput(field, $event.target.value)"
-            />
-
-            <ColorInput
-                    v-if="item && field.type === 'color'"
-                    :value="typeUnsafeItem[field.property] as string"
-                    @input="handleTextInput(field, $event)"
-            />
-
-            <VSelect
-                    v-if="item && field.type === 'shape'"
-                    :label="field.label"
-                    :required="field.required !== false"
-                    :items="shapeItems"
-                    :modelValue="puzzle.getShape(typeUnsafeItem[field.property])"
-                    no-data-text="No shapes in puzzle!"
-                    @update:modelValue="handleShapeInput(field, $event as Shape)"
             />
 
             <ProblemConstraintEditor
@@ -191,25 +115,6 @@ function handleBoundsInput(field: Field, boundsProperty: string, value?: number)
                     class="mt-6"
             />
 
-            <VContainer
-                    v-if="item && field.type === 'bounds' && puzzle !== null && item instanceof Shape"
-            >
-                <VRow>
-                    <VCol
-                            v-for="dimension in puzzle.grid.boundsEditInfo.dimensions"
-                            style="padding: 4px;"
-                    >
-                        <VNumberInput
-                                control-variant="stacked"
-                                :label="dimension.name"
-                                :min="1"
-                                :max="99"
-                                :model-value="(typeUnsafeItem[field.property] as Bounds)[dimension.boundsProperty]"
-                                @update:model-value="handleBoundsInput(field, dimension.boundsProperty, $event)"
-                        />
-                    </VCol>
-                </VRow>
-            </VContainer>
         </template>
 
     </div>

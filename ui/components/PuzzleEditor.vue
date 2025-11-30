@@ -9,7 +9,7 @@ import Split from "split-grid"
 
 import {Puzzle, ShapeId, ProblemId, AssemblySolution} from "~lib"
 
-import {Action, EditShapeGroupMetadataAction} from "~/ui/actions.ts"
+import {Action, EditShapeGroupMetadataAction, EditShapeMetadataAction} from "~/ui/actions.ts"
 import TabLayout from "~/ui/common/TabLayout.vue"
 import ShapeEditor from "~/ui/components/ShapeEditor.vue"
 import SolutionDisplay from "~/ui/components/SolutionDisplay.vue"
@@ -189,12 +189,13 @@ watch(currentTabId, (tabId) => {
                 v-show="currentTabId === 'shapes'"
                 style="height: 100%; display: flex; flex-direction: column;"
             >
-                <ItemMetadataEditor
-                    v-if="selectedShape"
-                    :puzzle="puzzle"
-                    itemType="shape"
-                    :itemId="selectedShape.id"
-                    @action="performAction"
+                <FormEditor
+                    v-if="selectedShape && selectedShapeId !== null"
+                    :item="selectedShape"
+                    :grid="puzzle.grid"
+                    @edit="performAction(new EditShapeMetadataAction(selectedShapeId, $event))"
+                    title="Shape"
+                    style="margin: 1em;"
                 />
                 <FormEditor
                     v-if="selectedShapeGroup && selectedShapeGroupId !== null"

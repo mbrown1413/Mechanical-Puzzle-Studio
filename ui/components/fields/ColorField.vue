@@ -1,38 +1,39 @@
-<!-- A button which opens a modal for picking a color. -->
-
 <script setup lang="ts">
-import {ref, Ref} from "vue"
+import {computed, ref, Ref} from "vue"
 
-import {swatches} from "~lib"
+import {ColorField, FormEditable, swatches} from "~lib"
+
 import Modal from "~/ui/common/Modal.vue"
 
 const props = defineProps<{
-    value: string,
+    item: FormEditable
+    field: ColorField
 }>()
 
 const emit = defineEmits<{
-    input: [value: string],
+    "edit": [editData: object]
 }>()
 
+const currentColor = computed(() => (props.item as any)[props.field.property])
+const temporaryColor = ref(currentColor.value)
 const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 
-const temporaryColor = ref(props.value)
-
 function onOpen() {
-    temporaryColor.value = props.value
+    temporaryColor.value = currentColor.value
     modal.value?.open()
 }
 
 function onOk() {
     modal.value?.close()
-    emit("input", temporaryColor.value)
+    const editData: any = {}
+    editData[props.field.property] = temporaryColor.value
+    emit("edit", editData)
 }
-
 </script>
 
 <template>
     <VBtn
-        :color="value"
+        :color="currentColor"
         @click="onOpen"
         class="color-input-button"
     >

@@ -1,5 +1,6 @@
 import {SerializableClass, clone, registerClass} from "~/lib/serialize.ts"
 import {Grid, Bounds, Voxel, Transform} from "~/lib/Grid.ts"
+import {Form, FormEditable} from "~/lib/forms.ts"
 
 export type ShapeId = number
 export type ShapeInstanceId = number
@@ -31,7 +32,7 @@ type ShapeStoredData = {
  * case, the term "piece" may be used and the `instance` attribute will be set
  * to distinguish multiple uses of the same shape.
  */
-export class Shape extends SerializableClass {
+export class Shape extends SerializableClass implements FormEditable{
     id: ShapeId
     instance?: ShapeInstanceId
     voxels: Voxel[]
@@ -72,6 +73,27 @@ export class Shape extends SerializableClass {
         }
         if(typeof stored.bounds !== "undefined") {
             shapeData.bounds = deserializeBounds(stored.bounds)
+        }
+    }
+
+    getForm(): Form {
+        return {
+            fields: [
+                {
+                    type: "string",
+                    property: "label",
+                    label: "Name",
+                },
+                {
+                    type: "bounds",
+                    property: "bounds",
+                },
+                {
+                    type: "color",
+                    property: "color",
+                    label: "Color",
+                },
+            ]
         }
     }
 
