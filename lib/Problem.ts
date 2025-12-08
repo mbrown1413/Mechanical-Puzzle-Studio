@@ -4,6 +4,7 @@ import {Solver, AssemblySolver, SymmetryReduction} from "~/lib/Solver.ts"
 import {Solution} from "~/lib/Solution.ts"
 import {Shape, ShapeId} from "~/lib/Shape.ts"
 import {Puzzle} from "~/lib/Puzzle.ts"
+import {Form, FormEditable, Field, FormContext} from "~/lib/forms.ts"
 
 export type ProblemId = number
 
@@ -38,7 +39,7 @@ export type ProblemConstraint = {
 /**
  * Describes an objective of the puzzle.
  */
-export abstract class Problem extends SerializableClass {
+export abstract class Problem extends SerializableClass implements FormEditable {
     id: ProblemId
     label: string
     solverId: string
@@ -49,6 +50,18 @@ export abstract class Problem extends SerializableClass {
         this.id = id
         this.label = `Problem ${id}`
         this.solverId = Object.keys(this.getSolvers())[0]
+    }
+
+    getForm(_context: FormContext): Form {
+        return {
+            fields: [
+                {
+                    type: "string",
+                    property: "label",
+                    label: "Name",
+                },
+            ]
+        }
     }
 
     copy(): this {
@@ -90,6 +103,39 @@ export class AssemblyProblem extends Problem {
         this.shapeCounts = {}
         this.disassemble = false
         this.removeNoDisassembly = true
+    }
+
+    getForm(context: FormContext): Form {
+        const form = super.getForm(context)
+        let voxelMessageChip
+
+        if(!context.puzzle) {
+            voxelMessageChip = {text: "- / -"}
+        } else {
+            const voxelCounts = this.countVoxels(context.puzzle)
+            voxelMessageChip = {
+                text: `${voxelCounts.piecesString} / ${voxelCounts.goalString}`,
+                tooltip: `${voxelCounts.piecesString} voxels in pieces and ${voxelCounts.goalString} voxels in goal`,
+                color: voxelCounts.warning ? "red" : undefined,
+            }
+        }
+
+        const assemblyFields: Field[] = [
+            {
+                type: "constraints",
+                property: "constraints",
+                label: "Constraints",
+            },
+            {
+                type: "problemPieces",
+                label: "Pieces",
+                shapeCountsField: "shapeCounts",
+                goalShapeIdField: "goalShapeId",
+                infoChip: voxelMessageChip,
+            }
+        ]
+        form.fields.push(...assemblyFields)
+        return form
     }
 
     static preDeserialize(data: AssemblyProblemStoredData) {

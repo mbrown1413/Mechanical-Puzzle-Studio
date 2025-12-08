@@ -1,4 +1,6 @@
-
+import {Grid} from "~/lib/Grid.ts"
+import {Problem} from "~/lib/Problem.ts"
+import {Puzzle} from "./Puzzle"
 
 export type StringField = {
     type: "string"
@@ -40,12 +42,44 @@ export type BoundsField = {
     property: string
 }
 
-export type Field = StringField | IntegerField | CheckboxField | ColorField | SectionField | BoundsField
+export type ConstraintsField = {
+    type: "constraints"
+    property: string
+    label: string
+}
+
+export type ProblemPiecesField = {
+    type: "problemPieces"
+    label: string
+    shapeCountsField: string
+    goalShapeIdField: string
+    infoChip?: {
+        text: string
+        tooltip?: string
+        color?: string
+    }
+}
+
+export type Field = 
+    StringField
+    | IntegerField
+    | CheckboxField
+    | ColorField
+    | SectionField
+    | BoundsField
+    | ConstraintsField
+    | ProblemPiecesField
 
 export type Form = {
     fields: Field[]
 }
 
+export type FormContext = {
+    puzzle?: Puzzle
+    grid?: Grid
+    problem?: Problem
+}
+
 export interface FormEditable {
-    getForm(): Form
+    getForm(context: FormContext): Form
 }

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {FormEditable, StringField} from "~lib"
+import {FormContext, FormEditable, StringField} from "~lib"
 
 const props = defineProps<{
     item: FormEditable
     field: StringField
+    context: FormContext
 }>()
 
 const emit = defineEmits<{

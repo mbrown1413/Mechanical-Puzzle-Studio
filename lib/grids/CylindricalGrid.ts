@@ -2,7 +2,7 @@ import {BufferGeometry, Vector3, Shape, ShapeGeometry, Matrix4} from "three"
 
 import {registerClass} from "~/lib/serialize.ts"
 import {Grid, Voxel, Viewpoint, Transform, VoxelInfo} from "~/lib/Grid.ts"
-import {Form} from "~/lib/forms.ts"
+import {Form, FormContext} from "~/lib/forms.ts"
 
 import {makeRectGeometry} from "~/ui/utils/threejs-objects.ts"
 
@@ -42,7 +42,7 @@ export class CylindricalGrid extends Grid {
         this.nDivisions = 4
     }
 
-    getForm(): Form {
+    getForm(_context: FormContext): Form {
         return {
             fields: [
                 {

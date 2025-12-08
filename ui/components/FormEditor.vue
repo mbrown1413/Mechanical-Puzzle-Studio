@@ -1,31 +1,36 @@
 <script setup lang="ts">
 import {computed} from "vue"
 
-import {FormEditable, Grid} from "~lib"
+import {FormContext, FormEditable} from "~lib"
 
 import DynamicField from "~/ui/components/fields/DynamicField.vue"
 import UiButton from "~/ui/components/UiButton.vue"
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 
-const props = defineProps<{
-    item: FormEditable
-    title?: string
-    grid?: Grid
-    floatingButton?: UiButtonDefinition
-}>()
+const props = withDefaults(
+    defineProps<{
+        item: FormEditable
+        title?: string
+        context?: FormContext
+        floatingButton?: UiButtonDefinition
+    }>(),
+    {
+        context: () => ({}),
+    }
+)
 
 defineEmits<{
     "edit": [editData: object]
 }>()
 
-const form = computed(() => props.item.getForm())
+const form = computed(() => props.item.getForm(props.context))
 </script>
 
 <template>
-    <div>
+    <div class="formEditor">
         <div
             v-if="title || floatingButton"
-            class="title-div"
+            class="formEditor-title"
         >
             <h4 v-if="title">{{ title }}</h4>
             <UiButton v-if="floatingButton" :uiButton="floatingButton" />
@@ -35,16 +40,21 @@ const form = computed(() => props.item.getForm())
             v-for="field of form.fields"
             :field="field"
             :item="item"
-            :grid="grid"
+            :context="context"
             @edit="$emit('edit', $event)"
         />
     </div>
 </template>
 
 <style scoped>
-.title-div {
+.formEditor {
+    width: fit-content;
+}
+
+.formEditor-title {
     display: flex;
     justify-content: space-between;
+    width: fit-content;
 
     margin-bottom: 0.5em;
 }

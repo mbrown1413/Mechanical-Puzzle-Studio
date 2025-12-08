@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import {FormEditable, SectionField} from "~lib"
+import {FormContext, FormEditable, SectionField} from "~lib"
 
 import DynamicField from "~/ui/components/fields/DynamicField.vue"
 
 defineProps<{
     item: FormEditable
     field: SectionField
+    context: FormContext
 }>()
 
 defineEmits<{
@@ -20,6 +21,7 @@ defineEmits<{
             v-for="subField of field.fields"
             :field="subField"
             :item="item"
+            :context="context"
             @edit="$emit('edit', $event)"
         />
     </fieldset>

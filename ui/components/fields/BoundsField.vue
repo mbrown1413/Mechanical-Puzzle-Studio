@@ -2,16 +2,16 @@
 import {computed} from "vue"
 import {VNumberInput} from "vuetify/labs/VNumberInput"
 
-import {BoundsField, FormEditable, Grid} from "~lib"
+import {BoundsField, FormContext, FormEditable} from "~lib"
 
 const props = defineProps<{
     item: FormEditable
     field: BoundsField
-    grid?: Grid
+    context: FormContext
 }>()
 
-if(!props.grid) {
-    throw new Error("BoundsField requires a grid")
+if(!props.context.grid) {
+    throw new Error("BoundsField requires a grid context")
 }
 
 const emit = defineEmits<{
@@ -31,10 +31,10 @@ function handleBoundsInput(boundsProperty: string, value: number) {
 </script>
 
 <template>
-    <VContainer v-if="grid">
+    <VContainer v-if="context.grid">
         <VRow>
             <VCol
-                v-for="dimension in grid.boundsEditInfo.dimensions"
+                v-for="dimension in context.grid.boundsEditInfo.dimensions"
                 style="padding: 4px;"
             >
                 <VNumberInput

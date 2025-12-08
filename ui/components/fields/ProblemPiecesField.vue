@@ -1,29 +1,35 @@
-<!--
-    Edit the shapes used and the goal shape in an AssemblyProblem.
--->
-
 <script setup lang="ts">
-import {computed, ref, Ref} from "vue"
+import {computed, ref, Ref, ComputedRef} from "vue"
 import {VDataTable} from "vuetify/components/VDataTable"
 import {VToolbar} from "vuetify/components/VToolbar"
 
-import {Puzzle, AssemblyProblem, ShapeId, Range} from '~lib'
+import {ShapeId, FormEditable, ProblemPiecesField, Range, FormContext} from "~lib"
 
-import {Action, EditProblemMetadataAction} from "~/ui/actions.ts"
 import GridDisplay from "~/ui/components/GridDisplay.vue"
 import RangeEditor from "~/ui/common/RangeEditor.vue"
 
 const props = defineProps<{
-    puzzle: Puzzle,
-    problem: AssemblyProblem | null,
-    label: string,
+    item: FormEditable
+    field: ProblemPiecesField
+    context: FormContext
 }>()
 
+if(!props.context.puzzle) {
+    throw new Error("ProblemPiecesField requires a puzzle context")
+}
+
 const emit = defineEmits<{
-    action: [action: Action]
+    "edit": [editData: object]
 }>()
 
 const selectedShapeIds: Ref<ShapeId[]> = ref([])
+
+const currentGoalShapeId = computed(() => {
+    return (props.item as any)[props.field.goalShapeIdField] as ShapeId | undefined
+})
+const currentShapeCounts: ComputedRef<{[shapeId: ShapeId]: Range}> = computed(() => {
+    return (props.item as any)[props.field.shapeCountsField] || {}
+})
 
 const tableHeaders: VDataTable["$props"]["headers"] = [
     {title: "Shape", key: "label"},
@@ -34,7 +40,8 @@ const tableHeaders: VDataTable["$props"]["headers"] = [
 ]
 
 const tableItems = computed(() => {
-    return props.puzzle.shapes.map((shape) => {
+    if(!props.context.puzzle) { return [] }
+    return props.context.puzzle.shapes.map((shape) => {
         const nVoxelsMin = getShapeNVoxels(shape.id, false)
         const nVoxelsMax = getShapeNVoxels(shape.id)
         return {
@@ -42,27 +49,23 @@ const tableItems = computed(() => {
             shape: shape,
             label: shape.label,
             nVoxels: nVoxelsMin === nVoxelsMax ? nVoxelsMin : `${nVoxelsMin}-${nVoxelsMax}`,
-            range: props.problem?.getPieceRange(shape.id) || {min: 0, max: 0},
-            isGoal: shape.id === props.problem?.goalShapeId,
+            range: getPieceRange(shape.id) || {min: 0, max: 0},
+            isGoal: shape.id === currentGoalShapeId.value,
         }
     })
 })
 
-const voxelCountInfo = computed(() => {
-    if(!props.problem) {
-        return {warning: false, summary: "-/-", description: ""}
-    }
-    const counts = props.problem?.countVoxels(props.puzzle)
-
-    const summary = `${counts.piecesString} / ${counts.goalString}`
-    const description = `${counts.piecesString} voxels in pieces and ${counts.goalString} voxels in goal`
-
-    return {summary, description, warning: counts.warning}
-})
+function getPieceRange(shapeId: ShapeId): {min: number, max: number} {
+    const count = (props.item as any)[props.field.shapeCountsField][shapeId]
+    if(count === undefined) return {min: 0, max: 0}
+    if(typeof count === "number") return {min: count, max: count}
+    return count
+}
 
 function getShapeNVoxels(shapeId: string | number, includeOptionalVoxels=true) {
+    if(!props.context.puzzle) { return 0 }
     shapeId = Number(shapeId)
-    const shape = props.puzzle.getShape(Number(shapeId))
+    const shape = props.context.puzzle.getShape(shapeId)
     if(!shape) { return 0 }
 
     if(includeOptionalVoxels) {
@@ -79,40 +82,33 @@ function getShapeNVoxels(shapeId: string | number, includeOptionalVoxels=true) {
 }
 
 function updateShapeRange(shapeId: ShapeId, newRange: Range) {
-    if(props.problem === null) { return }
-    const newShapeCounts = Object.assign({}, props.problem.shapeCounts)
+    const newShapeCounts = Object.assign({}, currentShapeCounts.value)
     newShapeCounts[shapeId] = newRange
-    const action = new EditProblemMetadataAction(
-        props.problem.id, {
-            shapeCounts: newShapeCounts
-        }
-    )
-    emit("action", action)
+
+    const editData: any = {}
+    editData[props.field.shapeCountsField] = newShapeCounts
+    emit("edit", editData)
 }
 
 function updateGoal(shapeId: ShapeId | undefined) {
-    if(props.problem === null) { return }
-    const action = new EditProblemMetadataAction(
-        props.problem.id, {
-            goalShapeId: shapeId
-        }
-    )
-    emit("action", action)
+    const editData: any = {}
+    editData[props.field.goalShapeIdField] = shapeId
+    emit("edit", editData)
 }
 
 function selectionCountAction(actionType: "-1"|"0"|"+1"|"min=0") {
-    if(props.problem === null) { return }
-    const newShapeCounts = Object.assign({}, props.problem.shapeCounts)
+    if(!props.context.puzzle) { return }
+    const newShapeCounts = Object.assign({}, currentShapeCounts.value)
 
     let selected
     if(selectedShapeIds.value.length === 0) {
-        selected = props.puzzle.shapes.map(p => p.id)
+        selected = props.context.puzzle.shapes.map(p => p.id)
     } else {
         selected = selectedShapeIds.value
     }
 
     for(const shapeId of selected) {
-        const range = props.problem.getPieceRange(shapeId)
+        const range = getPieceRange(shapeId)
 
         switch(actionType) {
             case "-1":
@@ -134,13 +130,12 @@ function selectionCountAction(actionType: "-1"|"0"|"+1"|"min=0") {
 
         newShapeCounts[shapeId] = range
     }
-    const action = new EditProblemMetadataAction(
-        props.problem.id, {
-            shapeCounts: newShapeCounts
-        }
-    )
-    emit("action", action)
+
+    const editData: any = {}
+    editData[props.field.shapeCountsField] = newShapeCounts
+    emit("edit", editData)
 }
+
 
 const selectionButtons = [
     {
@@ -169,24 +164,27 @@ const selectionButtons = [
 
 <template>
     <VDataTable
+            v-if="context.puzzle"
             :headers="tableHeaders"
             :items="tableItems"
             v-model="selectedShapeIds"
             items-per-page="-1"
             no-data-text="No shapes in puzzle!"
             style="width: fit-content;"
+            class="mt-6"
             show-select
     >
         <template v-slot:top>
-            <VToolbar flat density="compact" :title="label">
+            <VToolbar flat density="compact" :title="props.field.label">
 
                 <VChip
-                    :color="voxelCountInfo.warning ? 'red' : undefined"
+                    v-if="field.infoChip"
+                    :color="field.infoChip.color"
                     density="compact"
                     class="mr-6"
-                    v-tooltip.top="voxelCountInfo.description"
+                    v-tooltip.top="field.infoChip.tooltip"
                 >
-                    {{ voxelCountInfo.summary }}
+                    {{ field.infoChip.text }}
                 </VChip>
 
                 <VBtn
@@ -215,18 +213,18 @@ const selectionButtons = [
 
         <template v-slot:item.display="{item}">
             <GridDisplay
-                    :grid="puzzle.grid"
-                    :shapes="[item.shape]"
-                    displayOnly
-                    boundsSizing="voxels"
-                    :size="140"
+                :grid="context.puzzle.grid"
+                :shapes="[item.shape]"
+                displayOnly
+                boundsSizing="voxels"
+                :size="140"
             />
         </template>
 
         <template v-slot:item.actions="{item}">
             <VBtn
-                    v-if="!item.isGoal"
-                    @click="updateGoal(item.id)"
+                v-if="!item.isGoal"
+                @click="updateGoal(item.id)"
             >
                 Set Goal
             </VBtn>

@@ -9,11 +9,10 @@ import Split from "split-grid"
 
 import {Puzzle, ShapeId, ProblemId, AssemblySolution} from "~lib"
 
-import {Action, EditShapeGroupMetadataAction, EditShapeMetadataAction} from "~/ui/actions.ts"
+import {Action, EditProblemMetadataAction, EditShapeGroupMetadataAction, EditShapeMetadataAction} from "~/ui/actions.ts"
 import TabLayout from "~/ui/common/TabLayout.vue"
 import ShapeEditor from "~/ui/components/ShapeEditor.vue"
 import SolutionDisplay from "~/ui/components/SolutionDisplay.vue"
-import ItemMetadataEditor from "~/ui/components/ItemMetadataEditor.vue"
 import ShapeList from "~/ui/components/ShapeList.vue"
 import ProblemList from "~/ui/components/ProblemList.vue"
 import ProblemSolverForm from "~/ui/components/ProblemSolverForm.vue"
@@ -192,7 +191,7 @@ watch(currentTabId, (tabId) => {
                 <FormEditor
                     v-if="selectedShape && selectedShapeId !== null"
                     :item="selectedShape"
-                    :grid="puzzle.grid"
+                    :context="{grid: puzzle.grid}"
                     @edit="performAction(new EditShapeMetadataAction(selectedShapeId, $event))"
                     title="Shape"
                     style="margin: 1em;"
@@ -236,12 +235,13 @@ watch(currentTabId, (tabId) => {
                 "
                 @action="performAction"
             />
-            <ItemMetadataEditor
-                v-show="currentTabId === 'problems'"
-                :puzzle="puzzle"
-                itemType="problem"
-                :itemId="selectedProblemId"
-                @action="performAction"
+            <FormEditor
+                v-if="currentTabId === 'problems' && selectedProblem && selectedProblemId !== null"
+                :item="selectedProblem"
+                :context="{puzzle, problem: selectedProblem}"
+                @edit="performAction(new EditProblemMetadataAction(selectedProblemId, $event))"
+                title="Problem Data"
+                style="margin: 1em"
             />
             <SolutionDisplay
                 v-show="currentTabId === 'solutions' && selectedSolution"

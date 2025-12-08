@@ -2,7 +2,7 @@ import * as THREE from "three"
 import {Vector3} from "three"
 
 import {SerializableClass} from "~/lib/serialize.ts"
-import {Form, FormEditable} from "~/lib/forms.ts"
+import {Form, FormContext, FormEditable} from "~/lib/forms.ts"
 
 /**
  * Represents one cell in a `Grid`.
@@ -112,7 +112,7 @@ export type Transform = string
 export abstract class Grid extends SerializableClass implements FormEditable {
 
     /** Get form which can be used to edit parameters. */
-    getForm(): Form {
+    getForm(_context: FormContext): Form {
         return { fields: []}
     }
 

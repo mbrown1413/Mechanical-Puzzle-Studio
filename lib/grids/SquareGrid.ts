@@ -2,7 +2,7 @@ import {registerClass} from "~/lib/serialize.ts"
 import {Voxel} from "~/lib/Grid.ts"
 import {Shape} from "~/lib/Shape.ts"
 import {CubicBounds, CubicGrid} from "~/lib/grids/CubicGrid.ts"
-import {Form} from "~/lib/forms.ts"
+import {Form, FormContext} from "~/lib/forms.ts"
 
 export class SquareGrid extends CubicGrid {
     static gridTypeName = "Square"
@@ -15,7 +15,7 @@ export class SquareGrid extends CubicGrid {
         this.flippable = true
     }
 
-    getForm(): Form {
+    getForm(_context: FormContext): Form {
         return {
             fields: [
                 {

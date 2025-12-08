@@ -2,7 +2,7 @@
 <script lang="ts">
 import {FunctionalComponent, createVNode} from "vue"
 
-import {Field, FormEditable, Grid} from "~lib"
+import {Field, FormContext, FormEditable} from "~lib"
 
 import StringField from "~/ui/components/fields/StringField.vue"
 import IntegerField from "~/ui/components/fields/IntegerField.vue"
@@ -10,11 +10,13 @@ import CheckboxField from "~/ui/components/fields/CheckboxField.vue"
 import ColorField from "~/ui/components/fields/ColorField.vue"
 import Section from "~/ui/components/fields/Section.vue"
 import BoundsField from "~/ui/components/fields/BoundsField.vue"
+import ConstraintsField from "~/ui/components/fields/ConstraintsField.vue"
+import ProblemPiecesField from "~/ui/components/fields/ProblemPiecesField.vue"
 
 type Props = {
     item: FormEditable
     field: Field
-    grid?: Grid
+    context: FormContext
 }
 
 type Events = {
@@ -37,6 +39,8 @@ function getComponent(field: Field) {
         case "color": return ColorField
         case "section": return Section
         case "bounds": return BoundsField
+        case "constraints": return ConstraintsField
+        case "problemPieces": return ProblemPiecesField
         default:
             throw new Error(`Unrecognized field type "${type}"`)
     }

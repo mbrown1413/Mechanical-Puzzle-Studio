@@ -1,6 +1,6 @@
 import {SerializableClass, clone, registerClass} from "~/lib/serialize.ts"
 import {Grid, Bounds, Voxel, Transform} from "~/lib/Grid.ts"
-import {Form, FormEditable} from "~/lib/forms.ts"
+import {Form, FormEditable, FormContext} from "~/lib/forms.ts"
 
 export type ShapeId = number
 export type ShapeInstanceId = number
@@ -76,7 +76,7 @@ export class Shape extends SerializableClass implements FormEditable{
         }
     }
 
-    getForm(): Form {
+    getForm(_context: FormContext): Form {
         return {
             fields: [
                 {

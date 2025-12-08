@@ -1,28 +1,36 @@
 <script setup lang="ts">
-import {computed, ref, Ref} from "vue"
+import {computed, Ref, ref} from "vue"
 import {VDataTable} from "vuetify/components/VDataTable"
 
-import {Puzzle, AssemblyProblem, ProblemConstraint, clone} from "~lib"
+import {FormEditable, FormContext, ConstraintsField, ProblemConstraint, clone, AssemblyProblem} from "~lib"
 
-import {Action, EditProblemMetadataAction} from "~/ui/actions.ts"
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
-import PieceGroupConstraintEditor from "~/ui/components/PieceGroupConstraintEditor.vue"
-import UiButton from "~/ui/components/UiButton.vue"
 import Modal from "~/ui/common/Modal.vue"
+import UiButton from "~/ui/components/UiButton.vue"
+import PieceGroupConstraintEditor from "~/ui/components/PieceGroupConstraintEditor.vue"
 
 const props = defineProps<{
-    puzzle: Puzzle,
-    problem: AssemblyProblem
-    label: string,
+    item: FormEditable
+    field: ConstraintsField
+    context: FormContext
 }>()
 
+if(!props.context.puzzle) {
+    throw new Error("ConstraintsField requires a puzzle context")
+}
+if(!props.context.problem) {
+    throw new Error("ConstraintsField requires a problem context")
+}
+
 const emit = defineEmits<{
-    action: [action: Action]
+    "edit": [editData: object]
 }>()
 
 const newConstraintModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 
-const constraints = computed(() => props.problem.constraints || [])
+const currentValue = computed(() =>
+    (props.item as any)[props.field.property] as ProblemConstraint[] || []
+)
 
 const tableHeaders: VDataTable["$props"]["headers"] = [
     {title: "type", key: "type"},
@@ -31,7 +39,7 @@ const tableHeaders: VDataTable["$props"]["headers"] = [
 ]
 
 const tableItems = computed(() => {
-    return constraints.value.map((constraint) => {
+    return currentValue.value.map((constraint) => {
         return {
             type: constraint.type === "piece-group" ? "Piece Group" : constraint.type,
             constraint,
@@ -54,40 +62,37 @@ function makeDeleteButton(constraint: ProblemConstraint) {
 }
 
 function addConstraint() {
-    const constraints = clone(props.problem.constraints || [])
+    const constraints = clone(currentValue.value)
     constraints.push({
         type: "piece-group",
         shapeIds: [],
         count: 1
     })
-    const action = new EditProblemMetadataAction(
-        props.problem.id,
-        {constraints}
-    )
-    emit("action", action)
+
+    const editData: any = {}
+    editData[props.field.property] = constraints
+    emit("edit", editData)
     newConstraintModal.value?.close()
 }
 
 function updateConstraint(oldConstraint: ProblemConstraint, newConstraint: ProblemConstraint) {
-    const index = (props.problem.constraints || []).indexOf(oldConstraint)
-    const constraints = clone(props.problem.constraints || [])
+    const index = currentValue.value.indexOf(oldConstraint)
+    const constraints = clone(currentValue.value)
     constraints[index] = newConstraint
-    const action = new EditProblemMetadataAction(
-        props.problem.id,
-        {constraints}
-    )
-    emit("action", action)
+
+    const editData: any = {}
+    editData[props.field.property] = constraints
+    emit("edit", editData)
 }
 
 function deleteConstraint(constraint: ProblemConstraint) {
-    const index = (props.problem.constraints || []).indexOf(constraint)
-    const constraints = clone(props.problem.constraints || [])
+    const index = currentValue.value.indexOf(constraint)
+    const constraints = clone(currentValue.value)
     constraints.splice(index, 1)
-    const action = new EditProblemMetadataAction(
-        props.problem.id,
-        {constraints}
-    )
-    emit("action", action)
+
+    const editData: any = {}
+    editData[props.field.property] = constraints
+    emit("edit", editData)
 }
 </script>
 
@@ -99,7 +104,7 @@ function deleteConstraint(constraint: ProblemConstraint) {
         no-data-text="No Constraints"
     >
         <template v-slot:top>
-            <VToolbar flat density="compact" :title="label">
+            <VToolbar flat density="compact" :title="field.label">
 
                 <UiButton
                     :uiButton="addButton"
@@ -114,9 +119,9 @@ function deleteConstraint(constraint: ProblemConstraint) {
 
         <template v-slot:item.editor="{item}">
             <PieceGroupConstraintEditor
-                v-if="item.constraint.type === 'piece-group'"
-                :puzzle="puzzle"
-                :problem="problem"
+                v-if="context.puzzle && context.problem && item.constraint.type === 'piece-group'"
+                :puzzle="context.puzzle"
+                :problem="context.problem as AssemblyProblem"
                 :constraint="item.constraint"
                 @update:constraint="updateConstraint(item.constraint, $event)"
             />
