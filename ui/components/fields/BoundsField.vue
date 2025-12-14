@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {computed} from "vue"
-import {VNumberInput} from "vuetify/labs/VNumberInput"
 
 import {BoundsField, FormContext, FormEditable} from "~lib"
 

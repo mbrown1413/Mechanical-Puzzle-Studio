@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import {VNumberInput} from "vuetify/labs/VNumberInput"
-
 import {FormEditable, FormContext, IntegerField} from "~lib"
 
 const props = defineProps<{

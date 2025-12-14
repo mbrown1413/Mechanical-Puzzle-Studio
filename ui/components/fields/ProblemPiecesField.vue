@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {computed, ref, Ref, ComputedRef} from "vue"
-import {VDataTable} from "vuetify/components/VDataTable"
-import {VToolbar} from "vuetify/components/VToolbar"
+import {VDataTable} from "vuetify/components"
 
 import {ShapeId, FormEditable, ProblemPiecesField, Range, FormContext} from "~lib"
 

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {computed} from "vue"
-import {VNumberInput} from "vuetify/labs/VNumberInput"
 
 import {Range} from "~lib"
 
@@ -43,7 +42,7 @@ function update(field: "min" | "max", value: number) {
                     :label="hideLabels ? '' : 'min'"
                     :min="0"
                     :disabled="disabled"
-                    :model-value="disabled ? '' : range.min"
+                    :model-value="disabled ? undefined : range.min"
                     :hide-details="true"
                     @update:model-value="update('min', Number($event))"
                     control-variant="stacked"
@@ -56,7 +55,7 @@ function update(field: "min" | "max", value: number) {
                     :label="hideLabels ? '' : 'max'"
                     :min="0"
                     :disabled="disabled"
-                    :model-value="disabled ? '' : range.max"
+                    :model-value="disabled ? undefined : range.max"
                     :hide-details="true"
                     @update:model-value="update('max', Number($event))"
                     control-variant="stacked"
