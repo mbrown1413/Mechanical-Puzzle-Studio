@@ -36,10 +36,8 @@ const selectedProblemId: Ref<ProblemId | null> = ref(
 )
 const selectedSolutionId: Ref<number | null> = ref(null)
 
-const shapeEditor: Ref<InstanceType<typeof ShapeEditor> | null> = ref(null)
 const shapeList: Ref<InstanceType<typeof ShapeList> | null> = ref(null)
 const problemList: Ref<InstanceType<typeof ProblemList> | null> = ref(null)
-const solutionList: Ref<InstanceType<typeof SolutionList> | null> = ref(null)
 const auxEditArea: Ref<HTMLElement | null> = ref(null)
 
 const currentTabId: Ref<"shapes" | "problems" | "solutions"> = ref("shapes")
@@ -194,14 +192,14 @@ watch(currentTabId, (tabId) => {
                     :context="{grid: puzzle.grid}"
                     @edit="performAction(new EditShapeMetadataAction(selectedShapeId, $event))"
                     title="Shape"
-                    style="margin: 1em;"
+                    style="padding: 1em;"
                 />
                 <FormEditor
                     v-if="selectedShapeGroup && selectedShapeGroupId !== null"
                     :item="selectedShapeGroup"
                     @edit="performAction(new EditShapeGroupMetadataAction(selectedShapeGroupId, $event))"
                     title="Shape Group"
-                    style="margin: 1em;"
+                    style="padding: 1em;"
                 />
                 <div ref="auxEditArea" style="flex-grow: 1;"></div>
             </div>
@@ -213,7 +211,6 @@ watch(currentTabId, (tabId) => {
                 @setUiFocus="setUiFocus"
             />
             <SolutionList
-                ref="solutionList"
                 v-show="currentTabId === 'solutions'"
                 :puzzle="puzzle"
                 :problemId="selectedProblemId"
@@ -224,7 +221,6 @@ watch(currentTabId, (tabId) => {
 
         <div class="grid-cell main">
             <ShapeEditor
-                ref="shapeEditor"
                 v-show="currentTabId === 'shapes'"
                 :puzzle="puzzle"
                 :shapeId="selectedShapeId"
@@ -241,7 +237,7 @@ watch(currentTabId, (tabId) => {
                 :context="{puzzle, problem: selectedProblem}"
                 @edit="performAction(new EditProblemMetadataAction(selectedProblemId, $event))"
                 title="Problem Data"
-                style="margin: 1em"
+                style="width: fit-content; padding: 1em;"
             />
             <SolutionDisplay
                 v-show="currentTabId === 'solutions' && selectedSolution"

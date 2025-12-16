@@ -101,7 +101,7 @@ const solveButton = allUiButtons.startSolve
 
 <style scoped>
 .solver-form {
-    margin: 1em;
+    padding: 1em;
 }
 .solver-form h4 {
     margin-bottom: 0.5em;

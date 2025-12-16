@@ -48,7 +48,7 @@ const form = computed(() => props.item.getForm(props.context))
 
 <style scoped>
 .formEditor {
-    width: fit-content;
+    width: 100%;
 }
 
 .formEditor-title {

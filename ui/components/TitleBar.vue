@@ -64,6 +64,7 @@ const savePill = computed(() => {
             </VChip>
 
         </VAppBarTitle>
+        <VSpacer v-else />
 
         <TaskStatusDisplay />
     </VAppBar>
