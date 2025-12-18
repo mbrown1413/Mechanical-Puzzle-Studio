@@ -80,11 +80,11 @@ const formValid = ref(false)
 const fields: {
     name: string,
     storage: PuzzleStorage,
-    files: File[],
+    file?: File,
 } = reactive({
     name: "",
     storage: Object.values(storages)[0],
-    files: [],
+    file: undefined,
 })
 const uploadedPuzzle: Ref<PuzzleFile | null> = ref(null)
 
@@ -128,12 +128,12 @@ const nameRules: VTextField["rules"] = [
 ]
 
 const fileUploadRules: VFileInput["rules"] = [
-    async (files: File[]) => {
-        if(files.length !== 1) {
+    async (file: File) => {
+        if(!file) {
             return "Select a puzzle to upload"
         }
         try {
-            const readResult = await readPuzzleFile(files[0])
+            const readResult = await readPuzzleFile(file)
             uploadedPuzzle.value = readResult.puzzleFile
         } catch(e) {
             console.error(e)
@@ -145,7 +145,7 @@ const fileUploadRules: VFileInput["rules"] = [
 
 async function submit(event?: Event) {
     event?.preventDefault()
-    if(!formValid.value) {
+    if(!formValid.value || !fields.file) {
         return
     }
 
@@ -165,7 +165,7 @@ async function submit(event?: Event) {
         break
 
         case "upload":
-            const readResult = await readPuzzleFile(fields.files[0])
+            const readResult = await readPuzzleFile(fields.file)
             puzzleFile = readResult.puzzleFile
             if(readResult.unsupportedFeatures?.length) {
                 unsupportedFeatures.value = readResult.unsupportedFeatures
@@ -219,7 +219,7 @@ async function submit(event?: Event) {
             <VFileInput
                 v-if="mode === 'upload'"
                 label="File"
-                v-model="fields.files"
+                v-model="fields.file"
                 :rules="fileUploadRules"
                 prepend-icon=""
                 prepend-inner-icon="mdi-paperclip"
