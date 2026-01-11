@@ -145,7 +145,7 @@ const fileUploadRules: VFileInput["rules"] = [
 
 async function submit(event?: Event) {
     event?.preventDefault()
-    if(!formValid.value || !fields.file) {
+    if(!formValid.value) {
         return
     }
 
@@ -165,6 +165,7 @@ async function submit(event?: Event) {
         break
 
         case "upload":
+            if(!fields.file) { return }
             const readResult = await readPuzzleFile(fields.file)
             puzzleFile = readResult.puzzleFile
             if(readResult.unsupportedFeatures?.length) {
