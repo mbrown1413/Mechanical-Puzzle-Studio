@@ -28,10 +28,17 @@ export function convertToPuzzlecad(puzzleFile: PuzzleFile): string {
             result += `    [\n`
         }
 
-        for(let z = 0; z < bounds.zSize; z++) {
+        const xFirst = bounds.x || 0;
+        const yFirst = bounds.y || 0;
+        const zFirst = bounds.z || 0;
+        const xLast = xFirst + bounds.xSize - 1
+        const yLast = yFirst + bounds.ySize - 1
+        const zLast = zFirst + bounds.zSize - 1
+
+        for(let z=zFirst; z <= zLast; z++) {
             result += "        \""
-            for(let y = 0; y < bounds.ySize; y++) {
-                for(let x = 0; x < bounds.xSize; x++) {
+            for(let y=yFirst; y <= yLast; y++) {
+                for(let x=xFirst; x <= xLast; x++) {
                     const voxel = grid.coordinateToVoxel({x, y, z})
                     if(shape.voxels.includes(voxel)) {
                         result += "x"
@@ -39,7 +46,7 @@ export function convertToPuzzlecad(puzzleFile: PuzzleFile): string {
                         result += "."
                     }
                 }
-                if(y < bounds.ySize - 1) {
+                if(y < yLast) {
                     result += "|"
                 }
             }

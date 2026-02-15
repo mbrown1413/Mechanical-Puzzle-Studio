@@ -113,6 +113,36 @@ describe("puzzlecad export", () => {
         `);
     })
 
+    /* Tests pieces whose minimum bounds covering all voxels are not the same
+    * as the piece's bounds property. */
+    test("piece with empty space around origin", () => {
+        const puzzle = new Puzzle(new SquareGrid())
+        const puzzleFile = new PuzzleFile(puzzle, "Test Puzzle")
+
+        puzzle.addShape(new Shape(
+            0,
+            ["1,1,0", "1,2,0", "2,1,0", "3,1,0"]
+        ))
+
+        expect(convertToPuzzlecad(puzzleFile)).toMatchInlineSnapshot(`
+          "/**
+           * Test Puzzle
+           * Exported from Puzzle Studio
+           */
+
+          // Get Puzzlecad from:
+          //   https://github.com/aaron-siegel/puzzlecad/releases
+          //   https://www.puzzlehub.org/puzzlecad
+          include <puzzlecad.scad>
+
+          burr_plate([
+              [
+                  "xxx|x..",
+              ],
+          ], $auto_layout=true);"
+        `);
+    })
+
     test("empty puzzle", () => {
         const puzzle = new Puzzle(new SquareGrid())
         const puzzleFile = new PuzzleFile(puzzle, "Test Puzzle")
