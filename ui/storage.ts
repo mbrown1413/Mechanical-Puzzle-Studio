@@ -64,7 +64,7 @@ function decompressIfNeeded(strIn: string): string {
     }
 }
 
-let metadataCache: {[storageId: string]: PuzzleMetadata[]} = {}
+let metadataCache: {[storageId: string]: Promise<PuzzleMetadata[]>} = {}
 
 export function clearStorageCache() {
     metadataCache = {}
@@ -90,17 +90,17 @@ export abstract class PuzzleStorage {
      * The results are cached, which is important if anything makes this method
      * slow, such as a large puzzle file or slow network speeds.
      */
-    list(): PuzzleMetadata[] {
+    async list(): Promise<PuzzleMetadata[]> {
         if(metadataCache[this.id] === undefined) {
             metadataCache[this.id] = this.listWithoutCaching()
         }
-        return metadataCache[this.id]
+        return await metadataCache[this.id]
     }
 
     /**
      * Raw version of `list()` which does not handle caching results.
      */
-    abstract listWithoutCaching(): PuzzleMetadata[]
+    abstract listWithoutCaching(): Promise<PuzzleMetadata[]>
 
     /**
      * Retrieve serialized string form of the puzzle from storage.
@@ -108,7 +108,7 @@ export abstract class PuzzleStorage {
      * @throws PuzzleNotFoundError - When a puzzle with the given name does not
      * exist in the storage.
      */
-    abstract getRaw(puzzleName: string): string
+    abstract getRaw(puzzleName: string): Promise<string>
 
     /**
      * Get unserialized PuzzleFile instance from storage.
@@ -117,8 +117,8 @@ export abstract class PuzzleStorage {
      * ignored. This should only be used after trying without it, then catching
      * and displaying the error to the user.
      */
-    get(puzzleName: string, ignoreErrors=false): PuzzleFile {
-        const str = this.getRaw(puzzleName)
+    async get(puzzleName: string, ignoreErrors=false): Promise<PuzzleFile> {
+        const str = await this.getRaw(puzzleName)
         if(ignoreErrors) {
             return PuzzleFile.deserializeIgnoreErrors(str)
         } else {
@@ -131,8 +131,8 @@ export abstract class PuzzleStorage {
      * formatting issue, the returned `error` is a string containing the error
      * and `formatted` will be the raw unformatted string.
      */
-    getRawFormatted(puzzleName: string): [formatted: string, error: string | null] {
-        const raw = this.getRaw(puzzleName)
+    async getRawFormatted(puzzleName: string): Promise<[formatted: string, error: string | null]> {
+        const raw = await this.getRaw(puzzleName)
 
         // Try returning pretty formatted, but fail gracefully
         let formatted = null
@@ -152,9 +152,9 @@ export abstract class PuzzleStorage {
      * If `serialized` is given, it is assumed to be the same as `puzzleFile`
      * but already serialized.
      */
-    abstract save(puzzleFile: PuzzleFile, serialized?: string): void
+    abstract save(puzzleFile: PuzzleFile, serialized?: string): Promise<void>
 
-    abstract delete(puzzleName: string): void
+    abstract delete(puzzleName: string): Promise<void>
 }
 
 export class LocalPuzzleStorage extends PuzzleStorage {
@@ -167,7 +167,7 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         return "Browser Storage"
     }
 
-    listWithoutCaching(): PuzzleMetadata[] {
+    async listWithoutCaching(): Promise<PuzzleMetadata[]> {
         const ret = []
         for(let i=0; i<localStorage.length; i++) {
             const key = localStorage.key(i)
@@ -186,7 +186,7 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         return ret
     }
 
-    getRaw(puzzleName: string): string {
+    async getRaw(puzzleName: string): Promise<string> {
         const str = localStorage.getItem(this._getKey(puzzleName))
         if(str === null) {
             throw new PuzzleNotFoundError(puzzleName)
@@ -194,7 +194,7 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         return decompressIfNeeded(str)
     }
 
-    save(puzzleFile: PuzzleFile, serialized?: string) {
+    async save(puzzleFile: PuzzleFile, serialized?: string): Promise<void> {
         if(!serialized) {
             serialized = puzzleFile.serialize()
         }
@@ -204,7 +204,7 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         )
     }
 
-    delete(puzzleName: string) {
+    async delete(puzzleName: string): Promise<void> {
         localStorage.removeItem(
             this._getKey(puzzleName)
         )
@@ -251,13 +251,13 @@ class SampleStorage extends PuzzleStorage {
 
     get readOnly() { return true }
 
-    listWithoutCaching(): PuzzleMetadata[] {
+    async listWithoutCaching(): Promise<PuzzleMetadata[]> {
         return Object.values(this.puzzleStrings).map(
             (serialized) => PuzzleFile.deserialize(JSON.parse(serialized)).getMetadata()
         )
     }
 
-    getRaw(puzzleName: string): string {
+    async getRaw(puzzleName: string): Promise<string> {
         const raw = this.puzzleStrings[puzzleName]
         if(!raw) {
             throw new PuzzleNotFoundError(puzzleName)
@@ -265,7 +265,7 @@ class SampleStorage extends PuzzleStorage {
         return raw
     }
 
-    save() { }
+    async save(): Promise<void> { }
 
-    delete(_puzzleName: string) { }
+    async delete(_puzzleName: string): Promise<void> { }
 }

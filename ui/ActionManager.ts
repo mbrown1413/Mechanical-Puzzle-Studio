@@ -30,7 +30,7 @@ export function clearActionManager() {
  */
 export function saveCurrentPuzzle() {
     if(actionManager) {
-        actionManager.save()
+        void actionManager.save()
     }
 }
 
@@ -85,7 +85,7 @@ export class ActionManager {
         action.perform(this.puzzleFile.puzzle, this.puzzleFile)
         const after = serialize(this.puzzleFile)
 
-        this.save(after)
+        void this.save(after)
 
         const patch = diff(before, after)
         this.performedActions.push({action, patch})
@@ -101,16 +101,20 @@ export class ActionManager {
         }
         this.puzzleFile = deserialize(serialized)
 
-        this.save(serialized)
+        void this.save(serialized)
     }
 
-    save(serialized?: SerializedData) {
+    async save(serialized?: SerializedData): Promise<void> {
         this.puzzleFile.modifiedUTCString = new Date().toUTCString()
         if(serialized === undefined) {
             serialized = serialize(this.puzzleFile)
         }
         if(this.storage && !this.storage.readOnly) {
-            this.storage.save(this.puzzleFile, JSON.stringify(serialized))
+            try {
+                await this.storage.save(this.puzzleFile, JSON.stringify(serialized))
+            } catch(e) {
+                console.error("Error saving puzzle", e)
+            }
         }
     }
 

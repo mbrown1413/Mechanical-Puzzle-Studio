@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import {ref, Ref, reactive, provide} from "vue"
+import {ref, Ref, reactive, provide, onMounted} from "vue"
 import {VDataTable} from "vuetify/components"
 
+import {PuzzleMetadata} from "~lib"
 import {title} from "~/ui/globals.ts"
 import {downloadPuzzleFromStorage} from "~/ui/utils/download.ts"
 import {clearStorageCache, getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
@@ -17,17 +18,27 @@ const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
 
 provide("actionManager", null)
 
-const puzzlesByStorage = reactive(
+const puzzlesByStorage: {storage: PuzzleStorage, puzzles: PuzzleMetadata[]}[] = reactive(
     Object.values(getStorageInstances()).map((storage) => {
         return {
             storage,
-            puzzles: storage.list(),
+            puzzles: [],
         }
     })
 )
 
-function deletePuzzle(storage: PuzzleStorage, puzzleName: string) {
-    storage.delete(puzzleName)
+onMounted(() => {
+    void loadPuzzles()
+})
+
+async function loadPuzzles() {
+    await Promise.all(puzzlesByStorage.map(async (entry) => {
+        entry.puzzles = await entry.storage.list()
+    }))
+}
+
+async function deletePuzzle(storage: PuzzleStorage, puzzleName: string) {
+    await storage.delete(puzzleName)
 
     // Remove puzzle from puzzlesByStorage
     const storageEntry = puzzlesByStorage.find(
@@ -157,14 +168,14 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                 <template v-slot:item.actions="{item}">
 
                     <VBtn
-                        @click="downloadPuzzleFromStorage(storage, item.name)"
+                        @click="void downloadPuzzleFromStorage(storage, item.name)"
                         v-tooltip.top="'Download'"
                     >
                         <VIcon icon="mdi-download" aria-label="Download" aria-hidden="false" />
                     </VBtn>
 
                     <VBtn
-                        @click="rawDataModal?.openFromStorage(storage, item.name)"
+                        @click="void rawDataModal?.openFromStorage(storage, item.name)"
                         v-tooltip.top="'Raw Data'"
                     >
                         <VIcon icon="mdi-code-braces" aria-label="Raw Data" aria-hidden="false" />
@@ -182,7 +193,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                         :disabled="storage.readOnly"
                         confirmText="Delete"
                         confirmButtonColor="red"
-                        @confirm="deletePuzzle(storage, item.name)"
+                        @confirm="void deletePuzzle(storage, item.name)"
                         v-tooltip.top="'Delete'"
                     >
                         <VIcon icon="mdi-delete" aria-label="Delete" aria-hidden="false" />

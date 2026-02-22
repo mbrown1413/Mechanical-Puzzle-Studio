@@ -73,7 +73,7 @@ watchEffect(() => {
     title.value = props.puzzleName
 })
 
-setPuzzleFile()
+void setPuzzleFile()
 
 const uiButtons = useUiButtonComposible(
     puzzleFile,
@@ -90,7 +90,7 @@ const uiButtons = useUiButtonComposible(
 
 provide("uiButtons", uiButtons)
 
-function setPuzzleFile(ignoreErrors=false) {
+async function setPuzzleFile(ignoreErrors=false) {
     puzzleError.value = null
     puzzleFile.value = null
     if(!storage.value) {
@@ -103,7 +103,7 @@ function setPuzzleFile(ignoreErrors=false) {
         return
     }
     try {
-        puzzleFile.value = storage.value.get(props.puzzleName, ignoreErrors)
+        puzzleFile.value = await storage.value.get(props.puzzleName, ignoreErrors)
     } catch(e) {
         console.error(e)
         if(e instanceof PuzzleNotFoundError) {
@@ -120,7 +120,7 @@ function setPuzzleFile(ignoreErrors=false) {
         // If it fails now, we know it's unrecoverable.
         let recoverable = true
         try {
-            storage.value.get(props.puzzleName, true)
+            await storage.value.get(props.puzzleName, true)
         } catch {
             recoverable = false
         }
@@ -304,7 +304,7 @@ const toolbarButtons: UiButtonDefinition[] = [
 
     <Modal
         ref="puzzleErrorModal"
-        @ok="puzzleErrorModal?.close(); setPuzzleFile(true)"
+        @ok="puzzleErrorModal?.close(); void setPuzzleFile(true)"
         @cancel="$router.push({name: 'home'})"
         :title="puzzleError?.title || ''"
         persistent

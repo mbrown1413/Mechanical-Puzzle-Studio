@@ -11,11 +11,8 @@ const error: Ref<string | null> = ref(null)
 
 defineExpose({
 
-    openFromStorage(storage: PuzzleStorage, puzzleName: string) {
-        [raw.value, error.value] = storage.getRawFormatted(puzzleName)
-        if(error.value) {
-            error.value = error.value
-        }
+    async openFromStorage(storage: PuzzleStorage, puzzleName: string) {
+        [raw.value, error.value] = await storage.getRawFormatted(puzzleName)
         modal.value?.open()
     },
 

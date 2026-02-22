@@ -11,8 +11,8 @@ export function downloadPuzzle(puzzleFile: PuzzleFile) {
     )
 }
 
-export function downloadPuzzleFromStorage(storage: PuzzleStorage, puzzleName: string) {
-    const [raw, error] = storage.getRawFormatted(puzzleName)
+export async function downloadPuzzleFromStorage(storage: PuzzleStorage, puzzleName: string): Promise<void> {
+    const [raw, error] = await storage.getRawFormatted(puzzleName)
     if(error) {
         console.error(error)
     }

@@ -114,11 +114,11 @@ const storageSelectItems = computed(() =>
 )
 
 const nameRules: VTextField["rules"] = [
-    (name: string) => {
+    async (name: string) => {
         if(!name) {
             return false
         }
-        const allPuzzleMeta = fields.storage.list()
+        const allPuzzleMeta = await fields.storage.list()
         const allNames = allPuzzleMeta.map(puzzleMeta => puzzleMeta.name)
         if(allNames.includes(name)) {
             return "Puzzle name already exists"
@@ -175,7 +175,7 @@ async function submit(event?: Event) {
         break
 
         case "copy":
-            puzzleFile = copyFromStorage.get(copyFromPuzzleName, true)
+            puzzleFile = await copyFromStorage.get(copyFromPuzzleName, true)
         break
 
         case "saveas":
@@ -188,7 +188,7 @@ async function submit(event?: Event) {
     }
 
     puzzleFile.name = fields.name
-    fields.storage.save(puzzleFile)
+    await fields.storage.save(puzzleFile)
 
     router.push({
         name: "puzzle",
