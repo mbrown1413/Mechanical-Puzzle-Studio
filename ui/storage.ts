@@ -13,15 +13,31 @@ export class PuzzleNotFoundError extends Error {
 let _storageInstances: {[id: StorageId]: PuzzleStorage} | undefined = undefined
 export function getStorageInstances(): {[id: StorageId]: PuzzleStorage} {
     if(!_storageInstances) {
-        const storages = [
-            new LocalPuzzleStorage(),
-            new SampleStorage(),
-        ]
+
+        const storages: PuzzleStorage[] = []
+
+        storages.push(new LocalPuzzleStorage())
+
+        const apiBaseUrl = getApiStorageBaseUrl()
+        if(apiBaseUrl) {
+            storages.push(new BackendPuzzleStorage(apiBaseUrl))
+        }
+
+        storages.push(new SampleStorage())
+
         _storageInstances = Object.fromEntries(storages.map(
             (storage: PuzzleStorage) => [storage.id, storage]
         ))
     }
     return _storageInstances
+}
+
+function getApiStorageBaseUrl(): string | null {
+    const baseUrl = import.meta.env.VITE_BACKEND_URL?.trim()
+    if(!baseUrl) {
+        return null
+    }
+    return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl
 }
 
 function compress(strIn: string): string {
@@ -79,6 +95,10 @@ export abstract class PuzzleStorage {
     abstract get name(): string
 
     get readOnly(): boolean { return false }
+
+    get notFoundErrorMessage(): string {
+        return "The puzzle you're looking for may have been deleted or renamed in the selected storage."
+    }
 
     /** List puzzles in this storage.
      *
@@ -167,6 +187,10 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         return "Browser Storage"
     }
 
+    get notFoundErrorMessage() {
+        return "The puzzle you're looking for may have been created in another browser, or your browser data may have been cleared."
+    }
+
     async listWithoutCaching(): Promise<PuzzleMetadata[]> {
         const ret = []
         for(let i=0; i<localStorage.length; i++) {
@@ -220,6 +244,102 @@ export class LocalPuzzleStorage extends PuzzleStorage {
         }
     }
 
+}
+
+export class BackendPuzzleStorage extends PuzzleStorage {
+    private baseUrl: string
+
+    constructor(baseUrl: string) {
+        super()
+        this.baseUrl = baseUrl
+    }
+
+    get id() {
+        return "api"
+    }
+
+    get name() {
+        return "Backend Storage"
+    }
+
+    async listWithoutCaching(): Promise<PuzzleMetadata[]> {
+        try {
+            const response = await this.request("")
+            if(!response.ok) {
+                throw new Error(await this.getErrorMessage(response))
+            }
+            const result = await response.json()
+            if(!Array.isArray(result?.puzzles)) {
+                throw new Error("Invalid API response: expected { puzzles: [] }")
+            }
+            return result.puzzles
+        } catch(e) {
+            console.error("Failed to list puzzles from API storage", e)
+            return []
+        }
+    }
+
+    async getRaw(puzzleName: string): Promise<string> {
+        const response = await this.request(`/${encodeURIComponent(puzzleName)}`)
+        if(response.status === 404) {
+            throw new PuzzleNotFoundError(puzzleName)
+        }
+        if(!response.ok) {
+            throw new Error(await this.getErrorMessage(response))
+        }
+        return await response.text()
+    }
+
+    async save(puzzleFile: PuzzleFile, serialized?: string): Promise<void> {
+        if(!serialized) {
+            serialized = puzzleFile.serialize()
+        }
+        const response = await this.request(
+            `/${encodeURIComponent(puzzleFile.name)}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: serialized,
+            }
+        )
+        if(!response.ok) {
+            throw new Error(await this.getErrorMessage(response))
+        }
+    }
+
+    async delete(puzzleName: string): Promise<void> {
+        const response = await this.request(`/${encodeURIComponent(puzzleName)}`, {
+            method: "DELETE",
+        })
+        if(response.status === 404) {
+            return
+        }
+        if(!response.ok) {
+            throw new Error(await this.getErrorMessage(response))
+        }
+    }
+
+    private async request(path: string, options?: RequestInit): Promise<Response> {
+        return fetch(`${this.baseUrl}/puzzles${path}`, options)
+    }
+
+    private async getErrorMessage(response: Response): Promise<string> {
+        const text = await response.text()
+        if(!text) {
+            return `Storage API request failed: ${response.status} ${response.statusText}`
+        }
+        try {
+            const json = JSON.parse(text)
+            if(typeof json.error === "string") {
+                return json.error
+            }
+        } catch {
+            // Ignore parse failures and return raw response text.
+        }
+        return text
+    }
 }
 
 /** Read-only storage of all puzzles in examples folder. */

@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "lint": "eslint lib/ ui/"
+    "lint": "eslint lib/ ui/ backend/",
+    "backend": "vite-node backend/puzzle-api.ts"
   },
   "dependencies": {
     "@types/file-saver": "^2.0.7",

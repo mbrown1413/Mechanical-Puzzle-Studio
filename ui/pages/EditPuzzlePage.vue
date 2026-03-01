@@ -110,7 +110,7 @@ async function setPuzzleFile(ignoreErrors=false) {
             puzzleError.value = {
                 title: "Puzzle not found",
                 errorMessage: stripIfStartsWith(String(e), "Error:"),
-                userMessage: "Puzzles are stored locally inside the browser. The puzzle you're looking for may have been created in another browser, or your browser data may have been cleared.\n\nReturn home to select another puzzle.",
+                userMessage: storage.value.notFoundErrorMessage + "\n\nReturn home to select another puzzle.",
                 recoverable: false,
             }
             return

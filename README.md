@@ -82,6 +82,22 @@ The source code is divided into two main sections:
   * [`ui/`](ui/): User interface built on top of `lib/`.
 
 
+## Backend
+
+You can optionally run a backend to store puzzles on a server:
+
+    $ yarn backend
+
+The server stores puzzles in `data/puzzles/` by default and listens on
+`http://localhost:8787/api`.
+
+To enable it in the frontend, set this in `.env.local`:
+
+    VITE_BACKEND_URL="http://localhost:8787/api"
+
+See `.env` for additional backend configuration.
+
+
 ## License
 
 This project is licensed under **Mozilla Public License Version 2.0**. See
