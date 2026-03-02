@@ -18,11 +18,16 @@ const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
 
 provide("actionManager", null)
 
-const puzzlesByStorage: {storage: PuzzleStorage, puzzles: PuzzleMetadata[]}[] = reactive(
+const puzzlesByStorage: {
+    storage: PuzzleStorage,
+    puzzles: PuzzleMetadata[],
+    loading: boolean,
+}[] = reactive(
     Object.values(getStorageInstances()).map((storage) => {
         return {
             storage,
             puzzles: [],
+            loading: false,
         }
     })
 )
@@ -33,7 +38,9 @@ onMounted(() => {
 
 async function loadPuzzles() {
     await Promise.all(puzzlesByStorage.map(async (entry) => {
+        entry.loading = true
         entry.puzzles = await entry.storage.list()
+        entry.loading = false
     }))
 }
 
@@ -107,13 +114,15 @@ const appTitle = import.meta.env.VITE_APP_TITLE
         </VRow>
 
         <VRow
-            v-for="{storage, puzzles} of puzzlesByStorage"
+            v-for="{storage, puzzles, loading} of puzzlesByStorage"
             justify="center"
         >
             <VDataTable
                     :headers="tableHeaders"
                     :items="puzzles"
                     items-per-page="-1"
+                    :loading="loading"
+                    loading-text="Loading Puzzles..."
                     no-data-text="No puzzles in this storage location"
                     class="mt-10 ml-10 mr-10 table-striped"
                     style="max-width: 800px;"
