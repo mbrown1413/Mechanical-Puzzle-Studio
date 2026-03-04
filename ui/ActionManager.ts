@@ -3,7 +3,7 @@ import {diff, patch as doPatch, unpatch as doUnpatch, Delta} from "jsondiffpatch
 
 import {PuzzleFile, serialize, deserialize, SerializedData} from "~lib"
 import {Action} from "~/ui/actions.ts"
-import {PuzzleStorage} from "~/ui/storage.ts"
+import {Storage} from "~/ui/storage.ts"
 
 type PerformedAction = {
     action: Action,
@@ -39,7 +39,7 @@ export function saveCurrentPuzzle() {
  * functionality.
  */
 export class ActionManager {
-    storageRef: Ref<PuzzleStorage | null>
+    storageRef: Ref<Storage | null>
     puzzleFileRef: Ref<PuzzleFile | null>
 
     performedActions: PerformedAction[]
@@ -47,7 +47,7 @@ export class ActionManager {
 
     saveState: Ref<"saved" | "readOnly">
 
-    constructor(storageRef: Ref<PuzzleStorage | null>, puzzleFileRef: Ref<PuzzleFile | null>) {
+    constructor(storageRef: Ref<Storage | null>, puzzleFileRef: Ref<PuzzleFile | null>) {
         this.storageRef = storageRef
         this.puzzleFileRef = puzzleFileRef
         this.performedActions = reactive([])

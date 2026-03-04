@@ -9,7 +9,7 @@ import {VTextField, VFileInput, VForm} from "vuetify/components"
 
 import {Puzzle, PuzzleFile, CubicGrid, readPuzzleFile} from "~lib"
 
-import {getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
+import {getStorageInstances, Storage} from "~/ui/storage.ts"
 import Modal from "~/ui/common/Modal.vue"
 
 const router = useRouter()
@@ -19,20 +19,20 @@ const emit = defineEmits<{
 }>()
 
 defineExpose({
-    openNew(storage: PuzzleStorage) {
+    openNew(storage: Storage) {
         title.value = "New Puzzle"
         createButtonText.value = "Create"
         open("new", storage)
     },
 
-    openUpload(storage: PuzzleStorage) {
+    openUpload(storage: Storage) {
         title.value = "Upload Puzzle"
         fields.name = ""
         createButtonText.value = "Upload"
         open("upload", storage)
     },
 
-    openCopy(storage: PuzzleStorage, copyFrom: string) {
+    openCopy(storage: Storage, copyFrom: string) {
         title.value = `Copy "${copyFrom}"`
         fields.name = copyFrom + " (copy)"
         copyFromStorage = storage
@@ -41,7 +41,7 @@ defineExpose({
         open("copy", storage)
     },
 
-    openSaveAs(storage: PuzzleStorage, puzzleFile: PuzzleFile) {
+    openSaveAs(storage: Storage, puzzleFile: PuzzleFile) {
         title.value = "Save As"
         fields.name = puzzleFile.name + " (copy)"
         saveAsPuzzleFileToSave = puzzleFile
@@ -50,7 +50,7 @@ defineExpose({
     },
 })
 
-function open(newMode: Mode, storage: PuzzleStorage) {
+function open(newMode: Mode, storage: Storage) {
     mode.value = newMode
     if(storage.readOnly) {
         fields.storage = Object.values(storages)[0]
@@ -69,7 +69,7 @@ type Mode = "new" | "upload" | "copy" | "saveas"
 const mode: Ref<Mode> = ref("new")
 const title = ref("")
 let saveAsPuzzleFileToSave: PuzzleFile
-let copyFromStorage: PuzzleStorage
+let copyFromStorage: Storage
 let copyFromPuzzleName = ""
 
 const storages = getStorageInstances()
@@ -79,7 +79,7 @@ const form: Ref<InstanceType<typeof VForm> | null> = ref(null)
 const formValid = ref(false)
 const fields: {
     name: string,
-    storage: PuzzleStorage,
+    storage: Storage,
     file?: File,
 } = reactive({
     name: "",

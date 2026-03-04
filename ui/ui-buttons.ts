@@ -10,7 +10,7 @@ import {
     DuplicateProblemAction, DeleteShapeGroupAction, ShapeListMoveAction
 } from "~/ui/actions.ts"
 import {downloadPuzzle, downloadString} from "~/ui/utils/download.ts"
-import {PuzzleStorage} from "~/ui/storage.ts"
+import {Storage} from "~/ui/storage.ts"
 import {taskRunner} from "~/ui/globals.ts"
 import {ProblemSolveTask} from "~/ui/tasks.ts"
 import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
@@ -30,7 +30,7 @@ export type UiButtonDefinition = {
 
 export function useUiButtonComposible(
     puzzleFile: Ref<PuzzleFile | null>,
-    storage: Ref<PuzzleStorage | null>,
+    storage: Ref<Storage | null>,
     actionManager: ActionManager,
     performAction: (action: Action) => void,
     puzzleEditor: Ref<InstanceType<typeof PuzzleEditor> | null>,

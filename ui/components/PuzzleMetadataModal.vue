@@ -3,12 +3,12 @@ import {ref, Ref} from "vue"
 
 import {PuzzleFile} from "~lib"
 import {EditPuzzleMetadataAction} from "~/ui/actions.ts"
-import {PuzzleStorage} from "~/ui/storage.ts"
+import {Storage} from "~/ui/storage.ts"
 import Modal from "~/ui/common/Modal.vue"
 
 defineProps<{
     puzzleFile: PuzzleFile,
-    storage: PuzzleStorage,
+    storage: Storage,
 }>()
 
 defineExpose({

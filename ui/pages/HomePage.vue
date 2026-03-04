@@ -5,7 +5,7 @@ import {VDataTable} from "vuetify/components"
 import {PuzzleMetadata} from "~lib"
 import {title} from "~/ui/globals.ts"
 import {downloadPuzzleFromStorage} from "~/ui/utils/download.ts"
-import {clearStorageCache, getStorageInstances, PuzzleStorage} from "~/ui/storage.ts"
+import {clearStorageCache, getStorageInstances, Storage} from "~/ui/storage.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
@@ -19,7 +19,7 @@ const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
 provide("actionManager", null)
 
 const puzzlesByStorage: {
-    storage: PuzzleStorage,
+    storage: Storage,
     puzzles: PuzzleMetadata[],
     loading: boolean,
     error?: string,
@@ -51,7 +51,7 @@ async function loadPuzzles() {
     }))
 }
 
-async function deletePuzzle(storage: PuzzleStorage, puzzleName: string) {
+async function deletePuzzle(storage: Storage, puzzleName: string) {
     await storage.delete(puzzleName)
 
     // Remove puzzle from puzzlesByStorage
@@ -78,12 +78,12 @@ const storageButtons = [
     {
         text: "Upload",
         icon: "mdi-file-upload",
-        action: (storage: PuzzleStorage) => saveModal.value?.openUpload(storage),
+        action: (storage: Storage) => saveModal.value?.openUpload(storage),
     },
     {
         text: "New",
         icon: "mdi-plus-box",
-        action: (storage: PuzzleStorage) => saveModal.value?.openNew(storage),
+        action: (storage: Storage) => saveModal.value?.openNew(storage),
     },
 ]
 

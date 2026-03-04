@@ -3,7 +3,7 @@ import {ref, Ref} from "vue"
 
 import {PuzzleFile} from "~lib"
 import Modal from "~/ui/common/Modal.vue"
-import {PuzzleStorage} from "~/ui/storage"
+import {Storage} from "~/ui/storage"
 
 const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 const raw = ref("")
@@ -11,7 +11,7 @@ const error: Ref<string | null> = ref(null)
 
 defineExpose({
 
-    async openFromStorage(storage: PuzzleStorage, puzzleName: string) {
+    async openFromStorage(storage: Storage, puzzleName: string) {
         [raw.value, error.value] = await storage.getRawFormatted(puzzleName)
         modal.value?.open()
     },

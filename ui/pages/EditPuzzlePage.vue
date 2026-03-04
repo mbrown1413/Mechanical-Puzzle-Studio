@@ -5,7 +5,7 @@ import {PuzzleFile} from "~lib"
 
 import {taskRunner, title} from "~/ui/globals.ts"
 import {ActionManager, setActionManager, clearActionManager} from "~/ui/ActionManager.ts"
-import {PuzzleStorage, getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
+import {Storage, getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
 import {Action, GridSetAction} from "~/ui/actions.ts"
 import {UiButtonDefinition, useUiButtonComposible} from "~/ui/ui-buttons.ts"
 import {PuzzleStudioApi} from "../api"
@@ -24,7 +24,7 @@ const props = defineProps<{
     puzzleName: string,
 }>()
 
-const storage: Ref<PuzzleStorage | null> = computed(
+const storage: Ref<Storage | null> = computed(
     () => getStorageInstances()[props.storageId] || null
 )
 const puzzleFile: Ref<PuzzleFile | null> = ref(null)

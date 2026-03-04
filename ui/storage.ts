@@ -10,23 +10,23 @@ export class PuzzleNotFoundError extends Error {
     }
 }
 
-let _storageInstances: {[id: StorageId]: PuzzleStorage} | undefined = undefined
-export function getStorageInstances(): {[id: StorageId]: PuzzleStorage} {
+let _storageInstances: {[id: StorageId]: Storage} | undefined = undefined
+export function getStorageInstances(): {[id: StorageId]: Storage} {
     if(!_storageInstances) {
 
-        const storages: PuzzleStorage[] = []
+        const storages: Storage[] = []
 
-        storages.push(new LocalPuzzleStorage())
+        storages.push(new LocalStorage())
 
         const apiBaseUrl = getApiStorageBaseUrl()
         if(apiBaseUrl) {
-            storages.push(new BackendPuzzleStorage(apiBaseUrl))
+            storages.push(new BackendStorage(apiBaseUrl))
         }
 
         storages.push(new SampleStorage())
 
         _storageInstances = Object.fromEntries(storages.map(
-            (storage: PuzzleStorage) => [storage.id, storage]
+            (storage: Storage) => [storage.id, storage]
         ))
     }
     return _storageInstances
@@ -87,7 +87,7 @@ export function clearStorageCache() {
     _storageInstances = undefined
 }
 
-export abstract class PuzzleStorage {
+export abstract class Storage {
     /** Unique identifier used for this storage. */
     abstract get id(): StorageId
 
@@ -177,7 +177,7 @@ export abstract class PuzzleStorage {
     abstract delete(puzzleName: string): Promise<void>
 }
 
-export class LocalPuzzleStorage extends PuzzleStorage {
+export class LocalStorage extends Storage {
 
     get id() {
         return "local"
@@ -246,7 +246,7 @@ export class LocalPuzzleStorage extends PuzzleStorage {
 
 }
 
-export class BackendPuzzleStorage extends PuzzleStorage {
+export class BackendStorage extends Storage {
     private baseUrl: string
 
     constructor(baseUrl: string) {
@@ -338,7 +338,7 @@ export class BackendPuzzleStorage extends PuzzleStorage {
 }
 
 /** Read-only storage of all puzzles in examples folder. */
-class SampleStorage extends PuzzleStorage {
+class SampleStorage extends Storage {
     puzzleStrings: {[puzzleName: string]: string}
 
     constructor() {

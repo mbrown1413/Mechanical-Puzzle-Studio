@@ -1,7 +1,7 @@
 import {saveAs} from "file-saver"
 
 import {PuzzleFile} from "~lib"
-import {PuzzleStorage} from "~/ui/storage.ts"
+import {Storage} from "~/ui/storage.ts"
 
 export function downloadPuzzle(puzzleFile: PuzzleFile) {
     downloadString(
@@ -11,7 +11,7 @@ export function downloadPuzzle(puzzleFile: PuzzleFile) {
     )
 }
 
-export async function downloadPuzzleFromStorage(storage: PuzzleStorage, puzzleName: string): Promise<void> {
+export async function downloadPuzzleFromStorage(storage: Storage, puzzleName: string): Promise<void> {
     const [raw, error] = await storage.getRawFormatted(puzzleName)
     if(error) {
         console.error(error)
