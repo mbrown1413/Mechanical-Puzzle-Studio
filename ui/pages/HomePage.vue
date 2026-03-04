@@ -22,6 +22,7 @@ const puzzlesByStorage: {
     storage: PuzzleStorage,
     puzzles: PuzzleMetadata[],
     loading: boolean,
+    error?: string,
 }[] = reactive(
     Object.values(getStorageInstances()).map((storage) => {
         return {
@@ -39,7 +40,13 @@ onMounted(() => {
 async function loadPuzzles() {
     await Promise.all(puzzlesByStorage.map(async (entry) => {
         entry.loading = true
-        entry.puzzles = await entry.storage.list()
+        entry.error = undefined
+        try {
+            entry.puzzles = await entry.storage.list()
+        } catch(e) {
+            console.error(`Error listing puzzles on ${entry.storage.name} backend:\n${e}`)
+            entry.error = String(e)
+        }
         entry.loading = false
     }))
 }
@@ -114,7 +121,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
         </VRow>
 
         <VRow
-            v-for="{storage, puzzles, loading} of puzzlesByStorage"
+            v-for="{storage, puzzles, loading, error} of puzzlesByStorage"
             justify="center"
         >
             <VDataTable
@@ -123,7 +130,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
                     items-per-page="-1"
                     :loading="loading"
                     loading-text="Loading Puzzles..."
-                    no-data-text="No puzzles in this storage location"
+                    :no-data-text="error ? error : 'No puzzles in this storage location'"
                     class="mt-10 ml-10 mr-10 table-striped"
                     style="max-width: 800px;"
             >

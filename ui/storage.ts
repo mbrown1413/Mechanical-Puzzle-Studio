@@ -263,20 +263,15 @@ export class BackendPuzzleStorage extends PuzzleStorage {
     }
 
     async listWithoutCaching(): Promise<PuzzleMetadata[]> {
-        try {
-            const response = await this.request("")
-            if(!response.ok) {
-                throw new Error(await this.getErrorMessage(response))
-            }
-            const result = await response.json()
-            if(!Array.isArray(result?.puzzles)) {
-                throw new Error("Invalid API response: expected { puzzles: [] }")
-            }
-            return result.puzzles
-        } catch(e) {
-            console.error("Failed to list puzzles from API storage", e)
-            return []
+        const response = await this.request("")
+        if(!response.ok) {
+            throw new Error(await this.getErrorMessage(response))
         }
+        const result = await response.json()
+        if(!Array.isArray(result?.puzzles)) {
+            throw new Error("Invalid API response: expected { puzzles: [] }")
+        }
+        return result.puzzles
     }
 
     async getRaw(puzzleName: string): Promise<string> {
