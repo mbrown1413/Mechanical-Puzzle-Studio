@@ -45,7 +45,7 @@ export class ActionManager {
     performedActions: PerformedAction[]
     undoneActions: PerformedAction[]
 
-    saveState: Ref<"saved" | "readOnly">
+    saveState: Ref<"saved" | "saving" | "error" | "readOnly">
 
     constructor(storageRef: Ref<Storage | null>, puzzleFileRef: Ref<PuzzleFile | null>) {
         this.storageRef = storageRef
@@ -110,10 +110,15 @@ export class ActionManager {
             serialized = serialize(this.puzzleFile)
         }
         if(this.storage && !this.storage.readOnly) {
+            this.saveState.value = "saving"
             try {
                 await this.storage.save(this.puzzleFile, JSON.stringify(serialized))
             } catch(e) {
+                this.saveState.value = "error"
                 console.error("Error saving puzzle", e)
+            }
+            if(this.saveState.value !== "error") {
+                this.saveState.value = "saved"
             }
         }
     }

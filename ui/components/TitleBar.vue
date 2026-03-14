@@ -35,6 +35,17 @@ const savePill = computed(() => {
                 text: "Saved",
                 tooltip: "Auto-saving after every change"
             }
+        case "saving":
+            return {
+                color: "blue",
+                text: "Saving...",
+            }
+        case "error":
+            return {
+                color: "red",
+                text: "Unsaved",
+                tooltip: "An error occurred when saving. See console for details."
+            }
         default:
             const exhaustiveCheck: never = actionManager.saveState.value
             return exhaustiveCheck
