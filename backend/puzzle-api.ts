@@ -227,6 +227,7 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse<
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, PUT, DELETE, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": "86400",
         })
         response.end()
 
