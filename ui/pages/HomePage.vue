@@ -10,11 +10,14 @@ import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
 import PuzzleSaveModal from "~/ui/components/PuzzleSaveModal.vue"
+import Modal from "~/ui/common/Modal.vue"
 
 title.value = ""
 
 const saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null> = ref(null)
 const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
+const deleteErrorModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
+const deleteError: Ref<string | null> = ref(null)
 
 provide("actionManager", null)
 
@@ -52,7 +55,14 @@ async function loadPuzzles() {
 }
 
 async function deletePuzzle(storage: Storage, puzzleName: string) {
-    await storage.delete(puzzleName)
+    try {
+        await storage.delete(puzzleName)
+    } catch(e) {
+        console.error(`Error deleting puzzles on ${storage.name} backend:\n${e}`)
+        deleteError.value = String(e)
+        deleteErrorModal.value?.open()
+        return
+    }
 
     // Remove puzzle from puzzlesByStorage
     const storageEntry = puzzlesByStorage.find(
@@ -223,4 +233,15 @@ const appTitle = import.meta.env.VITE_APP_TITLE
 
     <RawDataModal ref="rawDataModal" />
     <PuzzleSaveModal ref="saveModal" />
+
+    <Modal
+        ref="deleteErrorModal"
+        title="Error deleting puzzle"
+        icon="mdi-alert-outline"
+        :cancel-show="false"
+        @ok="deleteErrorModal?.close()"
+    >
+        {{ deleteError }}
+    </Modal>
+
 </template>

@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import {ref, Ref, computed, reactive, watch, nextTick} from "vue"
 import {useRouter} from "vue-router"
-import {VTextField, VFileInput, VForm} from "vuetify/components"
+import {VAlert, VTextField, VFileInput, VForm} from "vuetify/components"
 
 import {Puzzle, PuzzleFile, CubicGrid, readPuzzleFile} from "~lib"
 
@@ -52,6 +52,7 @@ defineExpose({
 
 function open(newMode: Mode, storage: Storage) {
     mode.value = newMode
+    submitError.value = null
     if(storage.readOnly) {
         fields.storage = Object.values(storages)[0]
     } else {
@@ -77,6 +78,7 @@ const storages = getStorageInstances()
 const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 const form: Ref<InstanceType<typeof VForm> | null> = ref(null)
 const formValid = ref(false)
+const submitError: Ref<string | null> = ref(null)
 const fields: {
     name: string,
     storage: Storage,
@@ -118,7 +120,13 @@ const nameRules: VTextField["rules"] = [
         if(!name) {
             return false
         }
-        const allPuzzleMeta = await fields.storage.list()
+        let allPuzzleMeta
+        try {
+            allPuzzleMeta = await fields.storage.list()
+        } catch(e) {
+            submitError.value = String(e)
+            throw e
+        }
         const allNames = allPuzzleMeta.map(puzzleMeta => puzzleMeta.name)
         if(allNames.includes(name)) {
             return "Puzzle name already exists"
@@ -148,6 +156,7 @@ async function submit(event?: Event) {
     if(!formValid.value) {
         return
     }
+    submitError.value = null
 
     let puzzleFile: PuzzleFile
     switch(mode.value) {
@@ -175,7 +184,12 @@ async function submit(event?: Event) {
         break
 
         case "copy":
-            puzzleFile = await copyFromStorage.get(copyFromPuzzleName, true)
+            try {
+                puzzleFile = await copyFromStorage.get(copyFromPuzzleName, true)
+            } catch(e) {
+                submitError.value = String(e)
+                throw e
+            }
         break
 
         case "saveas":
@@ -188,7 +202,13 @@ async function submit(event?: Event) {
     }
 
     puzzleFile.name = fields.name
-    await fields.storage.save(puzzleFile)
+    try {
+        await fields.storage.save(puzzleFile)
+    } catch(e) {
+        submitError.value = String(e)
+        console.error(`Storage backend errored creating puzzle: ${submitError.value}`)
+        return
+    }
 
     router.push({
         name: "puzzle",
@@ -213,6 +233,15 @@ async function submit(event?: Event) {
             validateOn="input lazy"
             @submit="submit"
         >
+            <VAlert
+                v-if="submitError"
+                type="error"
+                variant="tonal"
+                density="compact"
+                class="mb-3"
+            >
+                {{ submitError }}
+            </VAlert>
 
             <template v-if="mode === 'upload'">
                 Upload a .json puzzle file or BurrTools .xmpuzzle

@@ -4,10 +4,22 @@ import {PuzzleFile, PuzzleMetadata} from "~lib"
 
 export type StorageId = string
 
-export class PuzzleNotFoundError extends Error {
+export class StorageError extends Error {
+    toString() {
+        return this.message
+    }
+}
+
+export class PuzzleNotFoundError extends StorageError {
     constructor(puzzleName: string) {
         super(`Puzzle not found: "${puzzleName}"`)
     }
+}
+
+function stripIfStartsWith(input: string, toStrip: string) {
+    return input.startsWith(toStrip) ?
+        input.slice(toStrip.length).trimStart()
+        : input
 }
 
 let _storageInstances: {[id: StorageId]: Storage} | undefined = undefined
@@ -100,15 +112,18 @@ export abstract class Storage {
         return "The puzzle you're looking for may have been deleted or renamed in the selected storage."
     }
 
-    /** List puzzles in this storage.
+    /**
+     * List puzzles in this storage.
+     *
+     * The results are cached, which is important if anything makes this method
+     * slow, such as a large puzzle file or slow network speeds.
      *
      * Failure to retrieve or deserialize any individual puzzle should never
      * cause this to throw an error. `PuzzleMetadata.error` should be set for
      * any puzzle which cannot be cleanly read, and whatever data can be read
      * should be used to fill out the rest of the return fields.
-     * 
-     * The results are cached, which is important if anything makes this method
-     * slow, such as a large puzzle file or slow network speeds.
+     *
+     * @throws StorageError
      */
     async list(): Promise<PuzzleMetadata[]> {
         if(metadataCache[this.id] === undefined) {
@@ -119,6 +134,8 @@ export abstract class Storage {
 
     /**
      * Raw version of `list()` which does not handle caching results.
+     *
+     * @throws StorageError
      */
     abstract listWithoutCaching(): Promise<PuzzleMetadata[]>
 
@@ -127,6 +144,8 @@ export abstract class Storage {
      *
      * @throws PuzzleNotFoundError - When a puzzle with the given name does not
      * exist in the storage.
+     *
+     * @throws StorageError
      */
     abstract getRaw(puzzleName: string): Promise<string>
 
@@ -136,6 +155,8 @@ export abstract class Storage {
      * @param ignoreErorrs - Ignore any deserialization errors that can be
      * ignored. This should only be used after trying without it, then catching
      * and displaying the error to the user.
+     *
+     * @throws StorageError
      */
     async get(puzzleName: string, ignoreErrors=false): Promise<PuzzleFile> {
         const str = await this.getRaw(puzzleName)
@@ -150,6 +171,8 @@ export abstract class Storage {
      * Get a pretty-formatted string representation of the puzzle. On any
      * formatting issue, the returned `error` is a string containing the error
      * and `formatted` will be the raw unformatted string.
+     *
+     * @throws StorageError
      */
     async getRawFormatted(puzzleName: string): Promise<[formatted: string, error: string | null]> {
         const raw = await this.getRaw(puzzleName)
@@ -171,9 +194,14 @@ export abstract class Storage {
      *
      * If `serialized` is given, it is assumed to be the same as `puzzleFile`
      * but already serialized.
+     *
+     * @throws StorageError
      */
     abstract save(puzzleFile: PuzzleFile, serialized?: string): Promise<void>
 
+    /**
+     * @throws StorageError
+     */
     abstract delete(puzzleName: string): Promise<void>
 }
 
@@ -265,11 +293,11 @@ export class BackendStorage extends Storage {
     async listWithoutCaching(): Promise<PuzzleMetadata[]> {
         const response = await this.request("")
         if(!response.ok) {
-            throw new Error(await this.getErrorMessage(response))
+            throw new StorageError(await this.getErrorMessage(response))
         }
         const result = await response.json()
         if(!Array.isArray(result?.puzzles)) {
-            throw new Error("Invalid API response: expected { puzzles: [] }")
+            throw new StorageError("Invalid API response: expected { puzzles: [] }")
         }
         return result.puzzles
     }
@@ -280,7 +308,7 @@ export class BackendStorage extends Storage {
             throw new PuzzleNotFoundError(puzzleName)
         }
         if(!response.ok) {
-            throw new Error(await this.getErrorMessage(response))
+            throw new StorageError(await this.getErrorMessage(response))
         }
         return await response.text()
     }
@@ -289,6 +317,7 @@ export class BackendStorage extends Storage {
         if(!serialized) {
             serialized = puzzleFile.serialize()
         }
+        this.errorOnInvalidPuzzleName(puzzleFile.name)
         const response = await this.request(
             `/${encodeURIComponent(puzzleFile.name)}`,
             {
@@ -300,7 +329,7 @@ export class BackendStorage extends Storage {
             }
         )
         if(!response.ok) {
-            throw new Error(await this.getErrorMessage(response))
+            throw new StorageError(await this.getErrorMessage(response))
         }
     }
 
@@ -312,12 +341,16 @@ export class BackendStorage extends Storage {
             return
         }
         if(!response.ok) {
-            throw new Error(await this.getErrorMessage(response))
+            throw new StorageError(await this.getErrorMessage(response))
         }
     }
 
     private async request(path: string, options?: RequestInit): Promise<Response> {
-        return fetch(`${this.baseUrl}/puzzles${path}`, options)
+        try {
+            return await fetch(`${this.baseUrl}/puzzles${path}`, options)
+        } catch(e) {
+            throw new StorageError(stripIfStartsWith(String(e), "TypeError: "))
+        }
     }
 
     private async getErrorMessage(response: Response): Promise<string> {
@@ -334,6 +367,14 @@ export class BackendStorage extends Storage {
             // Ignore parse failures and return raw response text.
         }
         return text
+    }
+
+    private errorOnInvalidPuzzleName(puzzleName: string) {
+        // Special case: The resulting URL would go the wrong location because
+        // it's relative. We'll completely avoid this by disallowing this name.
+        if(puzzleName === "..") {
+            throw new StorageError("Invalid puzzle name")
+        }
     }
 }
 
