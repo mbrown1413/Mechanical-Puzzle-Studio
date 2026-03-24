@@ -67,7 +67,7 @@ export class ActionManager {
         this.saveState = ref(
             this.storage === null || this.storage.readOnly ? "readOnly" : "saved"
         )
-        this.saveDebouncer = new SaveDebouncer(this)
+        this.saveDebouncer = new SaveDebouncer(this, 2000, 10000)
 
         watch(storageRef, () => {
             if(this.storage === null) {
@@ -190,11 +190,15 @@ export class ActionManager {
 }
 
 class SaveDebouncer {
-    defaultDebounceTimeMs: number
     private actionManager: ActionManager
+    private defaultDebounceTimeMs: number
+    private maxDebounceTimeMs: number
 
     /** Timer via `setTimeout()` for debouncing saves. */
     private debounceTimeout: ReturnType<typeof setTimeout> | undefined
+
+    /** Time we started debouncing */
+    private debounceStartTime: number | null
 
     /* `savePromise` is shared betweer all calls to `requestSave()` until the
      * promise is resolved. It resolves after a save actually gets triggered
@@ -206,11 +210,13 @@ class SaveDebouncer {
      * resolved when the save finishes. */
     private saveInFlight: Promise<void> | null
 
-    constructor(actionManager: ActionManager, defaultDebounceTimeMs: number=2000) {
-        this.defaultDebounceTimeMs = defaultDebounceTimeMs
+    constructor(actionManager: ActionManager, defaultDebounceTimeMs: number, maxDebounceTimeMs: number) {
         this.actionManager = actionManager
+        this.defaultDebounceTimeMs = defaultDebounceTimeMs
+        this.maxDebounceTimeMs = maxDebounceTimeMs
 
         this.debounceTimeout = undefined
+        this.debounceStartTime = null
 
         this.savePromise = null
         this.savePromiseResolve = null
@@ -222,8 +228,6 @@ class SaveDebouncer {
      * this method. The save may be delayed longer if there is already an
      * in-flight request to save. */
     async requestSave(debounceTimeMs: number|null = null): Promise<void> {
-        debounceTimeMs = debounceTimeMs === null ? this.defaultDebounceTimeMs : debounceTimeMs
-
         if(this.saveInFlight) {
             await this.saveInFlight
         }
@@ -236,6 +240,21 @@ class SaveDebouncer {
 
         clearTimeout(this.debounceTimeout)
 
+        if(this.debounceStartTime === null) {
+            this.debounceStartTime = Date.now()
+        }
+
+        if(debounceTimeMs === null) {
+            debounceTimeMs = this.defaultDebounceTimeMs
+        }
+
+        // Cap debounceTimeMs so we don't spend more than
+        // this.maxDebounceTimeMs debouncing.
+        const maxSaveTime = this.debounceStartTime + this.maxDebounceTimeMs
+        if(Date.now() + debounceTimeMs > maxSaveTime) {
+            debounceTimeMs = Math.max(0, maxSaveTime - Date.now())
+        }
+
         this.debounceTimeout = setTimeout(async () => {
             this.saveInFlight = this.actionManager.saveNow()
             await this.saveInFlight
@@ -244,6 +263,7 @@ class SaveDebouncer {
                 this.savePromiseResolve()
             }
 
+            this.debounceStartTime = null
             this.saveInFlight = null
             this.savePromiseResolve = null
             this.savePromise = null
