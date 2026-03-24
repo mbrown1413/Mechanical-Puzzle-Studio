@@ -3,7 +3,7 @@ import {Ref, nextTick} from "vue"
 import {Shape, Problem, Puzzle} from "~lib"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
-import {saveCurrentPuzzle} from "~/ui/ActionManager.ts"
+import {requestSave, saveNow} from "~/ui/ActionManager.ts"
 
 
 /**
@@ -61,8 +61,15 @@ export class PuzzleStudioApi {
         return this.puzzleEditor.$props.puzzle
     }
 
-    save() {
-        saveCurrentPuzzle()
+    /** Initiate a save. Resolve when the save completes. */
+    async save() {
+        await saveNow()
+    }
+
+    /** Request a save after a debounce period and possibly waiting for a
+     * currently in-flight save to finish. Resolves when the save completes. */
+    async requestSave(debounceTimeMs: number|null = null): Promise<void> {
+        await requestSave(debounceTimeMs)
     }
 
     ////////// Shapes //////////

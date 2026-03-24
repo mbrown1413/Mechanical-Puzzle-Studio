@@ -1,7 +1,7 @@
 import {ref, Ref, reactive, watch} from "vue"
 import {diff, patch as doPatch, unpatch as doUnpatch, Delta} from "jsondiffpatch"
 
-import {PuzzleFile, serialize, deserialize, SerializedData} from "~lib"
+import {PuzzleFile, serialize, deserialize} from "~lib"
 import {Action} from "~/ui/actions.ts"
 import {Storage} from "~/ui/storage.ts"
 
@@ -22,15 +22,25 @@ export function clearActionManager() {
 
 /**
  * Save the puzzle managed by the current global action manager.
- * 
+ *
  * Most edits to a puzzle should be done by emitting an action, however, there
  * are some times when it makes more sense to edit the `PuzzleFile` directly.
  * In those cases, this function can be called immediately after the edits to
  * trigger a save.
  */
-export function saveCurrentPuzzle() {
+export async function requestSave(debounceTimeMs: number|null = null) {
     if(actionManager) {
-        void actionManager.save()
+        await actionManager.requestSave(debounceTimeMs)
+    } else {
+        throw new Error("No current action manager")
+    }
+}
+
+export async function saveNow() {
+    if(actionManager) {
+        await actionManager.requestSave(0)
+    } else {
+        throw new Error("No current action manager")
     }
 }
 
@@ -45,7 +55,9 @@ export class ActionManager {
     performedActions: PerformedAction[]
     undoneActions: PerformedAction[]
 
-    saveState: Ref<"saved" | "saving" | "error" | "readOnly">
+    saveState: Ref<"saved" | "pending" | "saving" | "error" | "readOnly">
+
+    private saveDebouncer: SaveDebouncer
 
     constructor(storageRef: Ref<Storage | null>, puzzleFileRef: Ref<PuzzleFile | null>) {
         this.storageRef = storageRef
@@ -55,6 +67,7 @@ export class ActionManager {
         this.saveState = ref(
             this.storage === null || this.storage.readOnly ? "readOnly" : "saved"
         )
+        this.saveDebouncer = new SaveDebouncer(this)
 
         watch(storageRef, () => {
             if(this.storage === null) {
@@ -85,7 +98,7 @@ export class ActionManager {
         action.perform(this.puzzleFile.puzzle, this.puzzleFile)
         const after = serialize(this.puzzleFile)
 
-        void this.save(after)
+        void this.requestSave()
 
         const patch = diff(before, after)
         this.performedActions.push({action, patch})
@@ -101,25 +114,45 @@ export class ActionManager {
         }
         this.puzzleFile = deserialize(serialized)
 
-        void this.save(serialized)
+        void this.requestSave()
     }
 
-    async save(serialized?: SerializedData): Promise<void> {
-        this.puzzleFile.modifiedUTCString = new Date().toUTCString()
-        if(serialized === undefined) {
-            serialized = serialize(this.puzzleFile)
+    /**
+     * Mark the puzzle file as out of date and save after a debounce period.
+     */
+    async requestSave(debounceTimeoutMs: number | null = null): Promise<void> {
+        if(!this.storage || this.storage.readOnly) { return }
+
+        if(this.saveState.value !== "saving") {
+            this.saveState.value = "pending"
         }
-        if(this.storage && !this.storage.readOnly) {
-            this.saveState.value = "saving"
-            try {
-                await this.storage.save(this.puzzleFile, JSON.stringify(serialized))
-            } catch(e) {
-                this.saveState.value = "error"
-                console.error("Error saving puzzle", e)
-            }
-            if(this.saveState.value !== "error") {
-                this.saveState.value = "saved"
-            }
+        await this.saveDebouncer.requestSave(debounceTimeoutMs)
+    }
+
+    /**
+     * Save immediately without regard to debouncing or currently in-flight
+     * save requests.
+     *
+     * You probably want to call `requestSave()` instead, or `requestSave(0)`
+     * if you want to save as soon as possible but want protection against
+     * having multiple in-flight save requests.
+     */
+    async saveNow(): Promise<void> {
+        if(!this.storage || this.storage.readOnly) { return }
+        this.saveState.value = "saving"
+
+        this.puzzleFile.modifiedUTCString = new Date().toUTCString()
+        const serialized = serialize(this.puzzleFile)
+
+        try {
+            await this.storage.save(this.puzzleFile, JSON.stringify(serialized))
+        } catch(e) {
+            this.saveState.value = "error"
+            console.error("Error saving puzzle", e)
+        }
+
+        if(this.saveState.value !== "error") {
+            this.saveState.value = "saved"
         }
     }
 
@@ -153,5 +186,70 @@ export class ActionManager {
 
     canRedo(): boolean {
         return this.getRedoAction() !== null
+    }
+}
+
+class SaveDebouncer {
+    defaultDebounceTimeMs: number
+    private actionManager: ActionManager
+
+    /** Timer via `setTimeout()` for debouncing saves. */
+    private debounceTimeout: ReturnType<typeof setTimeout> | undefined
+
+    /* `savePromise` is shared betweer all calls to `requestSave()` until the
+     * promise is resolved. It resolves after a save actually gets triggered
+     * and finishes saving. */
+    private savePromise: Promise<void> | null
+    private savePromiseResolve: (() => void) | null
+
+    /* When an actual save is in-flight, this promise will be set, then
+     * resolved when the save finishes. */
+    private saveInFlight: Promise<void> | null
+
+    constructor(actionManager: ActionManager, defaultDebounceTimeMs: number=2000) {
+        this.defaultDebounceTimeMs = defaultDebounceTimeMs
+        this.actionManager = actionManager
+
+        this.debounceTimeout = undefined
+
+        this.savePromise = null
+        this.savePromiseResolve = null
+
+        this.saveInFlight = null
+    }
+
+    /** Perform a save `debounceTimeMs` milliseconds after the last call to
+     * this method. The save may be delayed longer if there is already an
+     * in-flight request to save. */
+    async requestSave(debounceTimeMs: number|null = null): Promise<void> {
+        debounceTimeMs = debounceTimeMs === null ? this.defaultDebounceTimeMs : debounceTimeMs
+
+        if(this.saveInFlight) {
+            await this.saveInFlight
+        }
+
+        if(!this.savePromise) {
+            this.savePromise = new Promise((resolve) => {
+                this.savePromiseResolve = resolve
+            })
+        }
+
+        clearTimeout(this.debounceTimeout)
+
+        this.debounceTimeout = setTimeout(async () => {
+            this.saveInFlight = this.actionManager.saveNow()
+            await this.saveInFlight
+
+            if(this.savePromiseResolve) {
+                this.savePromiseResolve()
+            }
+
+            this.saveInFlight = null
+            this.savePromiseResolve = null
+            this.savePromise = null
+
+        }, debounceTimeMs)
+
+        return this.savePromise
     }
 }

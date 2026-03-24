@@ -23,17 +23,17 @@ const savePill = computed(() => {
         return null
     }
     switch(actionManager.saveState.value) {
-        case "readOnly":
-            return {
-                color: "red",
-                text: "Read Only",
-                tooltip: 'Select "Save As" under the File menu to save changes'
-            }
         case "saved":
             return {
                 color: "green",
                 text: "Saved",
                 tooltip: "Auto-saving after every change"
+            }
+        case "pending":
+            return {
+                color: "yellow",
+                text: "Saving shortly...",
+                textColor: "#F57F17",
             }
         case "saving":
             return {
@@ -43,8 +43,14 @@ const savePill = computed(() => {
         case "error":
             return {
                 color: "red",
-                text: "Unsaved",
+                text: "Save Error",
                 tooltip: "An error occurred when saving. See console for details."
+            }
+        case "readOnly":
+            return {
+                color: "red",
+                text: "Read Only",
+                tooltip: 'Select "Save As" under the File menu to save changes'
             }
         default:
             const exhaustiveCheck: never = actionManager.saveState.value
@@ -71,7 +77,9 @@ const savePill = computed(() => {
                 class="ml-2"
                 v-tooltip="savePill.tooltip"
             >
-                {{ savePill.text }}
+                <span :style="{color: savePill.textColor || 'inherit'}">
+                    {{ savePill.text }}
+                </span>
             </VChip>
 
         </VAppBarTitle>
