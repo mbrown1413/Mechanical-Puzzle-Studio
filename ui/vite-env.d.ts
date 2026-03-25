@@ -1,3 +1,3 @@
 /// <reference types="vite/client" />
 
-declare const VITE_APP_TITLE: string
+declare const PZS_APP_TITLE: string

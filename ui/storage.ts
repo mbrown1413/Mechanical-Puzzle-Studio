@@ -45,7 +45,7 @@ export function getStorageInstances(): {[id: StorageId]: Storage} {
 }
 
 function getApiStorageBaseUrl(): string | null {
-    const baseUrl = import.meta.env.VITE_BACKEND_URL?.trim()
+    const baseUrl = import.meta.env.PZS_BACKEND_URL?.trim()
     if(!baseUrl) {
         return null
     }

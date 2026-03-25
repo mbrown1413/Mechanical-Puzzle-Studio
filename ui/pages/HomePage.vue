@@ -97,7 +97,7 @@ const storageButtons = [
     },
 ]
 
-const appTitle = import.meta.env.VITE_APP_TITLE
+const appTitle = import.meta.env.PZS_APP_TITLE
 </script>
 
 <template>

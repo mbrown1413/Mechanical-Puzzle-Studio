@@ -7,10 +7,10 @@ import cors from "cors"
 import {PuzzleMetadata} from "~lib"
 
 
-const host = process.env.VITE_BACKEND_HOST ?? "127.0.0.1"
-const port = Number.parseInt(process.env.VITE_BACKEND_PORT ?? "8787", 10)
+const host = process.env.PZS_BACKEND_HOST ?? "127.0.0.1"
+const port = Number.parseInt(process.env.PZS_BACKEND_PORT ?? "8787", 10)
 const urlBase = "/api"
-const dataDir = path.resolve(process.cwd(), process.env.VITE_BACKEND_PUZZLE_STORAGE ?? "data/puzzles")
+const dataDir = path.resolve(process.cwd(), process.env.PZS_BACKEND_PUZZLE_STORAGE ?? "data/puzzles")
 
 function puzzleNameToFilePath(name: string): string {
     const filename = `${encodeURIComponent(name)}.json`

@@ -12,7 +12,7 @@ export function convertToPuzzlecad(puzzleFile: PuzzleFile): string {
 
     let result = "/**\n"
     result += ` * ${puzzleFile.name}\n`
-    result += ` * Exported from ${import.meta.env.VITE_APP_TITLE}\n`
+    result += ` * Exported from ${import.meta.env.PZS_APP_TITLE}\n`
     result += " */\n\n"
     result += "// Get Puzzlecad from:\n"
     result += "//   https://github.com/aaron-siegel/puzzlecad/releases\n"

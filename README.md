@@ -93,7 +93,7 @@ The server stores puzzles in `data/puzzles/` by default and listens on
 
 To enable it in the frontend, set this in `.env.local`:
 
-    VITE_BACKEND_URL="http://localhost:8787/api"
+    PZS_BACKEND_URL="http://localhost:8787/api"
 
 See `.env` for additional backend configuration.
 

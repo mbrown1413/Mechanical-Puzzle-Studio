@@ -8,9 +8,9 @@ export const title = ref("")
 // Set <title> element whenever `title` ref changes
 watch(title, () => {
     if(title.value) {
-        document.title = title.value + " | " + import.meta.env.VITE_APP_TITLE
+        document.title = title.value + " | " + import.meta.env.PZS_APP_TITLE
     } else {
-        document.title = import.meta.env.VITE_APP_TITLE
+        document.title = import.meta.env.PZS_APP_TITLE
     }
 }, {immediate: true})
 
