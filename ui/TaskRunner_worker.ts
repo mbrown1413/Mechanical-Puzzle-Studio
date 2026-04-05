@@ -1,4 +1,5 @@
 import {serialize, deserialize} from "~lib"
+import {loadPlugins} from "~/ui/plugin.ts"
 
 import {
     StartMessage,
@@ -9,6 +10,8 @@ import {
 // Imports needed for registered classes which may be deserialized
 import "~lib"
 import "~/ui/tasks.ts"
+
+const pluginsReady = loadPlugins()
 
 function sendMessage(message: WorkerToRunnerMessage) {
     postMessage(serialize(message))
@@ -31,8 +34,9 @@ function onStart(data: StartMessage) {
     })
 }
 
-self.onmessage = (event: MessageEvent) => {
+self.onmessage = async (event: MessageEvent) => {
     try {
+        await pluginsReady
         const handlers: {[msgType: string]: (data: RunnerToWorkerMessage) => void} = {
             start: onStart
         }
