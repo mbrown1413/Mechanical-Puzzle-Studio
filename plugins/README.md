@@ -7,12 +7,12 @@ The plugin interface is in the early stages but an example plugin looks
 something like this:
 
 ```typescript
-import {definePlugin, PluginContext} from "~/ui/plugin.ts"
+import {PuzzleStudioPlugin, PluginContext} from "~/ui/plugin.ts"
 
-export default definePlugin({
+export default class TestPlugin extends PuzzleStudioPlugin {
     setup(ctx: PluginContext) {
-        console.log("Hello from test plugin!")
+        console.log("Hello from test plugin8!")
         ctx.registerClass(/* ... */)
     }
-})
+}
 ```

@@ -4,9 +4,10 @@ export type PluginContext = {
     registerClass: typeof registerClass,
 }
 
-export type PuzzleStudioPlugin = {
-    setup(ctx: PluginContext): void
-    cleanup?(ctx: PluginContext): void
+export abstract class PuzzleStudioPlugin {
+    constructor() {}
+    abstract setup(ctx: PluginContext): void
+    cleanup?(_ctx: PluginContext): void {}
 }
 
 const pluginModules = import.meta.glob(
@@ -18,10 +19,6 @@ const pluginModules = import.meta.glob(
     }
 )
 const loadedPlugins = new Map<string, PuzzleStudioPlugin>()
-
-export function definePlugin(plugin: PuzzleStudioPlugin): PuzzleStudioPlugin {
-    return plugin
-}
 
 function getPluginContext(): PluginContext {
     return {
@@ -55,9 +52,11 @@ async function loadPlugin(path: string) {
 
     unloadPlugin(path)
 
+    let pluginClass
     let plugin
     try {
-        plugin = await pluginModule() as PuzzleStudioPlugin
+        pluginClass = await pluginModule() as new () => PuzzleStudioPlugin
+        plugin = new pluginClass()
     } catch(e) {
         console.error(`Failed to load plugin from ${path}:\n`, e)
         return
@@ -65,12 +64,12 @@ async function loadPlugin(path: string) {
 
     try {
         plugin.setup(getPluginContext())
-        loadedPlugins.set(path, plugin)
     } catch(e) {
         console.error(`Failed to setup plugin from ${path}:\n`, e)
         return
     }
 
+    loadedPlugins.set(path, plugin)
     console.log(`Loaded plugin from ${path}`)
 }
 
