@@ -4,7 +4,11 @@
  * Here is an example of the boilerplate for defining new hooks:
  *
  *     export const namespaceHooks = defineHooks("namespace", {
+ *     
+ *         // Documentation using "/**" here appears in the plugin context for
+ *         // easy reference.
  *         hookname: new EventHook<[arg1: Type1, arg2: Type1, ...]>(),
+ *
  *         ...
  *     })
  *
@@ -54,6 +58,7 @@ export function defineHooks<
     return hooks
 }
 
+/** Hook type which sends out an event to any listeners subscribed to the hook. */
 export class EventHook<Args extends unknown[]> extends Hook {
     private callbacks: ((...args: Args) => void)[]
 
@@ -85,6 +90,7 @@ export class EventHook<Args extends unknown[]> extends Hook {
     }
 }
 
+/** Hook type which collects return values from subscribers and returns them as an array. */
 export abstract class CollectorHook<CollectedType, Args extends unknown[]> extends Hook {
     private callbacks: ((...args:Args) => CollectedType)[]
 

@@ -54,6 +54,7 @@ function getPluginContext(plugin: Plugin): PluginContext {
         registerClass: (...args) => {
             registerClass(...args)
             plugin.addCleanup(() => {
+                //TODO: Unregister class
             })
         },
         hooks: coreHooks,

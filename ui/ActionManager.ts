@@ -12,7 +12,10 @@ type PerformedAction = {
 }
 
 export const actionHooks = defineHooks("action", {
+
+    /** Emitted after an action is performed in the UI. */
     performed: new EventHook<[action: Action, actionManager: ActionManager]>(),
+
 })
 
 let actionManager: ActionManager | null = null
