@@ -2,6 +2,7 @@ import {ref, Ref, reactive, watch} from "vue"
 import {diff, patch as doPatch, unpatch as doUnpatch, Delta} from "jsondiffpatch"
 
 import {PuzzleFile, serialize, deserialize} from "~lib"
+import {defineHooks, EventHook} from "~/ui/hooks.ts"
 import {Action} from "~/ui/actions.ts"
 import {Storage} from "~/ui/storage.ts"
 
@@ -9,6 +10,10 @@ type PerformedAction = {
     action: Action,
     patch: Delta,
 }
+
+export const actionHooks = defineHooks("action", {
+    performed: new EventHook<[action: Action, actionManager: ActionManager]>(),
+})
 
 let actionManager: ActionManager | null = null
 
@@ -103,6 +108,7 @@ export class ActionManager {
         const patch = diff(before, after)
         this.performedActions.push({action, patch})
         this.undoneActions.length = 0
+        actionHooks.performed.emit(action, this)
     }
 
     private performPatch(patch: Delta, reverse: boolean) {

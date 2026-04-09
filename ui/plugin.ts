@@ -1,13 +1,42 @@
 import {registerClass} from "~lib"
 
-export type PluginContext = {
-    registerClass: typeof registerClass,
+import {runWithCleanupRegistrar} from "~/ui/hooks.ts"
+
+import {actionHooks} from "~/ui/ActionManager.ts"
+
+const coreHooks = {
+    action: actionHooks,
 }
 
-export abstract class PuzzleStudioPlugin {
-    constructor() {}
+let pluginsLoaded = false
+
+export type PluginContext = {
+    registerClass: typeof registerClass,
+    hooks: typeof coreHooks,
+}
+
+export abstract class Plugin {
+    cleanupFunctions: (() => void)[]
+
+    constructor() {
+        this.cleanupFunctions = []
+    }
+
     abstract setup(ctx: PluginContext): void
-    cleanup?(_ctx: PluginContext): void {}
+
+    addCleanup(cleanupFunction: () => void) {
+        this.cleanupFunctions.push(cleanupFunction)
+    }
+
+    cleanup(_ctx: PluginContext) {
+        for(const cleanupFunction of this.cleanupFunctions) {
+            try {
+                cleanupFunction()
+            } catch(e) {
+                console.error(`Error in plugin cleanup function:\n`, e)
+            }
+        }
+    }
 }
 
 const pluginModules = import.meta.glob(
@@ -18,11 +47,16 @@ const pluginModules = import.meta.glob(
         import: "default",
     }
 )
-const loadedPlugins = new Map<string, PuzzleStudioPlugin>()
+const loadedPlugins = new Map<string, Plugin>()
 
-function getPluginContext(): PluginContext {
+function getPluginContext(plugin: Plugin): PluginContext {
     return {
-        registerClass,
+        registerClass: (...args) => {
+            registerClass(...args)
+            plugin.addCleanup(() => {
+            })
+        },
+        hooks: coreHooks,
     }
 }
 
@@ -38,7 +72,7 @@ function unloadPlugin(path: string) {
     }
 
     try {
-        plugin.cleanup(getPluginContext())
+        plugin.cleanup(getPluginContext(plugin))
     } catch(e) {
         console.error(`Failed to cleanup plugin from ${path}:\n`, e)
     }
@@ -55,7 +89,7 @@ async function loadPlugin(path: string) {
     let pluginClass
     let plugin
     try {
-        pluginClass = await pluginModule() as new () => PuzzleStudioPlugin
+        pluginClass = await pluginModule() as new () => Plugin
         plugin = new pluginClass()
     } catch(e) {
         console.error(`Failed to load plugin from ${path}:\n`, e)
@@ -63,7 +97,10 @@ async function loadPlugin(path: string) {
     }
 
     try {
-        plugin.setup(getPluginContext())
+        runWithCleanupRegistrar(
+            (cleanupFunction) => plugin.addCleanup(cleanupFunction),
+            () => plugin.setup(getPluginContext(plugin)),
+        )
     } catch(e) {
         console.error(`Failed to setup plugin from ${path}:\n`, e)
         return
@@ -74,15 +111,24 @@ async function loadPlugin(path: string) {
 }
 
 export async function loadPlugins() {
+    pluginsLoaded = true
     for(const path of Object.keys(pluginModules)) {
         await loadPlugin(path)
     }
 }
 
 if(import.meta.hot) {
+
     import.meta.hot.accept(async (newModule) => {
-        if(loadedPlugins.size > 0) {
+        if(pluginsLoaded) {
             await newModule?.loadPlugins()
         }
     })
+
+    import.meta.hot.dispose(() => {
+        for(const path of loadedPlugins.keys()) {
+            unloadPlugin(path)
+        }
+    })
+
 }

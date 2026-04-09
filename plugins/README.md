@@ -11,8 +11,11 @@ import {PuzzleStudioPlugin, PluginContext} from "~/ui/plugin.ts"
 
 export default class TestPlugin extends PuzzleStudioPlugin {
     setup(ctx: PluginContext) {
-        console.log("Hello from test plugin8!")
-        ctx.registerClass(/* ... */)
+
+        ctx.hooks.action.performed.subscribe((action) => {
+            console.log("Action performed:", action.toString())
+        })
+
     }
 }
 ```
