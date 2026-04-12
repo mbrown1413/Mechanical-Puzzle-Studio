@@ -2,7 +2,9 @@ import {registerClass} from "~lib"
 
 import {runWithCleanupRegistrar} from "~/ui/hooks.ts"
 
-import {actionHooks} from "~/ui/ActionManager.ts"
+import {Action} from "~/ui/actions.ts"
+import {actionHooks, getActionManager} from "~/ui/ActionManager.ts"
+import {api} from "./globals.ts"
 
 const coreHooks = {
     action: actionHooks,
@@ -11,8 +13,18 @@ const coreHooks = {
 let pluginsLoaded = false
 
 export type PluginContext = {
-    registerClass: typeof registerClass,
+
+    /** Provides a reference to all core hooks for convenience. */
     hooks: typeof coreHooks,
+
+    /** Access to puzzle editor API. Will error if used outside of puzzle
+     * editor pages or before the API is initialized. */
+    api: typeof api,
+
+    /** Registers a class for serialization or enumeration. Must be used for cleanup to happen automatically on plugin unload. */
+    registerClass: typeof registerClass,
+
+    puzzleEditScope: (description: string, callback: () => void) => void,
 }
 
 export abstract class Plugin {
@@ -20,6 +32,10 @@ export abstract class Plugin {
 
     constructor() {
         this.cleanupFunctions = []
+    }
+
+    get name(): string {
+        return this.constructor.name || "Plugin"
     }
 
     abstract setup(ctx: PluginContext): void
@@ -49,15 +65,44 @@ const pluginModules = import.meta.glob(
 )
 const loadedPlugins = new Map<string, Plugin>()
 
+class PluginPuzzleEditAction extends Action {
+    private pluginName: string
+    private callback: () => void
+    private description: string
+
+    constructor(pluginName: string, description: string, callback: () => void) {
+        super()
+        this.callback = callback
+        this.pluginName = pluginName
+        this.description = description
+    }
+
+    perform() {
+        this.callback()
+    }
+
+    toString() {
+        return `${this.description} [Plugin: ${this.pluginName}]`
+    }
+}
+
 function getPluginContext(plugin: Plugin): PluginContext {
     return {
+        hooks: coreHooks,
+        api,
+
         registerClass: (...args) => {
             registerClass(...args)
             plugin.addCleanup(() => {
                 //TODO: Unregister class
             })
         },
-        hooks: coreHooks,
+
+        puzzleEditScope: (description, callback) => {
+            getActionManager().performAction(
+                new PluginPuzzleEditAction(plugin.name, description, callback)
+            )
+        }
     }
 }
 

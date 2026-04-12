@@ -13,7 +13,12 @@ type PerformedAction = {
 
 export const actionHooks = defineHooks("action", {
 
-    /** Emitted after an action is performed in the UI. */
+    /**
+     * Emitted after an action is performed in the UI.
+     *
+     * Edits to the puzzle file during this hook will be included in the same
+     * undo state as the action that triggered the hook.
+     */
     performed: new EventHook<[action: Action, actionManager: ActionManager]>(),
 
 })
@@ -26,6 +31,13 @@ export function setActionManager(value: ActionManager) {
 
 export function clearActionManager() {
     actionManager = null
+}
+
+export function getActionManager(): ActionManager {
+    if(!actionManager) {
+        throw new Error("No current action manager")
+    }
+    return actionManager
 }
 
 /**

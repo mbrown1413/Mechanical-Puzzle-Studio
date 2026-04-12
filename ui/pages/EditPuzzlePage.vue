@@ -3,12 +3,12 @@ import {computed, ComputedRef, ref, Ref, watch, watchEffect, onErrorCaptured, on
 
 import {PuzzleFile} from "~lib"
 
-import {taskRunner, title} from "~/ui/globals.ts"
+import {setApi, clearApi, taskRunner, title} from "~/ui/globals.ts"
 import {ActionManager, setActionManager, clearActionManager} from "~/ui/ActionManager.ts"
 import {Storage, getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
 import {Action, GridSetAction} from "~/ui/actions.ts"
 import {UiButtonDefinition, useUiButtonComposible} from "~/ui/ui-buttons.ts"
-import {PuzzleStudioApi} from "../api"
+import {PuzzleStudioApi} from "~/ui/api.ts"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import PuzzleEditor from "~/ui/components/PuzzleEditor.vue"
 import Modal from "~/ui/common/Modal.vue"
@@ -35,11 +35,13 @@ setActionManager(actionManager)
 
 onMounted(() => {
     const api = new PuzzleStudioApi(puzzleEditor, uiButtons)
+    setApi(api)
     ;(globalThis as any).api = api
 })
 
 onUnmounted(() => {
     clearActionManager()
+    clearApi()
     ;(globalThis as any).api = undefined
 })
 

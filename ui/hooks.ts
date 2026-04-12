@@ -61,13 +61,20 @@ export function defineHooks<
 /** Hook type which sends out an event to any listeners subscribed to the hook. */
 export class EventHook<Args extends unknown[]> extends Hook {
     private callbacks: ((...args: Args) => void)[]
+    private active: boolean
 
     constructor() {
         super()
         this.callbacks = []
+        this.active = false
     }
 
     emit(...args: Args) {
+        if(this.active) {
+            return
+        }
+        this.active = true
+
         for(const callback of this.callbacks) {
             try {
                 callback(...args)
@@ -75,6 +82,8 @@ export class EventHook<Args extends unknown[]> extends Hook {
                 console.error(`Error in callback for hook ${this.name}:\n`, e)
             }
         }
+
+        this.active = false
     }
 
     subscribe(callback: (...args: Args) => void) {
