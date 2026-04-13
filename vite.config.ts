@@ -39,6 +39,9 @@ export default defineConfig({
             },
         },
     },
+    worker: {
+        format: "esm",
+    },
     esbuild: {
         keepNames: true,
     },

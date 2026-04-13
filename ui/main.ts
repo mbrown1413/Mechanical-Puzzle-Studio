@@ -9,13 +9,10 @@ import HomePage from "~/ui/pages/HomePage.vue"
 import EditPuzzlePage from "~/ui/pages/EditPuzzlePage.vue"
 import NotFoundPage from "~/ui/pages/NotFoundPage.vue"
 import {clearStorageCache} from "~/ui/storage.ts"
-import {loadPlugins} from "~/ui/plugin.ts"
 
 import "~/ui/style.scss"
 import "@mdi/font/css/materialdesignicons.css"
 import "vuetify/styles"
-
-await loadPlugins()
 
 const routes: RouteRecordRaw[] = [
     {

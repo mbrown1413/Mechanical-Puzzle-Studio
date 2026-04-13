@@ -133,7 +133,7 @@ async function loadPlugin(path: string) {
     unloadPlugin(path)
 
     let pluginClass
-    let plugin
+    let plugin: Plugin
     try {
         pluginClass = await pluginModule() as new () => Plugin
         plugin = new pluginClass()
