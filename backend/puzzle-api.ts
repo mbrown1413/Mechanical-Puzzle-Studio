@@ -12,9 +12,11 @@ const port = Number.parseInt(process.env.PZS_BACKEND_PORT ?? "8787", 10)
 const urlBase = "/api"
 const dataDir = path.resolve(process.cwd(), process.env.PZS_BACKEND_PUZZLE_STORAGE ?? "data/puzzles")
 
-function puzzleNameToFilePath(name: string): string {
-    const filename = `${encodeURIComponent(name)}.json`
-    return path.join(dataDir, filename)
+function puzzleNameToFilePath(name: string): string | null {
+    if(name.includes("/") || name.includes("\\")) {
+        return null
+    }
+    return path.join(dataDir, name + ".json")
 }
 
 function fileNameToPuzzleName(fileName: string): string | null {
@@ -22,7 +24,7 @@ function fileNameToPuzzleName(fileName: string): string | null {
         return null
     }
     try {
-        return decodeURIComponent(fileName.slice(0, -".json".length))
+        return fileName.slice(0, -".json".length)
     } catch {
         return null
     }
@@ -107,6 +109,10 @@ app.get("/api/puzzles/", async (_request, response) => {
 app.get("/api/puzzles/:name", async (request, response) => {
     const puzzleName = request.params.name
     const filePath = puzzleNameToFilePath(puzzleName)
+    if(!filePath) {
+        response.status(400).json({error: `Invalid puzzle name: "${puzzleName}"`})
+        return
+    }
 
     let raw: string
     try {
@@ -124,6 +130,10 @@ app.get("/api/puzzles/:name", async (request, response) => {
 app.put("/api/puzzles/:name", async (request, response) => {
     const puzzleName = request.params.name
     const filePath = puzzleNameToFilePath(puzzleName)
+    if(!filePath) {
+        response.status(400).json({error: `Invalid puzzle name: "${puzzleName}"`})
+        return
+    }
 
     await writeFile(filePath, JSON.stringify(request.body), "utf-8")
     response.json({ok: true})
@@ -132,6 +142,10 @@ app.put("/api/puzzles/:name", async (request, response) => {
 app.delete("/api/puzzles/:name", async (request, response) => {
     const puzzleName = request.params.name
     const filePath = puzzleNameToFilePath(puzzleName)
+    if(!filePath) {
+        response.status(400).json({error: `Invalid puzzle name: "${puzzleName}"`})
+        return
+    }
 
     try {
         await rm(filePath)
