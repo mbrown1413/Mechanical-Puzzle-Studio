@@ -3,8 +3,8 @@ import {computed, ComputedRef, ref, Ref, watch, watchEffect, onErrorCaptured, on
 
 import {PuzzleFile} from "~lib"
 
-import {setApi, clearApi, taskRunner, title} from "~/ui/globals.ts"
-import {ActionManager, setActionManager, clearActionManager} from "~/ui/ActionManager.ts"
+import {setApi, clearApi, setActionManager, clearActionManager, taskRunner, title} from "~/ui/globals.ts"
+import {ActionManager} from "~/ui/ActionManager.ts"
 import {Storage, getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
 import {Action, GridSetAction} from "~/ui/actions.ts"
 import {UiButtonDefinition, useUiButtonComposible} from "~/ui/ui-buttons.ts"
@@ -31,18 +31,14 @@ const puzzleFile: Ref<PuzzleFile | null> = ref(null)
 const actionManager = new ActionManager(storage, puzzleFile)
 provide("actionManager", actionManager)
 
-setActionManager(actionManager)
-
 onMounted(() => {
-    const api = new PuzzleStudioApi(puzzleEditor, uiButtons)
-    setApi(api)
-    ;(globalThis as any).api = api
+    setApi(new PuzzleStudioApi(puzzleEditor, uiButtons))
+    setActionManager(actionManager)
 })
 
 onUnmounted(() => {
-    clearActionManager()
     clearApi()
-    ;(globalThis as any).api = undefined
+    clearActionManager()
 })
 
 type PuzzleErrorInfo = {

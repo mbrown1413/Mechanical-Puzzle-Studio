@@ -3,8 +3,8 @@ import {registerClass} from "~lib"
 import {runWithCleanupRegistrar} from "~/ui/hooks.ts"
 
 import {Action} from "~/ui/actions.ts"
-import {actionHooks, getActionManager} from "~/ui/ActionManager.ts"
-import {api} from "./globals.ts"
+import {actionHooks} from "~/ui/ActionManager.ts"
+import {api, actionManager} from "./globals.ts"
 
 const coreHooks = {
     action: actionHooks,
@@ -99,7 +99,7 @@ function getPluginContext(plugin: Plugin): PluginContext {
         },
 
         puzzleEditScope: (description, callback) => {
-            getActionManager().performAction(
+            actionManager.performAction(
                 new PluginPuzzleEditAction(plugin.name, description, callback)
             )
         }

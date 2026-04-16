@@ -23,47 +23,6 @@ export const actionHooks = defineHooks("action", {
 
 })
 
-let actionManager: ActionManager | null = null
-
-export function setActionManager(value: ActionManager) {
-    actionManager = value
-}
-
-export function clearActionManager() {
-    actionManager = null
-}
-
-export function getActionManager(): ActionManager {
-    if(!actionManager) {
-        throw new Error("No current action manager")
-    }
-    return actionManager
-}
-
-/**
- * Save the puzzle managed by the current global action manager.
- *
- * Most edits to a puzzle should be done by emitting an action, however, there
- * are some times when it makes more sense to edit the `PuzzleFile` directly.
- * In those cases, this function can be called immediately after the edits to
- * trigger a save.
- */
-export async function requestSave(debounceTimeMs: number|null = null) {
-    if(actionManager) {
-        await actionManager.requestSave(debounceTimeMs)
-    } else {
-        throw new Error("No current action manager")
-    }
-}
-
-export async function saveNow() {
-    if(actionManager) {
-        await actionManager.requestSave(0)
-    } else {
-        throw new Error("No current action manager")
-    }
-}
-
 /**
  * Handles editing a puzzle file, including saving to the storage and undo/redo
  * functionality.

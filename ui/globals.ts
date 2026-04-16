@@ -1,7 +1,9 @@
 import {reactive, ref, watch} from "vue"
 
+import {ActionManager} from "~/ui/ActionManager.ts"
 import {TaskRunner} from "~/ui/TaskRunner.ts"
 import {PuzzleStudioApi} from "~/ui/api.ts"
+import {makeProxy} from "~/ui/utils/proxy.ts"
 
 /** HTML page title */
 export const title = ref("")
@@ -23,10 +25,22 @@ export const taskRunner = reactive(
     new TaskRunner() as never
 ) as TaskRunner
 
-
 let currentApi: PuzzleStudioApi | null = null
 
-function requireApi(): PuzzleStudioApi {
+/** Proxy to PuzzleStudioApi which throws an error if accessed when no puzzle
+ * is open. */
+export const api = makeProxy(requireApi)
+export function setApi(value: PuzzleStudioApi) {
+    currentApi = value
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(globalThis as any).api = api
+}
+export function clearApi() {
+    currentApi = null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(globalThis as any).api = undefined
+}
+export function requireApi(): PuzzleStudioApi {
     if(!currentApi) {
         throw new Error(
             "Puzzle API is not available because no puzzle edit page is currently open."
@@ -35,32 +49,16 @@ function requireApi(): PuzzleStudioApi {
     return currentApi
 }
 
-/** Proxy to PuzzleStudioApi which throws an error if accessed when to puzzle
- * is open. */
-export const api = new Proxy({} as PuzzleStudioApi, {
-    get(_target, property) {
-        const currentApi = requireApi()
-        const value = Reflect.get(currentApi, property, currentApi)
-        return typeof value === "function" ? value.bind(currentApi) : value
-    },
+let currentActionManager: ActionManager | null = null
 
-    set(_target, property, value) {
-        return Reflect.set(requireApi(), property, value)
-    },
-
-    has(_target, property) {
-        return property in requireApi()
-    },
-
-    ownKeys() {
-        return Reflect.ownKeys(requireApi())
-    },
-
-    getOwnPropertyDescriptor(_target, property) {
-        return Object.getOwnPropertyDescriptor(requireApi(), property)
-    },
-})
-
-export function setApi(value: PuzzleStudioApi) { currentApi = value }
-export function getApi(): PuzzleStudioApi | null { return currentApi }
-export function clearApi() { currentApi = null }
+/** Proxy to PuzzleStudioApi which throws an error if accessed no action
+ * manager is set. */
+export const actionManager = makeProxy(requireActionManager)
+export function setActionManager(value: ActionManager) { currentActionManager = value }
+export function clearActionManager() { currentActionManager = null }
+export function requireActionManager(): ActionManager {
+    if(!currentActionManager) {
+        throw new Error("No current action manager")
+    }
+    return currentActionManager
+}
