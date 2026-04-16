@@ -46,7 +46,7 @@ export class ActionManager {
         this.saveState = ref(
             this.storage === null || this.storage.readOnly ? "readOnly" : "saved"
         )
-        this.saveDebouncer = new SaveDebouncer(this, 2000, 10000)
+        this.saveDebouncer = new SaveDebouncer(() => this.saveNow(), 2000, 10000)
 
         watch(storageRef, () => {
             if(this.storage === null) {
@@ -117,7 +117,7 @@ export class ActionManager {
      * if you want to save as soon as possible but want protection against
      * having multiple in-flight save requests.
      */
-    async saveNow(): Promise<void> {
+    private async saveNow(): Promise<void> {
         if(!this.storage || this.storage.readOnly) { return }
         this.saveState.value = "saving"
 
@@ -170,7 +170,7 @@ export class ActionManager {
 }
 
 class SaveDebouncer {
-    private actionManager: ActionManager
+    private saveFunc: () => Promise<void>
     private defaultDebounceTimeMs: number
     private maxDebounceTimeMs: number
 
@@ -190,8 +190,8 @@ class SaveDebouncer {
      * resolved when the save finishes. */
     private saveInFlight: Promise<void> | null
 
-    constructor(actionManager: ActionManager, defaultDebounceTimeMs: number, maxDebounceTimeMs: number) {
-        this.actionManager = actionManager
+    constructor(saveFunc: () => Promise<void>, defaultDebounceTimeMs: number, maxDebounceTimeMs: number) {
+        this.saveFunc = saveFunc
         this.defaultDebounceTimeMs = defaultDebounceTimeMs
         this.maxDebounceTimeMs = maxDebounceTimeMs
 
@@ -236,7 +236,7 @@ class SaveDebouncer {
         }
 
         this.debounceTimeout = setTimeout(async () => {
-            this.saveInFlight = this.actionManager.saveNow()
+            this.saveInFlight = this.saveFunc()
             await this.saveInFlight
 
             if(this.savePromiseResolve) {
