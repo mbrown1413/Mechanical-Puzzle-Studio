@@ -1,6 +1,6 @@
 import {reactive, ref, watch} from "vue"
 
-import {ActionManager} from "~/ui/ActionManager.ts"
+import {SaveManager} from "~/ui/SaveManager"
 import {TaskRunner} from "~/ui/TaskRunner.ts"
 import {PuzzleStudioApi} from "~/ui/api.ts"
 import {makeProxy} from "~/ui/utils/proxy.ts"
@@ -49,16 +49,16 @@ export function requireApi(): PuzzleStudioApi {
     return currentApi
 }
 
-let currentActionManager: ActionManager | null = null
+let currentSaveManager: SaveManager | null = null
 
-/** Proxy to PuzzleStudioApi which throws an error if accessed no action
+/** Proxy to PuzzleStudioApi which throws an error if accessed no save
  * manager is set. */
-export const actionManager = makeProxy(requireActionManager)
-export function setActionManager(value: ActionManager) { currentActionManager = value }
-export function clearActionManager() { currentActionManager = null }
-export function requireActionManager(): ActionManager {
-    if(!currentActionManager) {
-        throw new Error("No current action manager")
+export const saveManager = makeProxy(requireSaveManager)
+export function setSaveManager(value: SaveManager) { currentSaveManager = value }
+export function clearSaveManager() { currentSaveManager = null }
+export function requireSaveManager(): SaveManager {
+    if(!currentSaveManager) {
+        throw new Error("No current save manager")
     }
-    return currentActionManager
+    return currentSaveManager
 }

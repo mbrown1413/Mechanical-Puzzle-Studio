@@ -3,8 +3,8 @@ import {computed, ComputedRef, ref, Ref, watch, watchEffect, onErrorCaptured, on
 
 import {PuzzleFile} from "~lib"
 
-import {setApi, clearApi, setActionManager, clearActionManager, taskRunner, title} from "~/ui/globals.ts"
-import {ActionManager} from "~/ui/ActionManager.ts"
+import {setApi, clearApi, setSaveManager, clearSaveManager, taskRunner, title} from "~/ui/globals.ts"
+import {SaveManager} from "~/ui/SaveManager"
 import {Storage, getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
 import {Action, GridSetAction} from "~/ui/actions.ts"
 import {UiButtonDefinition, useUiButtonComposible} from "~/ui/ui-buttons.ts"
@@ -28,17 +28,17 @@ const storage: Ref<Storage | null> = computed(
     () => getStorageInstances()[props.storageId] || null
 )
 const puzzleFile: Ref<PuzzleFile | null> = ref(null)
-const actionManager = new ActionManager(storage, puzzleFile)
-provide("actionManager", actionManager)
+const saveManager = new SaveManager(storage, puzzleFile)
+provide("saveManager", saveManager)
 
 onMounted(() => {
     setApi(new PuzzleStudioApi(puzzleEditor, uiButtons))
-    setActionManager(actionManager)
+    setSaveManager(saveManager)
 })
 
 onUnmounted(() => {
     clearApi()
-    clearActionManager()
+    clearSaveManager()
 })
 
 type PuzzleErrorInfo = {
@@ -76,7 +76,7 @@ void setPuzzleFile()
 const uiButtons = useUiButtonComposible(
     puzzleFile,
     storage,
-    actionManager,
+    saveManager,
     performAction,
     puzzleEditor,
     saveModal,
@@ -146,7 +146,7 @@ function performAction(action: Action) {
     }
 
     try {
-        actionManager.performAction(action)
+        saveManager.performAction(action)
     } catch(e) {
         const msg = `Error performing action: ${action.toString()}`
         errorShow.value = true

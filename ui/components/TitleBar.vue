@@ -2,7 +2,7 @@
 import {computed, inject} from "vue"
 
 import {PuzzleFile} from "~lib"
-import {ActionManager} from "~/ui/ActionManager.ts"
+import {SaveManager} from "~/ui/SaveManager"
 import TaskStatusDisplay from "./TaskStatusDisplay.vue";
 
 withDefaults(
@@ -16,13 +16,13 @@ withDefaults(
 
 const appTitle = import.meta.env.PZS_APP_TITLE
 
-const actionManager = inject("actionManager") as ActionManager | null
+const saveManager = inject("saveManager") as SaveManager | null
 
 const savePill = computed(() => {
-    if(!actionManager) {
+    if(!saveManager) {
         return null
     }
-    switch(actionManager.saveState.value) {
+    switch(saveManager.saveState.value) {
         case "saved":
             return {
                 color: "green",
@@ -53,7 +53,7 @@ const savePill = computed(() => {
                 tooltip: 'Select "Save As" under the File menu to save changes'
             }
         default:
-            const exhaustiveCheck: never = actionManager.saveState.value
+            const exhaustiveCheck: never = saveManager.saveState.value
             return exhaustiveCheck
     }
 })

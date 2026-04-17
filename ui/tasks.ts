@@ -1,7 +1,7 @@
 import {SerializableClass, registerClass, Serializable, ProblemId} from "~lib"
 import {Puzzle, Problem, Solver, Solution, TaskCallbacks} from "~lib"
 
-import {actionManager} from "~/ui/globals.ts"
+import {saveManager} from "~/ui/globals.ts"
 
 /**
  * Encapsulates all of the code and data to run a specific task.
@@ -89,7 +89,7 @@ export class ProblemSolveTask extends Task<Solution[]> {
     setup() {
         const problem = this.getProblem()
         problem.solutions = undefined
-        void actionManager.requestSave()
+        void saveManager.requestSave()
     }
 
     run(callbacks: TaskCallbacks): Solution[] {
@@ -102,7 +102,7 @@ export class ProblemSolveTask extends Task<Solution[]> {
     processResult(result: Solution[]) {
         const problem = this.getProblem()
         problem.solutions = result
-        void actionManager.requestSave()
+        void saveManager.requestSave()
     }
 }
 registerClass(ProblemSolveTask)

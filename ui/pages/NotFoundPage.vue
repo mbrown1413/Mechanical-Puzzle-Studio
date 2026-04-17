@@ -3,7 +3,7 @@ import {provide} from "vue"
 
 import TitleBar from "~/ui/components/TitleBar.vue"
 
-provide("actionManager", null)
+provide("saveManager", null)
 </script>
 
 <template>

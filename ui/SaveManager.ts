@@ -19,7 +19,7 @@ export const actionHooks = defineHooks("action", {
      * Edits to the puzzle file during this hook will be included in the same
      * undo state as the action that triggered the hook.
      */
-    performed: new EventHook<[action: Action, actionManager: ActionManager]>(),
+    performed: new EventHook<[action: Action, saveManager: SaveManager]>(),
 
 })
 
@@ -27,7 +27,7 @@ export const actionHooks = defineHooks("action", {
  * Handles editing a puzzle file, including saving to the storage and undo/redo
  * functionality.
  */
-export class ActionManager {
+export class SaveManager {
     storageRef: Ref<Storage | null>
     puzzleFileRef: Ref<PuzzleFile | null>
 

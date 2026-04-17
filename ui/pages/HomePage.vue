@@ -19,7 +19,7 @@ const rawDataModal: Ref<InstanceType<typeof RawDataModal> | null> = ref(null)
 const deleteErrorModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 const deleteError: Ref<string | null> = ref(null)
 
-provide("actionManager", null)
+provide("saveManager", null)
 
 const puzzlesByStorage: {
     storage: Storage,

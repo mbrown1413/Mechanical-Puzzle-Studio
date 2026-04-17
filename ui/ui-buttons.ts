@@ -3,7 +3,7 @@ import {Ref} from "vue"
 import {PuzzleFile, ShapeAssembly, convertToPuzzlecad} from "~lib"
 
 import {Action, ProblemListMoveAction} from "~/ui/actions.ts"
-import {ActionManager} from "~/ui/ActionManager.ts"
+import {SaveManager} from "~/ui/SaveManager"
 import {
     NewShapeAction, DeleteShapeAction, DuplicateShapeAction,
     NewShapeGroupAction, NewProblemAction, DeleteProblemAction,
@@ -31,7 +31,7 @@ export type UiButtonDefinition = {
 export function useUiButtonComposible(
     puzzleFile: Ref<PuzzleFile | null>,
     storage: Ref<Storage | null>,
-    actionManager: ActionManager,
+    saveManager: SaveManager,
     performAction: (action: Action) => void,
     puzzleEditor: Ref<InstanceType<typeof PuzzleEditor> | null>,
     saveModal: Ref<InstanceType<typeof PuzzleSaveModal> | null>,
@@ -172,24 +172,24 @@ export function useUiButtonComposible(
 
         undo: {
             text: () => {
-                const action = actionManager.getUndoAction()
+                const action = saveManager.getUndoAction()
                 const actionString = action ? ` "${action.toString()}"` : ""
                 return "Undo" + actionString
             },
             icon: "mdi-undo",
-            perform: () => actionManager.undo(),
-            enabled: () => actionManager.canUndo(),
+            perform: () => saveManager.undo(),
+            enabled: () => saveManager.canUndo(),
         },
 
         redo: {
             text: () => {
-                const action = actionManager.getRedoAction()
+                const action = saveManager.getRedoAction()
                 const actionString = action ? ` "${action.toString()}"` : ""
                 return "Redo" + actionString
             },
             icon: "mdi-redo",
-            perform: () => actionManager.redo(),
-            enabled: () => actionManager.canRedo(),
+            perform: () => saveManager.redo(),
+            enabled: () => saveManager.canRedo(),
         },
 
         deleteSelectedItem: {
