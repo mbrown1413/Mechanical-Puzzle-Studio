@@ -19,21 +19,21 @@ type PuzzleFileReadResult = {
  */
 export async function readPuzzleFile(file: File): Promise<PuzzleFileReadResult> {
     const buffer = await asyncFileRead(file)
-    return readPuzzleFileBuffer(buffer, file.name)
+    return readPuzzleFileBuffer(buffer)
 }
 
 /**
  * Read a puzzle from a string in any supported format.
  */
-export async function readPuzzleFileString(contents: string, filename: string): Promise<PuzzleFileReadResult> {
+export async function readPuzzleFileString(contents: string): Promise<PuzzleFileReadResult> {
     const buffer = strToU8(contents)
-    return readPuzzleFileBuffer(buffer.buffer, filename)
+    return readPuzzleFileBuffer(buffer.buffer)
 }
 
 /**
  * Read a puzzle from an ArrayBuffer in any supported format.
  */
-export async function readPuzzleFileBuffer(buffer: ArrayBuffer, filename: string): Promise<PuzzleFileReadResult> {
+export async function readPuzzleFileBuffer(buffer: ArrayBuffer): Promise<PuzzleFileReadResult> {
     const bufferU8 = new Uint8Array(buffer)
 
     // Try gzip decompression, or assume uncompresed if it fails
@@ -91,7 +91,7 @@ export async function readPuzzleFileBuffer(buffer: ArrayBuffer, filename: string
     }
 
     if(xmlData) {
-        const result = await readBurrTools(filename, xmlData)
+        const result = await readBurrTools(xmlData)
         return {
             fileType: "BurrTools",
             ...result

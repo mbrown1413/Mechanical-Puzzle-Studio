@@ -5,6 +5,7 @@ import express, {ErrorRequestHandler} from "express"
 import cors from "cors"
 
 import {PuzzleMetadata} from "~lib"
+import {PuzzleListing} from "~/ui/storage"
 
 
 const host = process.env.PZS_BACKEND_HOST ?? "127.0.0.1"
@@ -30,7 +31,7 @@ function fileNameToPuzzleName(fileName: string): string | null {
     }
 }
 
-function extractMetadata(raw: string, fallbackName: string): PuzzleMetadata {
+function extractMetadata(raw: string): PuzzleMetadata {
 
     function readStringField(data: unknown, field: string): string | null {
         if(typeof data !== "object" || data === null) {
@@ -44,7 +45,6 @@ function extractMetadata(raw: string, fallbackName: string): PuzzleMetadata {
         const data: unknown = JSON.parse(raw)
         return {
             error: null,
-            name: readStringField(data, "name") || fallbackName,
             author: readStringField(data, "author"),
             description: readStringField(data, "description"),
             createdUTCString: readStringField(data, "createdUTCString"),
@@ -53,7 +53,6 @@ function extractMetadata(raw: string, fallbackName: string): PuzzleMetadata {
     } catch(error) {
         return {
             error: String(error),
-            name: fallbackName,
             author: null,
             description: null,
             createdUTCString: null,
@@ -75,35 +74,35 @@ app.use((request, _response, next) => {
 })
 
 app.get("/api/puzzles/", async (_request, response) => {
-    const entries = await readdir(dataDir, {withFileTypes: true})
-    const puzzles: PuzzleMetadata[] = []
-    for(const entry of entries) {
-        if(!entry.isFile()) {
+    const files = await readdir(dataDir, {withFileTypes: true})
+    files.sort((a, b) => a.name.localeCompare(b.name))
+
+    const listing: PuzzleListing = {}
+    for(const file of files) {
+        if(!file.isFile()) {
             continue
         }
-        const puzzleName = fileNameToPuzzleName(entry.name)
+        const puzzleName = fileNameToPuzzleName(file.name)
         if(!puzzleName) {
             continue
         }
 
-        const filePath = path.join(dataDir, entry.name)
+        const filePath = path.join(dataDir, file.name)
         try {
             const raw = await readFile(filePath, "utf-8")
-            puzzles.push(extractMetadata(raw, puzzleName))
+            listing[puzzleName] = extractMetadata(raw)
         } catch(error) {
-            puzzles.push({
+            listing[puzzleName] = {
                 error: String(error),
-                name: puzzleName,
                 author: null,
                 description: null,
                 createdUTCString: null,
                 modifiedUTCString: null,
-            })
+            }
         }
     }
-    puzzles.sort((a, b) => a.name.localeCompare(b.name))
 
-    response.json({puzzles})
+    response.json({puzzles: listing})
 })
 
 app.get("/api/puzzles/:name", async (request, response) => {

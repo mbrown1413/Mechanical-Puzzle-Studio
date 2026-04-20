@@ -10,7 +10,6 @@ function stripIfStartsWith(input: string, toStrip: string) {
 export type PuzzleMetadata = {
     error: string | null,
 
-    name: string,
     author: string | null,
     description: string | null,
 
@@ -21,13 +20,6 @@ export type PuzzleMetadata = {
 /** A `Puzzle` with some extra metadata and conveniences for dealing with
 * saving/loading puzzles. */
 export class PuzzleFile extends SerializableClass {
-
-    /**
-     * Used both as an internal identifier, and a human-readable name.
-     * Identifies the puzzle uniquely within a stroage.
-     */
-    name: string
-
     puzzle: Puzzle
 
     author?: string
@@ -41,10 +33,8 @@ export class PuzzleFile extends SerializableClass {
 
     constructor(
         puzzle: Puzzle,
-        name: string,
     ) {
         super()
-        this.name = name
         this.createdUTCString = new Date().toUTCString()
         this.puzzle = puzzle
     }
@@ -69,16 +59,11 @@ export class PuzzleFile extends SerializableClass {
 
     /**
      * Attempts to get metadata from a possibly corrupted serialized
-     * PuzzleFile. Uses the `name` passed in if it can't be obtained from the
-     * serialized data.
+     * PuzzleFile.
      */
-    static getMetadataSafe(data: string, name: string): PuzzleMetadata {
+    static getMetadataSafe(data: string): PuzzleMetadata {
         try {
-            const metadata = this.deserialize(JSON.parse(data)).getMetadata()
-            if(!metadata.name) {
-                metadata.name = name
-            }
-            return metadata
+            return this.deserialize(JSON.parse(data)).getMetadata()
         } catch(e) {
             console.error("Puzzle failed to deserialize:\n", e)
             let objData
@@ -92,14 +77,10 @@ export class PuzzleFile extends SerializableClass {
             if(puzzleFile instanceof PuzzleFile) {
                 metadata = puzzleFile.getMetadata()
                 metadata.error = stripIfStartsWith(String(e), "Error:")
-                if(typeof metadata.name !== "string") {
-                    metadata.name = name
-                }
                 return metadata
             } else {
                 return {
                     error: stripIfStartsWith(String(e), "Error:"),
-                    name,
                     author: null,
                     description: null,
                     createdUTCString: null,
@@ -112,7 +93,6 @@ export class PuzzleFile extends SerializableClass {
     getMetadata(): PuzzleMetadata {
         return {
             error: null,
-            name: this.name,
             author: this.author || null,
             description: this.description || null,
             createdUTCString: this.createdUTCString || null,

@@ -7,6 +7,7 @@ import {Storage} from "~/ui/storage.ts"
 import Modal from "~/ui/common/Modal.vue"
 
 defineProps<{
+    puzzleName: string,
     puzzleFile: PuzzleFile,
     storage: Storage,
 }>()
@@ -34,7 +35,7 @@ function handleTextInput(attribute: string, value: string) {
 <template>
     <Modal
         ref="modal"
-        :title="puzzleFile.name"
+        :title="puzzleName"
         :cancelShow="false"
         @ok="modal?.close()"
     >

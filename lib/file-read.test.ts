@@ -11,15 +11,11 @@ function compress(strIn: string) {
     return gzipSync(bufIn)
 }
 
-const emptyPuzzle = new PuzzleFile(
-    new Puzzle(new CubicGrid()),
-    "empty_puzzle"
-)
+const emptyPuzzle = new PuzzleFile(new Puzzle(new CubicGrid()))
 delete emptyPuzzle["createdUTCString"]
 
 const emptyNativeFormat = `{
     "type": "PuzzleFile",
-    "name": "empty_puzzle",
     "puzzle": {
         "type": "Puzzle",
         "grid": {
@@ -46,7 +42,7 @@ describe("readPuzzleFile reading JSON", () => {
 
     test("empty string", () => {
         expect(
-            readPuzzleFileString("", "puzzleFile.json")
+            readPuzzleFileString("")
         ).rejects.toThrowErrorMatchingInlineSnapshot(`
           [Error: Could not read file format
           Appears not to be gzip compressed due to gzip error: invalid gzip data
@@ -57,7 +53,7 @@ describe("readPuzzleFile reading JSON", () => {
 
     test("empty puzzle", () => {
         expect(
-            readPuzzleFileString(emptyNativeFormat, "puzzleFile.json")
+            readPuzzleFileString(emptyNativeFormat)
         ).resolves.toEqual({
             fileType: "Native",
             puzzleFile: emptyPuzzle,
@@ -67,7 +63,7 @@ describe("readPuzzleFile reading JSON", () => {
     test("empty puzzle compressed", () => {
         const compressed = compress(emptyNativeFormat)
         expect(
-            readPuzzleFileBuffer(compressed, "puzzleFile.json")
+            readPuzzleFileBuffer(compressed)
         ).resolves.toEqual({
             fileType: "Native",
             puzzleFile: emptyPuzzle,
@@ -78,7 +74,7 @@ describe("readPuzzleFile reading JSON", () => {
         const notPuzzleFile = JSON.parse(emptyNativeFormat)
         notPuzzleFile.type = "NotPuzzleFile"
         expect(
-            readPuzzleFileString(JSON.stringify(notPuzzleFile), "puzzleFile.json")
+            readPuzzleFileString(JSON.stringify(notPuzzleFile))
         ).rejects.toThrowErrorMatchingInlineSnapshot(`
           [Error: File appears to be JSON but not a PuzzleFile.
           The "type" key should be "PuzzleFile", not "NotPuzzleFile".]
@@ -86,7 +82,7 @@ describe("readPuzzleFile reading JSON", () => {
 
         delete notPuzzleFile["type"]
         expect(
-            readPuzzleFileString(JSON.stringify(notPuzzleFile), "puzzleFile.json")
+            readPuzzleFileString(JSON.stringify(notPuzzleFile))
         ).rejects.toThrowErrorMatchingInlineSnapshot(`
           [Error: File appears to be JSON but not a PuzzleFile.
           The "type" key should be "PuzzleFile", but it is not present.]
@@ -96,7 +92,7 @@ describe("readPuzzleFile reading JSON", () => {
     test("invalid json", () => {
         const notPuzzleFile = emptyNativeFormat.slice(1)
         expect(
-            readPuzzleFileString(notPuzzleFile, "puzzleFile.json")
+            readPuzzleFileString(notPuzzleFile)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`
           [Error: Could not read file format
           Appears not to be gzip compressed due to gzip error: invalid gzip data
@@ -113,7 +109,7 @@ describe("readPuzzleFile reading XML", () => {
 
     test("BurrTools", () => {
         expect(
-            readPuzzleFileString(emptyBtFormat, "empty_puzzle")
+            readPuzzleFileString(emptyBtFormat)
         ).resolves.toEqual({
             fileType: "BurrTools",
             puzzleFile: emptyPuzzle,
@@ -123,7 +119,7 @@ describe("readPuzzleFile reading XML", () => {
     test("BurrTools compressed", () => {
         const compressed = compress(emptyBtFormat)
         expect(
-            readPuzzleFileBuffer(compressed, "empty_puzzle")
+            readPuzzleFileBuffer(compressed)
         ).resolves.toEqual({
             fileType: "BurrTools",
             puzzleFile: emptyPuzzle,
@@ -142,14 +138,14 @@ describe("readPuzzleFile reading XML", () => {
             </notpuzzle>
         `
         expect(
-            readPuzzleFileString(notPuzzleFile, "empty_puzzle")
+            readPuzzleFileString(notPuzzleFile)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformatted BurrTools file: root xml element must be "puzzle", not "notpuzzle"]`)
     })
 
     test("invalid xml", () => {
         const notPuzzleFile = emptyBtFormat.slice(8)
         expect(
-            readPuzzleFileString(notPuzzleFile, "empty_puzzle")
+            readPuzzleFileString(notPuzzleFile)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`
           [Error: Could not read file format
           Appears not to be gzip compressed due to gzip error: invalid gzip data

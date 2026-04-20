@@ -1,6 +1,5 @@
 {
     "type": "PuzzleFile",
-    "name": "Soma Cube",
     "author": "Piet Hein",
     "description": "A popular assembly puzzle invented by Piet Hein in 1933.",
     "puzzle": {

@@ -19,19 +19,19 @@ describe("burrtools read", () => {
     test("xml but not a puzzle", async () => {
         const xml = await readXmlForBurrTools('<foo></foo>')
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformatted BurrTools file: root xml element must be "puzzle", not "foo"]`)
     })
 
     test("unsupported version", async () => {
         let xml = await readXmlForBurrTools('<puzzle version="3"></puzzle>')
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Only BurrTools file format version 2 is supported, not version 3]`)
 
         xml = await readXmlForBurrTools('<puzzle></puzzle>')
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformatted BurrTools file: puzzle tag must have version attribute]`)
     })
 
@@ -46,11 +46,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -78,7 +77,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Unsupported BurrTools grid type: Triangular Prism]`)
 
         xml = await readXmlForBurrTools(`
@@ -92,7 +91,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Unsupported BurrTools grid type: A]`)
     })
 
@@ -109,11 +108,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -154,7 +152,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Unsupported BurrTools voxel type: 1]`)
     })
 
@@ -171,11 +169,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -215,11 +212,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -268,7 +264,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools file: not enough characters in voxel space]`)
 
         xml = await readXmlForBurrTools(`
@@ -284,7 +280,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools file: too many characters in voxel space]`)
 
         xml = await readXmlForBurrTools(`
@@ -300,7 +296,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools shape: Unrecognized voxel character: !]`)
 
         xml = await readXmlForBurrTools(`
@@ -316,7 +312,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools file: voxel tag must have x, y, and z attributes as positive integers]`)
 
         xml = await readXmlForBurrTools(`
@@ -332,7 +328,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools file: voxel tag must have x, y, and z attributes as positive integers]`)
 
         xml = await readXmlForBurrTools(`
@@ -348,7 +344,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools file: voxel tag must have x, y, and z attributes as positive integers]`)
     })
 
@@ -365,11 +361,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        let puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        let puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -410,11 +405,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -446,11 +440,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -504,11 +497,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -584,11 +576,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -631,7 +622,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Expected one shapes definition in problem, found 0]`)
 
         xml = await readXmlForBurrTools(`
@@ -653,7 +644,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools file: Problem shape id must be a positive integer, not "-1"]`)
 
         xml = await readXmlForBurrTools(`
@@ -675,7 +666,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools file: Problem shape missing id]`)
 
         xml = await readXmlForBurrTools(`
@@ -699,7 +690,7 @@ describe("burrtools read", () => {
             </puzzle>
         `)
         expect(
-            readBurrTools("puzzle.xmpuzzle", xml)
+            readBurrTools(xml)
         ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Malformed BurrTools file: Expected problem shape to have either count, or min and max attributes.]`)
     })
 
@@ -720,11 +711,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -775,11 +765,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -853,11 +842,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        let puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        let puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -923,11 +911,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -998,11 +985,10 @@ describe("burrtools read", () => {
                 <comment/>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -1066,12 +1052,11 @@ describe("burrtools read", () => {
                 <comment>foo</comment>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
               "description": "foo",
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",
@@ -1098,12 +1083,11 @@ describe("burrtools read", () => {
                 <comment popup="">foo</comment>
             </puzzle>
         `)
-        const puzzle = await readBurrTools("puzzle.xmpuzzle", xml)
+        const puzzle = await readBurrTools(xml)
         expect(serialize(puzzle)).toMatchInlineSnapshot(`
           {
             "puzzleFile": {
               "description": "foo",
-              "name": "puzzle.xmpuzzle",
               "puzzle": {
                 "grid": {
                   "type": "CubicGrid",

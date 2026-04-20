@@ -60,7 +60,6 @@ export async function readXmlForBurrTools(
  * Read parsed BurrTools XML from `readXmlForBurrTools()` into a puzzle file.
  */
 export async function readBurrTools(
-    filename: string,
     xml: XmlRoot,
 ): Promise<BurrToolsFileReadResult> {
     const unsupportedFeatures: Set<string> = new Set()
@@ -84,10 +83,7 @@ export async function readBurrTools(
 
     const grid = readGrid(xml)
 
-    const puzzleFile = new PuzzleFile(
-        new Puzzle(grid),
-        filename,
-    )
+    const puzzleFile = new PuzzleFile(new Puzzle(grid))
     puzzleFile.createdUTCString = undefined
     puzzleFile.modifiedUTCString = undefined
 

@@ -3,10 +3,10 @@ import {saveAs} from "file-saver"
 import {PuzzleFile} from "~lib"
 import {Storage} from "~/ui/storage.ts"
 
-export function downloadPuzzle(puzzleFile: PuzzleFile) {
+export function downloadPuzzle(puzzleName: string, puzzleFile: PuzzleFile) {
     downloadString(
         puzzleFile.serialize(true),
-        puzzleFile.name + ".json",
+        puzzleName + ".json",
         "application/json"
     )
 }

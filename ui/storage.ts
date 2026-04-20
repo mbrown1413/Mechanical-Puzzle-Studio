@@ -4,6 +4,8 @@ import {PuzzleFile, PuzzleMetadata} from "~lib"
 
 export type StorageId = string
 
+export type PuzzleListing = Record<string, PuzzleMetadata>
+
 export class StorageError extends Error {
     toString() {
         return this.message
@@ -92,7 +94,7 @@ function decompressIfNeeded(strIn: string): string {
     }
 }
 
-let metadataCache: {[storageId: string]: Promise<PuzzleMetadata[]>} = {}
+let metadataCache: {[storageId: string]: Promise<PuzzleListing>} = {}
 
 export function clearStorageCache() {
     metadataCache = {}
@@ -125,7 +127,7 @@ export abstract class Storage {
      *
      * @throws StorageError
      */
-    async list(): Promise<PuzzleMetadata[]> {
+    async list(): Promise<PuzzleListing> {
         if(metadataCache[this.id] === undefined) {
             metadataCache[this.id] = this.listWithoutCaching()
         }
@@ -137,7 +139,7 @@ export abstract class Storage {
      *
      * @throws StorageError
      */
-    abstract listWithoutCaching(): Promise<PuzzleMetadata[]>
+    abstract listWithoutCaching(): Promise<PuzzleListing>
 
     /**
      * Retrieve serialized string form of the puzzle from storage.
@@ -197,7 +199,7 @@ export abstract class Storage {
      *
      * @throws StorageError
      */
-    abstract save(puzzleFile: PuzzleFile, serialized?: string): Promise<void>
+    abstract save(puzzleName: string, puzzleFile: PuzzleFile, serialized?: string): Promise<void>
 
     /**
      * @throws StorageError
@@ -219,8 +221,8 @@ export class LocalStorage extends Storage {
         return "The puzzle you're looking for may have been created in another browser, or your browser data may have been cleared."
     }
 
-    async listWithoutCaching(): Promise<PuzzleMetadata[]> {
-        const ret = []
+    async listWithoutCaching(): Promise<PuzzleListing> {
+        const listing: PuzzleListing = {}
         for(let i=0; i<localStorage.length; i++) {
             const key = localStorage.key(i)
             if(!key?.startsWith("puzzle:")) {
@@ -230,46 +232,38 @@ export class LocalStorage extends Storage {
             const item = localStorage.getItem(key)
             if(item !== null) {
                 const decompressed = decompressIfNeeded(item)
-                ret.push(
-                    PuzzleFile.getMetadataSafe(decompressed, puzzleName)
-                )
+                listing[puzzleName] = PuzzleFile.getMetadataSafe(decompressed)
             }
         }
-        return ret
+        return listing
     }
 
     async getRaw(puzzleName: string): Promise<string> {
-        const str = localStorage.getItem(this._getKey(puzzleName))
+        const str = localStorage.getItem(this.getKey(puzzleName))
         if(str === null) {
             throw new PuzzleNotFoundError(puzzleName)
         }
         return decompressIfNeeded(str)
     }
 
-    async save(puzzleFile: PuzzleFile, serialized?: string): Promise<void> {
+    async save(puzzleName: string, puzzleFile: PuzzleFile, serialized?: string): Promise<void> {
         if(!serialized) {
             serialized = puzzleFile.serialize()
         }
         localStorage.setItem(
-            this._getKey(puzzleFile),
+            this.getKey(puzzleName),
             compressIfNeeded(serialized)
         )
     }
 
     async delete(puzzleName: string): Promise<void> {
         localStorage.removeItem(
-            this._getKey(puzzleName)
+            this.getKey(puzzleName)
         )
     }
 
-    _getKey(puzzleFile: PuzzleFile): string
-    _getKey(puzzleFileName: string): string
-    _getKey(puzzleFileOrName: PuzzleFile | string): string {
-        if(typeof puzzleFileOrName === "string") {
-            return "puzzle:" + puzzleFileOrName
-        } else {
-            return "puzzle:" + puzzleFileOrName.name
-        }
+    private getKey(puzzleName: string): string {
+        return "puzzle:" + puzzleName
     }
 
 }
@@ -290,14 +284,14 @@ export class BackendStorage extends Storage {
         return "Backend Storage"
     }
 
-    async listWithoutCaching(): Promise<PuzzleMetadata[]> {
+    async listWithoutCaching(): Promise<PuzzleListing> {
         const response = await this.request("")
         if(!response.ok) {
             throw new StorageError(await this.getErrorMessage(response))
         }
         const result = await response.json()
-        if(!Array.isArray(result?.puzzles)) {
-            throw new StorageError("Invalid API response: expected { puzzles: [] }")
+        if(typeof result?.puzzles !== "object" || result.puzzles === null) {
+            throw new StorageError("Invalid API response")
         }
         return result.puzzles
     }
@@ -313,13 +307,13 @@ export class BackendStorage extends Storage {
         return await response.text()
     }
 
-    async save(puzzleFile: PuzzleFile, serialized?: string): Promise<void> {
+    async save(puzzleName: string, puzzleFile: PuzzleFile, serialized?: string): Promise<void> {
         if(!serialized) {
             serialized = puzzleFile.serialize()
         }
-        this.errorOnInvalidPuzzleName(puzzleFile.name)
+        this.errorOnInvalidPuzzleName(puzzleName)
         const response = await this.request(
-            `/${encodeURIComponent(puzzleFile.name)}`,
+            `/${encodeURIComponent(puzzleName)}`,
             {
                 method: "PUT",
                 headers: {
@@ -389,12 +383,21 @@ class SampleStorage extends Storage {
             {eager: true, import: "default"}
         )
         this.puzzleStrings = Object.fromEntries(
-            Object.values(modules).map((object) => {
-                const serializedString = JSON.stringify(object)
-                const puzzleFile = PuzzleFile.deserialize(JSON.parse(serializedString))
-                return [puzzleFile.name, serializedString]
+            Object.entries(modules).map(([filePath, puzzleObject]) => {
+                const serializedString = JSON.stringify(puzzleObject)
+                const puzzleName = SampleStorage.puzzleNameFromPath(filePath)
+                return [puzzleName, serializedString]
             })
         )
+    }
+
+    private static puzzleNameFromPath(filePath: string): string {
+        // Get filename
+        const pathParts = filePath.split("/")
+        const filename = pathParts[pathParts.length-1]
+        // Remove extension
+        const filenameParts = filename.split(".")
+        return filenameParts.slice(0, -1).join(".")
     }
 
     get id() {
@@ -407,10 +410,12 @@ class SampleStorage extends Storage {
 
     get readOnly() { return true }
 
-    async listWithoutCaching(): Promise<PuzzleMetadata[]> {
-        return Object.values(this.puzzleStrings).map(
-            (serialized) => PuzzleFile.deserialize(JSON.parse(serialized)).getMetadata()
-        )
+    async listWithoutCaching(): Promise<PuzzleListing> {
+        const listing: PuzzleListing = {}
+        for (const [name, serialized] of Object.entries(this.puzzleStrings)) {
+            listing[name] = PuzzleFile.deserialize(JSON.parse(serialized)).getMetadata()
+        }
+        return listing
     }
 
     async getRaw(puzzleName: string): Promise<string> {

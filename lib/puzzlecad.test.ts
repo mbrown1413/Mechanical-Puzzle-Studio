@@ -13,7 +13,7 @@ describe("puzzlecad export", () => {
 
     test("cubic puzzle", () => {
         const puzzle = new Puzzle(new CubicGrid())
-        const puzzleFile = new PuzzleFile(puzzle, "Test Puzzle")
+        const puzzleFile = new PuzzleFile(puzzle)
 
         const goal = puzzle.addShape(new Shape(
             3,
@@ -38,7 +38,7 @@ describe("puzzlecad export", () => {
         problem0.shapeCounts[shape0.id] = 1
         problem0.shapeCounts[shape1.id] = 1
 
-        expect(convertToPuzzlecad(puzzleFile)).toMatchInlineSnapshot(`
+        expect(convertToPuzzlecad("Test Puzzle", puzzleFile)).toMatchInlineSnapshot(`
           "/**
            * Test Puzzle
            * Exported from Puzzle Studio
@@ -66,7 +66,7 @@ describe("puzzlecad export", () => {
 
     test("square puzzle", () => {
         const puzzle = new Puzzle(new SquareGrid())
-        const puzzleFile = new PuzzleFile(puzzle, "Test Puzzle")
+        const puzzleFile = new PuzzleFile(puzzle)
 
         const goal = puzzle.addShape(new Shape(
             3,
@@ -88,7 +88,7 @@ describe("puzzlecad export", () => {
         problem0.shapeCounts[shape0.id] = 1
         problem0.shapeCounts[shape1.id] = 1
 
-        expect(convertToPuzzlecad(puzzleFile)).toMatchInlineSnapshot(`
+        expect(convertToPuzzlecad("Test Puzzle", puzzleFile)).toMatchInlineSnapshot(`
           "/**
            * Test Puzzle
            * Exported from Puzzle Studio
@@ -117,14 +117,14 @@ describe("puzzlecad export", () => {
     * as the piece's bounds property. */
     test("piece with empty space around origin", () => {
         const puzzle = new Puzzle(new SquareGrid())
-        const puzzleFile = new PuzzleFile(puzzle, "Test Puzzle")
+        const puzzleFile = new PuzzleFile(puzzle)
 
         puzzle.addShape(new Shape(
             0,
             ["1,1,0", "1,2,0", "2,1,0", "3,1,0"]
         ))
 
-        expect(convertToPuzzlecad(puzzleFile)).toMatchInlineSnapshot(`
+        expect(convertToPuzzlecad("Test Puzzle", puzzleFile)).toMatchInlineSnapshot(`
           "/**
            * Test Puzzle
            * Exported from Puzzle Studio
@@ -145,8 +145,8 @@ describe("puzzlecad export", () => {
 
     test("empty puzzle", () => {
         const puzzle = new Puzzle(new SquareGrid())
-        const puzzleFile = new PuzzleFile(puzzle, "Test Puzzle")
-        expect(convertToPuzzlecad(puzzleFile)).toMatchInlineSnapshot(`
+        const puzzleFile = new PuzzleFile(puzzle)
+        expect(convertToPuzzlecad("Test Puzzle", puzzleFile)).toMatchInlineSnapshot(`
           "/**
            * Test Puzzle
            * Exported from Puzzle Studio
@@ -164,8 +164,8 @@ describe("puzzlecad export", () => {
 
     test("unsupported grid", () => {
         const puzzle = new Puzzle(new CylindricalGrid())
-        const puzzleFile = new PuzzleFile(puzzle, "Test Puzzle")
-        expect(() => convertToPuzzlecad(puzzleFile)).toThrowErrorMatchingInlineSnapshot(`[Error: Grid not compatible with Puzzlecad export]`)
+        const puzzleFile = new PuzzleFile(puzzle)
+        expect(() => convertToPuzzlecad("Test Puzzle", puzzleFile)).toThrowErrorMatchingInlineSnapshot(`[Error: Grid not compatible with Puzzlecad export]`)
     })
 
 })

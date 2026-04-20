@@ -30,6 +30,7 @@ let currentApi: PuzzleStudioApi | null = null
 /** Proxy to PuzzleStudioApi which throws an error if accessed when no puzzle
  * is open. */
 export const api = makeProxy(requireApi)
+export function getApi() { return currentApi }
 export function setApi(value: PuzzleStudioApi) {
     currentApi = value
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,6 +55,7 @@ let currentSaveManager: SaveManager | null = null
 /** Proxy to PuzzleStudioApi which throws an error if accessed no save
  * manager is set. */
 export const saveManager = makeProxy(requireSaveManager)
+export function getSaveManager() { return currentSaveManager }
 export function setSaveManager(value: SaveManager) { currentSaveManager = value }
 export function clearSaveManager() { currentSaveManager = null }
 export function requireSaveManager(): SaveManager {

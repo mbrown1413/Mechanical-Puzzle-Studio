@@ -3,20 +3,17 @@
 -->
 
 <script setup lang="ts">
-import {ref, Ref, computed, reactive, watch, nextTick} from "vue"
+import {ref, Ref, computed, reactive, nextTick} from "vue"
 import {useRouter} from "vue-router"
 import {VAlert, VTextField, VFileInput, VForm} from "vuetify/components"
 
 import {Puzzle, PuzzleFile, CubicGrid, readPuzzleFile} from "~lib"
 
-import {getStorageInstances, Storage} from "~/ui/storage.ts"
+import {getStorageInstances, PuzzleListing, Storage} from "~/ui/storage.ts"
 import Modal from "~/ui/common/Modal.vue"
+import {getSaveManager} from "~/ui/globals.ts"
 
 const router = useRouter()
-
-const emit = defineEmits<{
-    save: [PuzzleFile]
-}>()
 
 defineExpose({
     openNew(storage: Storage) {
@@ -41,9 +38,9 @@ defineExpose({
         open("copy", storage)
     },
 
-    openSaveAs(storage: Storage, puzzleFile: PuzzleFile) {
+    openSaveAs(storage: Storage, puzzleName: string, puzzleFile: PuzzleFile) {
         title.value = "Save As"
-        fields.name = puzzleFile.name + " (copy)"
+        fields.name = puzzleName + " (copy)"
         saveAsPuzzleFileToSave = puzzleFile
         createButtonText.value = "Save As"
         open("saveas", storage)
@@ -93,19 +90,6 @@ const uploadedPuzzle: Ref<PuzzleFile | null> = ref(null)
 const unsupportedWarningModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 const unsupportedFeatures: Ref<string[]> = ref([])
 
-watch(uploadedPuzzle, (newPuzzle, oldPuzzle) => {
-    if(mode.value === "upload") {
-        // Automatically set puzzle name from uploaded file, but only if user
-        // has not manually modified name.
-        if(
-            fields.name === "" ||
-            fields.name === oldPuzzle?.name
-        ) {
-            fields.name = newPuzzle ? newPuzzle.name : ""
-        }
-    }
-})
-
 const storageSelectItems = computed(() =>
     Object.values(storages).filter(s => !s.readOnly).map((storage) => {
         return {
@@ -120,14 +104,14 @@ const nameRules: VTextField["rules"] = [
         if(!name) {
             return false
         }
-        let allPuzzleMeta
+        let allPuzzleMeta: PuzzleListing
         try {
             allPuzzleMeta = await fields.storage.list()
         } catch(e) {
             submitError.value = String(e)
             throw e
         }
-        const allNames = allPuzzleMeta.map(puzzleMeta => puzzleMeta.name)
+        const allNames = Object.keys(allPuzzleMeta)
         if(allNames.includes(name)) {
             return "Puzzle name already exists"
         }
@@ -143,6 +127,7 @@ const fileUploadRules: VFileInput["rules"] = [
         try {
             const readResult = await readPuzzleFile(file)
             uploadedPuzzle.value = readResult.puzzleFile
+            fields.name = file.name
         } catch(e) {
             console.error(e)
             return String(e).split("\n")[0]
@@ -165,7 +150,6 @@ async function submit(event?: Event) {
                 new Puzzle(
                     new CubicGrid()
                 ),
-                fields.name
             )
             // Uncomment the next line to pop up the grid configure dialog when
             // a puzzle is created. For now, there aren't enough grids
@@ -201,21 +185,21 @@ async function submit(event?: Event) {
             return _exhaustiveCheck
     }
 
-    puzzleFile.name = fields.name
     try {
-        await fields.storage.save(puzzleFile)
+        await fields.storage.save(fields.name, puzzleFile)
     } catch(e) {
         submitError.value = String(e)
         console.error(`Storage backend errored creating puzzle: ${submitError.value}`)
         return
     }
 
+    getSaveManager()?.setSaveLocation(fields.storage, fields.name)
+
     router.push({
         name: "puzzle",
         params: {storageId: fields.storage.id, puzzleName: fields.name}
     })
     modal.value?.close()
-    emit("save", puzzleFile)
 }
 </script>
 

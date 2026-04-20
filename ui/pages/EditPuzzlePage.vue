@@ -28,7 +28,7 @@ const storage: Ref<Storage | null> = computed(
     () => getStorageInstances()[props.storageId] || null
 )
 const puzzleFile: Ref<PuzzleFile | null> = ref(null)
-const saveManager = new SaveManager(storage, puzzleFile)
+const saveManager = new SaveManager(props.puzzleName, storage, puzzleFile)
 provide("saveManager", saveManager)
 
 onMounted(() => {
@@ -249,7 +249,7 @@ const toolbarButtons: UiButtonDefinition[] = [
 </script>
 
 <template>
-    <TitleBar :puzzleFile="puzzleFile" :storage="storage" flat />
+    <TitleBar :puzzleName="puzzleName" :puzzleFile="puzzleFile" :storage="storage" flat />
     <VAppBar
         density="compact"
         :height="48"
@@ -326,12 +326,13 @@ const toolbarButtons: UiButtonDefinition[] = [
     <PuzzleMetadataModal
         v-if="puzzleFile && storage"
         ref="metadataModal"
+        :puzzleName="puzzleName"
         :puzzleFile="puzzleFile"
         :storage="storage"
         @action="performAction"
     />
     <RawDataModal ref="rawDataModal" />
-    <PuzzleSaveModal ref="saveModal" @save="puzzleFile = $event" />
+    <PuzzleSaveModal ref="saveModal" />
     <GridEditModal
         v-if="puzzleFile"
         ref="gridEditModal"

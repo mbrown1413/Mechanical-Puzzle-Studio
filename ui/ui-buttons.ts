@@ -115,7 +115,7 @@ export function useUiButtonComposible(
             enabled: () => storage.value !== null,
             perform() {
                 if(puzzleFile.value && storage.value) {
-                    saveModal.value?.openSaveAs(storage.value, puzzleFile.value)
+                    saveModal.value?.openSaveAs(storage.value, saveManager.puzzleName, puzzleFile.value)
                 }
             },
         },
@@ -136,7 +136,7 @@ export function useUiButtonComposible(
             icon: "mdi-download",
             perform() {
                 if(puzzleFile.value) {
-                    downloadPuzzle(puzzleFile.value)
+                    downloadPuzzle(saveManager.puzzleName, puzzleFile.value)
                 }
             },
             enabled: () => Boolean(puzzleFile.value)
@@ -157,10 +157,10 @@ export function useUiButtonComposible(
             icon: "mdi-export",
             perform() {
                 if(puzzleFile.value) {
-                    const puzzlecadString = convertToPuzzlecad(puzzleFile.value)
+                    const puzzlecadString = convertToPuzzlecad(saveManager.puzzleName, puzzleFile.value)
                     downloadString(
                         puzzlecadString,
-                        (puzzleFile.value.name || "puzzle") + ".scad",
+                        saveManager.puzzleName + ".scad",
                         "application/x-openscad"
                     )
                 }

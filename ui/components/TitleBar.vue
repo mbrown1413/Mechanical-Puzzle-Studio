@@ -7,6 +7,7 @@ import TaskStatusDisplay from "./TaskStatusDisplay.vue";
 
 withDefaults(
     defineProps<{
+        puzzleName?: string | null,
         puzzleFile?: PuzzleFile | null,
         flat?: boolean,
     }>(), {
@@ -68,7 +69,7 @@ const savePill = computed(() => {
         </div>
 
         <VAppBarTitle v-if="puzzleFile" class="page-title">
-            {{ puzzleFile.name }}
+            {{ puzzleName }}
 
             <VChip
                 v-if="savePill"

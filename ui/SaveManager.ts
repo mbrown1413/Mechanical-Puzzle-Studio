@@ -28,6 +28,7 @@ export const actionHooks = defineHooks("action", {
  * functionality.
  */
 export class SaveManager {
+    puzzleName: string
     storageRef: Ref<Storage | null>
     puzzleFileRef: Ref<PuzzleFile | null>
 
@@ -38,7 +39,8 @@ export class SaveManager {
 
     private saveDebouncer: SaveDebouncer
 
-    constructor(storageRef: Ref<Storage | null>, puzzleFileRef: Ref<PuzzleFile | null>) {
+    constructor(puzzleName: string, storageRef: Ref<Storage | null>, puzzleFileRef: Ref<PuzzleFile | null>) {
+        this.puzzleName = puzzleName
         this.storageRef = storageRef
         this.puzzleFileRef = puzzleFileRef
         this.performedActions = reactive([])
@@ -70,6 +72,11 @@ export class SaveManager {
 
     set puzzleFile(value: PuzzleFile) {
         this.puzzleFileRef.value = value
+    }
+
+    setSaveLocation(storage: Storage, puzzleName: string) {
+        this.storageRef.value = storage
+        this.puzzleName = puzzleName
     }
 
     performAction(action: Action) {
@@ -125,7 +132,7 @@ export class SaveManager {
         const serialized = serialize(this.puzzleFile)
 
         try {
-            await this.storage.save(this.puzzleFile, JSON.stringify(serialized))
+            await this.storage.save(this.puzzleName, this.puzzleFile, JSON.stringify(serialized))
         } catch(e) {
             this.saveState.value = "error"
             console.error("Error saving puzzle", e)

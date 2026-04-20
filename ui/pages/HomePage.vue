@@ -5,7 +5,7 @@ import {VDataTable} from "vuetify/components"
 import {PuzzleMetadata} from "~lib"
 import {title} from "~/ui/globals.ts"
 import {downloadPuzzleFromStorage} from "~/ui/utils/download.ts"
-import {clearStorageCache, getStorageInstances, Storage} from "~/ui/storage.ts"
+import {clearStorageCache, getStorageInstances, PuzzleListing, Storage} from "~/ui/storage.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
@@ -23,14 +23,14 @@ provide("saveManager", null)
 
 const puzzlesByStorage: {
     storage: Storage,
-    puzzles: PuzzleMetadata[],
+    puzzles: PuzzleListing,
     loading: boolean,
     error?: string,
 }[] = reactive(
     Object.values(getStorageInstances()).map((storage) => {
         return {
             storage,
-            puzzles: [],
+            puzzles: {},
             loading: false,
         }
     })
@@ -69,9 +69,7 @@ async function deletePuzzle(storage: Storage, puzzleName: string) {
         (item) => item.storage === storage
     )
     if(storageEntry !== undefined) {
-        storageEntry.puzzles = storageEntry.puzzles.filter(
-            (puzzle) => puzzle.name !== puzzleName
-        )
+        delete storageEntry.puzzles[puzzleName]
     }
 
     clearStorageCache()
@@ -96,6 +94,14 @@ const storageButtons = [
         action: (storage: Storage) => saveModal.value?.openNew(storage),
     },
 ]
+
+type PuzzleTableRow = PuzzleMetadata & {name: string}
+function puzzleRows(puzzleListing: PuzzleListing): PuzzleTableRow[] {
+    return Object.entries(puzzleListing).map(([name, metadata]) => ({
+        name,
+        ...metadata,
+    }))
+}
 
 const appTitle = import.meta.env.PZS_APP_TITLE
 </script>
@@ -131,12 +137,12 @@ const appTitle = import.meta.env.PZS_APP_TITLE
         </VRow>
 
         <VRow
-            v-for="{storage, puzzles, loading, error} of puzzlesByStorage"
+            v-for="{storage, puzzles: puzzleListing, loading, error} of puzzlesByStorage"
             justify="center"
         >
             <VDataTable
                     :headers="tableHeaders"
-                    :items="puzzles"
+                    :items="puzzleRows(puzzleListing)"
                     items-per-page="-1"
                     :loading="loading"
                     loading-text="Loading Puzzles..."

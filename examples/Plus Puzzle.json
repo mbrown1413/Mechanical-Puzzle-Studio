@@ -1,6 +1,5 @@
 {
     "type": "PuzzleFile",
-    "name": "Plus Puzzle",
     "author": "Michael S. Brown",
     "description": "A simple interlocking puzzle demonstrating optional voxels, disassembly, and multiple problems in one file.\n\nDesigned by Michael Brown in 2023.",
     "puzzle": {

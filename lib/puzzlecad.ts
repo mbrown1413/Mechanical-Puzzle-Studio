@@ -4,14 +4,14 @@ import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 /**
  * Converts all shapes in the puzzle file to Puzzlecad.
  */
-export function convertToPuzzlecad(puzzleFile: PuzzleFile): string {
+export function convertToPuzzlecad(puzzleName: string, puzzleFile: PuzzleFile): string {
     const grid = puzzleFile.puzzle.grid
     if(!(grid instanceof CubicGrid)) {
         throw new Error("Grid not compatible with Puzzlecad export");
     }
 
     let result = "/**\n"
-    result += ` * ${puzzleFile.name}\n`
+    result += ` * ${puzzleName}\n`
     result += ` * Exported from ${import.meta.env.PZS_APP_TITLE}\n`
     result += " */\n\n"
     result += "// Get Puzzlecad from:\n"
