@@ -33,7 +33,7 @@ export async function readPuzzleFileString(contents: string): Promise<PuzzleFile
 /**
  * Read a puzzle from an ArrayBuffer in any supported format.
  */
-export async function readPuzzleFileBuffer(buffer: ArrayBuffer): Promise<PuzzleFileReadResult> {
+export async function readPuzzleFileBuffer(buffer: ArrayBufferLike): Promise<PuzzleFileReadResult> {
     const bufferU8 = new Uint8Array(buffer)
 
     // Try gzip decompression, or assume uncompresed if it fails

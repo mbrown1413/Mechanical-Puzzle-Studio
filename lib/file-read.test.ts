@@ -8,7 +8,7 @@ import {CubicGrid} from "~/lib/grids/CubicGrid.ts"
 
 function compress(strIn: string) {
     const bufIn = strToU8(strIn)
-    return gzipSync(bufIn)
+    return gzipSync(bufIn).buffer
 }
 
 const emptyPuzzle = new PuzzleFile(new Puzzle(new CubicGrid()))
