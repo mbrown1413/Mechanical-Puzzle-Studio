@@ -45,13 +45,20 @@ export type TaskInfo = {
     error: string | null,
 }
 
+type TaskPromiseInfo = {
+    resolve: () => void,
+    reject: (reason: string) => void,
+}
+
+type InternalTaskInfo = TaskInfo & TaskPromiseInfo
+
 /**
  * Singleton class which queues and runs tasks in a web worker. You will find
  * the single instance of this in globals.ts
  */
 export class TaskRunner {
-    queue: TaskInfo[]
-    current: TaskInfo | null
+    queue: InternalTaskInfo[]
+    current: InternalTaskInfo | null
     finished: TaskInfo[]
 
     worker: Worker | null
@@ -73,19 +80,25 @@ export class TaskRunner {
         return tasks
     }
 
-    submitTask(task: Task<Serializable>) {
-        this.queue.push({
-            task,
-            status: "queued",
-            progressPercent: null,
-            progressMessage: null,
-            messages: [],
-            error: null,
-        })
+    /** Puts a task in the queue and returns a promise which resolves when the
+     * task is done. */
+    submitTask(task: Task<Serializable>): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.queue.push({
+                task,
+                status: "queued",
+                progressPercent: null,
+                progressMessage: null,
+                messages: [],
+                error: null,
+                resolve,
+                reject,
+            })
 
-        if(this.current === null && this.queue.length === 1) {
-            this.startNextTask()
-        }
+            if(this.current === null && this.queue.length === 1) {
+                this.startNextTask()
+            }
+        })
     }
 
     terminateRunningTask() {
@@ -93,8 +106,11 @@ export class TaskRunner {
         this.log("Terminated worker")
         this.worker = null
         if(this.current) {
+            this.current.task.state = "canceled"
             this.current.status = "canceled"
+            this.current.error = "Task canceled"
             this.finished.push(this.current)
+            this.current.reject("Task canceled")
         }
         this.current = null
         if(this.queue.length === 1) {
@@ -147,19 +163,20 @@ export class TaskRunner {
         if(!this.current) {
             throw new Error("Cannot finish current task, none is running!")
         }
+        const taskInfo = this.current
 
         if(success) {
             try {
-                this.current?.task.processResult(result)
-                this.current?.task.onSuccess()
+                taskInfo.task.processResult(result)
+                taskInfo.task.onSuccess()
             } catch(e) {
                 success = false
                 error = String(e)
             }
         }
 
-        this.current.error = error
-        this.current.status = "finished"
+        taskInfo.error = error
+        taskInfo.status = "finished"
         if(success) {
             this.log("Task finished successfully")
         } else {
@@ -169,7 +186,7 @@ export class TaskRunner {
         if(!success) {
             console.error(error)
             try {
-                this.current?.task.onFailure(
+                taskInfo.task.onFailure(
                     error || "Unknown worker error"
                 )
             } catch(e) {
@@ -177,11 +194,17 @@ export class TaskRunner {
             }
         }
 
-        this.finished.push(this.current)
+        this.finished.push(taskInfo)
         this.current = null
 
         if(this.queue.length) {
             this.startNextTask()
+        }
+
+        if(success) {
+            taskInfo.resolve()
+        } else {
+            taskInfo.reject(error || "Unknown worker error")
         }
     }
 

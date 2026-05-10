@@ -11,7 +11,6 @@ type TaskErrorLocation = null | "setup" | "run" | "processResult" | "onSuccess" 
 class TestTask extends Task<string> {
     errorAt: TaskErrorLocation
     input: string
-    doneCallback: (result: string) => void
 
     result: string
     state: null | "running" | "succeeded" | "failed"
@@ -19,12 +18,10 @@ class TestTask extends Task<string> {
 
     constructor(
         input: string,
-        doneCallback: (result: string) => void,
         errorAt: TaskErrorLocation = null,
     ) {
         super()
         this.input = input
-        this.doneCallback = doneCallback
         this.errorAt = errorAt
 
         this.result = ""
@@ -57,7 +54,6 @@ class TestTask extends Task<string> {
 
     onSuccess() {
         this.state = "succeeded"
-        this.doneCallback(this.result)
         if(this.errorAt === "onSuccess" || this.errorAt === "onFailure") {
             throw "Error in onSuccess!"
         }
@@ -66,7 +62,6 @@ class TestTask extends Task<string> {
     onFailure(error: string) {
         this.state = "failed"
         this.error = error
-        this.doneCallback(this.result)
         if(this.errorAt === "onFailure") {
             throw "Error in onFailure!"
         }
@@ -78,64 +73,53 @@ describe("TestRunner", () => {
     const taskRunner = new TaskRunner()
 
     test("basic functionality", async () => {
-        let task: TestTask | undefined
-        await new Promise((resolve) => {
-            task = new TestTask("Hello", resolve)
-            taskRunner.submitTask(task)
-        })
-        expect(task?.state).toEqual("succeeded")
-        expect(task?.result).toEqual("Hello, world!")
+        const task = new TestTask("Hello")
+        await taskRunner.submitTask(task)
+        expect(task.state).toEqual("succeeded")
+        expect(task.result).toEqual("Hello, world!")
     })
 
     test("error in task.setup()", async () => {
-        let task: TestTask | undefined
-        const taskRunner = new TaskRunner()
-        await new Promise((resolve) => {
-            task = new TestTask("Hello", resolve, "setup")
-            taskRunner.submitTask(task)
-        })
-        expect(task?.state).toEqual("failed")
-        expect(task?.error).toEqual("Error in setup!")
+        const task = new TestTask("Hello", "setup")
+        await expect(taskRunner.submitTask(task)).rejects.toEqual("Error in setup!")
+        expect(task.state).toEqual("failed")
+        expect(task.error).toEqual("Error in setup!")
     })
 
     test("error in task.run()", async () => {
-        let task: TestTask | undefined
-        await new Promise((resolve) => {
-            task = new TestTask("Hello", resolve, "run")
-            taskRunner.submitTask(task)
-        })
-        expect(task?.state).toEqual("failed")
-        expect(task?.error).toEqual("Error in run!")
+        const task = new TestTask("Hello", "run")
+        await expect(taskRunner.submitTask(task)).rejects.toEqual("Error in run!")
+        expect(task.state).toEqual("failed")
+        expect(task.error).toEqual("Error in run!")
     })
 
     test("error in task.processResult()", async () => {
-        let task: TestTask | undefined
-        await new Promise((resolve) => {
-            task = new TestTask("Hello", resolve, "processResult")
-            taskRunner.submitTask(task)
-        })
-        expect(task?.state).toEqual("failed")
-        expect(task?.error).toEqual("Error in processResult!")
+        const task = new TestTask("Hello", "processResult")
+        await expect(taskRunner.submitTask(task)).rejects.toEqual("Error in processResult!")
+        expect(task.state).toEqual("failed")
+        expect(task.error).toEqual("Error in processResult!")
     })
 
     test("error in task.onSuccess()", async () => {
-        let task: TestTask | undefined
-        await new Promise((resolve) => {
-            task = new TestTask("Hello", resolve, "onSuccess")
-            taskRunner.submitTask(task)
-        })
-        expect(task?.state).toEqual("failed")
-        expect(task?.error).toEqual("Error in onSuccess!")
+        const task = new TestTask("Hello", "onSuccess")
+        await expect(taskRunner.submitTask(task)).rejects.toEqual("Error in onSuccess!")
+        expect(task.state).toEqual("failed")
+        expect(task.error).toEqual("Error in onSuccess!")
     })
 
     test("error in task.onFailure()", async () => {
-        let task: TestTask | undefined
-        await new Promise((resolve) => {
-            task = new TestTask("Hello", resolve, "onFailure")
-            taskRunner.submitTask(task)
-        })
-        expect(task?.state).toEqual("failed")
+        const task = new TestTask("Hello", "onFailure")
+        await expect(taskRunner.submitTask(task)).rejects.toEqual("Error in onSuccess!")
+        expect(task.state).toEqual("failed")
         // Error in onFailure leaves the original error intact
-        expect(task?.error).toEqual("Error in onSuccess!")
+        expect(task.error).toEqual("Error in onSuccess!")
+    })
+
+    test("canceling rejects the submitted task promise", async () => {
+        const task = new TestTask("Hello")
+        const taskPromise = taskRunner.submitTask(task)
+        taskRunner.terminateRunningTask()
+        await expect(taskPromise).rejects.toEqual("Task canceled")
+        expect(task.state).toEqual("canceled")
     })
 })
