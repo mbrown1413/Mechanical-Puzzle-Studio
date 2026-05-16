@@ -46,7 +46,7 @@ export type TaskInfo = {
 }
 
 type TaskPromiseInfo = {
-    resolve: () => void,
+    resolve: (result: Serializable | PromiseLike<Serializable>) => void,
     reject: (reason: string) => void,
 }
 
@@ -82,7 +82,7 @@ export class TaskRunner {
 
     /** Puts a task in the queue and returns a promise which resolves when the
      * task is done. */
-    submitTask(task: Task<Serializable>): Promise<void> {
+    submitTask<Result extends Serializable>(task: Task<Result>): Promise<Result> {
         return new Promise((resolve, reject) => {
             this.queue.push({
                 task,
@@ -91,7 +91,7 @@ export class TaskRunner {
                 progressMessage: null,
                 messages: [],
                 error: null,
-                resolve,
+                resolve: resolve as (result: Serializable | PromiseLike<Serializable>) => void,
                 reject,
             })
 
@@ -163,48 +163,22 @@ export class TaskRunner {
         if(!this.current) {
             throw new Error("Cannot finish current task, none is running!")
         }
-        const taskInfo = this.current
 
-        if(success) {
-            try {
-                taskInfo.task.processResult(result)
-                taskInfo.task.onSuccess()
-            } catch(e) {
-                success = false
-                error = String(e)
-            }
-        }
-
-        taskInfo.error = error
-        taskInfo.status = "finished"
+        this.current.error = error
+        this.current.status = "finished"
         if(success) {
             this.log("Task finished successfully")
+            this.current.resolve(result)
         } else {
             this.log("Task failed")
+            this.current.reject(error || "Unknown worker error")
         }
 
-        if(!success) {
-            console.error(error)
-            try {
-                taskInfo.task.onFailure(
-                    error || "Unknown worker error"
-                )
-            } catch(e) {
-                console.error(e)
-            }
-        }
-
-        this.finished.push(taskInfo)
+        this.finished.push(this.current)
         this.current = null
 
         if(this.queue.length) {
             this.startNextTask()
-        }
-
-        if(success) {
-            taskInfo.resolve()
-        } else {
-            taskInfo.reject(error || "Unknown worker error")
         }
     }
 

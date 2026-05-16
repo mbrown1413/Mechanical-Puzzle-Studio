@@ -30,18 +30,6 @@ export abstract class Task<Result extends Serializable> extends SerializableClas
      * Perform blocking/long-running processing, called in a worker.
      */
     abstract run(_callbacks: TaskCallbacks): Result
-
-    /**
-     * Process results returned from `run()` in main thread.
-     */
-    abstract processResult(result: Result): void
-
-    /**
-     * One of these methods is always called main thread when the task
-     * is done running, whether if it succeeds or has an error.
-     */
-    onSuccess() { }
-    onFailure(_error: string) { }
 }
 
 export class ProblemSolveTask extends Task<Solution[]> {
@@ -97,12 +85,6 @@ export class ProblemSolveTask extends Task<Solution[]> {
         const solver = this.getSolver()
         const solutions = solver.solve(this.puzzle, problem, callbacks)
         return solutions
-    }
-
-    processResult(result: Solution[]) {
-        const problem = this.getProblem()
-        problem.solutions = result
-        void saveManager.requestSave()
     }
 }
 registerClass(ProblemSolveTask)

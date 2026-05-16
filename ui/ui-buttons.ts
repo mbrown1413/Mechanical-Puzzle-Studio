@@ -368,10 +368,17 @@ export function useUiButtonComposible(
             text: "Solve",
             icon: "",
             perform: () => {
+                const problemId = puzzleEditor.value?.selectedProblem?.id
+                if(problemId === undefined) { return }
                 if(puzzleFile.value && puzzleEditor.value?.selectedProblem) {
                     taskRunner.submitTask(
-                        new ProblemSolveTask(puzzleFile.value.puzzle, puzzleEditor.value.selectedProblem.id)
-                    )
+                        new ProblemSolveTask(puzzleFile.value.puzzle, problemId)
+                    ).then(solutions => {
+                        const problem = puzzleFile.value?.puzzle.getProblem(problemId)
+                        if(!problem) { return }
+                        problem.solutions = solutions
+                        void saveManager.requestSave()
+                    })
                 }
             },
             enabled: () => {
