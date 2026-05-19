@@ -157,6 +157,10 @@ async function loadPlugin(path: string) {
 }
 
 export async function loadPlugins() {
+
+    // Don't load plugins in a test environment
+    if(import.meta.env.VITEST) return
+
     pluginsLoaded = true
     for(const path of Object.keys(pluginModules)) {
         await loadPlugin(path)
