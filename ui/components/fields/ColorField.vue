@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import {computed, ref, Ref} from "vue"
 
-import {ColorField, FormContext, FormEditable, swatches} from "~lib"
+import {ColorField, FormContext, swatches} from "~lib"
 
 import Modal from "~/ui/common/Modal.vue"
 
 const props = defineProps<{
-    item: FormEditable
+    item: object
     field: ColorField
     context: FormContext
 }>()

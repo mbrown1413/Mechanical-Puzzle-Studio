@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {computed} from "vue"
 
-import {BoundsField, FormContext, FormEditable} from "~lib"
+import {BoundsField, FormContext} from "~lib"
 
 const props = defineProps<{
-    item: FormEditable
+    item: object
     field: BoundsField
     context: FormContext
 }>()

@@ -2,7 +2,7 @@
 <script lang="ts">
 import {FunctionalComponent, createVNode} from "vue"
 
-import {Field, FormContext, FormEditable} from "~lib"
+import {Field, FormContext} from "~lib"
 
 import StringField from "~/ui/components/fields/StringField.vue"
 import IntegerField from "~/ui/components/fields/IntegerField.vue"
@@ -14,7 +14,7 @@ import ConstraintsField from "~/ui/components/fields/ConstraintsField.vue"
 import ProblemPiecesField from "~/ui/components/fields/ProblemPiecesField.vue"
 
 type Props = {
-    item: FormEditable
+    item: object
     field: Field
     context: FormContext
 }

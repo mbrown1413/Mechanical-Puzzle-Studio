@@ -2,13 +2,13 @@
 import {computed, ref, Ref, ComputedRef} from "vue"
 import {VDataTable} from "vuetify/components"
 
-import {ShapeId, FormEditable, ProblemPiecesField, Range, FormContext} from "~lib"
+import {ShapeId, ProblemPiecesField, Range, FormContext} from "~lib"
 
 import GridDisplay from "~/ui/components/GridDisplay.vue"
 import RangeEditor from "~/ui/common/RangeEditor.vue"
 
 const props = defineProps<{
-    item: FormEditable
+    item: object
     field: ProblemPiecesField
     context: FormContext
 }>()

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {FormEditable, FormContext, CheckboxField} from "~lib"
+import {FormContext, CheckboxField} from "~lib"
 
 const props = defineProps<{
-    item: FormEditable
+    item: object
     field: CheckboxField
     context: FormContext
 }>()

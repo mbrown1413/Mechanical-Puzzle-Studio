@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {FormContext, FormEditable, SectionField} from "~lib"
+import {FormContext, SectionField} from "~lib"
 
 import DynamicField from "~/ui/components/fields/DynamicField.vue"
 
 defineProps<{
-    item: FormEditable
+    item: object
     field: SectionField
     context: FormContext
 }>()

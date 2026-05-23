@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed} from "vue"
 
-import {FormContext, FormEditable} from "~lib"
+import {Form, FormContext, isFormEditable} from "~lib"
 
 import DynamicField from "~/ui/components/fields/DynamicField.vue"
 import UiButton from "~/ui/components/UiButton.vue"
@@ -9,7 +9,8 @@ import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 
 const props = withDefaults(
     defineProps<{
-        item: FormEditable
+        item: object
+        form?: Form
         title?: string
         context?: FormContext
         floatingButton?: UiButtonDefinition
@@ -23,7 +24,15 @@ defineEmits<{
     "edit": [editData: object]
 }>()
 
-const form = computed(() => props.item.getForm(props.context))
+const activeForm = computed(() => {
+    if(props.form) {
+        return props.form
+    } else if(isFormEditable(props.item)) {
+        return props.item.getForm(props.context)
+    } else {
+        throw new Error("Item is not form editable and no form was provided.")
+    }
+})
 </script>
 
 <template>
@@ -37,7 +46,7 @@ const form = computed(() => props.item.getForm(props.context))
         </div>
 
         <DynamicField
-            v-for="field of form.fields"
+            v-for="field of activeForm.fields"
             :field="field"
             :item="item"
             :context="context"

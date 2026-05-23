@@ -83,3 +83,7 @@ export type FormContext = {
 export interface FormEditable {
     getForm(context: FormContext): Form
 }
+
+export function isFormEditable(value: object): value is FormEditable {
+    return typeof (value as unknown as FormEditable).getForm === "function"
+}

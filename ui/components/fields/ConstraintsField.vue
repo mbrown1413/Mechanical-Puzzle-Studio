@@ -2,7 +2,7 @@
 import {computed, Ref, ref} from "vue"
 import {VDataTable} from "vuetify/components/VDataTable"
 
-import {FormEditable, FormContext, ConstraintsField, ProblemConstraint, clone, AssemblyProblem} from "~lib"
+import {FormContext, ConstraintsField, ProblemConstraint, clone, AssemblyProblem} from "~lib"
 
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 import Modal from "~/ui/common/Modal.vue"
@@ -10,7 +10,7 @@ import UiButton from "~/ui/components/UiButton.vue"
 import PieceGroupConstraintEditor from "~/ui/components/PieceGroupConstraintEditor.vue"
 
 const props = defineProps<{
-    item: FormEditable
+    item: object
     field: ConstraintsField
     context: FormContext
 }>()

@@ -32,7 +32,7 @@ type ShapeStoredData = {
  * case, the term "piece" may be used and the `instance` attribute will be set
  * to distinguish multiple uses of the same shape.
  */
-export class Shape extends SerializableClass implements FormEditable{
+export class Shape extends SerializableClass implements FormEditable {
     id: ShapeId
     instance?: ShapeInstanceId
     voxels: Voxel[]
