@@ -4,6 +4,7 @@ import {SaveManager} from "~/ui/SaveManager"
 import {TaskRunner} from "~/ui/TaskRunner.ts"
 import {PuzzleStudioApi} from "~/ui/api.ts"
 import {makeProxy} from "~/ui/utils/proxy.ts"
+import FormModal from "~/ui/components/FormModal.vue"
 
 /** HTML page title */
 export const title = ref("")
@@ -63,4 +64,16 @@ export function requireSaveManager(): SaveManager {
         throw new Error("No current save manager")
     }
     return currentSaveManager
+}
+
+let globalFormModal: InstanceType<typeof FormModal> | null = null
+export function setGlobalFormModal(formModal: InstanceType<typeof FormModal>) {
+    globalFormModal = formModal
+}
+type OpenModal = InstanceType<typeof FormModal>["open"]
+export const openGlobalModal: OpenModal = (...args: Parameters<OpenModal>) => {
+    if(!globalFormModal) {
+        return Promise.reject()
+    }
+    return globalFormModal.open(...args)
 }

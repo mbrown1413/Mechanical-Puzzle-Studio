@@ -4,7 +4,7 @@ import {runWithCleanupRegistrar} from "~/ui/hooks.ts"
 
 import {Action} from "~/ui/actions.ts"
 import {actionHooks} from "~/ui/SaveManager.ts"
-import {api, saveManager} from "~/ui/globals.ts"
+import {api, openGlobalModal, saveManager} from "~/ui/globals.ts"
 
 const coreHooks = {
     action: actionHooks,
@@ -25,6 +25,8 @@ export type PluginContext = {
     registerClass: typeof registerClass,
 
     puzzleEditScope: (description: string, callback: () => void) => void,
+
+    openModal: typeof openGlobalModal,
 }
 
 export abstract class Plugin {
@@ -102,7 +104,9 @@ function getPluginContext(plugin: Plugin): PluginContext {
             saveManager.performAction(
                 new PluginPuzzleEditAction(plugin.name, description, callback)
             )
-        }
+        },
+
+        openModal: openGlobalModal,
     }
 }
 
