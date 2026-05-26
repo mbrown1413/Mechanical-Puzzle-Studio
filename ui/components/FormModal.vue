@@ -15,9 +15,10 @@ const currentContext: Ref<FormContext | undefined> = ref()
 
 let currentResolve: ((item: object) => void) | null = null
 let currentReject: (() => void) | null = null
+
 function handleEdit(editData: object) {
-    if(!currentItem) { return }
-    Object.assign(currentItem, editData)
+    if(!currentItem.value) { return }
+    Object.assign(currentItem.value, editData)
 }
 
 function handleOk() {
