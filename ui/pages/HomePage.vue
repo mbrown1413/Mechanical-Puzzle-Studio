@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import {ref, Ref, reactive, provide, onMounted} from "vue"
+import {ref, Ref, reactive, provide, onMounted, shallowReactive} from "vue"
 import {VDataTable} from "vuetify/components"
 
 import {PuzzleMetadata} from "~lib"
-import {title} from "~/ui/globals.ts"
+
+import {getSavedStorages, openGlobalModal, setSavedStorages, title} from "~/ui/globals.ts"
 import {downloadPuzzleFromStorage} from "~/ui/utils/download.ts"
-import {clearStorageCache, getStorageInstances, PuzzleListing, Storage} from "~/ui/storage.ts"
+import {clearStorageCache, PuzzleListing, Storage} from "~/ui/storage.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
@@ -21,15 +22,17 @@ const deleteError: Ref<string | null> = ref(null)
 
 provide("saveManager", null)
 
-const puzzlesByStorage: {
+type StorageEntry = {
     storage: Storage,
     puzzles: PuzzleListing,
     loading: boolean,
     error?: string,
-}[] = reactive(
-    Object.values(getStorageInstances()).map((storage) => {
+}
+
+const storageEntries: StorageEntry[] = reactive(
+    getSavedStorages().map((storage) => {
         return {
-            storage,
+            storage: shallowReactive(storage),
             puzzles: {},
             loading: false,
         }
@@ -37,21 +40,24 @@ const puzzlesByStorage: {
 )
 
 onMounted(() => {
-    void loadPuzzles()
+    void loadAllPuzzles()
 })
 
-async function loadPuzzles() {
-    await Promise.all(puzzlesByStorage.map(async (entry) => {
-        entry.loading = true
-        entry.error = undefined
-        try {
-            entry.puzzles = await entry.storage.list()
-        } catch(e) {
-            console.error(`Error listing puzzles on ${entry.storage.name} backend:\n${e}`)
-            entry.error = String(e)
-        }
-        entry.loading = false
-    }))
+async function loadAllPuzzles() {
+    await Promise.all(storageEntries.map(loadStoragePuzzles))
+}
+
+async function loadStoragePuzzles(entry: StorageEntry) {
+    entry.loading = true
+    entry.error = undefined
+    entry.puzzles = {}
+    try {
+        entry.puzzles = await entry.storage.list()
+    } catch(e) {
+        console.error(`Error listing puzzles on ${entry.storage.name} backend:\n${e}`)
+        entry.error = String(e)
+    }
+    entry.loading = false
 }
 
 async function deletePuzzle(storage: Storage, puzzleName: string) {
@@ -65,7 +71,7 @@ async function deletePuzzle(storage: Storage, puzzleName: string) {
     }
 
     // Remove puzzle from puzzlesByStorage
-    const storageEntry = puzzlesByStorage.find(
+    const storageEntry = storageEntries.find(
         (item) => item.storage === storage
     )
     if(storageEntry !== undefined) {
@@ -103,6 +109,17 @@ function puzzleRows(puzzleListing: PuzzleListing): PuzzleTableRow[] {
     }))
 }
 
+function openConfigureStorageModal(storage: Storage) {
+    const storageEntry = storageEntries.find(entry => entry.storage === storage)
+    if(!storageEntry) return
+    openGlobalModal({item: storage}).then((updatedStorage) => {
+        Object.assign(storage, updatedStorage)
+        setSavedStorages()
+        clearStorageCache()
+        void loadStoragePuzzles(storageEntry)
+    })
+}
+
 const appTitle = import.meta.env.PZS_APP_TITLE
 </script>
 
@@ -137,7 +154,7 @@ const appTitle = import.meta.env.PZS_APP_TITLE
         </VRow>
 
         <VRow
-            v-for="{storage, puzzles: puzzleListing, loading, error} of puzzlesByStorage"
+            v-for="{storage, puzzles: puzzleListing, loading, error} of storageEntries"
             justify="center"
         >
             <VDataTable
@@ -156,19 +173,31 @@ const appTitle = import.meta.env.PZS_APP_TITLE
                     <VToolbar
                             flat
                             density="compact"
-                            :title="storage.name"
                     >
-                        <VBtn
-                            v-for="storageButton in storageButtons"
-                            v-if="!storage.readOnly"
-                            color="primary"
-                            size="large"
-                            style="flex: 0 0 auto;"
-                            @click="storageButton.action(storage)"
-                        >
-                            <VIcon :icon="storageButton.icon" class="mr-1" />
-                            {{ storageButton.text }}
-                        </VBtn>
+                        <template v-slot:default>
+                            <VBtn
+                                v-for="storageButton in storageButtons"
+                                v-if="!storage.readOnly"
+                                color="primary"
+                                size="large"
+                                style="flex: 0 0 auto;"
+                                @click="storageButton.action(storage)"
+                            >
+                                <VIcon :icon="storageButton.icon" class="mr-1" />
+                                {{ storageButton.text }}
+                            </VBtn>
+                        </template>
+                        <template v-slot:title>
+                            {{ storage.name }}
+                            <VBtn
+                                v-if="storage.needsConfiguration() !== 'no-config'"
+                                v-tooltip="'Configure Storage'"
+                                class="storage-configure-button"
+                                @click="openConfigureStorageModal(storage)"
+                            >
+                                <VIcon role="img" aria-label="Configure Storage">mdi-cog-outline</VIcon>
+                            </VBtn>
+                        </template>
                     </VToolbar>
                 </template>
 
@@ -251,3 +280,10 @@ const appTitle = import.meta.env.PZS_APP_TITLE
     </Modal>
 
 </template>
+
+<style scoped>
+.storage-configure-button {
+    min-width: 48px;
+    padding: 0;
+}
+</style>

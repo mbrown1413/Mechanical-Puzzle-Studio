@@ -1,10 +1,13 @@
 import {reactive, ref, watch} from "vue"
 
+import {serialize, deserialize} from "~lib"
+
 import {SaveManager} from "~/ui/SaveManager"
 import {TaskRunner} from "~/ui/TaskRunner.ts"
 import {PuzzleStudioApi} from "~/ui/api.ts"
 import {makeProxy} from "~/ui/utils/proxy.ts"
 import FormModal from "~/ui/components/FormModal.vue"
+import {Storage, LocalStorage, SampleStorage, BackendStorage, StorageId} from "~/ui/storage.ts"
 
 /** HTML page title */
 export const title = ref("")
@@ -66,14 +69,56 @@ export function requireSaveManager(): SaveManager {
     return currentSaveManager
 }
 
-let globalFormModal: InstanceType<typeof FormModal> | null = null
-export function setGlobalFormModal(formModal: InstanceType<typeof FormModal>) {
-    globalFormModal = formModal
-}
-type OpenModal = InstanceType<typeof FormModal>["open"]
+/** Opens a global instance of FormModal. */
 export const openGlobalModal: OpenModal = (...args: Parameters<OpenModal>) => {
     if(!globalFormModal) {
         return Promise.reject()
     }
     return globalFormModal.open(...args)
+}
+let globalFormModal: InstanceType<typeof FormModal> | null = null
+export function setGlobalFormModal(formModal: InstanceType<typeof FormModal>) {
+    globalFormModal = formModal
+}
+type OpenModal = InstanceType<typeof FormModal>["open"]
+
+/** Storage instances saved in browser's LocalStorage. */
+let savedStorages: Storage[] | null = null
+export function getSavedStorages() {
+    if(savedStorages !== null) {
+        return savedStorages
+    }
+
+    const serializedValue = localStorage.getItem("storages")
+    if(serializedValue !== null) {
+        try {
+            savedStorages = deserialize(JSON.parse(serializedValue))
+        } catch(e) {
+            console.error("Failed to load saved storage instances", e)
+        }
+    }
+
+    if(
+        !Array.isArray(savedStorages) ||
+        savedStorages.length == 0 ||
+        !savedStorages.every(item => item instanceof Storage)
+    ) {
+        savedStorages = [
+            new LocalStorage(),
+            new SampleStorage(),
+            new BackendStorage(""),
+        ]
+        setSavedStorages()
+    }
+
+    return savedStorages
+}
+export function setSavedStorages() {
+    localStorage.setItem(
+        "storages",
+        JSON.stringify(serialize(savedStorages))
+    )
+}
+export function getSavedStorage(storageId: StorageId): Storage | null {
+    return savedStorages?.find((storage) => storage.id === storageId) || null
 }

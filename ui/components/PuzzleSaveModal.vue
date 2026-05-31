@@ -3,15 +3,15 @@
 -->
 
 <script setup lang="ts">
-import {ref, Ref, computed, reactive, nextTick} from "vue"
+import {ref, Ref, computed, shallowReactive, nextTick} from "vue"
 import {useRouter} from "vue-router"
 import {VAlert, VTextField, VFileInput, VForm} from "vuetify/components"
 
 import {Puzzle, PuzzleFile, CubicGrid, readPuzzleFile} from "~lib"
 
-import {getStorageInstances, PuzzleListing, Storage} from "~/ui/storage.ts"
+import {PuzzleListing, Storage} from "~/ui/storage.ts"
 import Modal from "~/ui/common/Modal.vue"
-import {getSaveManager} from "~/ui/globals.ts"
+import {getSaveManager, getSavedStorages} from "~/ui/globals.ts"
 
 const router = useRouter()
 
@@ -51,7 +51,7 @@ function open(newMode: Mode, storage: Storage) {
     mode.value = newMode
     submitError.value = null
     if(storage.readOnly) {
-        fields.storage = Object.values(storages)[0]
+        fields.storage = storages[0]
     } else {
         fields.storage = storage
     }
@@ -70,7 +70,7 @@ let saveAsPuzzleFileToSave: PuzzleFile
 let copyFromStorage: Storage
 let copyFromPuzzleName = ""
 
-const storages = getStorageInstances()
+const storages = getSavedStorages()
 
 const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 const form: Ref<InstanceType<typeof VForm> | null> = ref(null)
@@ -80,9 +80,9 @@ const fields: {
     name: string,
     storage: Storage,
     file?: File,
-} = reactive({
+} = shallowReactive({
     name: "",
-    storage: Object.values(storages)[0],
+    storage: storages[0],
     file: undefined,
 })
 const uploadedPuzzle: Ref<PuzzleFile | null> = ref(null)
@@ -91,7 +91,7 @@ const unsupportedWarningModal: Ref<InstanceType<typeof Modal> | null> = ref(null
 const unsupportedFeatures: Ref<string[]> = ref([])
 
 const storageSelectItems = computed(() =>
-    Object.values(storages).filter(s => !s.readOnly).map((storage) => {
+    storages.filter(s => !s.readOnly).map((storage) => {
         return {
             title: storage.name,
             value: storage,

@@ -5,7 +5,7 @@ import {PuzzleFile} from "~lib"
 
 import {setApi, clearApi, setSaveManager, clearSaveManager, taskRunner, title} from "~/ui/globals.ts"
 import {SaveManager} from "~/ui/SaveManager"
-import {Storage, getStorageInstances, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
+import {Storage, PuzzleNotFoundError, StorageId} from "~/ui/storage.ts"
 import {Action, GridSetAction} from "~/ui/actions.ts"
 import {UiButtonDefinition, useUiButtonComposible} from "~/ui/ui-buttons.ts"
 import {PuzzleStudioApi} from "~/ui/api.ts"
@@ -18,6 +18,7 @@ import ExportModal from "~/ui/components/ExportModal.vue"
 import PuzzleMetadataModal from "~/ui/components/PuzzleMetadataModal.vue"
 import GridEditModal from "~/ui/components/GridEditModal.vue"
 import UiButton from "~/ui/components/UiButton.vue"
+import {getSavedStorage} from "~/ui/globals.ts"
 
 const props = defineProps<{
     storageId: StorageId,
@@ -25,7 +26,7 @@ const props = defineProps<{
 }>()
 
 const storage: Ref<Storage | null> = computed(
-    () => getStorageInstances()[props.storageId] || null
+    () => getSavedStorage(props.storageId)
 )
 const puzzleFile: Ref<PuzzleFile | null> = ref(null)
 const saveManager = new SaveManager(props.puzzleName, storage, puzzleFile)

@@ -91,9 +91,9 @@ You can optionally run a backend to store puzzles on a server:
 The server stores puzzles in `data/puzzles/` by default and listens on
 `http://localhost:8787/api`.
 
-To enable it in the frontend, set this in `.env.local`:
-
-    PZS_BACKEND_URL="http://localhost:8787/api"
+To use a backend in the web interface, configure a Backend Storage with a URL.
+If using the defaults to run the backend, enter `http://localhost:8787/api` for
+the URL.
 
 See `.env` for additional backend configuration.
 

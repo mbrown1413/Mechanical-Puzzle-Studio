@@ -1,6 +1,6 @@
 import {gzipSync, gunzipSync, strToU8, strFromU8} from "fflate"
 
-import {PuzzleFile, PuzzleMetadata} from "~lib"
+import {Form, FormContext, FormEditable, PuzzleFile, PuzzleMetadata, registerClass, SerializableClass} from "~lib"
 
 export type StorageId = string
 
@@ -22,36 +22,6 @@ function stripIfStartsWith(input: string, toStrip: string) {
     return input.startsWith(toStrip) ?
         input.slice(toStrip.length).trimStart()
         : input
-}
-
-let _storageInstances: {[id: StorageId]: Storage} | undefined = undefined
-export function getStorageInstances(): {[id: StorageId]: Storage} {
-    if(!_storageInstances) {
-
-        const storages: Storage[] = []
-
-        storages.push(new LocalStorage())
-
-        const apiBaseUrl = getApiStorageBaseUrl()
-        if(apiBaseUrl) {
-            storages.push(new BackendStorage(apiBaseUrl))
-        }
-
-        storages.push(new SampleStorage())
-
-        _storageInstances = Object.fromEntries(storages.map(
-            (storage: Storage) => [storage.id, storage]
-        ))
-    }
-    return _storageInstances
-}
-
-function getApiStorageBaseUrl(): string | null {
-    const baseUrl = import.meta.env.PZS_BACKEND_URL?.trim()
-    if(!baseUrl) {
-        return null
-    }
-    return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl
 }
 
 function compress(strIn: string): string {
@@ -98,15 +68,24 @@ let metadataCache: {[storageId: string]: Promise<PuzzleListing>} = {}
 
 export function clearStorageCache() {
     metadataCache = {}
-    _storageInstances = undefined
 }
 
-export abstract class Storage {
+export abstract class Storage extends SerializableClass implements FormEditable {
     /** Unique identifier used for this storage. */
     abstract get id(): StorageId
 
     /** Name to display to the user for this storage. */
     abstract get name(): string
+
+    getForm(_context: FormContext): Form {
+        return {
+            fields: []
+        }
+    }
+
+    needsConfiguration(): "no-config" | "needs-config" | "valid-config" {
+        return "no-config"
+    }
 
     get readOnly(): boolean { return false }
 
@@ -265,14 +244,16 @@ export class LocalStorage extends Storage {
     private getKey(puzzleName: string): string {
         return "puzzle:" + puzzleName
     }
-
 }
+registerClass(LocalStorage)
 
 export class BackendStorage extends Storage {
-    private baseUrl: string
+    name: string
+    baseUrl: string
 
     constructor(baseUrl: string) {
         super()
+        this.name = "Backend Storage"
         this.baseUrl = baseUrl
     }
 
@@ -280,8 +261,38 @@ export class BackendStorage extends Storage {
         return "api"
     }
 
-    get name() {
-        return "Backend Storage"
+    getForm(): Form {
+        return {
+            fields: [
+                {property: "name", type: "string", label: "Name"},
+                {property: "baseUrl", type: "string", label: "URL"},
+            ]
+        }
+    }
+
+    get normalizedBaseUrl(): string | null {
+        let normalized = this.baseUrl.trim()
+        normalized = normalized.endsWith("/") ? normalized.slice(0, -1) : normalized
+
+        if(normalized.length === 0) {
+            return null
+        }
+
+        let url
+        try {
+            url = new URL(normalized)
+        } catch {
+            return null
+        }
+        if(!["http:", "https:"].includes(url.protocol)) {
+            return null
+        }
+
+        return normalized
+    }
+
+    needsConfiguration() {
+        return this.normalizedBaseURl ? "valid-config" : "needs-config"
     }
 
     async listWithoutCaching(): Promise<PuzzleListing> {
@@ -340,8 +351,12 @@ export class BackendStorage extends Storage {
     }
 
     private async request(path: string, options?: RequestInit): Promise<Response> {
+        if(!this.normalizedBaseUrl) {
+            throw new StorageError("Needs configuration: invalid backend URL")
+        }
+
         try {
-            return await fetch(`${this.baseUrl}/puzzles${path}`, options)
+            return await fetch(`${this.normalizedBaseUrl}/puzzles${path}`, options)
         } catch(e) {
             throw new StorageError(stripIfStartsWith(String(e), "TypeError: "))
         }
@@ -371,9 +386,10 @@ export class BackendStorage extends Storage {
         }
     }
 }
+registerClass(BackendStorage)
 
 /** Read-only storage of all puzzles in examples folder. */
-class SampleStorage extends Storage {
+export class SampleStorage extends Storage {
     puzzleStrings: {[puzzleName: string]: string}
 
     constructor() {
@@ -430,3 +446,4 @@ class SampleStorage extends Storage {
 
     async delete(_puzzleName: string): Promise<void> { }
 }
+registerClass(SampleStorage)
