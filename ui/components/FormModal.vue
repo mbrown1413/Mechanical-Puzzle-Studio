@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, Ref} from "vue"
+import {ref, Ref, toRaw} from "vue"
 
 import {Form, FormContext} from "~lib"
 
@@ -22,8 +22,8 @@ function handleEdit(editData: object) {
 }
 
 function handleOk() {
-    if(currentResolve) {
-        currentResolve(currentItem)
+    if(currentResolve && currentItem.value) {
+        currentResolve(currentItem.value)
     }
     currentResolve = null
     currentReject = null
@@ -41,16 +41,65 @@ function handleCancel() {
     modal.value?.close()
 }
 
+function defaultCloneItem(item: object): object {
+    if(item === null || typeof item !== "object") {
+        return item
+    }
+    const raw = toRaw(item)
+
+    if(Array.isArray(raw)) {
+        const copy: unknown[] = []
+        for(const item of raw) {
+            copy.push(defaultCloneItem(item))
+        }
+        return copy
+
+    } else if(raw instanceof Date) {
+        return new Date(raw)
+
+    } else if(raw instanceof Map) {
+        const copy = new Map()
+        for(const [key, mapValue] of raw) {
+            copy.set(
+                defaultCloneItem(key),
+                defaultCloneItem(mapValue),
+            )
+        }
+        return copy
+
+    } else if(raw instanceof Set) {
+        const copy = new Set()
+        for(const item of raw) {
+            copy.add(defaultCloneItem(item))
+        }
+        return copy
+    }
+
+    const copy = Object.create(Object.getPrototypeOf(raw))
+    for(const key of Reflect.ownKeys(raw)) {
+        const descriptor = Object.getOwnPropertyDescriptor(raw, key)
+        if(!descriptor || !descriptor.enumerable) {
+            continue
+        }
+        if("value" in descriptor) {
+            descriptor.value = defaultCloneItem(descriptor.value)
+        }
+        Object.defineProperty(copy, key, descriptor)
+    }
+    return copy
+}
+
 type OpenFormModalOptions = {
-    item?: object
+    item: object
     form?: Form
     title?: string
     context?: FormContext
+    cloneItem?: (item: object) => object
 }
 
 defineExpose({
-    open({item, form, title="Edit Form", context}: OpenFormModalOptions): Promise<object> {
-        currentItem.value = item
+    open({item, form, title="Edit Form", context, cloneItem=defaultCloneItem}: OpenFormModalOptions): Promise<object> {
+        currentItem.value = cloneItem(item)
         currentForm.value = form
         currentTitle.value = title
         currentContext.value = context
@@ -75,6 +124,7 @@ defineExpose({
         <FormEditor
             v-if="currentItem"
             :item="currentItem"
+            :form="currentForm"
             :context="currentContext"
             @edit="handleEdit"
         />
