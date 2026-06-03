@@ -112,7 +112,7 @@ function puzzleRows(puzzleListing: PuzzleListing): PuzzleTableRow[] {
 function openConfigureStorageModal(storage: Storage) {
     const storageEntry = storageEntries.find(entry => entry.storage === storage)
     if(!storageEntry) return
-    openGlobalModal({item: storage}).then((updatedStorage) => {
+    openGlobalModal({item: storage, title: "Edit Storage"}).then((updatedStorage) => {
         Object.assign(storage, updatedStorage)
         setSavedStorages()
         clearStorageCache()
