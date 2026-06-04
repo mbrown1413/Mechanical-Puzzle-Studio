@@ -120,5 +120,5 @@ export function setSavedStorages() {
     )
 }
 export function getSavedStorage(storageId: StorageId): Storage | null {
-    return savedStorages?.find((storage) => storage.id === storageId) || null
+    return getSavedStorages().find((storage) => storage.id === storageId) || null
 }
