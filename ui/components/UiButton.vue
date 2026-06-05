@@ -50,13 +50,15 @@ defineExpose({
     <VTooltip
         :text="text"
         :modelValue="uiButton.alwaysShowTooltip ? true : undefined"
-        contentClass="tooltip-arrow-up"
         location="bottom"
         :disabled="variant === 'text'"
     >
-        <template v-slot:activator="{props}">
+        <template v-slot:activator="{props, isActive}">
             <!-- Wrap in span so tooltips show on disabled buttons -->
-            <span v-bind="props">
+            <span
+                v-bind="props"
+                :class="{'tooltip-arrow-up': true, 'tooltip-arrow-up-active': isActive}"
+            >
                 <VBtn
                     rounded
                     :disabled="disabled"

@@ -163,28 +163,35 @@ const gridDisplayProps = computed(() => {
                 <VBtnToggle
                     v-model="toggles"
                     multiple
+                    style="overflow: visible; /* Don't cut off tooltip arrows */"
                 >
 
                     <VTooltip
                         v-for="toggle of toggleButtons"
                         :text="toggle.text"
                         location="bottom"
-                        contentClass="tooltip-arrow-up"
                     >
-                        <template v-slot:activator="{props}">
-                            <VBtn
-                                rounded
-                                @click=""
-                                :value="toggle.value"
+                        <template v-slot:activator="{props, isActive}">
+                            <span
                                 v-bind="props"
+                                :class="{
+                                    'tooltip-arrow-up': true,
+                                    'tooltip-arrow-up-active': isActive,
+                                }"
                             >
-                                <VIcon
-                                    :icon="toggle.icon"
-                                    size="x-large"
-                                    :aria-label="toggle.text"
-                                    aria-hidden="false"
-                                />
-                            </VBtn>
+                                <VBtn
+                                    rounded
+                                    @click=""
+                                    :value="toggle.value"
+                                >
+                                    <VIcon
+                                        :icon="toggle.icon"
+                                        size="x-large"
+                                        :aria-label="toggle.text"
+                                        aria-hidden="false"
+                                    />
+                                </VBtn>
+                            </span>
                         </template>
                     </VTooltip>
 

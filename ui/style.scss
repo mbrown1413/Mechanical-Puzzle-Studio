@@ -39,19 +39,54 @@ code {
 }
 
 /**
- * Add arrow to the top of tooltips with contentClass set, like this:
+ * Add an arrow to the top of tooltips pointing to their activator. Apply these
+ * classes to the activator this:
  *
- *   <VTooltip contentClass="tooltip-arrow-up" location="bottom">
+ *     <VTooltip :text="text" location="bottom">
+ *         <template v-slot:activator="{props, isActive}">
+ *             <span
+ *                 v-bind="props"
+ *                 :class="{'tooltip-arrow-up': true, 'tooltip-arrow-up-active': isActive}"
+ *              >
+ *                 ...
+ *             </span>
+ *         </template>
+ *     </VTooltip>
+ *
+ * Activator elements other than <span> can be used, but some such as
+ * vuetify's <VBtn> interfere with the ::after rules used.
  */
+.tooltip-arrow-up {
+    display: inline-flex;
+    position: relative;
+}
 .tooltip-arrow-up::after {
-    border-right: solid 8px transparent;
-    border-left: solid 8px transparent;
-    transform: translateX(-50%);
+    border-right: solid 10px transparent;
+    border-left: solid 10px transparent;
+    border-bottom: solid 10px rgb(var(--v-theme-surface-variant));
+
+    transform: translateX(-50%) scale(0);
     position: absolute;
+    pointer-events: none;
     content: '';
-    bottom: 100%;
+    top: calc(100%);
     left: 50%;
     height: 0;
     width: 0;
-    border-bottom: solid 8px rgb(var(--v-theme-surface-variant));
+    opacity: 0;
+    z-index: 1000;
+
+    transform-origin: center top;
+    transition-property: opacity, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+    transition-duration: 150ms;
+}
+.tooltip-arrow-up-active::after {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+}
+
+.v-toolbar__content {
+    /* Prevent tooltip arrows from being cut off inside toolbar */
+    overflow: visible;
 }
