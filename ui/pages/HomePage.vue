@@ -286,4 +286,7 @@ const appTitle = import.meta.env.PZS_APP_TITLE
     min-width: 48px;
     padding: 0;
 }
+.v-main {
+    padding-bottom: 3em;
+}
 </style>
