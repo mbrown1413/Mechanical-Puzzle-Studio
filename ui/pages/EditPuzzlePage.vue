@@ -95,7 +95,7 @@ async function setPuzzleFile(ignoreErrors=false) {
     if(!storage.value) {
         puzzleError.value = {
             title: "Storage not found",
-            errorMessage: `The storage not found: "${props.storageId}"`,
+            errorMessage: `Storage not found: "${props.storageId}"`,
             userMessage: "Return home to select another puzzle.",
             recoverable: false,
         }
