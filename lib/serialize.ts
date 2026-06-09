@@ -81,6 +81,10 @@
  *     // Casting to `never` then back should always work
  *     const c2 = reactive(new MyClass("myclass-1") as never) as MyClass
  *
+ * Alternatively, either using `markRaw()` or `shallowReactive()` will avoid
+ * this issue, but those will actually change runtime by reducing how deep the
+ * reactive state is.
+ *
  *
  * ## Requirements
  *
