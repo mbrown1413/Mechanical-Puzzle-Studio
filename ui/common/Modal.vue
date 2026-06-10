@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {WatchStopHandle, ref, watch} from "vue"
-import {VCard, VDialog} from "vuetify/components"
+import {VCard, VDialog, VForm} from "vuetify/components"
 
 withDefaults(
     defineProps<{
@@ -63,35 +63,38 @@ defineExpose({
             :maxWidth="dialogMaxWidth"
             :persistent="persistent"
     >
-        <VCard>
-            <VCardTitle>
-                <VIcon v-if="icon" :icon="icon" />
-                <span class="text-h5">{{ title }}</span>
-            </VCardTitle>
+        <VForm @submit.prevent="$emit('ok')">
+            <VCard>
+                <VCardTitle>
+                    <VIcon v-if="icon" :icon="icon" />
+                    <span class="text-h5">{{ title }}</span>
+                </VCardTitle>
 
-            <VCardText>
-                <slot></slot>
-            </VCardText>
+                <VCardText>
+                    <slot></slot>
+                </VCardText>
 
-            <VCardActions>
-                <VSpacer />
-                <VBtn
-                        v-if="cancelShow"
-                        color="blue-darken-1"
-                        variant="outlined"
-                        @click="modalOpen = false; $emit('cancel')"
-                >
-                    {{ cancelText }}
-                </VBtn>
-                <VBtn
-                        v-if="okShow"
-                        :color="okColor"
-                        variant="elevated"
-                        @click="$emit('ok')"
-                >
-                    {{ okText }}
-                </VBtn>
-            </VCardActions>
-        </VCard>
+                <VCardActions>
+                    <VSpacer />
+                    <VBtn
+                            v-if="cancelShow"
+                            color="blue-darken-1"
+                            variant="outlined"
+                            @click="modalOpen = false; $emit('cancel')"
+                    >
+                        {{ cancelText }}
+                    </VBtn>
+                    <VBtn
+                            v-if="okShow"
+                            :color="okColor"
+                            variant="elevated"
+                            type="submit"
+                            @click="$emit('ok')"
+                    >
+                        {{ okText }}
+                    </VBtn>
+                </VCardActions>
+            </VCard>
+        </VForm>
     </VDialog>
 </template>
