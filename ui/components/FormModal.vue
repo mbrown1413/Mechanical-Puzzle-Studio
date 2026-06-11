@@ -13,8 +13,7 @@ const currentForm: Ref<Form | undefined> = ref()
 const currentTitle: Ref<string | undefined> = ref()
 const currentContext: Ref<FormContext | undefined> = ref()
 
-let currentResolve: ((item: object) => void) | null = null
-let currentReject: (() => void) | null = null
+let currentResolve: ((item: object | null) => void) | null = null
 
 function handleEdit(editData: object) {
     if(!currentItem.value) { return }
@@ -26,17 +25,15 @@ function handleOk() {
         currentResolve(currentItem.value)
     }
     currentResolve = null
-    currentReject = null
     isOpen.value = false
     modal.value?.close()
 }
 
 function handleCancel() {
-    if(currentReject) {
-        currentReject()
+    if(currentResolve) {
+        currentResolve(null)
     }
     currentResolve = null
-    currentReject = null
     isOpen.value = false
     modal.value?.close()
 }
@@ -98,7 +95,11 @@ type OpenFormModalOptions = {
 }
 
 defineExpose({
-    open({item, form, title="Edit Form", context, cloneItem=defaultCloneItem}: OpenFormModalOptions): Promise<object> {
+    /** Open the modal with the given form, or use item.getForm() if no form is
+     * given. A promise is returned which resolves when the modal is closed,
+     * resolving to an edited version of the object, or null if the modal
+     * was canceled. */
+    open({item, form, title="Edit Form", context, cloneItem=defaultCloneItem}: OpenFormModalOptions): Promise<object | null> {
         currentItem.value = cloneItem(item)
         currentForm.value = form
         currentTitle.value = title
@@ -106,9 +107,8 @@ defineExpose({
 
         isOpen.value = true
         modal.value?.open()
-        return new Promise((resolve, reject) => {
+        return new Promise<object | null>((resolve) => {
             currentResolve = resolve
-            currentReject = reject
         })
     }
 })
