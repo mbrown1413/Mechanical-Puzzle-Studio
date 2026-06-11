@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import {ref, Ref, toRaw} from "vue"
+import {ref, Ref} from "vue"
 
 import {Form, FormContext} from "~lib"
 
+import {objectClone} from "~/ui/utils/objectClone.ts"
 import Modal from "~/ui/common/Modal.vue"
 import FormEditor from "~/ui/components/FormEditor.vue"
 
@@ -38,54 +39,6 @@ function handleCancel() {
     modal.value?.close()
 }
 
-function defaultCloneItem(item: object): object {
-    if(item === null || typeof item !== "object") {
-        return item
-    }
-    const raw = toRaw(item)
-
-    if(Array.isArray(raw)) {
-        const copy: unknown[] = []
-        for(const item of raw) {
-            copy.push(defaultCloneItem(item))
-        }
-        return copy
-
-    } else if(raw instanceof Date) {
-        return new Date(raw)
-
-    } else if(raw instanceof Map) {
-        const copy = new Map()
-        for(const [key, mapValue] of raw) {
-            copy.set(
-                defaultCloneItem(key),
-                defaultCloneItem(mapValue),
-            )
-        }
-        return copy
-
-    } else if(raw instanceof Set) {
-        const copy = new Set()
-        for(const item of raw) {
-            copy.add(defaultCloneItem(item))
-        }
-        return copy
-    }
-
-    const copy = Object.create(Object.getPrototypeOf(raw))
-    for(const key of Reflect.ownKeys(raw)) {
-        const descriptor = Object.getOwnPropertyDescriptor(raw, key)
-        if(!descriptor || !descriptor.enumerable) {
-            continue
-        }
-        if("value" in descriptor) {
-            descriptor.value = defaultCloneItem(descriptor.value)
-        }
-        Object.defineProperty(copy, key, descriptor)
-    }
-    return copy
-}
-
 type OpenFormModalOptions = {
     item: object
     form?: Form
@@ -99,7 +52,7 @@ defineExpose({
      * given. A promise is returned which resolves when the modal is closed,
      * resolving to an edited version of the object, or null if the modal
      * was canceled. */
-    open({item, form, title="Edit Form", context, cloneItem=defaultCloneItem}: OpenFormModalOptions): Promise<object | null> {
+    open({item, form, title="Edit Form", context, cloneItem=objectClone}: OpenFormModalOptions): Promise<object | null> {
         currentItem.value = cloneItem(item)
         currentForm.value = form
         currentTitle.value = title
