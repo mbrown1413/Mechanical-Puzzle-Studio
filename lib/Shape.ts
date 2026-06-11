@@ -1,4 +1,4 @@
-import {SerializableClass, clone, registerClass} from "~/lib/serialize.ts"
+import {SerializableClass, serializeClone, registerClass} from "~/lib/serialize.ts"
 import {Grid, Bounds, Voxel, Transform} from "~/lib/Grid.ts"
 import {Form, FormEditable, FormContext} from "~/lib/forms.ts"
 
@@ -110,7 +110,7 @@ export class Shape extends SerializableClass implements FormEditable {
     }
 
     copy(): Shape {
-        return clone(this)
+        return serializeClone(this)
     }
 
     equals(other: Shape): boolean {

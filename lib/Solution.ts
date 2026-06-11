@@ -1,6 +1,6 @@
 import {Shape} from "~/lib/Shape.ts"
 import {Disassembly} from "~/lib/Disassembly.ts"
-import {SerializableClass, registerClass, clone} from "~/lib/serialize.ts"
+import {SerializableClass, registerClass, serializeClone} from "~/lib/serialize.ts"
 
 export abstract class Solution extends SerializableClass {
     id: number
@@ -19,7 +19,7 @@ export class AssemblySolution extends Solution {
     constructor(id: number, placements: Shape[]) {
         super(id)
         this.placements = placements.map((placement) =>
-            clone(placement)
+            serializeClone(placement)
         )
     }
 }

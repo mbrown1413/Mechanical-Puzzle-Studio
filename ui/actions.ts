@@ -1,7 +1,7 @@
 import {
     Voxel, Puzzle, Item, ItemId, Shape, ShapeId, Problem, AssemblyProblem,
     PuzzleFile, Bounds, ProblemId, AssemblySolution, ShapeGroup,
-    Grid, clone, ShapeGroupId
+    Grid, serializeClone, ShapeGroupId
 } from "~lib"
 
 
@@ -204,7 +204,7 @@ export class GridSetAction extends Action {
     }
 
     perform(puzzle: Puzzle, _puzzleFile: PuzzleFile) {
-        puzzle.grid = clone(this.grid)
+        puzzle.grid = serializeClone(this.grid)
         for(const shape of puzzle.shapes) {
             if(shape.bounds && !puzzle.grid.validateBounds(shape.bounds)) {
                 shape.bounds = puzzle.grid.getDefaultShapeBounds()

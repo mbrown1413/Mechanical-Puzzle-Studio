@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, ref, Ref} from "vue"
 
-import {Grid, CubicGrid, Puzzle, clone, listSubclasses, getRegisteredClass} from "~lib"
+import {Grid, CubicGrid, Puzzle, serializeClone, listSubclasses, getRegisteredClass} from "~lib"
 
 import {GridSetAction} from "~/ui/actions.ts"
 import Modal from "~/ui/common/Modal.vue"
@@ -18,7 +18,7 @@ const emit = defineEmits<{
 
 defineExpose({
     open() {
-        grid.value = clone(props.puzzle.grid)
+        grid.value = serializeClone(props.puzzle.grid)
         gridTypeInstances[grid.value.constructor.name] = grid.value
         modal.value?.open()
     },

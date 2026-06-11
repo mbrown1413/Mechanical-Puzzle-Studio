@@ -126,7 +126,7 @@ class SerializerError extends Error {
 /**
  * Produce a deep copy by serializing and deserializing the given value.
  */
-export function clone<T extends Serializable>(value: T): T {
+export function serializeClone<T extends Serializable>(value: T): T {
     return deserialize(serialize(value))
 }
 

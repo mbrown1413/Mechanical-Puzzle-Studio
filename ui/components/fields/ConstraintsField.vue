@@ -2,7 +2,7 @@
 import {computed, Ref, ref} from "vue"
 import {VDataTable} from "vuetify/components/VDataTable"
 
-import {FormContext, ConstraintsField, ProblemConstraint, clone, AssemblyProblem} from "~lib"
+import {FormContext, ConstraintsField, ProblemConstraint, serializeClone, AssemblyProblem} from "~lib"
 
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
 import Modal from "~/ui/common/Modal.vue"
@@ -62,7 +62,7 @@ function makeDeleteButton(constraint: ProblemConstraint) {
 }
 
 function addConstraint() {
-    const constraints = clone(currentValue.value)
+    const constraints = serializeClone(currentValue.value)
     constraints.push({
         type: "piece-group",
         shapeIds: [],
@@ -77,7 +77,7 @@ function addConstraint() {
 
 function updateConstraint(oldConstraint: ProblemConstraint, newConstraint: ProblemConstraint) {
     const index = currentValue.value.indexOf(oldConstraint)
-    const constraints = clone(currentValue.value)
+    const constraints = serializeClone(currentValue.value)
     constraints[index] = newConstraint
 
     const editData: any = {}
@@ -87,7 +87,7 @@ function updateConstraint(oldConstraint: ProblemConstraint, newConstraint: Probl
 
 function deleteConstraint(constraint: ProblemConstraint) {
     const index = currentValue.value.indexOf(constraint)
-    const constraints = clone(currentValue.value)
+    const constraints = serializeClone(currentValue.value)
     constraints.splice(index, 1)
 
     const editData: any = {}

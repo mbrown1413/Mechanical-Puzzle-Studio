@@ -4,7 +4,7 @@ import {VDataTable} from "vuetify/components/VDataTable"
 
 import RangeEditor from "~/ui/common/RangeEditor.vue"
 
-import {Puzzle, ShapeId, AssemblyProblem, ProblemConstraint, Range, clone} from "~lib"
+import {Puzzle, ShapeId, AssemblyProblem, ProblemConstraint, Range, serializeClone} from "~lib"
 import UiButton from "~/ui/components/UiButton.vue"
 import Modal from "~/ui/common/Modal.vue"
 
@@ -46,13 +46,13 @@ const piecesTableHeader: VDataTable["$props"]["headers"] = [
 const tempPieceIds: Ref<ShapeId[]> = ref([])
 
 function updateRange(range: Range) {
-    const newConstraint = clone(props.constraint)
+    const newConstraint = serializeClone(props.constraint)
     newConstraint.count = range
     emit("update:constraint", newConstraint)
 }
 
 function updatePieces(pieceIds: ShapeId[]) {
-    const newConstraint = clone(props.constraint)
+    const newConstraint = serializeClone(props.constraint)
     newConstraint.shapeIds = pieceIds
     emit("update:constraint", newConstraint)
     editPiecesModal.value?.close()

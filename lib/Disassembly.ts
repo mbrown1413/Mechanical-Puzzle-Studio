@@ -1,7 +1,7 @@
 import {SerializableClass, registerClass} from "~/lib/serialize.ts"
 import {Shape, ShapeCompleteId} from "~/lib/Shape.ts"
 import {Grid, Transform, Bounds, Voxel} from "~/lib/Grid.ts"
-import {clone} from "~/lib/serialize.ts"
+import {serializeClone} from "~/lib/serialize.ts"
 
 export type DisassemblyStep = {
     movedShapes: ShapeCompleteId[]
@@ -26,7 +26,7 @@ export class Disassembly extends SerializableClass {
     }
 
     copy() {
-        return clone(this)
+        return serializeClone(this)
     }
 
     /**

@@ -1,7 +1,7 @@
 import {Shape, ShapeId, Assembly} from "~/lib/Shape.ts"
 import {Voxel, Grid, Transform} from "~/lib/Grid.ts"
 import {isTranslationCongruent} from "~/lib/placements.ts"
-import {clone} from "~/lib/serialize.ts"
+import {serializeClone} from "~/lib/serialize.ts"
 
 export type SymmetryShapeInfo = {
     shape: Shape,
@@ -165,7 +165,7 @@ export function filterSymmetricalAssemblies(
         // Check first transform for an entry in `assembliesExplored`.
         // If we find a match, we've already explored all transforms of this
         // assembly.
-        const transformedAssembly = Shape.transformAssembly(grid, clone(assembly), symmetryTransforms[0])
+        const transformedAssembly = Shape.transformAssembly(grid, serializeClone(assembly), symmetryTransforms[0])
         const hash = hashAssembly(grid, transformedAssembly)
         if(assembliesExplored.has(hash)) { continue }
         assembliesExplored.add(hash)
@@ -175,7 +175,7 @@ export function filterSymmetricalAssemblies(
         // covered again.
         uniqueAssemblies.push(assembly)
         for(const transform of symmetryTransforms.slice(1)) {
-            const transformedAssembly = Shape.transformAssembly(grid, clone(assembly), transform)
+            const transformedAssembly = Shape.transformAssembly(grid, serializeClone(assembly), transform)
             const hash = hashAssembly(grid, transformedAssembly)
             assembliesExplored.add(hash)
         }

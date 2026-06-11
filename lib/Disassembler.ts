@@ -3,7 +3,7 @@ import {TaskCallbacks} from "~/lib/types.ts"
 import {Grid, Transform} from "~/lib/Grid.ts"
 import {getMovements, Movement} from "~/lib/movement.ts"
 import {Disassembly, DisassemblyStep} from "~/lib/Disassembly.ts"
-import {clone} from "~/lib/serialize.ts"
+import {serializeClone} from "~/lib/serialize.ts"
 
 /**
  * The movement defined in the DisassemblyStep properties define how to
@@ -322,7 +322,7 @@ export class SimpleDisassembler extends Disassembler {
                 } else {
                     // If no nodes are left, all parts have reached leaf nodes and
                     // we have a complete solution.
-                    solutions.push(new Disassembly(clone(newSteps)))
+                    solutions.push(new Disassembly(serializeClone(newSteps)))
                 }
             }
         }
