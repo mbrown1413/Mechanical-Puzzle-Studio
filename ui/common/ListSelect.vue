@@ -196,7 +196,7 @@ function getItemIdDelta<T extends Item | Group>(
 
 <template>
     <div class="list-container">
-        <div class="buttons" v-if="uiButtons.length">
+        <div class="buttons" v-if="uiButtons.length || upButton || downButton">
             <VDivider role="presentation" opacity="0" />
             <UiButton
                 v-for="uiButton in uiButtons"
