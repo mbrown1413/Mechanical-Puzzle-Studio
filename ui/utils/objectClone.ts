@@ -1,6 +1,6 @@
 import {toRaw} from "vue"
 
-export function objectClone(item: object): object {
+export function objectClone<T extends object>(item: T): T {
     if(item === null || typeof item !== "object") {
         return item
     }
@@ -11,10 +11,10 @@ export function objectClone(item: object): object {
         for(const item of raw) {
             copy.push(objectClone(item))
         }
-        return copy
+        return copy as T
 
     } else if(raw instanceof Date) {
-        return new Date(raw)
+        return new Date(raw) as T
 
     } else if(raw instanceof Map) {
         const copy = new Map()
@@ -24,14 +24,14 @@ export function objectClone(item: object): object {
                 objectClone(mapValue),
             )
         }
-        return copy
+        return copy as T
 
     } else if(raw instanceof Set) {
         const copy = new Set()
         for(const item of raw) {
             copy.add(objectClone(item))
         }
-        return copy
+        return copy as T
     }
 
     const copy = Object.create(Object.getPrototypeOf(raw))
