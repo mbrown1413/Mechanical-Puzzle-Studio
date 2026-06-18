@@ -7,37 +7,50 @@ import {objectClone} from "~/ui/utils/objectClone.ts"
 import Modal from "~/ui/common/Modal.vue"
 import FormEditor from "~/ui/components/FormEditor.vue"
 
-const isOpen = ref(false)
 const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
-const currentItem: Ref<object | undefined> = ref()
-const currentForm: Ref<Form | undefined> = ref()
-const currentTitle: Ref<string | undefined> = ref()
-const currentContext: Ref<FormContext | undefined> = ref()
-const currentModalProps: Ref<ExtractPropTypes<typeof Modal> | undefined> = ref()
 
-let currentResolve: ((item: object | null) => void) | null = null
+type CurrentData = {
+    item: object,
+    form: Form
+    title: string
+    context: FormContext
+    modalProps: ExtractPropTypes<typeof Modal>
+    resolve: ((item: object | null) => void)
+}
+
+const current = ref<CurrentData | null>(null)
+
 
 function handleEdit(editData: object) {
-    if(!currentItem.value) { return }
-    Object.assign(currentItem.value, editData)
+    if(!current.value) { return }
+    Object.assign(current.value.item, editData)
 }
 
 function handleOk() {
-    if(currentResolve && currentItem.value) {
-        currentResolve(currentItem.value)
+    if(current.value) {
+        current.value.resolve(current.value.item)
     }
-    currentResolve = null
-    isOpen.value = false
     modal.value?.close()
+    clearCurrent()
 }
 
 function handleCancel() {
-    if(currentResolve) {
-        currentResolve(null)
+    if(current.value) {
+        current.value.resolve(null)
     }
-    currentResolve = null
-    isOpen.value = false
     modal.value?.close()
+    clearCurrent()
+}
+
+function clearCurrent() {
+    // Clear current data after a timeout to ensure modal transitions to
+    // completely closed first.
+    const staleCurrent = current.value
+    setTimeout(() => {
+        if(current.value === staleCurrent) {
+            current.value = null
+        }
+    }, 500)
 }
 
 type OpenFormModalOptions = {
@@ -62,16 +75,16 @@ defineExpose({
         cloneItem=objectClone,
         modalProps=undefined
     }: OpenFormModalOptions): Promise<object | null> {
-        currentItem.value = cloneItem(item)
-        currentForm.value = form
-        currentTitle.value = title
-        currentContext.value = context
-        currentModalProps.value = modalProps
-
-        isOpen.value = true
-        modal.value?.open()
         return new Promise<object | null>((resolve) => {
-            currentResolve = resolve
+            current.value = {
+                item: cloneItem(item),
+                form,
+                title,
+                context,
+                modalProps,
+                resolve,
+            } as CurrentData
+            modal.value?.open()
         })
     }
 })
@@ -80,16 +93,16 @@ defineExpose({
 <template>
     <Modal
         ref="modal"
-        :title="currentTitle || 'Edit Form'"
+        :title="current?.title || 'Edit Form'"
         @cancel="handleCancel"
         @ok="handleOk"
-        v-bind="currentModalProps"
+        v-bind="current?.modalProps"
     >
         <FormEditor
-            v-if="currentItem"
-            :item="currentItem"
-            :form="currentForm"
-            :context="currentContext"
+            v-if="current?.item"
+            :item="current?.item"
+            :form="current?.form"
+            :context="current?.context as FormContext"
             @edit="handleEdit"
         />
     </Modal>
