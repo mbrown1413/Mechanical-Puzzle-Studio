@@ -163,7 +163,7 @@ async function submit(event?: Event) {
             puzzleFile = readResult.puzzleFile
             if(readResult.unsupportedFeatures?.length) {
                 unsupportedFeatures.value = readResult.unsupportedFeatures
-                await unsupportedWarningModal.value?.openAsync()
+                await unsupportedWarningModal.value?.open()
             }
         break
 

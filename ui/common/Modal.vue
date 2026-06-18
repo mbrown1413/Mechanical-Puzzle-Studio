@@ -37,13 +37,18 @@ defineEmits<{
 
 const modalOpen = ref(false)
 
-defineExpose({
-    open() { modalOpen.value = true },
-    close() { modalOpen.value = false },
+let closeResolve: (() => void) | null = null
+function onAfterLeave() {
+    if(closeResolve) {
+        closeResolve()
+    }
+}
 
-    /** Opens modal and returns promise which resolves when dialog is closed. */
-    openAsync() {
-        this.open()
+defineExpose({
+
+    /** Opens modal and returns a promise which resolves when dialog starts closing. */
+    open() {
+        modalOpen.value = true
         return new Promise<void>(resolve => {
             let stopHandle: WatchStopHandle
             stopHandle = watch(modalOpen, newValue => {
@@ -53,15 +58,26 @@ defineExpose({
                 }
             })
         })
-    }
+    },
+
+    /** Closes modal and returns a promise which resolves when close transition finishes. */
+    close() {
+        const promise = new Promise<void>((resolve) => {
+            closeResolve = resolve
+        })
+        modalOpen.value = false
+        return promise
+    },
+
 })
 </script>
 
 <template>
     <VDialog
-            v-model="modalOpen"
-            :maxWidth="dialogMaxWidth"
-            :persistent="persistent"
+        v-model="modalOpen"
+        :maxWidth="dialogMaxWidth"
+        :persistent="persistent"
+        @afterLeave="onAfterLeave"
     >
         <VForm @submit.prevent="$emit('ok')">
             <VCard>
