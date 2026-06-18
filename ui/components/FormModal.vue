@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, Ref} from "vue"
+import {ref, Ref, ExtractPropTypes} from "vue"
 
 import {Form, FormContext} from "~lib"
 
@@ -13,6 +13,7 @@ const currentItem: Ref<object | undefined> = ref()
 const currentForm: Ref<Form | undefined> = ref()
 const currentTitle: Ref<string | undefined> = ref()
 const currentContext: Ref<FormContext | undefined> = ref()
+const currentModalProps: Ref<ExtractPropTypes<typeof Modal> | undefined> = ref()
 
 let currentResolve: ((item: object | null) => void) | null = null
 
@@ -45,6 +46,7 @@ type OpenFormModalOptions = {
     title?: string
     context?: FormContext
     cloneItem?: (item: object) => object
+    modalProps?: ExtractPropTypes<typeof Modal>
 }
 
 defineExpose({
@@ -52,11 +54,19 @@ defineExpose({
      * given. A promise is returned which resolves when the modal is closed,
      * resolving to an edited version of the object, or null if the modal
      * was canceled. */
-    open({item, form, title="Edit Form", context, cloneItem=objectClone}: OpenFormModalOptions): Promise<object | null> {
+    open({
+        item,
+        form,
+        title="Edit Form",
+        context,
+        cloneItem=objectClone,
+        modalProps=undefined
+    }: OpenFormModalOptions): Promise<object | null> {
         currentItem.value = cloneItem(item)
         currentForm.value = form
         currentTitle.value = title
         currentContext.value = context
+        currentModalProps.value = modalProps
 
         isOpen.value = true
         modal.value?.open()
@@ -73,6 +83,7 @@ defineExpose({
         :title="currentTitle || 'Edit Form'"
         @cancel="handleCancel"
         @ok="handleOk"
+        v-bind="currentModalProps"
     >
         <FormEditor
             v-if="currentItem"
