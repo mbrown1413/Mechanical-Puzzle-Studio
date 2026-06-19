@@ -30,27 +30,18 @@ function handleOk() {
     if(current.value) {
         current.value.resolve(current.value.item)
     }
-    modal.value?.close()
-    clearCurrent()
+    modal.value?.close().then(() => {
+        current.value = null
+    })
 }
 
 function handleCancel() {
     if(current.value) {
         current.value.resolve(null)
     }
-    modal.value?.close()
-    clearCurrent()
-}
-
-function clearCurrent() {
-    // Clear current data after a timeout to ensure modal transitions to
-    // completely closed first.
-    const staleCurrent = current.value
-    setTimeout(() => {
-        if(current.value === staleCurrent) {
-            current.value = null
-        }
-    }, 500)
+    modal.value?.close().then(() => {
+        current.value = null
+    })
 }
 
 type OpenFormModalOptions = {
