@@ -12,6 +12,7 @@ import Section from "~/ui/components/fields/Section.vue"
 import BoundsField from "~/ui/components/fields/BoundsField.vue"
 import ConstraintsField from "~/ui/components/fields/ConstraintsField.vue"
 import ProblemPiecesField from "~/ui/components/fields/ProblemPiecesField.vue"
+import ClassListField from "~/ui/components/fields/ClassListField.vue"
 
 type Props = {
     item: object
@@ -41,6 +42,7 @@ function getComponent(field: Field) {
         case "bounds": return BoundsField
         case "constraints": return ConstraintsField
         case "problemPieces": return ProblemPiecesField
+        case "classList": return ClassListField
         default:
             throw new Error(`Unrecognized field type "${type}"`)
     }

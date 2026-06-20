@@ -1,6 +1,6 @@
 import {gzipSync, gunzipSync, strToU8, strFromU8} from "fflate"
 
-import {Form, FormContext, FormEditable, PuzzleFile, PuzzleMetadata, registerClass, SerializableClass} from "~lib"
+import {FormClassInfo, Form, Field, FormContext, FormEditable, listSubclasses, PuzzleFile, PuzzleMetadata, registerClass, SerializableClass} from "~lib"
 
 export type StorageId = string
 
@@ -70,7 +70,28 @@ export function clearStorageCache() {
     metadataCache = {}
 }
 
+export function makeStorageListField(property: string): Field {
+    const classInfos: FormClassInfo<Storage>[] = []
+    for(const cls of listSubclasses(Storage)) {
+        const storageCls = cls as unknown as typeof Storage
+        classInfos.push({
+            name: storageCls.storageTypeName,
+            description: storageCls.storageTypeDescription,
+            newInstance: () => { return new cls() },
+        })
+    }
+    return {
+        type: "classList",
+        property,
+        getLabel: (storage: Storage) => storage.name,
+        newInstance: classInfos,
+    }
+}
+
 export abstract class Storage extends SerializableClass implements FormEditable {
+    static storageTypeName = "Unnamed Storage Type"
+    static storageTypeDescription = ""
+
     /** Unique identifier used for this storage. */
     abstract get id(): StorageId
 
@@ -187,6 +208,8 @@ export abstract class Storage extends SerializableClass implements FormEditable 
 }
 
 export class LocalStorage extends Storage {
+    static storageTypeName = "Browser Storage"
+    static storageTypeDescription = "Stores puzzles in the browser's localStorage."
 
     get id() {
         return "local"
@@ -248,6 +271,9 @@ export class LocalStorage extends Storage {
 registerClass(LocalStorage)
 
 export class BackendStorage extends Storage {
+    static storageTypeName = "Backend Storage"
+    static storageTypeDescription = "Stores puzzles on a server running the Puzzle Studio backend server."
+
     name: string
     baseUrl: string
 
@@ -265,7 +291,12 @@ export class BackendStorage extends Storage {
         return {
             fields: [
                 {property: "name", type: "string", label: "Name"},
-                {property: "baseUrl", type: "string", label: "URL"},
+                {
+                    property: "baseUrl",
+                    type: "string",
+                    label: "URL",
+                    description: 'Typically "http://localhost:8787/api" if running a backend locally',
+                },
             ]
         }
     }
@@ -390,6 +421,9 @@ registerClass(BackendStorage)
 
 /** Read-only storage of all puzzles in examples folder. */
 export class SampleStorage extends Storage {
+    static storageTypeName = "Sample Storage"
+    static storageTypeDescription = "A set of example built-in puzzles."
+
     puzzleStrings: {[puzzleName: string]: string}
 
     constructor() {

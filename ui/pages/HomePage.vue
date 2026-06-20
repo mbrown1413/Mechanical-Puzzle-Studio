@@ -6,7 +6,7 @@ import {PuzzleMetadata} from "~lib"
 
 import {getSavedStorages, openGlobalModal, setSavedStorages, title} from "~/ui/globals.ts"
 import {downloadPuzzleFromStorage} from "~/ui/utils/download.ts"
-import {clearStorageCache, PuzzleListing, Storage} from "~/ui/storage.ts"
+import {makeStorageListField, clearStorageCache, PuzzleListing, Storage} from "~/ui/storage.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
@@ -29,19 +29,24 @@ type StorageEntry = {
     error?: string,
 }
 
-const storageEntries: StorageEntry[] = reactive(
-    getSavedStorages().map((storage) => {
+const storageEntries: StorageEntry[] = reactive([])
+
+onMounted(() => {
+    loadAllStorages()
+    void loadAllPuzzles()
+})
+
+function loadAllStorages() {
+    storageEntries.length = 0
+    clearStorageCache()
+    storageEntries.push(...getSavedStorages().map((storage) => {
         return {
             storage: shallowReactive(storage),
             puzzles: {},
             loading: false,
         }
-    })
-)
-
-onMounted(() => {
-    void loadAllPuzzles()
-})
+    }))
+}
 
 async function loadAllPuzzles() {
     await Promise.all(storageEntries.map(loadStoragePuzzles))
@@ -109,15 +114,39 @@ function puzzleRows(puzzleListing: PuzzleListing): PuzzleTableRow[] {
     }))
 }
 
-function openConfigureStorageModal(storage: Storage) {
+async function openConfigureStoragesModal() {
+    const updatedForm = await openGlobalModal({
+        item: {storageList: getSavedStorages()},
+        form: {
+            fields: [
+                makeStorageListField("storageList"),
+            ]
+        },
+        title: "Manage Storages",
+        modalProps: {dialogMaxWidth: "800px"},
+    }) as {storageList: Storage[]}
+    if(updatedForm && updatedForm.storageList) {
+        setSavedStorages(updatedForm.storageList)
+        loadAllStorages()
+        loadAllPuzzles()
+    }
+}
+
+async function openConfigureStorageModal(storage: Storage) {
     const storageEntry = storageEntries.find(entry => entry.storage === storage)
     if(!storageEntry) return
-    openGlobalModal({item: storage, title: "Edit Storage"}).then((updatedStorage) => {
-        Object.assign(storage, updatedStorage)
-        setSavedStorages()
-        clearStorageCache()
-        void loadStoragePuzzles(storageEntry)
+
+    const storageTypeName = (storageEntry.storage.constructor as typeof Storage).storageTypeName
+    const updatedStorage = await openGlobalModal({
+        item: storage,
+        title: "Edit " + storageTypeName,
     })
+    if(!updatedStorage) { return }
+
+    Object.assign(storage, updatedStorage)
+    setSavedStorages()
+    clearStorageCache()
+    void loadStoragePuzzles(storageEntry)
 }
 
 const appTitle = import.meta.env.PZS_APP_TITLE
@@ -153,8 +182,22 @@ const appTitle = import.meta.env.PZS_APP_TITLE
             </VCol>
         </VRow>
 
+        <VRow justify="center">
+            <VCol style="max-width: 800px;">
+                <VToolbar density="comfortable" color="transparent">
+
+                    <VSpacer />
+
+                    <VBtn @click="openConfigureStoragesModal()">
+                        <VIcon icon="mdi-database-cog" class="mr-1" />
+                        Manage Storages
+                    </VBtn>
+                </VToolbar>
+            </VCol>
+        </VRow>
+
         <VRow
-            v-for="{storage, puzzles: puzzleListing, loading, error} of storageEntries"
+            v-for="{storage, puzzles: puzzleListing, loading, error}, i of storageEntries"
             justify="center"
         >
             <VDataTable
@@ -164,7 +207,8 @@ const appTitle = import.meta.env.PZS_APP_TITLE
                     :loading="loading"
                     loading-text="Loading Puzzles..."
                     :no-data-text="error ? error : 'No puzzles in this storage location'"
-                    class="mt-10 ml-10 mr-10 table-striped"
+                    class="ml-10 mr-10 table-striped"
+                    :class="{'mt-10': i !== 0}"
                     style="max-width: 800px;"
             >
                 <template v-slot:bottom />
@@ -193,7 +237,7 @@ const appTitle = import.meta.env.PZS_APP_TITLE
                                 v-if="storage.needsConfiguration() !== 'no-config'"
                                 v-tooltip="'Configure Storage'"
                                 class="storage-configure-button"
-                                @click="openConfigureStorageModal(storage)"
+                                @click="void openConfigureStorageModal(storage)"
                             >
                                 <VIcon role="img" aria-label="Configure Storage">mdi-cog-outline</VIcon>
                             </VBtn>

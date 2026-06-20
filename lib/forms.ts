@@ -60,8 +60,22 @@ export type ProblemPiecesField = {
     }
 }
 
-export type Field = 
-    StringField
+export type FormClassInfo<Class> = {
+    name: string
+    description?: string
+    newInstance: () => Class
+}
+export type ClassListField<Class extends FormEditable> = {
+    type: "classList"
+    property: string
+    getLabel: (object: Class) => string
+    newInstance:
+        | (() => Class)
+        | FormClassInfo<Class>[]
+}
+
+export type Field =
+    | StringField
     | IntegerField
     | CheckboxField
     | ColorField
@@ -69,6 +83,8 @@ export type Field =
     | BoundsField
     | ConstraintsField
     | ProblemPiecesField
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    | ClassListField<any>
 
 export type Form = {
     fields: Field[]

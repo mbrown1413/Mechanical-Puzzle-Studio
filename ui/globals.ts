@@ -113,7 +113,13 @@ export function getSavedStorages() {
 
     return savedStorages
 }
-export function setSavedStorages() {
+/** Set the storages saved in browser's LocalStorage. Without an argument the
+ * saved storages returned from getSavedStorages is saved, presumably mutated
+ * from when it was retrieved. */
+export function setSavedStorages(storages?: Storage[]) {
+    if(storages !== undefined) {
+        savedStorages = storages
+    }
     localStorage.setItem(
         "storages",
         JSON.stringify(serialize(savedStorages))
