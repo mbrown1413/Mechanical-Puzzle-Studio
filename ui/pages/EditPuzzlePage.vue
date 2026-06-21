@@ -21,12 +21,17 @@ import UiButton from "~/ui/components/UiButton.vue"
 import {getSavedStorage} from "~/ui/globals.ts"
 
 const props = defineProps<{
-    storageId: StorageId,
+    storageId1: string,
+    storageId2?: string,
     puzzleName: string,
 }>()
 
+const storageId = computed<StorageId>(() => {
+    return [props.storageId1, props.storageId2 || null]
+})
+
 const storage: Ref<Storage | null> = computed(
-    () => getSavedStorage(props.storageId)
+    () => getSavedStorage(storageId.value)
 )
 const puzzleFile: Ref<PuzzleFile | null> = ref(null)
 const saveManager = new SaveManager(props.puzzleName, storage, puzzleFile)
@@ -95,7 +100,7 @@ async function setPuzzleFile(ignoreErrors=false) {
     if(!storage.value) {
         puzzleError.value = {
             title: "Storage not found",
-            errorMessage: `Storage not found: "${props.storageId}"`,
+            errorMessage: `Storage not found: "${storageId.value.join('/')}"`,
             userMessage: "Return home to select another puzzle.",
             recoverable: false,
         }

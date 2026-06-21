@@ -247,7 +247,16 @@ const appTitle = import.meta.env.PZS_APP_TITLE
 
                 <template v-slot:item.name="{item}">
 
-                    <RouterLink :to="{name: 'puzzle', params: {storageId: storage.id, puzzleName: item.name}}">
+                    <RouterLink
+                        :to="{
+                            name: 'puzzle',
+                            params: {
+                                storageId1: storage.id[0],
+                                storageId2: storage.id[1],
+                                puzzleName: item.name
+                            }
+                        }"
+                    >
                         {{ item.name }}
                     </RouterLink>
 

@@ -197,7 +197,11 @@ async function submit(event?: Event) {
 
     router.push({
         name: "puzzle",
-        params: {storageId: fields.storage.id, puzzleName: fields.name}
+        params: {
+            storageId1: fields.storage.id[0],
+            storageId2: fields.storage.id[1],
+            puzzleName: fields.name
+        }
     })
     modal.value?.close()
 }

@@ -22,7 +22,7 @@ const routes: RouteRecordRaw[] = [
     },
     {
         name: "puzzle",
-        path: "/puzzle/:storageId/:puzzleName",
+        path: "/puzzle/:storageId1/:storageId2?/:puzzleName",
         props: true,
         component: EditPuzzlePage
     },

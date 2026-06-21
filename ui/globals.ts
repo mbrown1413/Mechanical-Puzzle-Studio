@@ -126,5 +126,8 @@ export function setSavedStorages(storages?: Storage[]) {
     )
 }
 export function getSavedStorage(storageId: StorageId): Storage | null {
-    return getSavedStorages().find((storage) => storage.id === storageId) || null
+    return getSavedStorages().find((s) => (
+        s.id[0] === storageId[0] &&
+        s.id[1] === storageId[1]
+    )) || null
 }

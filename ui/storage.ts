@@ -2,7 +2,7 @@ import {gzipSync, gunzipSync, strToU8, strFromU8} from "fflate"
 
 import {FormClassInfo, Form, Field, FormContext, FormEditable, listSubclasses, PuzzleFile, PuzzleMetadata, registerClass, SerializableClass} from "~lib"
 
-export type StorageId = string
+export type StorageId = [string, null] | [string, string]
 
 export type PuzzleListing = Record<string, PuzzleMetadata>
 
@@ -92,7 +92,14 @@ export abstract class Storage extends SerializableClass implements FormEditable 
     static storageTypeName = "Unnamed Storage Type"
     static storageTypeDescription = ""
 
-    /** Unique identifier used for this storage. */
+    /** Unique identifier for this storage instance.
+     *
+     * The `StorageId` type is a list of two parts to the identifier. Singleton
+     * storages may just provide a single ID (and leave the second part as
+     * null), while other storages may specify a ID for the type of storages,
+     * and an ID for this specific instance. Either way, the value returned
+     * must be unique for each instance.
+     */
     abstract get id(): StorageId
 
     /** Name to display to the user for this storage. */
@@ -128,10 +135,11 @@ export abstract class Storage extends SerializableClass implements FormEditable 
      * @throws StorageError
      */
     async list(): Promise<PuzzleListing> {
-        if(metadataCache[this.id] === undefined) {
-            metadataCache[this.id] = this.listWithoutCaching()
+        const stringId = this.id.join("/")
+        if(metadataCache[stringId] === undefined) {
+            metadataCache[stringId] = this.listWithoutCaching()
         }
-        return await metadataCache[this.id]
+        return await metadataCache[stringId]
     }
 
     /**
@@ -212,7 +220,7 @@ export class LocalStorage extends Storage {
     static storageTypeDescription = "Stores puzzles in the browser's localStorage."
 
     get id() {
-        return "local"
+        return ["local", null] as StorageId
     }
 
     get name() {
@@ -282,9 +290,17 @@ export class BackendStorage extends Storage {
         this.name = "Backend Storage"
         this.baseUrl = baseUrl
     }
+    
+    private static slugify(s: string) {
+        s = s.toLowerCase().trim()
+        s = s.replace(/[^a-z0-9 -]/g, '')
+        s = s.replace(/\s+/g, '-')
+        s = s.replace(/-+/g, '-')
+        return s
+    }
 
     get id() {
-        return "api"
+        return ["backend", BackendStorage.slugify(this.name)] as StorageId
     }
 
     getForm(): Form {
@@ -451,7 +467,7 @@ export class SampleStorage extends Storage {
     }
 
     get id() {
-        return "sample"
+        return ["sample", null] as StorageId
     }
 
     get name() {
