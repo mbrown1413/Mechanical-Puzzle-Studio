@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {ref, Ref, ExtractPropTypes} from "vue"
+import {ref, Ref, ExtractPropTypes, computed} from "vue"
 
-import {Form, FormContext} from "~lib"
+import {Form, FormContext, isFormEditable} from "~lib"
 
 import {objectClone} from "~/ui/utils/objectClone.ts"
 import Modal from "~/ui/common/Modal.vue"
@@ -11,14 +11,24 @@ const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 
 type CurrentData = {
     item: object,
-    form: Form
+    form?: Form
     title: string
     context: FormContext
     modalProps: ExtractPropTypes<typeof Modal>
+    errors: string[]
     resolve: ((item: object | null) => void)
 }
 
 const current = ref<CurrentData | null>(null)
+
+const activeForm = computed(() => {
+    if(current.value === null) { return null }
+    if(current.value.form) { return current.value.form }
+    if(isFormEditable(current.value.item)) {
+        return current.value.item.getForm(current.value.context as FormContext)
+    }
+    throw new Error("Item is not form editable and no form was provided.")
+})
 
 
 function handleEdit(editData: object) {
@@ -27,9 +37,18 @@ function handleEdit(editData: object) {
 }
 
 function handleOk() {
-    if(current.value) {
-        current.value.resolve(current.value.item)
+    if(!current.value) { return }
+    current.value.errors = []
+
+    const validate = activeForm.value?.validate
+    if(validate) {
+        current.value.errors = validate(current.value.item, current.value.context as FormContext)
+        if(current.value.errors.length) {
+            return
+        }
     }
+
+    current.value.resolve(current.value.item)
     modal.value?.close().then(() => {
         current.value = null
     })
@@ -73,6 +92,7 @@ defineExpose({
                 title,
                 context,
                 modalProps,
+                errors: [],
                 resolve,
             } as CurrentData
             modal.value?.open()
@@ -96,5 +116,16 @@ defineExpose({
             :context="current?.context as FormContext"
             @edit="handleEdit"
         />
+        <VAlert
+            v-if="current?.errors.length"
+            type="error"
+            variant="tonal"
+            density="compact"
+            class="mt-4"
+        >
+            <div v-for="error in current.errors">
+                {{ error }}
+            </div>
+        </VAlert>
     </Modal>
 </template>

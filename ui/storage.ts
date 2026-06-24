@@ -70,7 +70,7 @@ export function clearStorageCache() {
     metadataCache = {}
 }
 
-export function makeStorageListField(property: string): Field {
+function makeStorageListField(property: string, selectedStorage?: Storage): Field {
     const classInfos: FormClassInfo<Storage>[] = []
     for(const cls of listSubclasses(Storage)) {
         const storageCls = cls as unknown as typeof Storage
@@ -85,7 +85,41 @@ export function makeStorageListField(property: string): Field {
         property,
         getLabel: (storage: Storage) => storage.name,
         newInstance: classInfos,
+        initialSelectionIndex(storages: Storage[]) {
+            if(!selectedStorage) { return 0 }
+            const selectedStorageId = storageIdToString(selectedStorage.id)
+            return storages.findIndex((s) => storageIdToString(s.id) === selectedStorageId)
+        }
     }
+}
+
+export function makeStorageListForm(property: string, selectedStorage?: Storage): Form {
+    return {
+        fields: [
+            makeStorageListField(property, selectedStorage)
+        ],
+        validate: (item) => {
+            const storages = (item as Record<string, Storage[]>)[property]
+            return validateUniqueStorageIds(storages)
+        }
+    }
+}
+
+export function validateUniqueStorageIds(storages: Storage[]): string[] {
+    const errors = new Set<string>()
+    const seenIds = new Set()
+    for(const storage of storages) {
+        const id = storageIdToString(storage.id)
+        if(seenIds.has(id)) {
+            errors.add(`Duplicate storage ID ${id}. Please change storage's name to be unique.`)
+        }
+        seenIds.add(id)
+    }
+    return [...errors]
+}
+
+function storageIdToString(id: StorageId): string {
+    return id.join("/")
 }
 
 export abstract class Storage extends SerializableClass implements FormEditable {
@@ -135,7 +169,7 @@ export abstract class Storage extends SerializableClass implements FormEditable 
      * @throws StorageError
      */
     async list(): Promise<PuzzleListing> {
-        const stringId = this.id.join("/")
+        const stringId = storageIdToString(this.id)
         if(metadataCache[stringId] === undefined) {
             metadataCache[stringId] = this.listWithoutCaching()
         }

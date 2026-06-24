@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, ref, Ref} from "vue"
+import {computed, onMounted, ref, Ref} from "vue"
 
 import {FormContext, ClassListField, FormEditable} from "~lib"
 
@@ -21,6 +21,12 @@ const emit = defineEmits<{
 
 const selectedIndex = ref<number | null>(0)
 const chooseTypeModal: Ref<InstanceType<typeof Modal> | null> = ref(null)
+
+onMounted(() => {
+    if(props.field.initialSelectionIndex) {
+        selectedIndex.value = props.field.initialSelectionIndex(items.value)
+    }
+})
 
 function makeEdit(callback: (newItemList: FormEditable[]) => void) {
     const editData: any = {}

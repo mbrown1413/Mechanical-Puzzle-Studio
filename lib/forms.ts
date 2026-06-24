@@ -72,6 +72,7 @@ export type ClassListField<Class extends FormEditable> = {
     newInstance:
         | (() => Class)
         | FormClassInfo<Class>[]
+    initialSelectionIndex?(objects: Class[]): number
 }
 
 export type Field =
@@ -88,6 +89,7 @@ export type Field =
 
 export type Form = {
     fields: Field[]
+    validate?: (item: object, context?: FormContext) => string[]
 }
 
 export type FormContext = {

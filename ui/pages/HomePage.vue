@@ -6,7 +6,7 @@ import {PuzzleMetadata} from "~lib"
 
 import {getSavedStorages, openGlobalModal, setSavedStorages, title} from "~/ui/globals.ts"
 import {downloadPuzzleFromStorage} from "~/ui/utils/download.ts"
-import {makeStorageListField, clearStorageCache, PuzzleListing, Storage} from "~/ui/storage.ts"
+import {makeStorageListForm, clearStorageCache, PuzzleListing, Storage} from "~/ui/storage.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
@@ -114,14 +114,10 @@ function puzzleRows(puzzleListing: PuzzleListing): PuzzleTableRow[] {
     }))
 }
 
-async function openConfigureStoragesModal() {
+async function openConfigureStoragesModal(selectedStorage?: Storage) {
     const updatedForm = await openGlobalModal({
         item: {storageList: getSavedStorages()},
-        form: {
-            fields: [
-                makeStorageListField("storageList"),
-            ]
-        },
+        form: makeStorageListForm("storageList", selectedStorage),
         title: "Manage Storages",
         modalProps: {dialogMaxWidth: "800px"},
     }) as {storageList: Storage[]}
@@ -130,23 +126,6 @@ async function openConfigureStoragesModal() {
         loadAllStorages()
         loadAllPuzzles()
     }
-}
-
-async function openConfigureStorageModal(storage: Storage) {
-    const storageEntry = storageEntries.find(entry => entry.storage === storage)
-    if(!storageEntry) return
-
-    const storageTypeName = (storageEntry.storage.constructor as typeof Storage).storageTypeName
-    const updatedStorage = await openGlobalModal({
-        item: storage,
-        title: "Edit " + storageTypeName,
-    })
-    if(!updatedStorage) { return }
-
-    Object.assign(storage, updatedStorage)
-    setSavedStorages()
-    clearStorageCache()
-    void loadStoragePuzzles(storageEntry)
 }
 
 const appTitle = import.meta.env.PZS_APP_TITLE
@@ -237,7 +216,7 @@ const appTitle = import.meta.env.PZS_APP_TITLE
                                 v-if="storage.needsConfiguration() !== 'no-config'"
                                 v-tooltip="'Configure Storage'"
                                 class="storage-configure-button"
-                                @click="void openConfigureStorageModal(storage)"
+                                @click="void openConfigureStoragesModal(storage)"
                             >
                                 <VIcon role="img" aria-label="Configure Storage">mdi-cog-outline</VIcon>
                             </VBtn>
