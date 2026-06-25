@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, onMounted, ref, Ref} from "vue"
 
-import {FormContext, ClassListField, FormEditable} from "~lib"
+import {FormContext, ClassListField, FormEditable, FormClassInfo, BoolWithReason} from "~lib"
 
 import {objectClone} from "~/ui/utils/objectClone.ts"
 import {UiButtonDefinition} from "~/ui/ui-buttons.ts"
@@ -83,6 +83,13 @@ function onNewInstance(instanceFactory: () => any) {
         selectedIndex.value = index+1
     })
     chooseTypeModal.value?.close()
+}
+
+function classIsEnabled(classInfo: FormClassInfo<any>): BoolWithReason {
+    if(classInfo.enabled === undefined) {
+        return {bool: true}
+    }
+    return classInfo.enabled(items.value)
 }
 
 const upButton: UiButtonDefinition = {
@@ -188,12 +195,27 @@ const deleteButton: UiButtonDefinition = {
             <tbody>
                 <tr v-for="classInfo of field.newInstance">
                     <td>
-                        <VBtn @click="onNewInstance(classInfo.newInstance)">
-                            <VIcon icon="mdi-plus" class="mr-2" />
-                            {{ classInfo.name }}
-                        </VBtn>
+                        <VTooltip
+                            :text="classIsEnabled(classInfo).reason"
+                            :disabled="classIsEnabled(classInfo).bool"
+                        >
+                            <template v-slot:activator="{props}">
+                                <!-- Wrap in span so tooltips show on disabled buttons -->
+                                <span v-bind="props">
+                                    <VBtn
+                                        :disabled="!(classIsEnabled(classInfo).bool)"
+                                        @click="onNewInstance(classInfo.newInstance)"
+                                    >
+                                        <VIcon icon="mdi-plus" class="mr-2" />
+                                        {{ classInfo.name }}
+                                    </VBtn>
+                                </span>
+                            </template>
+                        </VTooltip>
                     </td>
-                    <td>{{ classInfo.description }}</td>
+                    <td>
+                        {{ classInfo.description }}
+                    </td>
                 </tr>
             </tbody>
         </VTable>

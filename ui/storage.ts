@@ -78,6 +78,18 @@ function makeStorageListField(property: string, selectedStorage?: Storage): Fiel
             name: storageCls.storageTypeName,
             description: storageCls.storageTypeDescription,
             newInstance: () => { return new cls() },
+            enabled: (storages) => {
+                if(
+                    storageCls.isSingleton &&
+                    storages.some((s) => (s instanceof storageCls))
+                ) {
+                    return {
+                        bool: false,
+                        reason: "Only one storage may exist of this type"
+                    }
+                }
+                return {bool: true}
+            }
         })
     }
     return {
@@ -125,6 +137,7 @@ function storageIdToString(id: StorageId): string {
 export abstract class Storage extends SerializableClass implements FormEditable {
     static storageTypeName = "Unnamed Storage Type"
     static storageTypeDescription = ""
+    static isSingleton = false
 
     /** Unique identifier for this storage instance.
      *
@@ -252,6 +265,7 @@ export abstract class Storage extends SerializableClass implements FormEditable 
 export class BrowserStorage extends Storage {
     static storageTypeName = "Browser Storage"
     static storageTypeDescription = "Stores puzzles in the browser's localStorage."
+    static isSingleton = true
 
     get id() {
         return ["browser", null] as StorageId
@@ -473,6 +487,7 @@ registerClass(BackendStorage)
 export class SampleStorage extends Storage {
     static storageTypeName = "Sample Storage"
     static storageTypeDescription = "A set of example built-in puzzles."
+    static isSingleton = true
 
     puzzleStrings: {[puzzleName: string]: string}
 

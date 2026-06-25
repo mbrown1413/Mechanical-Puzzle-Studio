@@ -1,6 +1,7 @@
 import {Grid} from "~/lib/Grid.ts"
 import {Problem} from "~/lib/Problem.ts"
-import {Puzzle} from "./Puzzle"
+import {Puzzle} from "~/lib/Puzzle.ts"
+import {BoolWithReason} from "~/lib/types.ts"
 
 export type StringField = {
     type: "string"
@@ -60,10 +61,11 @@ export type ProblemPiecesField = {
     }
 }
 
-export type FormClassInfo<Class> = {
+export type FormClassInfo<Class extends FormEditable> = {
     name: string
     description?: string
     newInstance: () => Class
+    enabled?: (objects: Class[]) => BoolWithReason
 }
 export type ClassListField<Class extends FormEditable> = {
     type: "classList"
