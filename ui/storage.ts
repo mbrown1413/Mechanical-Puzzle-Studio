@@ -249,12 +249,12 @@ export abstract class Storage extends SerializableClass implements FormEditable 
     abstract delete(puzzleName: string): Promise<void>
 }
 
-export class LocalStorage extends Storage {
+export class BrowserStorage extends Storage {
     static storageTypeName = "Browser Storage"
     static storageTypeDescription = "Stores puzzles in the browser's localStorage."
 
     get id() {
-        return ["local", null] as StorageId
+        return ["browser", null] as StorageId
     }
 
     get name() {
@@ -310,7 +310,7 @@ export class LocalStorage extends Storage {
         return "puzzle:" + puzzleName
     }
 }
-registerClass(LocalStorage)
+registerClass(BrowserStorage)
 
 export class BackendStorage extends Storage {
     static storageTypeName = "Backend Storage"

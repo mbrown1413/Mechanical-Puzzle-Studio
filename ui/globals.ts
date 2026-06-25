@@ -7,7 +7,7 @@ import {TaskRunner} from "~/ui/TaskRunner.ts"
 import {PuzzleStudioApi} from "~/ui/api.ts"
 import {makeProxy} from "~/ui/utils/proxy.ts"
 import FormModal from "~/ui/components/FormModal.vue"
-import {Storage, LocalStorage, SampleStorage, BackendStorage, StorageId} from "~/ui/storage.ts"
+import {Storage, BrowserStorage, SampleStorage, BackendStorage, StorageId} from "~/ui/storage.ts"
 
 /** HTML page title */
 export const title = ref("")
@@ -104,7 +104,7 @@ export function getSavedStorages() {
         !savedStorages.every(item => item instanceof Storage)
     ) {
         savedStorages = [
-            new LocalStorage(),
+            new BrowserStorage(),
             new SampleStorage(),
             new BackendStorage(""),
         ]
