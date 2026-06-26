@@ -143,10 +143,12 @@ const deleteButton: UiButtonDefinition = {
     perform: () => {
         makeEdit((newItemList) => {
             if(selectedIndex.value === null) { return }
-            if(selectedIndex.value === numberedItems.value.length - 1) {
-                selectedIndex.value -= 1
-            }
             newItemList.splice(selectedIndex.value, 1)
+            selectedIndex.value = Math.min(
+                selectedIndex.value,
+                // The index of what will be the last item (numberedItems hasn't updated yet)
+                numberedItems.value.length - 2
+            )
         })
     },
     enabled: () => selectedIndex.value !== null,
