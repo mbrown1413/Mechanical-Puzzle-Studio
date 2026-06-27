@@ -71,6 +71,7 @@ export type ClassListField<Class extends FormEditable> = {
     type: "classList"
     property: string
     getLabel: (object: Class) => string
+    getSubtitle?: (object: Class) => string
     newInstance:
         | (() => Class)
         | FormClassInfo<Class>[]

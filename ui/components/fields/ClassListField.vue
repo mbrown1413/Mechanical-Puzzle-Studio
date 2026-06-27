@@ -171,7 +171,10 @@ const deleteButton: UiButtonDefinition = {
                 />
             </VCol>
             <VCol>
-                <h4>{{ selectedItem?.constructor?.name }}</h4>
+                <h3>{{ selectedItem ? field.getLabel(selectedItem) : "" }}</h3>
+                <div class="mb-2" style="font-size: 90%;">
+                    {{ selectedItem && field.getSubtitle ? field.getSubtitle(selectedItem) : "" }}
+                </div>
                 <FormEditor
                     v-if="selectedItem"
                     :item="selectedItem"

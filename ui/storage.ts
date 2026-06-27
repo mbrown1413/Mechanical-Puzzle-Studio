@@ -96,6 +96,14 @@ function makeStorageListField(property: string, selectedStorage?: Storage): Fiel
         type: "classList",
         property,
         getLabel: (storage: Storage) => storage.name,
+        getSubtitle: (storage: Storage) => {
+            const cls = storage.constructor as unknown as typeof Storage
+            if(cls.isSingleton) {
+                return `${cls.storageTypeDescription}`
+            } else {
+                return `${cls.storageTypeName}: ${cls.storageTypeDescription}`
+            }
+        },
         newInstance: classInfos,
         initialSelectionIndex(storages: Storage[]) {
             if(!selectedStorage) { return 0 }
