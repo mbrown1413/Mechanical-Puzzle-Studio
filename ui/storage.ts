@@ -339,9 +339,9 @@ export class BackendStorage extends Storage {
     static storageTypeDescription = "Stores puzzles on a server running the Puzzle Studio backend server."
 
     name: string
-    baseUrl: string
+    baseUrl: string | undefined
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl?: string) {
         super()
         this.name = "Backend Storage"
         this.baseUrl = baseUrl
@@ -374,9 +374,12 @@ export class BackendStorage extends Storage {
     }
 
     get normalizedBaseUrl(): string | null {
+        if(typeof this.baseUrl !== "string") {
+            return null
+        }
+
         let normalized = this.baseUrl.trim()
         normalized = normalized.endsWith("/") ? normalized.slice(0, -1) : normalized
-
         if(normalized.length === 0) {
             return null
         }
