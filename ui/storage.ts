@@ -2,6 +2,8 @@ import {gzipSync, gunzipSync, strToU8, strFromU8} from "fflate"
 
 import {FormClassInfo, Form, Field, FormContext, FormEditable, listSubclasses, PuzzleFile, PuzzleMetadata, registerClass, SerializableClass} from "~lib"
 
+import {slugify} from "~/ui/utils/string.ts"
+
 export type StorageId = [string, null] | [string, string]
 
 export type PuzzleListing = Record<string, PuzzleMetadata>
@@ -346,17 +348,9 @@ export class BackendStorage extends Storage {
         this.name = "Backend Storage"
         this.baseUrl = baseUrl
     }
-    
-    private static slugify(s: string) {
-        s = s.toLowerCase().trim()
-        s = s.replace(/[^a-z0-9 -]/g, '')
-        s = s.replace(/\s+/g, '-')
-        s = s.replace(/-+/g, '-')
-        return s
-    }
 
     get id() {
-        return ["backend", BackendStorage.slugify(this.name)] as StorageId
+        return ["backend", slugify(this.name)] as StorageId
     }
 
     getForm(): Form {
