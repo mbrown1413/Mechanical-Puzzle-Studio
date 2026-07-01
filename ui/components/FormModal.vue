@@ -9,6 +9,10 @@ import FormEditor from "~/ui/components/FormEditor.vue"
 
 const modal: Ref<InstanceType<typeof Modal> | null> = ref(null)
 
+const defaultModalProps: ExtractPropTypes<typeof Modal> = {
+    persistent: true,
+}
+
 type CurrentData = {
     item: object,
     form?: Form
@@ -91,7 +95,7 @@ defineExpose({
                 form,
                 title,
                 context,
-                modalProps,
+                modalProps: Object.assign({}, defaultModalProps, modalProps),
                 errors: [],
                 resolve,
             } as CurrentData
