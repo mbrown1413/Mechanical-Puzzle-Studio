@@ -78,6 +78,12 @@ export type ClassListField<Class extends FormEditable> = {
     initialSelectionIndex?(objects: Class[]): number
 }
 
+export type FileSystemFolderField = {
+    type: "fileSystemFolder"
+    property: string
+    label: string
+}
+
 export type Field =
     | StringField
     | IntegerField
@@ -89,6 +95,7 @@ export type Field =
     | ProblemPiecesField
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | ClassListField<any>
+    | FileSystemFolderField
 
 export type Form = {
     fields: Field[]

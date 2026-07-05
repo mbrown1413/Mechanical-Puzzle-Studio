@@ -6,7 +6,7 @@ import {PuzzleMetadata} from "~lib"
 
 import {getSavedStorages, openGlobalModal, setSavedStorages, title} from "~/ui/globals.ts"
 import {downloadPuzzleFromStorage} from "~/ui/utils/download.ts"
-import {makeStorageListForm, clearStorageCache, PuzzleListing, Storage} from "~/ui/storage.ts"
+import {makeStorageListForm, clearStorageCache, PuzzleListing, Storage, StorageError} from "~/ui/storage.ts"
 import ConfirmButton from "~/ui/common/ConfirmButton.vue"
 import TitleBar from "~/ui/components/TitleBar.vue"
 import RawDataModal from "~/ui/components/RawDataModal.vue"
@@ -27,6 +27,7 @@ type StorageEntry = {
     puzzles: PuzzleListing,
     loading: boolean,
     error?: string,
+    retryText?: string,
 }
 
 const storageEntries: StorageEntry[] = reactive([])
@@ -49,18 +50,22 @@ function loadAllStorages() {
 }
 
 async function loadAllPuzzles() {
-    await Promise.all(storageEntries.map(loadStoragePuzzles))
+    await Promise.all(storageEntries.map(loadPuzzlesFromStorage))
 }
 
-async function loadStoragePuzzles(entry: StorageEntry) {
+async function loadPuzzlesFromStorage(entry: StorageEntry) {
     entry.loading = true
     entry.error = undefined
+    entry.retryText = undefined
     entry.puzzles = {}
     try {
-        entry.puzzles = await entry.storage.list()
+        entry.puzzles = await entry.storage.list(true)
     } catch(e) {
         console.error(`Error listing puzzles on ${entry.storage.name} backend:\n${e}`)
         entry.error = String(e)
+        if(e instanceof StorageError && e.retryText) {
+            entry.retryText = e.retryText
+        }
     }
     entry.loading = false
 }
@@ -176,21 +181,41 @@ const appTitle = import.meta.env.PZS_APP_TITLE
         </VRow>
 
         <VRow
-            v-for="{storage, puzzles: puzzleListing, loading, error}, i of storageEntries"
+            v-for="entry, i of storageEntries"
             justify="center"
         >
             <VDataTable
                     :headers="tableHeaders"
-                    :items="puzzleRows(puzzleListing)"
+                    :items="puzzleRows(entry.puzzles)"
                     items-per-page="-1"
-                    :loading="loading"
+                    :loading="entry.loading"
                     loading-text="Loading Puzzles..."
-                    :no-data-text="error ? error : 'No puzzles in this storage location'"
                     class="ml-10 mr-10 table-striped"
                     :class="{'mt-10': i !== 0}"
                     style="max-width: 800px;"
             >
                 <template v-slot:bottom />
+
+                <template v-slot:no-data>
+                    <div class="mt-3 mb-3">
+                        {{ entry.error || "No puzzles in this storage location" }}
+                    </div>
+                    <VBtn
+                        v-if="entry.error && entry.storage.needsConfiguration() !== 'needs-config'"
+                        @click="loadPuzzlesFromStorage(entry)"
+                        class="mb-3"
+                    >
+                        {{ entry.retryText || "Retry" }}
+                    </VBtn>
+                    <VBtn
+                        v-if="entry.storage.needsConfiguration() === 'needs-config'"
+                        class="mb-3"
+                        prepend-icon="mdi-cog-outline"
+                        @click="void openConfigureStoragesModal(entry.storage)"
+                    >
+                        Configure
+                    </VBtn>
+                </template>
 
                 <template v-slot:top>
                     <VToolbar
@@ -200,23 +225,23 @@ const appTitle = import.meta.env.PZS_APP_TITLE
                         <template v-slot:default>
                             <VBtn
                                 v-for="storageButton in storageButtons"
-                                v-if="!storage.readOnly"
+                                v-if="!entry.storage.readOnly"
                                 color="primary"
                                 size="large"
                                 style="flex: 0 0 auto;"
-                                @click="storageButton.action(storage)"
+                                @click="storageButton.action(entry.storage)"
                             >
                                 <VIcon :icon="storageButton.icon" class="mr-1" />
                                 {{ storageButton.text }}
                             </VBtn>
                         </template>
                         <template v-slot:title>
-                            {{ storage.name }}
+                            {{ entry.storage.name }}
                             <VBtn
-                                v-if="storage.needsConfiguration() !== 'no-config'"
+                                v-if="entry.storage.needsConfiguration() !== 'no-config'"
                                 v-tooltip="'Configure Storage'"
                                 class="storage-configure-button"
-                                @click="void openConfigureStoragesModal(storage)"
+                                @click="void openConfigureStoragesModal(entry.storage)"
                             >
                                 <VIcon role="img" aria-label="Configure Storage">mdi-cog-outline</VIcon>
                             </VBtn>
@@ -230,8 +255,8 @@ const appTitle = import.meta.env.PZS_APP_TITLE
                         :to="{
                             name: 'puzzle',
                             params: {
-                                storageId1: storage.id[0],
-                                storageId2: storage.id[1],
+                                storageId1: entry.storage.id[0],
+                                storageId2: entry.storage.id[1],
                                 puzzleName: item.name
                             }
                         }"
@@ -261,21 +286,21 @@ const appTitle = import.meta.env.PZS_APP_TITLE
                 <template v-slot:item.actions="{item}">
 
                     <VBtn
-                        @click="void downloadPuzzleFromStorage(storage, item.name)"
+                        @click="void downloadPuzzleFromStorage(entry.storage, item.name)"
                         v-tooltip.top="'Download'"
                     >
                         <VIcon icon="mdi-download" aria-label="Download" aria-hidden="false" />
                     </VBtn>
 
                     <VBtn
-                        @click="void rawDataModal?.openFromStorage(storage, item.name)"
+                        @click="void rawDataModal?.openFromStorage(entry.storage, item.name)"
                         v-tooltip.top="'Raw Data'"
                     >
                         <VIcon icon="mdi-code-braces" aria-label="Raw Data" aria-hidden="false" />
                     </VBtn>
 
                     <VBtn
-                        @click="saveModal?.openCopy(storage, item.name)"
+                        @click="saveModal?.openCopy(entry.storage, item.name)"
                         v-tooltip.top="'Copy'"
                     >
                         <VIcon icon="mdi-content-copy" aria-label="Copy" aria-hidden="false" />
@@ -283,10 +308,10 @@ const appTitle = import.meta.env.PZS_APP_TITLE
 
                     <ConfirmButton
                         :text="`Delete Puzzle ${item.name}?`"
-                        :disabled="storage.readOnly"
+                        :disabled="entry.storage.readOnly"
                         confirmText="Delete"
                         confirmButtonColor="red"
-                        @confirm="void deletePuzzle(storage, item.name)"
+                        @confirm="void deletePuzzle(entry.storage, item.name)"
                         v-tooltip.top="'Delete'"
                     >
                         <VIcon icon="mdi-delete" aria-label="Delete" aria-hidden="false" />

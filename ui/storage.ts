@@ -3,12 +3,20 @@ import {gzipSync, gunzipSync, strToU8, strFromU8} from "fflate"
 import {FormClassInfo, Form, Field, FormContext, FormEditable, listSubclasses, PuzzleFile, PuzzleMetadata, registerClass, SerializableClass} from "~lib"
 
 import {slugify} from "~/ui/utils/string.ts"
+import {StoredFileSystemHandle} from "~/ui/utils/StoredFileSystemHandle.ts"
 
 export type StorageId = [string, null] | [string, string]
 
 export type PuzzleListing = Record<string, PuzzleMetadata>
 
 export class StorageError extends Error {
+    retryText?: string
+
+    constructor(message: string, retryText?: string) {
+        super(message)
+        this.retryText = retryText
+    }
+
     toString() {
         return this.message
     }
@@ -18,6 +26,17 @@ export class PuzzleNotFoundError extends StorageError {
     constructor(puzzleName: string) {
         super(`Puzzle not found: "${puzzleName}"`)
     }
+}
+
+// This workaround is just for typing to recognize methods on
+// FileSystemDirectoryHandle which should be present.
+type FixedFileSystemDirectoryHandle = FileSystemDirectoryEntry & {
+    queryPermission(permissions: object): string
+    requestPermission(permission: object): string
+    values(): FileSystemDirectoryHandleAsyncIterator<FileSystemDirectoryHandle | FileSystemFileHandle>
+}
+interface FileSystemDirectoryHandleAsyncIterator<T> extends AsyncIterator<T, unknown, unknown> {
+    [Symbol.asyncIterator](): FileSystemDirectoryHandleAsyncIterator<T>;
 }
 
 function stripIfStartsWith(input: string, toStrip: string) {
@@ -191,8 +210,12 @@ export abstract class Storage extends SerializableClass implements FormEditable 
      *
      * @throws StorageError
      */
-    async list(): Promise<PuzzleListing> {
+    async list(clearCache=false): Promise<PuzzleListing> {
         const stringId = storageIdToString(this.id)
+        if(clearCache) {
+            delete metadataCache[stringId]
+        }
+
         if(metadataCache[stringId] === undefined) {
             metadataCache[stringId] = this.listWithoutCaching()
         }
@@ -392,7 +415,7 @@ export class BackendStorage extends Storage {
     }
 
     needsConfiguration() {
-        return this.normalizedBaseURl ? "valid-config" : "needs-config"
+        return this.normalizedBaseUrl ? "valid-config" : "needs-config"
     }
 
     async listWithoutCaching(): Promise<PuzzleListing> {
@@ -551,3 +574,138 @@ export class SampleStorage extends Storage {
     async delete(_puzzleName: string): Promise<void> { }
 }
 registerClass(SampleStorage)
+
+export class FolderStorage extends Storage {
+    static storageTypeName = "Folder Storage"
+    static storageTypeDescription = "Stores puzzles in a local folder."
+
+    storedFolderHandle?: StoredFileSystemHandle
+
+    get name() {
+        if(!this.storedFolderHandle) {
+            return "Folder: (unconfigured)"
+        }
+        return `Folder: ${this.storedFolderHandle.name}`
+    }
+
+    get id() {
+        let key
+        if(this.storedFolderHandle) {
+            key = this.storedFolderHandle.storageKey.toString()
+        } else {
+            key = null
+        }
+        return ["folder", key] as StorageId
+    }
+
+    getForm(_context: FormContext): Form {
+        return {
+            fields: [
+                {property: "storedFolderHandle", type: "fileSystemFolder", label: "Folder"},
+            ],
+        }
+    }
+
+    needsConfiguration() {
+        return this.storedFolderHandle ? "valid-config" : "needs-config"
+    }
+
+    static testSupport(): boolean {
+         return typeof window !== 'undefined' && 'showDirectoryPicker' in window
+    }
+
+    private async getFolderHandle(): Promise<FileSystemDirectoryHandle> {
+        if (!FolderStorage.testSupport()) {
+            throw new StorageError("Folder Storage is not supported in this browser.")
+        }
+        if(!this.storedFolderHandle) {
+            throw new StorageError("Folder selection needed.")
+        }
+        const handle = await this.storedFolderHandle.getHandle() as FileSystemDirectoryHandle
+        const handleWithFixedType = handle as unknown as FixedFileSystemDirectoryHandle
+
+        const permissions = {mode: "readwrite"}
+        if ((await handleWithFixedType.queryPermission(permissions)) === "granted") {
+            return handle
+        }
+        try {
+            if ((await handleWithFixedType.requestPermission(permissions)) === "granted") {
+                return handle
+            }
+        } catch (e: unknown) {
+            console.error("Permission required for storage", e)
+            if (e instanceof Error && e.name === "SecurityError") {
+                // requestPermission requires a transient user interaction,
+                // otherwise it throws a SecurityError. Prompt the user to click
+                // the retry button which will be the user interaction we need.
+                throw new StorageError("Permission required", "Request Permission")
+            }
+            throw e
+        }
+        throw new StorageError("Permission to access the local folder was denied.", "Request Permission")
+    }
+
+    async listWithoutCaching(): Promise<PuzzleListing> {
+        const handle = await this.getFolderHandle() as unknown as FixedFileSystemDirectoryHandle
+        const listing: PuzzleListing = {}
+        try {
+            for await (const entry of handle.values()) {
+                if (entry.kind === "file" && entry.name.endsWith(".json")) {
+                    const file = await entry.getFile()
+                    const text = await file.text()
+                    const puzzleName = entry.name.slice(0, -".json".length)
+                    listing[puzzleName] = PuzzleFile.getMetadataSafe(text)
+                }
+            }
+        } catch (e) {
+            const message = "Failed to list folder contents"
+            console.error(message, e)
+            throw new StorageError(message)
+        }
+        return listing
+    }
+
+    async getRaw(puzzleName: string): Promise<string> {
+        const handle = await this.getFolderHandle()
+        try {
+            const fileHandle = await handle.getFileHandle(`${puzzleName}.json`)
+            const file = await fileHandle.getFile()
+            return await file.text()
+        } catch (e: unknown) {
+            if (e instanceof Error && e.name === "NotFoundError") {
+                throw new PuzzleNotFoundError(puzzleName)
+            }
+            console.error("Failed to read puzzle file", e)
+            throw new StorageError(`Failed to read puzzle "${puzzleName}": ${String(e)}`)
+        }
+    }
+
+    async save(puzzleName: string, puzzleFile: PuzzleFile, serialized?: string): Promise<void> {
+        if (!serialized) {
+            serialized = puzzleFile.serialize()
+        }
+        const handle = await this.getFolderHandle()
+        try {
+            const fileHandle = await handle.getFileHandle(`${puzzleName}.json`, { create: true })
+            const writable = await fileHandle.createWritable()
+            await writable.write(serialized)
+            await writable.close()
+        } catch (e) {
+            throw new StorageError(`Failed to save puzzle "${puzzleName}": ${String(e)}`)
+        }
+    }
+
+    async delete(puzzleName: string): Promise<void> {
+        const handle = await this.getFolderHandle()
+        try {
+            await handle.removeEntry(`${puzzleName}.json`)
+        } catch (e: unknown) {
+            if (e instanceof Error && e.name === "NotFoundError") {
+                return
+            }
+            console.error("Failed to delete puzzle", e)
+            throw new StorageError(`Failed to delete puzzle "${puzzleName}": ${String(e)}`)
+        }
+    }
+}
+registerClass(FolderStorage)
