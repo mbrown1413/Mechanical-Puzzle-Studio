@@ -28,17 +28,6 @@ export class PuzzleNotFoundError extends StorageError {
     }
 }
 
-// This workaround is just for typing to recognize methods on
-// FileSystemDirectoryHandle which should be present.
-type FixedFileSystemDirectoryHandle = FileSystemDirectoryEntry & {
-    queryPermission(permissions: object): string
-    requestPermission(permission: object): string
-    values(): FileSystemDirectoryHandleAsyncIterator<FileSystemDirectoryHandle | FileSystemFileHandle>
-}
-interface FileSystemDirectoryHandleAsyncIterator<T> extends AsyncIterator<T, unknown, unknown> {
-    [Symbol.asyncIterator](): FileSystemDirectoryHandleAsyncIterator<T>;
-}
-
 function stripIfStartsWith(input: string, toStrip: string) {
     return input.startsWith(toStrip) ?
         input.slice(toStrip.length).trimStart()
@@ -622,14 +611,13 @@ export class FolderStorage extends Storage {
             throw new StorageError("Folder selection needed.")
         }
         const handle = await this.storedFolderHandle.getHandle() as FileSystemDirectoryHandle
-        const handleWithFixedType = handle as unknown as FixedFileSystemDirectoryHandle
 
-        const permissions = {mode: "readwrite"}
-        if ((await handleWithFixedType.queryPermission(permissions)) === "granted") {
+        const permissions: FileSystemHandlePermissionDescriptor = {mode: "readwrite"}
+        if ((await handle.queryPermission(permissions)) === "granted") {
             return handle
         }
         try {
-            if ((await handleWithFixedType.requestPermission(permissions)) === "granted") {
+            if ((await handle.requestPermission(permissions)) === "granted") {
                 return handle
             }
         } catch (e: unknown) {
@@ -646,7 +634,7 @@ export class FolderStorage extends Storage {
     }
 
     async listWithoutCaching(): Promise<PuzzleListing> {
-        const handle = await this.getFolderHandle() as unknown as FixedFileSystemDirectoryHandle
+        const handle = await this.getFolderHandle()
         const listing: PuzzleListing = {}
         try {
             for await (const entry of handle.values()) {
