@@ -1,6 +1,6 @@
 import {gzipSync, gunzipSync, strToU8, strFromU8} from "fflate"
 
-import {FormClassInfo, Form, Field, FormContext, FormEditable, listSubclasses, PuzzleFile, PuzzleMetadata, registerClass, SerializableClass} from "~lib"
+import {FormClassInfo, Form, Field, FormContext, FormEditable, listSubclasses, PuzzleFile, PuzzleMetadata, registerClass, SerializableClass, BoolWithReason} from "~lib"
 
 import {slugify} from "~/ui/utils/string.ts"
 import {StoredFileSystemHandle} from "~/ui/utils/StoredFileSystemHandle.ts"
@@ -98,7 +98,7 @@ function makeStorageListField(property: string, selectedStorage?: Storage): Fiel
                         reason: "Only one storage may exist of this type"
                     }
                 }
-                return {bool: true}
+                return storageCls.isEnabled
             }
         })
     }
@@ -156,6 +156,7 @@ export abstract class Storage extends SerializableClass implements FormEditable 
     static storageTypeName = "Unnamed Storage Type"
     static storageTypeDescription = ""
     static isSingleton = false
+    static isEnabled: BoolWithReason = {bool: true}
 
     /** Unique identifier for this storage instance.
      *
@@ -567,6 +568,9 @@ registerClass(SampleStorage)
 export class FolderStorage extends Storage {
     static storageTypeName = "Folder Storage"
     static storageTypeDescription = "Stores puzzles in a local folder."
+    static isEnabled: BoolWithReason = FolderStorage.testSupport() ?
+        {bool: true} :
+        {bool: false, reason: "Folder storage is not supported in this browser."}
 
     storedFolderHandle?: StoredFileSystemHandle
 
